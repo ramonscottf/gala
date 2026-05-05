@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1b3d">
+<title>DEF Gala 2026</title>
+
+<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DEF Gala 2026">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="DEF Gala 2026 — Sign in">
+<meta property="og:description" content="Davis Education Foundation · June 10, 2026">
+<meta property="og:url" content="https://gala.daviskids.org">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --navy: #0d1b3d;
+  --navy-700: #182a55;
+  --navy-300: #5a6a8c;
+  --gold: #c9a45c;
+  --red: #cb262c;
+  --red-light: #e84e53;
+  --paper: #faf8f3;
+  --paper-card: #ffffff;
+  --rule: rgba(13,27,61,0.10);
+  --mute: #6b7493;
+  --ink: #1a2540;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.shell {
+  width: 100%;
+  max-width: 440px;
+  background: var(--paper-card);
+  border-radius: 22px;
+  box-shadow: 0 12px 40px rgba(13,27,61,0.08), 0 2px 8px rgba(13,27,61,0.04);
+  overflow: hidden;
+}
+.banner {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-700) 100%);
+  padding: 28px 28px 32px;
+  color: #fff;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--red) 0%, var(--gold) 50%, var(--red) 100%);
+}
+.banner .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.banner h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.banner h1 em {
+  font-style: italic;
+  color: var(--gold);
+  font-weight: 600;
+}
+.banner .meta {
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.78);
+  font-weight: 500;
+}
+.body { padding: 28px; }
+.headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+.subhead {
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+form { display: flex; flex-direction: column; gap: 12px; }
+label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--navy-300);
+}
+input[type="email"] {
+  font: inherit;
+  font-size: 16px;
+  padding: 13px 14px;
+  border: 1.5px solid var(--rule);
+  border-radius: 11px;
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s;
+}
+input[type="email"]:focus {
+  outline: none;
+  border-color: var(--navy);
+  background: #fff;
+}
+button {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 20px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+button:hover:not(:disabled) { background: var(--navy-700); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.status {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  display: none;
+}
+.status.show { display: block; }
+.status.success {
+  background: rgba(13,124,72,0.08);
+  color: #0d7c48;
+  border: 1px solid rgba(13,124,72,0.18);
+}
+.status.error {
+  background: rgba(203,38,44,0.06);
+  color: #a01f24;
+  border: 1px solid rgba(203,38,44,0.14);
+}
+.fineprint {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  font-size: 12px;
+  color: var(--mute);
+  line-height: 1.55;
+}
+.fineprint a {
+  color: var(--navy);
+  text-decoration: none;
+  font-weight: 500;
+}
+.fineprint a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<main class="shell">
+  <div class="banner">
+    <div class="eyebrow">Davis Education Foundation</div>
+    <h1>Gala <em>2026</em></h1>
+    <div class="meta">Wednesday · June 10, 2026 · Megaplex Legacy Crossing</div>
+  </div>
+
+  <div class="body">
+    <h2 class="headline">Sign in</h2>
+    <p class="subhead">Enter your email and we'll send you a link.</p>
+
+    <form id="loginForm" autocomplete="on">
+      <label for="email">Email</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        required
+        autofocus
+        autocomplete="email"
+        placeholder="you@example.com"
+        spellcheck="false"
+        autocapitalize="none"
+      >
+      <button type="submit" id="submitBtn">Send me a link</button>
+    </form>
+
+    <div id="status" class="status" role="status"></div>
+
+    <div class="fineprint">
+      <strong>Sponsor?</strong> If you have your invitation email, you can open the link there directly. This form is just for replacing a lost link or for admins.<br><br>
+      Questions: <a href="mailto:smiggin@dsdmail.net">smiggin@dsdmail.net</a>
+    </div>
+  </div>
+</main>
+
+<script>
+const form = document.getElementById('loginForm');
+const emailInput = document.getElementById('email');
+const submitBtn = document.getElementById('submitBtn');
+const status = document.getElementById('status');
+
+function showStatus(message, kind) {
+  status.textContent = message;
+  status.className = 'status show ' + kind;
+}
+function clearStatus() {
+  status.className = 'status';
+  status.textContent = '';
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = emailInput.value.trim().toLowerCase();
+  if (!email) return;
+
+  clearStatus();
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('/api/auth/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      // Always show generic success — don't leak whether email is in allowlist
+      showStatus('If that email is on file, we just sent you a sign-in link. Check your inbox (and spam).', 'success');
+      form.reset();
+    } else if (res.status === 429) {
+      showStatus('Too many requests. Wait a minute and try again.', 'error');
+    } else {
+      showStatus(data.error || 'Something went wrong. Try again in a moment.', 'error');
+    }
+  } catch (err) {
+    showStatus('Network error. Check your connection and retry.', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send me a link';
+  }
+});
+</script>
+
+</body>
+</html>

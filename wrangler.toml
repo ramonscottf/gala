@@ -1,0 +1,26 @@
+# Cloudflare Pages project config for "gala"
+# Production env vars (19 total) and bindings are configured via the
+# Cloudflare dashboard. This file is for local `wrangler pages dev` only.
+
+name = "gala"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "public"
+
+[vars]
+SITE_NAME = "DEF Gala 2026"
+SITE_URL = "https://gala.daviskids.org"
+MONDAY_SPONSORS_BOARD = "18401288062"
+MONDAY_TICKETS_BOARD = "18401288062"
+MONDAY_AUCTION_BOARD = "18403409730"
+
+# D1 binding — same database the def-site Pages project used before migration
+# (gala-seating, 108 sponsors). No data moved, just bindings.
+[[d1_databases]]
+binding = "GALA_DB"
+database_name = "gala-seating"
+database_id = "1468a0b3-cc6c-49a6-ad89-421e9fb00a86"
+
+# R2 binding — sponsor logos, movie posters, marketing assets
+[[r2_buckets]]
+binding = "GALA_ASSETS"
+bucket_name = "gala-assets"
