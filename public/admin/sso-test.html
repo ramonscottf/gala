@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSO Test · Gala Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --card: #ffffff;
+    --text: #0d1b3d;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --ms-blue: #2f72e1;
+    --ms-red: #d83b01;
+    --ms-green: #107c10;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(13,27,61,0.08);
+    max-width: 640px;
+    width: 100%;
+    padding: 40px;
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 28px;
+  }
+  .config {
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 28px;
+    word-break: break-all;
+  }
+  .config strong { color: var(--text); }
+  button {
+    background: var(--ms-blue);
+    color: white;
+    border: 0;
+    border-radius: 8px;
+    padding: 14px 22px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s ease;
+  }
+  button:hover { background: #1f5fcf; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ms-logo {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    background:
+      linear-gradient(to right, #f25022 50%, #7fba00 50%) top / 100% 50% no-repeat,
+      linear-gradient(to right, #00a4ef 50%, #ffb900 50%) bottom / 100% 50% no-repeat;
+  }
+  .result {
+    margin-top: 28px;
+    padding: 18px 20px;
+    border-radius: 10px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+  .result.success {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+  }
+  .result.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+  .result.info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+  }
+  .result h3 { margin: 0 0 10px; font-size: 0.95rem; }
+  .verdict {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #78350f;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+  .verdict strong { display: block; margin-bottom: 4px; }
+  details { margin-top: 16px; font-size: 0.82rem; color: var(--muted); }
+  details summary { cursor: pointer; font-weight: 500; }
+  details pre {
+    background: #f3f4f6;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Microsoft SSO test</h1>
+  <p class="subtitle">Probes whether the existing childspree app reg accepts the bare daviskids.org URL as a redirect URI.</p>
+
+  <div class="config">
+    <div><strong>Tenant:</strong> 3d9cf274-547e-4af5-8dde-01a636e0b607</div>
+    <div><strong>Client ID:</strong> ddf5d2a5-b2f2-4661-943f-c25fcc69833f <span style="color:var(--muted);">(childspree app reg)</span></div>
+    <div><strong>Redirect URI:</strong> <span id="redirect-uri-display"></span></div>
+    <div style="margin-top:8px;color:var(--muted);font-size:0.7rem;">After successful auth, Microsoft sends the token to the redirect URI in the URL fragment. If the URI is the daviskids.org Webflow homepage, you'll see the token in the URL bar (look for <code>#id_token=...</code>) — that's success. If you see Microsoft's red AADSTS50011 page, the URI isn't registered.</div>
+  </div>
+
+  <button id="signin-btn" onclick="signIn()">
+    <span class="ms-logo"></span>
+    Sign in with Microsoft
+  </button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+const TENANT_ID = '3d9cf274-547e-4af5-8dde-01a636e0b607';
+const CLIENT_ID = 'ddf5d2a5-b2f2-4661-943f-c25fcc69833f';
+// Probe the bare-root URL Scott originally requested for the daviskids.org app reg.
+// If Mike added daviskids.org to the childspree app instead of creating a separate
+// app, this URI will be registered and auth will succeed.
+const REDIRECT_URI = 'https://daviskids.org/';
+
+document.getElementById('redirect-uri-display').textContent = REDIRECT_URI;
+
+const msalConfig = {
+  auth: {
+    clientId: CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${TENANT_ID}`,
+    redirectUri: REDIRECT_URI,
+    navigateToLoginRequestUrl: false,
+  },
+  cache: { cacheLocation: 'sessionStorage' },
+};
+
+let msalInstance;
+let initPromise;
+
+async function getMsal() {
+  if (!msalInstance) {
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    initPromise = msalInstance.initialize();
+  }
+  await initPromise;
+  return msalInstance;
+}
+
+function showResult(type, html) {
+  const el = document.getElementById('result');
+  el.className = 'result ' + type;
+  el.innerHTML = html;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+async function signIn() {
+  try {
+    const m = await getMsal();
+    document.getElementById('signin-btn').disabled = true;
+    showResult('info', '<h3>Redirecting to Microsoft…</h3>If you stay on this page, look at the URL bar — Azure may have redirected back with an error fragment.');
+    await m.loginRedirect({
+      scopes: ['openid', 'profile', 'email', 'User.Read'],
+      prompt: 'select_account',
+    });
+  } catch (e) {
+    document.getElementById('signin-btn').disabled = false;
+    showResult('error',
+      '<h3>Sign-in attempt failed before redirect</h3>' +
+      '<strong>Error:</strong> ' + escapeHtml(e.errorCode || 'unknown') + '<br>' +
+      '<strong>Message:</strong> ' + escapeHtml(e.errorMessage || e.message || String(e)) +
+      '<details><summary>Full error</summary><pre>' + escapeHtml(JSON.stringify(e, Object.getOwnPropertyNames(e), 2)) + '</pre></details>'
+    );
+  }
+}
+
+// Handle redirect on page load
+(async () => {
+  try {
+    const m = await getMsal();
+    const resp = await m.handleRedirectPromise();
+    if (resp && resp.account) {
+      const claims = resp.idTokenClaims || {};
+      showResult('success',
+        '<h3>✅ Microsoft SSO works with this redirect URI</h3>' +
+        '<strong>Email:</strong> ' + escapeHtml(claims.preferred_username || resp.account.username || '?') + '<br>' +
+        '<strong>Name:</strong> ' + escapeHtml(claims.name || resp.account.name || '?') + '<br>' +
+        '<strong>Tenant:</strong> ' + escapeHtml(claims.tid || '?') + '<br>' +
+        '<strong>Client ID matched:</strong> ' + escapeHtml(claims.aud || '?') +
+        '<div class="verdict"><strong>Verdict</strong>The childspree app reg accepts daviskids.org. We can wire up gala dashboard SSO using the existing client ID — no new IT request needed.</div>'
+      );
+    } else {
+      // Look for error in URL hash (Azure redirects with error params)
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const error = params.get('error');
+      const errorDesc = params.get('error_description');
+      if (error) {
+        let verdict = '';
+        if (errorDesc && errorDesc.includes('AADSTS50011')) {
+          verdict = '<div class="verdict"><strong>Verdict</strong>The redirect URI is NOT registered on the childspree app. We need Mike to either (a) add this URI to the existing app, or (b) send the daviskids.org client ID he created on Apr 9.</div>';
+        } else if (errorDesc && errorDesc.includes('AADSTS700016')) {
+          verdict = '<div class="verdict"><strong>Verdict</strong>The client ID itself is not recognized in this tenant. Something is wrong with the app reg.</div>';
+        } else if (errorDesc && errorDesc.includes('AADSTS65001')) {
+          verdict = '<div class="verdict"><strong>Verdict</strong>App reg works but admin consent is needed for the requested scopes. Easy fix.</div>';
+        } else {
+          verdict = '<div class="verdict"><strong>Verdict</strong>Azure rejected the request — error message above tells us exactly why.</div>';
+        }
+        showResult('error',
+          '<h3>❌ Azure returned an error</h3>' +
+          '<strong>Error code:</strong> ' + escapeHtml(error) + '<br>' +
+          '<strong>Description:</strong> ' + escapeHtml(errorDesc || '(none)') +
+          verdict
+        );
+        // Clean URL
+        history.replaceState(null, '', window.location.pathname);
+      }
+      // No error and no response = first page load, do nothing
+    }
+  } catch (e) {
+    showResult('error',
+      '<h3>Unexpected error during redirect handling</h3>' +
+      '<strong>Error:</strong> ' + escapeHtml(e.errorCode || 'unknown') + '<br>' +
+      '<strong>Message:</strong> ' + escapeHtml(e.errorMessage || e.message || String(e)) +
+      '<details><summary>Full error</summary><pre>' + escapeHtml(JSON.stringify(e, Object.getOwnPropertyNames(e), 2)) + '</pre></details>'
+    );
+  }
+})();
+</script>
+</body>
+</html>

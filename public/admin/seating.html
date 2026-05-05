@@ -1,0 +1,4042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seating Chart – Gala Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── Gala Palette (red — was pink from Childspree clone origin) ── */
+  --navy: #1B3A4B;           /* primary dark */
+  --navy-deep: #122838;
+  --gala-red: #CB262C;       /* gala brand accent (early showing) */
+  --gala-red-light: #E84E53;
+  --gala-red-deep: #A01F24;
+  --gala-red-soft: #FDEDED;
+  /* Late showing — navy palette, mirrors --gala-red* roles */
+  --gala-navy: #1B3A4B;
+  --gala-navy-light: #345A70;
+  --gala-navy-deep: #0E2837;
+  --gala-navy-soft: #E8EFF4;
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --card-alt: #F1F5F9;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --text: #1E293B;
+  --muted: #64748B;
+  --light: #94A3B8;
+  --green: #059669;
+  --green-bg: #ECFDF5;
+  --amber: #D97706;
+  --amber-bg: #FFFBEB;
+  --red: #DC2626;
+  --red-bg: #FEF2F2;
+  --blue: #2563EB;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,0.08);
+  --shadow-lg: 0 12px 32px rgba(15,23,42,0.12);
+
+  /* Legacy tokens aliased so existing rules still work */
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: var(--light);
+  --blue-light: var(--navy);
+  --blue-glow: var(--navy);
+  /* Legacy pink aliases → now point to gala red. This file was cloned from
+     the Childspree admin originally, so ~40 rules still reference --pink*.
+     Aliasing avoids a sprawling rename while visually switching the whole UI. */
+  --pink: var(--gala-red);
+  --pink-light: var(--gala-red-light);
+  --pink-soft: var(--gala-red-soft);
+  --pink-neon: var(--gala-red);
+  --pink-glow: var(--gala-red);
+  --glass: var(--card);
+  --glass-light: var(--card);
+  --navy-mid: var(--card);
+  --navy-light: var(--card-alt);
+  --yellow: var(--amber);
+}
+
+/* ── Late showing (showing 2) — flip red brand vars to navy ───────────── */
+body[data-showing="2"] {
+  --gala-red:       var(--gala-navy);
+  --gala-red-light: var(--gala-navy-light);
+  --gala-red-deep:  var(--gala-navy-deep);
+  --gala-red-soft:  var(--gala-navy-soft);
+}
+/* Soften the active-pill shadow color to match navy */
+body[data-showing="2"] .picker__showtime.active {
+  box-shadow: 0 4px 12px rgba(27,58,75,0.28);
+}
+body[data-showing="2"] .picker__aud.active {
+  box-shadow: 0 4px 12px rgba(27,58,75,0.28);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+body::before, body::after { content: none !important; display: none !important; }
+
+/* ── Header Bar ── */
+.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(13,27,61,0.06);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+
+.top-bar__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.35rem; font-weight: 700;
+  color: var(--navy);
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.top-bar__controls {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+
+select, .btn {
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+select:focus, .btn:hover {
+  border-color: var(--navy);
+}
+.btn:active { transform: translateY(1px); }
+
+select option { background: var(--card); color: var(--text); }
+
+.btn-primary {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff; font-weight: 700;
+}
+.btn-primary:hover { background: var(--navy-deep); border-color: var(--navy-deep); color: #fff; }
+
+.btn-secondary {
+  background: var(--card);
+  color: var(--muted);
+}
+
+.btn-back {
+  text-decoration: none;
+  color: var(--muted);
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 600; font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-back:hover { color: var(--navy); background: var(--card-alt); }
+
+/* ── Layout ── */
+.layout {
+  position: relative; z-index: 1;
+  display: flex;
+  min-height: calc(100vh - 64px);
+}
+
+.chart-area {
+  flex: 1;
+  padding: 24px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg);
+}
+
+/* ── Showtime / Movie / Auditorium Picker (mirrors guest portal) ── */
+.picker {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto 20px;
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.picker__step { margin-bottom: 14px; }
+.picker__step:last-child { margin-bottom: 0; }
+.picker__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.picker__showtimes {
+  display: inline-flex;
+  gap: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 3px;
+  background: var(--bg);
+}
+.picker__showtime {
+  padding: 9px 18px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.15;
+}
+.picker__showtime__sub {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: var(--light);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.picker__showtime.active {
+  background: linear-gradient(135deg, var(--gala-red), var(--gala-red-deep));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(203,38,44,0.22);
+}
+.picker__showtime.active .picker__showtime__sub { color: rgba(255,255,255,0.85); }
+.picker__movies {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.picker__movie {
+  padding: 0;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+  text-align: left;
+  font-family: inherit;
+  display: flex;
+  gap: 12px;
+  overflow: hidden;
+  align-items: stretch;
+}
+.picker__movie:hover {
+  border-color: var(--gala-red-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.picker__movie.active {
+  border-color: var(--gala-red);
+  background: linear-gradient(135deg, rgba(203,38,44,0.08), rgba(203,38,44,0.02));
+  box-shadow: 0 6px 18px rgba(203,38,44,0.18);
+}
+.picker__movie__poster {
+  flex-shrink: 0;
+  width: 70px;
+  background: #1b2c5a center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.6rem;
+}
+.picker__movie__poster-fallback { opacity: 0.55; }
+.picker__movie__body {
+  flex: 1;
+  padding: 12px 14px 12px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.picker__movie__title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.picker__movie__badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.picker__movie__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #eef0f5;
+  color: #2c3858;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+.picker__movie__badge--rating {
+  background: #0d1b3d;
+  color: #fff;
+}
+.picker__movie__meta {
+  font-size: 0.74rem;
+  color: var(--light);
+  margin-top: auto;
+}
+.picker__auds {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.picker__aud {
+  padding: 8px 14px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.picker__aud:hover { border-color: var(--gala-red-light); color: var(--text); }
+.picker__aud.active {
+  background: var(--gala-red);
+  border-color: var(--gala-red);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(203,38,44,0.22);
+}
+.picker__empty {
+  padding: 12px 14px;
+  background: var(--bg);
+  border-radius: 10px;
+  color: var(--light);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.sidebar {
+  width: 300px;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* ── Screen label ── */
+.screen {
+  width: 60%;
+  max-width: 420px;
+  height: 5px;
+  background: linear-gradient(90deg, var(--pink-light), var(--pink), var(--pink-light));
+  border-radius: 3px;
+  margin: 0 auto 8px;
+  opacity: 0.8;
+}
+
+.screen-label {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+/* ── Seat Grid (column-aligned engine) ──
+   Rule: every seat sits at a grid track corresponding to its
+   spreadsheet column. Same column # across rows = same vertical line.
+   Aisles fall out as empty tracks. No hand-tuned per-row spacers. */
+.theater-map {
+  --seat-w: 22px;
+  --seat-h: 22px;
+  --col-gap: 3px;
+  --row-gap: 4px;
+  --label-w: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--row-gap);
+}
+
+.seat-row {
+  display: grid;
+  /* grid-template-columns set inline per theater: label + N seat tracks + label */
+  align-items: center;
+  column-gap: var(--col-gap);
+}
+
+.row-label {
+  width: var(--label-w);
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--light);
+}
+
+.seat {
+  width: var(--seat-w);
+  height: var(--seat-h);
+  border-radius: 4px 4px 6px 6px;
+  border: 1px solid rgba(15,23,42,0.1);
+  cursor: default;
+  transition: all 0.15s;
+  position: relative;
+  font-size: 0;
+}
+
+.seat:hover {
+  transform: scale(1.25);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.15);
+}
+
+.seat.assigned {
+  background: var(--green) !important;
+  border-color: rgba(5,150,105,0.5);
+}
+
+.seat.blocked {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+.seat.blocked:hover { transform: none; box-shadow: none; }
+
+/* Loveseats — two adjacent seats wrapped in a shared body.
+   The pair spans 2 grid tracks (= 2 seat widths + 1 col-gap).
+   Inside, each half fills 50% of the inner width — matching a single
+   seat track exactly. So loveseat halves vertically align with the
+   seats above and below, and the wrapper just adds visual fusion. */
+.seat-loveseat-pair {
+  display: flex;
+  align-items: stretch;
+  height: var(--seat-h);
+  /* Span 2 tracks; the column-gap between those tracks is also covered. */
+  width: calc(var(--seat-w) * 2 + var(--col-gap));
+  border-radius: 5px 5px 9px 9px;
+  background: transparent;
+}
+.seat-loveseat-pair .seat {
+  width: var(--seat-w);
+  flex: 0 0 var(--seat-w);
+  border: 1px solid rgba(15,23,42,0.15);
+  border-radius: 4px 4px 6px 6px;
+  position: relative;
+}
+.seat-loveseat-pair .seat-loveseat-half--left {
+  /* Connector line drawn from right edge of left half across the gap */
+  margin-right: 0;
+}
+.seat-loveseat-pair .seat-loveseat-half--left::after {
+  content: "";
+  position: absolute;
+  top: 35%;
+  bottom: 25%;
+  right: calc(var(--col-gap) * -1 - 1px);
+  width: calc(var(--col-gap) + 2px);
+  background: rgba(15,23,42,0.18);
+  pointer-events: none;
+  z-index: 1;
+}
+.seat-loveseat-pair .seat-loveseat-half--right {
+  margin-left: var(--col-gap);
+}
+.seat-loveseat-pair:hover .seat:not(.blocked):not(.assigned) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Tier color reach-through to loveseat halves */
+.seat-loveseat-pair .seat.assigned {
+  background: var(--green) !important;
+}
+
+/* ── Tooltip ── */
+.seat-tooltip {
+  display: none;
+  position: fixed;
+  background: var(--navy);
+  border: 1px solid var(--navy-deep);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: #fff;
+  z-index: 1000;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+.seat-tooltip.visible { display: block; }
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  justify-content: center;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.legend-swatch {
+  width: 16px; height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(15,23,42,0.1);
+}
+
+/* ── Sidebar sections ── */
+.sidebar h3 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--navy);
+  margin-bottom: 12px;
+  font-weight: 800;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--pink-light);
+}
+
+.sidebar-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 24px;
+}
+
+.sidebar-stat {
+  background: var(--card-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+}
+
+.sidebar-stat__val {
+  font-size: 1.5rem; font-weight: 800;
+  font-family: 'Inter', sans-serif;
+  color: var(--navy);
+}
+
+.sidebar-stat__label {
+  font-size: 0.65rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.assignment-list { list-style: none; margin-bottom: 24px; }
+.assignment-list li {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--text);
+}
+.assignment-list li:hover { background: var(--card-alt); }
+.assignment-list__seat {
+  font-weight: 700;
+  color: var(--navy);
+}
+.assignment-list__remove {
+  background: none; border: none;
+  color: var(--light); cursor: pointer;
+  font-size: 1.1rem; padding: 0 4px;
+  transition: color 0.2s;
+}
+.assignment-list__remove:hover { color: var(--red); }
+.assignment-list__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.assignment-list__dinner {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.74rem;
+  font-family: inherit;
+  cursor: pointer;
+  max-width: 90px;
+}
+.assignment-list__dinner:focus {
+  outline: 2px solid var(--gala-red);
+  outline-offset: 1px;
+}
+.assignment-list__summary {
+  background: var(--card-alt);
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 6px 12px !important;
+  justify-content: flex-start !important;
+}
+
+/* ── Assign Modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  place-items: center;
+}
+.modal-overlay.visible { display: grid; }
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  width: 400px; max-width: calc(100vw - 32px);
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
+}
+
+.modal h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem; margin-bottom: 4px;
+  color: var(--navy);
+}
+
+.modal__sub {
+  color: var(--muted); font-size: 0.85rem; margin-bottom: 18px;
+}
+
+.modal input, .modal select {
+  width: 100%; padding: 11px 14px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.95rem; font-family: inherit;
+  outline: none; margin-bottom: 14px;
+}
+.modal input:focus, .modal select:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(27,58,75,0.12);
+}
+
+.modal__actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+
+/* ═══ VENUE STATS BAR ═══ */
+.venue-bar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex; gap: 28px; align-items: center; flex-wrap: wrap;
+  position: sticky; top: 60px; z-index: 90;
+}
+.venue-bar__item { display: flex; flex-direction: column; gap: 2px; }
+.venue-bar__value {
+  font-size: 1.5rem; font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+  font-family: 'Inter', sans-serif;
+}
+.venue-bar__value--accent { color: var(--pink); text-shadow: none; }
+.venue-bar__value--good { color: var(--green); }
+.venue-bar__label {
+  font-size: 0.68rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+}
+.venue-bar__progress {
+  flex: 1; min-width: 160px; max-width: 320px;
+  height: 8px; background: var(--border);
+  border-radius: 4px; overflow: hidden; position: relative;
+}
+.venue-bar__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pink), var(--navy));
+  transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.venue-bar__cta { margin-left: auto; display: flex; gap: 10px; }
+
+/* ═══ SPONSOR QUEUE PANEL ═══ */
+.queue-panel {
+  width: 320px;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  padding: 18px 14px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.queue-panel__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--navy);
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.queue-panel__count {
+  font-size: 0.72rem;
+  background: var(--pink-soft);
+  color: var(--pink);
+  padding: 3px 10px; border-radius: 20px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+.queue-panel__sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.queue-filter {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;
+}
+.queue-filter__pill {
+  padding: 5px 11px; font-size: 0.72rem; font-weight: 600;
+  border-radius: 30px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.queue-filter__pill:hover { border-color: var(--navy); color: var(--navy); }
+.queue-filter__pill.active {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: #fff;
+}
+
+.queue-search {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: inherit; font-size: 0.85rem;
+  outline: none;
+}
+.queue-search:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(27,58,75,0.08);
+}
+
+.queue-list {
+  flex: 1;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.sponsor-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.sponsor-card:hover {
+  border-color: var(--navy);
+  transform: translateX(1px);
+  box-shadow: var(--shadow-md);
+}
+.sponsor-card.selected {
+  background: var(--pink-soft);
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(232,84,140,0.15);
+  transform: translateX(3px);
+}
+.sponsor-card.fully-seated { opacity: 0.45; }
+.sponsor-card.fully-seated::after {
+  content: '✓';
+  position: absolute; top: 8px; right: 10px;
+  color: var(--green); font-weight: 700; font-size: 1.05rem;
+}
+
+/* Mobile-friendly: name wraps, tier chip sits below */
+.sponsor-card__header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 8px; margin-bottom: 4px;
+}
+.sponsor-card__name {
+  font-size: 0.88rem; font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  flex: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+.sponsor-card__contact {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+  word-break: break-word;
+}
+.sponsor-card__meta {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.tier-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.62rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.tier-badge--Platinum       { background: #EDE9FE; color: #5B21B6; }
+.tier-badge--Gold           { background: #FEF3C7; color: #92400E; }
+.tier-badge--Silver         { background: #E2E8F0; color: #334155; }
+.tier-badge--Bronze         { background: #FED7AA; color: #9A3412; }
+.tier-badge--CellPhone      { background: #EDE9FE; color: #6D28D9; }
+.tier-badge--FriendsAndFamily, .tier-badge--SplitFriendsFamily {
+  background: #DBEAFE; color: #1E40AF;
+}
+.tier-badge--IndividualSeats, .tier-badge--IndivudialTickets {
+  background: #F1F5F9; color: var(--muted);
+}
+.tier-badge--Trade           { background: #F1F5F9; color: var(--muted); }
+.tier-badge--FoundationGuest { background: #FEF3C7; color: #92400E; }
+.tier-badge--Winner          { background: #D1FAE5; color: #065F46; }
+.tier-badge--Other, .tier-badge--Individual {
+  background: #F1F5F9; color: var(--muted);
+}
+
+.sponsor-card__seats {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.sponsor-card__seats strong { color: var(--navy); }
+.sponsor-card__seats--low { color: var(--green); }
+.sponsor-card__seats--done { color: var(--light); }
+
+.sponsor-card__remaining-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.sponsor-card__remaining-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pink), var(--pink-light));
+  transition: width 0.5s ease;
+}
+
+/* ═══ BULK ASSIGN MODE ═══ */
+.bulk-banner {
+  position: sticky; top: 0;
+  background: var(--navy);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  z-index: 5;
+  display: none;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+.bulk-banner.active { display: block; animation: bulkFadeIn 0.3s ease; }
+.bulk-banner__close {
+  float: right;
+  background: rgba(255,255,255,0.18);
+  border: none;
+  color: #fff;
+  padding: 3px 11px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+}
+.bulk-banner__close:hover { background: rgba(255,255,255,0.3); }
+
+@keyframes bulkFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+body.bulk-mode .seat:not(.assigned):not(.blocked):not(.gap) {
+  cursor: default;
+}
+
+/* Selected seats (pending commit) */
+.seat.seat--selected {
+  outline: 3px solid #14b8a6 !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px #fff, 0 0 10px rgba(20,184,166,0.65);
+  z-index: 3;
+  position: relative;
+}
+
+/* Lasso selection rectangle */
+.lasso-box {
+  position: fixed;
+  border: 2px dashed #14b8a6;
+  background: rgba(20,184,166,0.12);
+  pointer-events: none;
+  z-index: 7000;
+  border-radius: 4px;
+}
+
+/* Sticky selection action bar (bottom center) */
+#selection-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(140%);
+  background: var(--navy);
+  color: #fff;
+  border-radius: 100px;
+  padding: 10px 10px 10px 22px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.28);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  z-index: 8000;
+  font-size: 0.88rem;
+  font-family: 'Inter', sans-serif;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+#selection-bar.active { transform: translateX(-50%) translateY(0); }
+#selection-bar strong { color: #FCD34D; font-weight: 800; }
+.selection-btn {
+  background: #fff;
+  color: var(--navy);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.15s, background 0.15s;
+}
+.selection-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.selection-btn.secondary {
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+}
+.selection-btn.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.25); }
+.selection-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (max-width: 700px) {
+  #selection-bar {
+    bottom: 12px;
+    width: calc(100% - 24px);
+    justify-content: space-between;
+    padding: 10px 10px 10px 16px;
+    font-size: 0.78rem;
+  }
+  .selection-btn { padding: 8px 14px; }
+}
+
+/* Seat ownership color coding (by tier) when placed */
+.seat.tier-Platinum  { background: #A78BFA !important; border-color: #7C3AED !important; }
+.seat.tier-Gold      { background: #F59E0B !important; border-color: #D97706 !important; }
+.seat.tier-Silver    { background: #94A3B8 !important; border-color: #64748B !important; }
+.seat.tier-Bronze    { background: #EA580C !important; border-color: #C2410C !important; }
+.seat.tier-CellPhone { background: #8B5CF6 !important; border-color: #6D28D9 !important; }
+
+/* ═══ Toast notifications ═══ */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: calc(100vw - 48px);
+}
+.toast {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.85rem;
+  max-width: 360px;
+  animation: toastSlideIn 0.3s ease;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.toast--success { border-left: 3px solid var(--green); }
+.toast--error   { border-left: 3px solid var(--red); }
+.toast--info    { border-left: 3px solid var(--navy); }
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.toast__icon { font-size: 1.05rem; flex-shrink: 0; }
+.toast__body { flex: 1; line-height: 1.4; }
+.toast__title { font-weight: 700; margin-bottom: 2px; color: var(--navy); }
+
+/* Recommendation note in modal */
+.placement-hint {
+  background: var(--amber-bg);
+  border: 1px solid #FED7AA;
+  color: #92400E;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.placement-hint__icon { font-size: 1rem; flex-shrink: 0; }
+
+/* ═══ RESPONSIVE / MOBILE ═══ */
+@media (max-width: 900px) {
+  .top-bar { padding: 12px 14px; }
+  .top-bar__title { font-size: 1.1rem; }
+  .top-bar__controls { gap: 6px; }
+  .top-bar__controls select,
+  .top-bar__controls .btn {
+    font-size: 0.78rem;
+    padding: 7px 11px;
+  }
+  .venue-bar {
+    gap: 16px;
+    padding: 12px 14px;
+    top: 56px;
+  }
+  .venue-bar__value { font-size: 1.2rem; }
+  .venue-bar__label { font-size: 0.62rem; }
+  .venue-bar__progress { min-width: 100%; max-width: 100%; order: 99; }
+  .venue-bar__cta { margin-left: 0; }
+
+  .layout { flex-direction: column; min-height: auto; }
+  .chart-area { padding: 16px 8px; }
+  .sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 16px;
+  }
+  .queue-panel {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+    max-height: 50vh;
+    padding: 14px;
+  }
+
+  /* Pills: wrap cleanly instead of cropping/scrolling */
+  .queue-filter {
+    gap: 5px;
+    margin-bottom: 2px;
+  }
+  .queue-filter__pill {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+    flex: 0 0 auto;
+  }
+
+  /* Bigger touch targets on mobile — adjust the theater-map vars
+     and the grid will recompute automatically. */
+  .theater-map {
+    --seat-w: 30px;
+    --seat-h: 30px;
+    --col-gap: 4px;
+    --label-w: 22px;
+  }
+  .seat { border-radius: 6px 6px 9px 9px; }
+  .row-label { font-size: 0.72rem; }
+
+  /* ─── Auto-fit the seating chart to viewport so you don't pan back-and-forth ─── */
+  .chart-area { overflow: hidden; }
+  .theater-map {
+    min-width: 0;
+    transform: scale(var(--fit-scale, 1));
+    transform-origin: top center;
+    transition: transform 0.2s ease;
+    /* Compensate for the scale so the container still shrinks */
+    margin-bottom: calc((var(--fit-scale, 1) - 1) * var(--map-height, 0px));
+  }
+  .screen, .screen-label, .legend {
+    transform: scale(var(--fit-scale, 1));
+    transform-origin: top center;
+  }
+
+  .sponsor-card { padding: 11px 12px; }
+  .sponsor-card__name { font-size: 0.92rem; }
+  .sponsor-card__contact { font-size: 0.78rem; }
+
+  .modal { padding: 22px; }
+  .modal h2 { font-size: 1.1rem; }
+
+  .toast-container { bottom: 76px; right: 12px; left: 12px; }
+  .toast { max-width: 100%; }
+
+  .legend { gap: 10px 14px; font-size: 0.72rem; padding: 10px 12px; }
+  .legend-item { font-size: 0.72rem; }
+}
+
+@media (max-width: 480px) {
+  .top-bar { padding: 10px 12px; }
+  .top-bar__title { font-size: 1rem; }
+  .top-bar > div:first-child { flex-basis: 100%; }
+  .venue-bar { gap: 12px; padding: 10px 12px; }
+  .venue-bar__item { flex: 1; min-width: 70px; }
+  .venue-bar__value { font-size: 1.05rem; }
+  .seat { width: 28px; height: 28px; }
+  .seat-loveseat { width: 56px; }
+  .queue-filter__pill { padding: 5px 9px; font-size: 0.66rem; }
+}
+
+/* ═════════════════ MOVIE MANAGER OVERLAY ═════════════════ */
+.mm-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 22, 35, 0.78);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+.mm-overlay.is-open { display: flex; }
+.mm-shell {
+  width: 100%;
+  max-width: 1240px;
+  background: var(--bg-card, #fff);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.mm-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #0d1b3d, #1b2c5a);
+  color: #fff;
+}
+.mm-head h2 { font-size: 1.25rem; margin: 0; font-weight: 700; letter-spacing: 0.01em; }
+.mm-head__sub { font-size: 0.82rem; opacity: 0.78; margin-top: 2px; }
+.mm-close {
+  background: rgba(255,255,255,0.12);
+  color: #fff; border: 0;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background .15s;
+}
+.mm-close:hover { background: rgba(255,255,255,0.22); }
+
+.mm-tabs {
+  display: flex; gap: 4px;
+  padding: 0 24px;
+  background: var(--bg-card, #fff);
+  border-bottom: 1px solid var(--border, #e6e8ef);
+}
+.mm-tab {
+  padding: 12px 18px;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted, #6a7180);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.mm-tab:hover { color: var(--text, #0d1b3d); }
+.mm-tab.is-active { color: var(--gala-red, #CB262C); border-bottom-color: var(--gala-red, #CB262C); }
+
+.mm-body {
+  padding: 22px 24px 28px;
+  max-height: calc(100vh - 230px);
+  overflow-y: auto;
+  background: #f7f8fb;
+}
+
+/* — Auditorium matrix — */
+.mm-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.mm-aud {
+  background: #fff;
+  border: 1px solid #e3e6ee;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex; gap: 12px;
+  cursor: pointer;
+  transition: border-color .12s, transform .12s, box-shadow .12s;
+}
+.mm-aud:hover { border-color: var(--gala-red, #CB262C); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.06); }
+.mm-aud__poster {
+  width: 56px; height: 84px;
+  border-radius: 6px;
+  background: #e9ecf3 center/cover no-repeat;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  color: #b0b6c4;
+}
+.mm-aud__body { flex: 1; min-width: 0; }
+.mm-aud__title {
+  font-weight: 700; font-size: 0.95rem;
+  color: var(--text, #0d1b3d);
+  margin-bottom: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mm-aud__sub { font-size: 0.74rem; color: var(--text-muted, #6a7180); margin-bottom: 6px; }
+.mm-aud__chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem; font-weight: 600;
+  background: #fdeded; color: #a01f24;
+}
+.mm-aud__chip--late { background: #e7edff; color: #1b2c5a; }
+.mm-aud__chip--empty { background: #fff4e0; color: #8a5500; }
+.mm-aud__movie { font-size: 0.84rem; font-weight: 600; color: var(--text); margin-top: 4px; line-height: 1.2; }
+.mm-aud__movie-empty { font-size: 0.8rem; color: #b89400; font-style: italic; margin-top: 4px; }
+.mm-aud__times { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.mm-aud__metabadges { display: flex; gap: 5px; margin-top: 4px; }
+.mm-aud__metabadge {
+  display: inline-flex; padding: 2px 6px;
+  border-radius: 4px;
+  background: #eef0f5;
+  color: #2c3858;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.mm-aud__metabadge--rating { background: #0d1b3d; color: #fff; }
+.mm-aud--conflict { border-color: #cb262c; box-shadow: 0 0 0 2px rgba(203,38,44,0.18); }
+.mm-aud--tight { border-color: #d68900; }
+.mm-aud__conflict {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: #fdeded;
+  color: #a01f24;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 5px;
+}
+.mm-aud__conflict--tight { background: #fff4e0; color: #8a5500; }
+
+.mm-conflicts {
+  background: #fff;
+  border: 1px solid #f4c4c6;
+  border-left: 4px solid #cb262c;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+.mm-conflicts__head { font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; }
+.mm-conflicts__head--hard { color: #a01f24; }
+.mm-conflicts__head--tight { color: #8a5500; margin-top: 8px; }
+.mm-conflicts__item {
+  font-size: 0.8rem;
+  color: var(--text);
+  padding: 3px 0;
+}
+
+.mm-lib-item__badges { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+.mm-lib-item__badge {
+  display: inline-flex;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #eef0f5;
+  color: #2c3858;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.mm-lib-item__badge--ok { background: #dcf6e7; color: #166534; }
+.mm-lib-item__badge--warn { background: #fff4e0; color: #8a5500; }
+.mm-lib-item__actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.mm-assign__timeline {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  background: #f0f3f9;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.mm-assign__timeline:empty { display: none; }
+.mm-assign__timeline strong { color: #0d1b3d; }
+.mm-assign__timeline--warn {
+  background: #fdeded;
+  color: #a01f24;
+}
+.mm-assign__timeline--warn strong { color: #a01f24; }
+.mm-assign__timeline--tight {
+  background: #fff4e0;
+  color: #8a5500;
+}
+.mm-assign__timeline--tight strong { color: #8a5500; }
+
+.mm-section-title {
+  font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted, #6a7180);
+  margin: 4px 0 12px;
+}
+.mm-showing-block { margin-bottom: 26px; }
+
+/* — Library list — */
+.mm-lib-search {
+  display: flex; gap: 10px; margin-bottom: 16px;
+  align-items: center;
+}
+.mm-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d3d8e3;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+.mm-input:focus { outline: none; border-color: var(--gala-red, #CB262C); box-shadow: 0 0 0 3px rgba(203,38,44,0.12); }
+
+.mm-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.mm-result {
+  background: #fff;
+  border: 1px solid #e3e6ee;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .12s, transform .12s;
+  display: flex; flex-direction: column;
+}
+.mm-result:hover { border-color: var(--gala-red, #CB262C); transform: translateY(-2px); }
+.mm-result__poster {
+  width: 100%; aspect-ratio: 2/3;
+  background: #e9ecf3 center/cover no-repeat;
+  display: flex; align-items: center; justify-content: center;
+  color: #b0b6c4; font-size: 2rem;
+}
+.mm-result__body { padding: 10px 12px; }
+.mm-result__title { font-weight: 600; font-size: 0.86rem; line-height: 1.25; color: var(--text); }
+.mm-result__meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; }
+
+.mm-lib-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.mm-lib-item {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff;
+  border: 1px solid #e3e6ee;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.mm-lib-item__poster {
+  width: 40px; height: 60px;
+  border-radius: 5px;
+  background: #e9ecf3 center/cover no-repeat;
+  flex-shrink: 0;
+}
+.mm-lib-item__body { flex: 1; min-width: 0; }
+.mm-lib-item__title { font-weight: 600; font-size: 0.92rem; color: var(--text); }
+.mm-lib-item__meta { font-size: 0.78rem; color: var(--text-muted); }
+.mm-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid #d3d8e3;
+  background: #fff;
+  font-size: 0.82rem; font-weight: 600;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.mm-btn:hover { border-color: var(--gala-red, #CB262C); }
+.mm-btn--danger { color: #a01f24; border-color: #f4c4c6; }
+.mm-btn--danger:hover { background: #fdeded; border-color: #cb262c; }
+.mm-btn--primary {
+  background: var(--gala-red, #CB262C);
+  color: #fff; border-color: var(--gala-red, #CB262C);
+}
+.mm-btn--primary:hover { background: var(--gala-red-deep, #A01F24); border-color: var(--gala-red-deep, #A01F24); }
+.mm-btn--ghost { background: transparent; border-color: transparent; color: var(--text-muted); }
+.mm-btn--ghost:hover { background: #f0f2f7; color: var(--text); }
+.mm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.mm-empty {
+  text-align: center; padding: 28px 18px;
+  color: var(--text-muted, #6a7180);
+  font-size: 0.88rem;
+  background: #fff;
+  border: 1px dashed #d3d8e3;
+  border-radius: 10px;
+}
+
+/* Assignment modal (inner — over the overlay) */
+.mm-assign {
+  position: fixed; inset: 0;
+  background: rgba(15, 22, 35, 0.5);
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 20px;
+  z-index: 1100;
+}
+.mm-assign.is-open { display: flex; }
+.mm-assign__card {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%; max-width: 520px;
+  padding: 22px 24px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+.mm-assign__title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+.mm-assign__sub { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 16px; }
+.mm-assign__field { margin-bottom: 14px; }
+.mm-assign__label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+.mm-assign__select {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid #d3d8e3; border-radius: 8px;
+  font-size: 0.95rem; background: #fff;
+}
+.mm-assign__row { display: flex; gap: 10px; }
+.mm-assign__row > * { flex: 1; }
+.mm-assign__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+
+/* Mobile — overlay */
+@media (max-width: 720px) {
+  .mm-overlay { padding: 0; }
+  .mm-shell { border-radius: 0; max-height: 100vh; }
+  .mm-tabs { padding: 0 12px; overflow-x: auto; }
+  .mm-tab { padding: 12px 14px; font-size: 0.86rem; white-space: nowrap; }
+  .mm-body { padding: 16px 14px 22px; }
+  .mm-matrix { grid-template-columns: 1fr; }
+  .mm-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <a href="/gala-dashboard/" class="btn-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      Dashboard
+    </a>
+    <span class="top-bar__title">Seating Chart</span>
+  </div>
+  <div class="top-bar__controls">
+    <button class="btn" id="manage-movies-btn" title="Assign movies to auditoriums, search TMDB, edit library" style="background:linear-gradient(135deg,#CB262C,#A01F24);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(203,38,44,0.25);">🎬 Movies &amp; Auditoriums</button>
+    <button class="btn btn-secondary" id="export-btn">Export</button>
+    <button class="btn btn-secondary" id="clear-btn">Clear</button>
+  </div>
+</div>
+
+<!-- ═══ VENUE-WIDE STATS BAR ═══ -->
+<div class="venue-bar" id="venue-bar">
+  <div class="venue-bar__item">
+    <div class="venue-bar__value venue-bar__value--accent" id="venue-ticketed">—</div>
+    <div class="venue-bar__label">Ticketed Seats</div>
+  </div>
+  <div class="venue-bar__item">
+    <div class="venue-bar__value venue-bar__value--good" id="venue-assigned">—</div>
+    <div class="venue-bar__label">Assigned</div>
+  </div>
+  <div class="venue-bar__item">
+    <div class="venue-bar__value" id="venue-remaining">—</div>
+    <div class="venue-bar__label">Still to Place</div>
+  </div>
+  <div class="venue-bar__progress" title="Assignment progress">
+    <div class="venue-bar__progress-fill" id="venue-progress" style="width:0%"></div>
+  </div>
+  <div class="venue-bar__item">
+    <div class="venue-bar__value" id="venue-sponsors">—</div>
+    <div class="venue-bar__label">Sponsors Placed</div>
+  </div>
+  <div class="venue-bar__cta">
+    <button class="btn btn-secondary" id="unseated-btn" title="Export list of sponsors who still need seats">📋 Unseated CSV</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- ═══ LEFT: SPONSOR QUEUE PANEL ═══ -->
+  <aside class="queue-panel">
+    <div class="queue-panel__header">
+      <div class="queue-panel__title">
+        <span>Sponsor Queue</span>
+        <span class="queue-panel__count" id="queue-count">—</span>
+      </div>
+      <p class="queue-panel__sub"><strong>1.</strong> Click a sponsor below. <strong>2.</strong> Click seats to select · shift-click for a row range · drag a box to lasso. <strong>3.</strong> Hit <em>Assign</em> when ready.</p>
+    </div>
+
+    <input type="text" class="queue-search" id="queue-search" placeholder="Search company, contact..." autocomplete="off">
+
+    <div class="queue-filter" id="queue-filter">
+      <button class="queue-filter__pill active" data-filter="unseated">Unseated</button>
+      <button class="queue-filter__pill" data-filter="partial">Partial</button>
+      <button class="queue-filter__pill" data-filter="all">All</button>
+      <button class="queue-filter__pill" data-filter="Platinum">Platinum</button>
+      <button class="queue-filter__pill" data-filter="Gold">Gold</button>
+      <button class="queue-filter__pill" data-filter="Silver">Silver</button>
+      <button class="queue-filter__pill" data-filter="Bronze">Bronze</button>
+    </div>
+
+    <div class="queue-list" id="queue-list">
+      <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 20px;">Loading sponsors…</div>
+    </div>
+  </aside>
+
+  <!-- ═══ CENTER: CHART AREA ═══ -->
+  <div class="chart-area">
+    <div id="bulk-banner" class="bulk-banner">
+      <button class="bulk-banner__close" id="bulk-exit">Cancel</button>
+      <div id="bulk-banner-text">Placement mode active</div>
+    </div>
+
+    <!-- Showtime / Movie / Auditorium picker (mirrors the guest portal) -->
+    <div class="picker" id="admin-picker">
+      <div class="picker__step">
+        <div class="picker__label">1. Showtime</div>
+        <div class="picker__showtimes" id="picker-showtimes"></div>
+      </div>
+      <div class="picker__step">
+        <div class="picker__label">2. Movie</div>
+        <div class="picker__movies" id="picker-movies"></div>
+      </div>
+      <div class="picker__step">
+        <div class="picker__label">3. Auditorium</div>
+        <div class="picker__auds" id="picker-auds"></div>
+      </div>
+    </div>
+
+    <div class="screen"></div>
+    <div class="screen-label">Screen</div>
+    <div class="theater-map" id="theater-map"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <!-- ═══ SELECTION ACTION BAR (floats bottom-center when seats are picked) ═══ -->
+  <div id="selection-bar">
+    <div id="selection-count">0 selected</div>
+    <button class="selection-btn secondary" id="selection-clear" type="button">Clear</button>
+    <button class="selection-btn" id="selection-assign" type="button" disabled>Assign</button>
+  </div>
+
+  <!-- ═══ RIGHT: SIDEBAR ═══ -->
+  <div class="sidebar">
+    <h3>Auditorium Info</h3>
+    <div class="sidebar-stats">
+      <div class="sidebar-stat">
+        <div class="sidebar-stat__val" id="stat-total">--</div>
+        <div class="sidebar-stat__label">Total Seats</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat__val" id="stat-assigned">0</div>
+        <div class="sidebar-stat__label">Assigned</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat__val" id="stat-available">--</div>
+        <div class="sidebar-stat__label">Available</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat__val" id="stat-blocked">--</div>
+        <div class="sidebar-stat__label">Blocked</div>
+      </div>
+    </div>
+
+    <h3>Assignments</h3>
+    <ul class="assignment-list" id="assignment-list">
+      <li style="color: var(--text-muted); justify-content: center;">Click a seat to assign</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div class="seat-tooltip" id="tooltip"></div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Assign Modal -->
+<div class="modal-overlay" id="assign-modal">
+  <div class="modal">
+    <h2>Assign Seat</h2>
+    <p class="modal__sub" id="modal-seat-info"></p>
+    <div id="modal-placement-hint" class="placement-hint" style="display:none;"></div>
+    <div style="position:relative; margin-bottom: 12px;">
+      <input type="text" id="modal-guest-name" placeholder="Guest name (or select buyer below)" autocomplete="off" style="margin-bottom:0">
+      <div id="buyer-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:180px; overflow-y:auto; background:var(--navy-mid); border:1px solid var(--border); border-radius:0 0 var(--radius-sm) var(--radius-sm); z-index:600;"></div>
+    </div>
+    <select id="modal-buyer-select" style="width:100%; padding:10px 14px; background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-family:inherit; font-size:0.85rem; margin-bottom:16px; cursor:pointer;">
+      <option value="">— Link to ticket buyer (optional) —</option>
+    </select>
+    <div class="modal__actions">
+      <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+      <button class="btn btn-secondary" id="modal-multi" type="button" title="Pick a sponsor and select multiple seats at once" style="background:#14b8a6;border-color:#14b8a6;color:#fff;">Select multiple →</button>
+      <button class="btn btn-primary" id="modal-assign">Assign</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sponsor-picker">
+  <div class="modal" style="max-width:420px;max-height:70vh;display:flex;flex-direction:column;">
+    <h2>Select a sponsor</h2>
+    <p class="modal__sub">Then select multiple seats for them.</p>
+    <input type="text" id="sponsor-picker-search" placeholder="Search company, contact..." autocomplete="off" style="width:100%;padding:10px 12px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:0.9rem;margin:8px 0 12px;">
+    <div id="sponsor-picker-list" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);"></div>
+    <div class="modal__actions" style="margin-top:12px;">
+      <button class="btn btn-secondary" id="sponsor-picker-cancel" type="button">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOVIE & AUDITORIUM MANAGER OVERLAY ═══ -->
+<div class="mm-overlay" id="mm-overlay">
+  <div class="mm-shell">
+    <div class="mm-head">
+      <div>
+        <h2>Movies &amp; Auditoriums</h2>
+        <div class="mm-head__sub">Assign movies to auditoriums on the fly. Pull posters and metadata from TMDB. Edit anytime.</div>
+      </div>
+      <button class="mm-close" id="mm-close" aria-label="Close">×</button>
+    </div>
+    <div class="mm-tabs">
+      <button class="mm-tab is-active" data-mm-tab="auds">Auditoriums</button>
+      <button class="mm-tab" data-mm-tab="search">Add from TMDB</button>
+      <button class="mm-tab" data-mm-tab="library">Movie Library</button>
+    </div>
+    <div class="mm-body">
+      <!-- Auditoriums tab — matrix of all 14 auds × 2 showings -->
+      <div class="mm-pane" data-mm-pane="auds">
+        <div class="mm-conflicts" id="mm-conflicts" hidden></div>
+        <div class="mm-showing-block" data-showing="1">
+          <div class="mm-section-title">Showing 1 · Early (staggered: 4:00 / 4:30)</div>
+          <div class="mm-matrix" id="mm-matrix-1"></div>
+        </div>
+        <div class="mm-showing-block" data-showing="2">
+          <div class="mm-section-title">Showing 2 · Late (7:30 PM)</div>
+          <div class="mm-matrix" id="mm-matrix-2"></div>
+        </div>
+      </div>
+
+      <!-- TMDB search tab -->
+      <div class="mm-pane" data-mm-pane="search" hidden>
+        <div class="mm-lib-search">
+          <input type="text" class="mm-input" id="mm-search-input" placeholder="Search TMDB — try “Paddington”, “Mario”, “Wonka”…" autocomplete="off">
+          <button class="mm-btn mm-btn--ghost" id="mm-search-clear" type="button">Clear</button>
+        </div>
+        <div class="mm-results" id="mm-search-results">
+          <div class="mm-empty" style="grid-column:1/-1;">Type a movie title above to search.</div>
+        </div>
+      </div>
+
+      <!-- Library tab -->
+      <div class="mm-pane" data-mm-pane="library" hidden>
+        <div class="mm-section-title">Saved movies</div>
+        <div class="mm-lib-list" id="mm-library-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inner assignment dialog (assign a library movie to an aud+showing) -->
+  <div class="mm-assign" id="mm-assign">
+    <div class="mm-assign__card">
+      <div class="mm-assign__title" id="mm-assign-title">Assign movie</div>
+      <div class="mm-assign__sub" id="mm-assign-sub"></div>
+
+      <div class="mm-assign__field">
+        <label class="mm-assign__label" for="mm-assign-movie">Movie</label>
+        <select class="mm-assign__select" id="mm-assign-movie"></select>
+      </div>
+      <div class="mm-assign__row">
+        <div class="mm-assign__field">
+          <label class="mm-assign__label" for="mm-assign-dinner">Dinner time</label>
+          <input type="text" class="mm-assign__select" id="mm-assign-dinner" placeholder="3:45 PM">
+        </div>
+        <div class="mm-assign__field">
+          <label class="mm-assign__label" for="mm-assign-show">Show start</label>
+          <input type="text" class="mm-assign__select" id="mm-assign-show" placeholder="4:30 PM">
+        </div>
+      </div>
+      <div class="mm-assign__field">
+        <label class="mm-assign__label" for="mm-assign-trailer-min">Pre-roll (DEF intro video, min)</label>
+        <input type="number" min="0" max="60" class="mm-assign__select" id="mm-assign-trailer-min" placeholder="5">
+      </div>
+      <div class="mm-assign__timeline" id="mm-assign-timeline"></div>
+      <div class="mm-assign__actions">
+        <button class="mm-btn mm-btn--danger" id="mm-assign-clear" type="button">Clear assignment</button>
+        <button class="mm-btn mm-btn--ghost" id="mm-assign-cancel" type="button">Cancel</button>
+        <button class="mm-btn mm-btn--primary" id="mm-assign-save" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── State ── */
+let theaterData = null;
+let currentTheater = null;
+let assignments = {}; // { "theaterId:rowLabel:seatNum": { guest_name, sponsor_id } }
+let pendingSeat = null;
+let ticketBuyers = []; // cached from Monday.com
+
+// v2 key — previous key 'gala_seating_assignments' held demo assignments; new key
+// forces every browser to start from D1 truth on first load after this deploy.
+const STORAGE_KEY = 'gala_seating_assignments_v2';
+// Best-effort cleanup of the old demo cache so it doesn't linger.
+try { localStorage.removeItem('gala_seating_assignments'); } catch {}
+const USE_API = true; // D1 backend; falls back to localStorage if API unavailable
+
+/* ── Load saved assignments from localStorage (fallback cache) ── */
+try {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    const raw = JSON.parse(saved);
+    // Migrate old string-value format to object format
+    for (const [k, v] of Object.entries(raw)) {
+      assignments[k] = typeof v === 'string' ? { guest_name: v } : v;
+    }
+  }
+} catch {}
+
+function cacheToLocalStorage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(assignments)); } catch {}
+}
+
+function seatKey(theaterId, rowLabel, seatId) {
+  return `${theaterId}:${rowLabel}:${seatId}`;
+}
+
+// For display: loveseat halves are stored as "6L" / "6R" but shown as just "6"
+// (both halves of a pair share the same pair number — you must select both).
+function displaySeatNum(seatNum) {
+  if (typeof seatNum === 'string') {
+    const m = seatNum.match(/^(\d+)[LR]$/);
+    if (m) return m[1];
+  }
+  return String(seatNum);
+}
+
+function getGuestName(key) {
+  const a = assignments[key];
+  return a ? (typeof a === 'string' ? a : a.guest_name) : '';
+}
+
+/* ── API helpers ── */
+async function apiGet(theaterId) {
+  try {
+    const res = await fetch(`/api/gala/seating?theater_id=${theaterId}`, { credentials: 'same-origin' });
+    if (!res.ok) {
+      console.warn(`[seating] GET /api/gala/seating?theater_id=${theaterId} → ${res.status}`);
+      if (res.status === 401) {
+        toast({ type: 'error', title: 'Session expired', message: 'Reload the page and log in again.' });
+      }
+      return null;
+    }
+    const data = await res.json();
+    return data.assignments || [];
+  } catch (err) {
+    console.error('[seating] apiGet network error', err);
+    return null;
+  }
+}
+
+async function apiAssign(theaterId, rowLabel, seatNum, guestName, sponsorId) {
+  try {
+    const res = await fetch('/api/gala/seating', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theater_id: theaterId, row_label: rowLabel, seat_num: String(seatNum), guest_name: guestName, sponsor_id: sponsorId || null }),
+    });
+    return res.ok;
+  } catch { return false; }
+}
+
+async function apiUnassign(theaterId, rowLabel, seatNum) {
+  try {
+    const res = await fetch('/api/gala/seating', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ theater_id: theaterId, row_label: rowLabel, seat_num: String(seatNum) }),
+    });
+    return res.ok;
+  } catch { return false; }
+}
+
+/* ── Load assignments from D1 for a theater ── */
+async function loadAssignmentsFromAPI(theaterId) {
+  const rows = await apiGet(theaterId);
+  if (!rows) return; // API unavailable, keep localStorage data
+  // Clear existing assignments for this theater and reload from DB
+  for (const key in assignments) {
+    if (key.startsWith(theaterId + ':')) delete assignments[key];
+  }
+  for (const row of rows) {
+    const key = seatKey(row.theater_id, row.row_label, row.seat_num);
+    assignments[key] = {
+      guest_name: row.guest_name,
+      sponsor_id: row.sponsor_id || null,
+      dinner_choice: row.dinner_choice || '',
+    };
+  }
+  cacheToLocalStorage();
+}
+
+/* ── Load buyers from D1 sponsors (authoritative source) ── */
+async function loadTicketBuyers() {
+  try {
+    const res = await fetch('/api/gala/sponsors');
+    if (!res.ok) return;
+    const data = await res.json();
+    ticketBuyers = data.sponsors || [];
+    populateBuyerSelect();
+  } catch {}
+}
+
+function populateBuyerSelect() {
+  const sel = document.getElementById('modal-buyer-select');
+  sel.innerHTML = '<option value="">— Link to ticket buyer (optional) —</option>';
+  // Sort: buyers with seats remaining first, then alphabetical
+  const sorted = [...ticketBuyers].sort((a, b) => {
+    const aRem = (a.seatsRemaining ?? a.quantity ?? 0);
+    const bRem = (b.seatsRemaining ?? b.quantity ?? 0);
+    if ((aRem > 0) !== (bRem > 0)) return bRem - aRem;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+  sorted.forEach((b, i) => {
+    const remaining = b.seatsRemaining ?? b.quantity ?? 0;
+    const assigned = b.seatsAssigned ?? 0;
+    const total = b.quantity ?? 0;
+    const seatInfo = assigned > 0 ? `${assigned}/${total} seated` : `${total} seats`;
+    const label = `${b.name}${b.contact ? ' (' + b.contact + ')' : ''} — ${seatInfo} — ${b.paymentStatus || 'unpaid'}`;
+    const opt = document.createElement('option');
+    opt.value = b.id != null ? b.id : i;
+    opt.textContent = remaining === 0 ? `✓ ${label}` : label;
+    if (remaining === 0) opt.style.opacity = '0.5';
+    sel.appendChild(opt);
+  });
+}
+
+/* ── Load theater data + showtimes + movies ── */
+let pickerState = {
+  showtimes: [],
+  movies: [],
+  currentShowingNumber: 1,
+  currentMovieId: null,
+  currentTheaterId: null,
+};
+
+async function init() {
+  // Fetch layout JSON and showtimes/movies in parallel
+  const [layoutRes, moviesRes] = await Promise.all([
+    fetch('/data/theater-layouts.json'),
+    fetch('/api/gala/movies'),
+  ]);
+  theaterData = await layoutRes.json();
+  const moviesData = moviesRes.ok ? await moviesRes.json() : { movies: [], showtimes: [] };
+  pickerState.showtimes = moviesData.showtimes || [];
+  pickerState.movies = moviesData.movies || [];
+  pickerState.conflicts = moviesData.conflicts || [];
+  pickerState.default_trailers_minutes = moviesData.default_trailers_minutes ?? 5;
+  pickerState.messaging_minutes = moviesData.messaging_minutes ?? 0;
+  pickerState.turnover_minutes = moviesData.turnover_minutes ?? 30;
+  pickerState.showing_2_floor_minutes = moviesData.showing_2_floor_minutes ?? (19 * 60 + 30);
+  pickerState.showing_2_floor_label = moviesData.showing_2_floor_label || '7:30 PM';
+  pickerState.showing2_recommendations = moviesData.showing2_recommendations || {};
+
+  renderLegend();
+
+  // Seed picker defaults (earliest showing, first movie, first eligible aud)
+  seedPickerDefaults();
+
+  // Build picker and render initial theater
+  buildPicker();
+
+  const firstTheater = pickerState.currentTheaterId;
+  await Promise.all([
+    (USE_API && firstTheater) ? loadAssignmentsFromAPI(firstTheater) : Promise.resolve(),
+    loadTicketBuyers(),
+    loadVenueSummary(),
+  ]);
+  if (firstTheater) renderTheater(firstTheater);
+}
+
+/* ═══ PICKER LOGIC (ported from guest portal) ═══ */
+function fmtTime(input) {
+  if (!input) return '';
+  const raw = String(input).trim();
+  // 12-hour input: "4:30 PM" — already formatted, just clean up whitespace
+  const m12 = raw.match(/^(\d{1,2}):?(\d{2})?\s*([ap])\.?\s*m\.?$/i);
+  if (m12) {
+    const h = Number(m12[1]);
+    const min = Number(m12[2] || 0);
+    const ampm = m12[3].toLowerCase() === 'p' ? 'PM' : 'AM';
+    return `${h}:${String(min).padStart(2,'0')} ${ampm}`;
+  }
+  // 24-hour: "16:30"
+  const m24 = raw.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) {
+    const h = Number(m24[1]);
+    const min = Number(m24[2]);
+    if (isNaN(h) || isNaN(min)) return '';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(min).padStart(2,'0')} ${ampm}`;
+  }
+  return raw;
+}
+
+function seedPickerDefaults() {
+  const showings = [...new Set(pickerState.showtimes.map(s => s.showing_number))].sort();
+  pickerState.currentShowingNumber = showings[0] || 1;
+  autoSelectMovieAndAud();
+}
+
+function autoSelectMovieAndAud() {
+  const shows = pickerState.showtimes.filter(s => s.showing_number === pickerState.currentShowingNumber);
+  if (!shows.length) { pickerState.currentMovieId = null; pickerState.currentTheaterId = null; return; }
+  const keepMovie = pickerState.currentMovieId && shows.some(s => s.movie_id === pickerState.currentMovieId);
+  if (!keepMovie) {
+    const movieIds = [...new Set(shows.map(s => s.movie_id))];
+    pickerState.currentMovieId = movieIds[0];
+  }
+  const audsForMovie = shows.filter(s => s.movie_id === pickerState.currentMovieId).map(s => s.theater_id);
+  // Filter out staging-only auds; admin has no tier preference so sort by id.
+  const bookableIds = new Set(theaterData.theaters.filter(t => !t.staging).map(t => t.id));
+  const eligible = audsForMovie.filter(id => bookableIds.has(id)).sort((a,b) => a - b);
+  if (!eligible.includes(pickerState.currentTheaterId)) {
+    pickerState.currentTheaterId = eligible[0] || null;
+  }
+}
+
+function buildPicker() {
+  applyShowingTheme(pickerState.currentShowingNumber);
+  buildShowtimeStep();
+  buildMovieStep();
+  buildAudStep();
+}
+
+/* Theme flip: showing 1 = red, showing 2 = navy.
+   Sets body[data-showing] for CSS, and rewrites the in-memory luxury seat
+   color so JS-rendered seat backgrounds (set via element.style.background)
+   pick up the new color on next render. */
+function applyShowingTheme(num) {
+  const showing = (num === 2) ? 2 : 1;
+  document.body.dataset.showing = String(showing);
+  if (theaterData && theaterData.seatTypes && theaterData.seatTypes.luxury) {
+    theaterData.seatTypes.luxury.color = (showing === 2) ? '#1B3A4B' : '#CB262C';
+    if (document.getElementById('legend')) renderLegend();
+  }
+}
+
+function buildShowtimeStep() {
+  const el = document.getElementById('picker-showtimes');
+  if (!el) return;
+  el.innerHTML = '';
+  const showings = [...new Set(pickerState.showtimes.map(s => s.showing_number))].sort();
+  showings.forEach(num => {
+    const sample = pickerState.showtimes.find(s => s.showing_number === num);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'picker__showtime' + (num === pickerState.currentShowingNumber ? ' active' : '');
+    const label = num === 1 ? 'Early showing' : (num === 2 ? 'Late showing' : `Showing ${num}`);
+    btn.innerHTML = `
+      <span>${fmtTime(sample.show_start)}</span>
+      <span class="picker__showtime__sub">${label} · dinner ${fmtTime(sample.dinner_time)}</span>
+    `;
+    btn.onclick = async () => {
+      if (pickerState.currentShowingNumber === num) return;
+      pickerState.currentShowingNumber = num;
+      applyShowingTheme(num);
+      autoSelectMovieAndAud();
+      buildPicker();
+      await switchToCurrentAud();
+    };
+    el.appendChild(btn);
+  });
+}
+
+function buildMovieStep() {
+  const el = document.getElementById('picker-movies');
+  if (!el) return;
+  el.innerHTML = '';
+  const shows = pickerState.showtimes.filter(s => s.showing_number === pickerState.currentShowingNumber);
+  if (!shows.length) {
+    el.innerHTML = '<div class="picker__empty">No movies configured for this showtime.</div>';
+    return;
+  }
+  const seen = new Set();
+  const movies = [];
+  shows.forEach(s => {
+    if (seen.has(s.movie_id)) return;
+    seen.add(s.movie_id);
+    movies.push(s);
+  });
+  const bookableIds = new Set(theaterData.theaters.filter(t => !t.staging).map(t => t.id));
+  movies.forEach(m => {
+    const audsForMovie = shows.filter(s => s.movie_id === m.movie_id && bookableIds.has(s.theater_id));
+    const totalCap = audsForMovie.reduce((sum, a) => sum + (a.capacity || 0), 0);
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'picker__movie' + (m.movie_id === pickerState.currentMovieId ? ' active' : '');
+    const movieRow = pickerState.movies.find(mm => mm.id === m.movie_id) || {};
+    const poster = movieRow.poster_url || m.movie_poster;
+    const rating = movieRow.rating || m.movie_rating;
+    const runtime = movieRow.runtime_minutes || m.movie_runtime || m.runtime_minutes;
+    const endLabel = m.show_end_label;
+
+    card.innerHTML = `
+      <div class="picker__movie__poster" ${poster ? `style="background-image:url('${escapeHtml(poster)}');"` : ''}>
+        ${poster ? '' : '<span class="picker__movie__poster-fallback">🎬</span>'}
+      </div>
+      <div class="picker__movie__body">
+        <div class="picker__movie__title">${escapeHtml(m.movie_title || '(untitled)')}</div>
+        <div class="picker__movie__badges">
+          ${rating ? `<span class="picker__movie__badge picker__movie__badge--rating">${escapeHtml(rating)}</span>` : ''}
+          ${runtime ? `<span class="picker__movie__badge">${runtime} min</span>` : ''}
+        </div>
+        <div class="picker__movie__meta">
+          ${endLabel ? `Ends ~${escapeHtml(endLabel)} · ` : ''}${audsForMovie.length} aud${audsForMovie.length===1?'':'s'} · ${totalCap} seats
+        </div>
+      </div>
+    `;
+    card.onclick = async () => {
+      if (pickerState.currentMovieId === m.movie_id) return;
+      pickerState.currentMovieId = m.movie_id;
+      autoSelectMovieAndAud();
+      buildPicker();
+      await switchToCurrentAud();
+    };
+    el.appendChild(card);
+  });
+}
+
+function buildAudStep() {
+  const el = document.getElementById('picker-auds');
+  if (!el) return;
+  el.innerHTML = '';
+  const bookableIds = new Set(theaterData.theaters.filter(t => !t.staging).map(t => t.id));
+  const audIds = pickerState.showtimes
+    .filter(s => s.showing_number === pickerState.currentShowingNumber && s.movie_id === pickerState.currentMovieId)
+    .map(s => s.theater_id)
+    .filter(id => bookableIds.has(id))
+    .sort((a,b) => a - b);
+  if (!audIds.length) {
+    el.innerHTML = '<div class="picker__empty">No auditoriums assigned to this movie.</div>';
+    return;
+  }
+  audIds.forEach(id => {
+    const t = theaterData.theaters.find(x => x.id === id);
+    if (!t) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'picker__aud' + (id === pickerState.currentTheaterId ? ' active' : '');
+    btn.textContent = `Aud ${t.id} · ${t.totalSeats} seats`;
+    btn.onclick = async () => {
+      if (pickerState.currentTheaterId === id) return;
+      pickerState.currentTheaterId = id;
+      buildAudStep();
+      await switchToCurrentAud();
+    };
+    el.appendChild(btn);
+  });
+}
+
+async function switchToCurrentAud() {
+  const tid = pickerState.currentTheaterId;
+  if (!tid) return;
+  if (USE_API) await loadAssignmentsFromAPI(tid);
+  renderTheater(tid);
+}
+
+/* ── Render Legend ── */
+function renderLegend() {
+  const legend = document.getElementById('legend');
+  const types = theaterData.seatTypes;
+  // Collect types actually used in bookable (non-staging) theaters
+  const usedTypes = new Set();
+  theaterData.theaters.filter(t => !t.staging).forEach(t => {
+    t.rows.forEach(r => {
+      if (r.type && r.type !== 'mixed') usedTypes.add(r.type);
+      if (r.segments) r.segments.forEach(seg => { if (seg.type && seg.type !== 'gap') usedTypes.add(seg.type); });
+    });
+  });
+  let html = '';
+  for (const [key, info] of Object.entries(types)) {
+    if (!usedTypes.has(key)) continue;
+    html += `<div class="legend-item"><div class="legend-swatch" style="background: ${info.color};"></div>${info.label}</div>`;
+  }
+  html += `<div class="legend-item"><div class="legend-swatch" style="background: var(--green);"></div>Assigned</div>`;
+  legend.innerHTML = html;
+}
+
+/* ── Render Theater (column-aligned grid renderer) ──
+   The layout JSON now carries `cols` arrays (1-indexed track numbers)
+   on each segment / uniform row. We build a CSS Grid where every
+   spreadsheet column = one grid track. Same column # across rows
+   ⇒ vertical alignment. Aisles fall out as empty tracks. */
+function renderTheater(id) {
+  const theater = theaterData.theaters.find(t => t.id === id);
+  if (!theater) return;
+  currentTheater = theater;
+
+  const map = document.getElementById('theater-map');
+  map.innerHTML = '';
+
+  let totalSeats = 0;
+  let blockedCount = 0;
+
+  // Determine column track count for this theater. Falls back to walking
+  // the segments if minCol/maxCol aren't present (safety net for old data).
+  let trackCount = 0;
+  if (theater.maxCol && theater.minCol != null) {
+    trackCount = theater.maxCol - theater.minCol + 1;
+  } else {
+    theater.rows.forEach(row => {
+      if (row.segments) {
+        row.segments.forEach(seg => {
+          if (seg.cols) trackCount = Math.max(trackCount, ...seg.cols);
+        });
+      } else if (row.cols) {
+        trackCount = Math.max(trackCount, ...row.cols);
+      }
+    });
+  }
+  // Set the row-template once per theater on the map element so all rows share it
+  // Format: [label] [N tracks] [label]
+  const trackTpl = `var(--label-w) repeat(${trackCount}, var(--seat-w)) var(--label-w)`;
+
+  theater.rows.forEach(row => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'seat-row';
+    rowEl.style.gridTemplateColumns = trackTpl;
+
+    // Row label (left) — track 1
+    const labelL = document.createElement('div');
+    labelL.className = 'row-label';
+    labelL.style.gridColumn = '1';
+    labelL.textContent = row.label;
+    rowEl.appendChild(labelL);
+
+    // Helper: seats start at grid track 2 (after the label)
+    const trackOf = c => (c + 1);
+
+    // Walk segments / numbers and place seats at their column tracks
+    if (row.type === 'mixed' && row.segments) {
+      // Loveseats are paired in the source data: consecutive seats inside
+      // a loveseat segment get fused into one seat-loveseat-pair element
+      // that spans two adjacent grid tracks. Other types render as single
+      // seats at their assigned track.
+      row.segments.forEach(seg => {
+        if (seg.type === 'gap' || seg.type === 'aisle' || !seg.cols) return;
+        const seats = seg.seats || [];
+        const cols  = seg.cols  || [];
+
+        if (seg.type === 'loveseat') {
+          for (let i = 0; i < seats.length; i += 2) {
+            const leftNum  = seats[i];
+            const rightNum = seats[i + 1];
+            const leftCol  = cols[i];
+            const rightCol = cols[i + 1];
+            if (rightNum === undefined || rightCol == null) {
+              // Lone loveseat half — render as a single seat
+              const el = createSeat(theater.id, row.label, leftNum, 'loveseat');
+              el.style.gridColumn = String(trackOf(leftCol));
+              rowEl.appendChild(el);
+              totalSeats++;
+              continue;
+            }
+            const leftKey  = seatKey(theater.id, row.label, leftNum);
+            const rightKey = seatKey(theater.id, row.label, rightNum);
+            const pair = document.createElement('div');
+            pair.className = 'seat-loveseat-pair';
+            // Span 2 tracks: leftCol .. rightCol (rightCol should be leftCol+1)
+            pair.style.gridColumn = `${trackOf(leftCol)} / span 2`;
+            const leftEl  = createSeat(theater.id, row.label, leftNum,  'loveseat', false, { half: 'left',  pairKey: rightKey });
+            const rightEl = createSeat(theater.id, row.label, rightNum, 'loveseat', false, { half: 'right', pairKey: leftKey  });
+            pair.appendChild(leftEl);
+            pair.appendChild(rightEl);
+            rowEl.appendChild(pair);
+            totalSeats += 2;
+          }
+        } else {
+          // Standard segment: each seat at its own track
+          for (let i = 0; i < seats.length; i++) {
+            const num = seats[i];
+            const col = cols[i];
+            if (col == null) continue;
+            const el = createSeat(theater.id, row.label, num, seg.type);
+            el.style.gridColumn = String(trackOf(col));
+            rowEl.appendChild(el);
+            if (seg.type === 'blocked') blockedCount++;
+            else totalSeats++;
+          }
+        }
+      });
+    } else {
+      // Uniform row: numbers + cols arrays
+      const numbers = row.numbers || [];
+      const cols    = row.cols    || [];
+      const blocked = row.blocked || [];
+      const blockedSet = new Set(blocked);
+      const isLoveseat = row.type === 'loveseat';
+
+      if (isLoveseat) {
+        // Pair every two consecutive numbers
+        for (let i = 0; i < numbers.length; i += 2) {
+          const leftNum  = numbers[i];
+          const rightNum = numbers[i + 1];
+          const leftCol  = cols[i];
+          const rightCol = cols[i + 1];
+          if (rightNum === undefined || rightCol == null) {
+            const type = blockedSet.has(leftNum) ? 'blocked' : 'loveseat';
+            const el = createSeat(theater.id, row.label, leftNum, type);
+            if (leftCol != null) el.style.gridColumn = String(trackOf(leftCol));
+            rowEl.appendChild(el);
+            if (type === 'blocked') blockedCount++; else totalSeats++;
+            continue;
+          }
+          const leftKey  = seatKey(theater.id, row.label, leftNum);
+          const rightKey = seatKey(theater.id, row.label, rightNum);
+          const bothBlocked = blockedSet.has(leftNum) && blockedSet.has(rightNum);
+          const pair = document.createElement('div');
+          pair.className = 'seat-loveseat-pair';
+          pair.style.gridColumn = `${trackOf(leftCol)} / span 2`;
+          if (bothBlocked) {
+            pair.appendChild(createSeat(theater.id, row.label, leftNum, 'blocked'));
+            pair.appendChild(createSeat(theater.id, row.label, rightNum, 'blocked'));
+            blockedCount += 2;
+          } else {
+            const leftEl  = createSeat(theater.id, row.label, leftNum,  'loveseat', false, { half: 'left',  pairKey: rightKey });
+            const rightEl = createSeat(theater.id, row.label, rightNum, 'loveseat', false, { half: 'right', pairKey: leftKey  });
+            pair.appendChild(leftEl);
+            pair.appendChild(rightEl);
+            totalSeats += 2;
+          }
+          rowEl.appendChild(pair);
+        }
+      } else {
+        for (let i = 0; i < numbers.length; i++) {
+          const num = numbers[i];
+          const col = cols[i];
+          if (col == null) continue;
+          const isBlocked = blockedSet.has(num);
+          const type = isBlocked ? 'blocked' : (row.type || 'standard');
+          const el = createSeat(theater.id, row.label, num, type, false);
+          el.style.gridColumn = String(trackOf(col));
+          rowEl.appendChild(el);
+          if (isBlocked) blockedCount++;
+          else totalSeats++;
+        }
+      }
+    }
+
+    // Row label (right) — last track
+    const labelR = document.createElement('div');
+    labelR.className = 'row-label';
+    labelR.style.gridColumn = String(trackCount + 2);
+    labelR.textContent = row.label;
+    rowEl.appendChild(labelR);
+
+    map.appendChild(rowEl);
+  });
+
+  updateStats(totalSeats, blockedCount);
+  updateAssignmentList();
+  // Scale the chart to fit narrow viewports so rows don't require horizontal panning.
+  requestAnimationFrame(fitMapToViewport);
+}
+
+/* ── Auto-fit the seat chart to viewport width (mobile) ── */
+function fitMapToViewport() {
+  const map = document.getElementById('theater-map');
+  const chart = document.querySelector('.chart-area');
+  if (!map || !chart) return;
+  // Only fit on narrow viewports (match the CSS breakpoint)
+  if (window.innerWidth > 900) {
+    map.style.setProperty('--fit-scale', 1);
+    map.style.setProperty('--map-height', '0px');
+    return;
+  }
+  // Temporarily reset scale so we measure the intrinsic width
+  map.style.setProperty('--fit-scale', 1);
+  const mapWidth = map.scrollWidth;
+  const available = chart.clientWidth - 16; // a little breathing room
+  const scale = Math.min(1, available / Math.max(mapWidth, 1));
+  map.style.setProperty('--fit-scale', scale);
+  // Compensate for the layout gap transform creates
+  const mapHeight = map.getBoundingClientRect().height;
+  map.style.setProperty('--map-height', mapHeight + 'px');
+}
+
+// Re-fit on resize and orientation changes
+window.addEventListener('resize', () => requestAnimationFrame(fitMapToViewport));
+window.addEventListener('orientationchange', () => setTimeout(fitMapToViewport, 150));
+
+/* ── Create Seat Element ── */
+function createSeat(theaterId, rowLabel, seatNum, type, isLoveseat, halfInfo = null) {
+  const el = document.createElement('div');
+  const color = theaterData.seatTypes[type]?.color || '#6c757d';
+  const key = seatKey(theaterId, rowLabel, seatNum);
+  const assignment = assignments[key];
+  const isAssigned = !!assignment;
+  const isBlocked = type === 'blocked';
+
+  // Tier color class if assigned and tier-known (from venue summary placement lookup)
+  let tierCls = '';
+  if (isAssigned && assignment.sponsor_id) {
+    const sp = allSponsors.find(s => s.id === assignment.sponsor_id);
+    if (sp && sp.tier) tierCls = ' tier-' + sp.tier.replace(/[^a-zA-Z]/g, '');
+  }
+
+  const halfCls = halfInfo ? ` seat-loveseat-half seat-loveseat-half--${halfInfo.half}` : '';
+  el.className = 'seat' + (isLoveseat ? ' seat-loveseat' : '') + halfCls + (isAssigned ? ' assigned' : '') + (isBlocked ? ' blocked' : '') + tierCls;
+  el.style.background = isAssigned ? '' : color;
+  el.dataset.key = key;
+  el.dataset.row = rowLabel;
+  el.dataset.seat = seatNum;
+  el.dataset.type = type;
+  if (halfInfo) {
+    el.dataset.pair = halfInfo.pairKey;
+    el.dataset.half = halfInfo.half;
+  }
+
+  if (!isBlocked) {
+    el.addEventListener('click', async (e) => {
+      // If a lasso-drag just ended, swallow this click
+      if (lassoJustEnded) { lassoJustEnded = false; return; }
+      // If bulk/placement mode active → route to manual multi-select
+      if (bulkMode.active) {
+        if (e.shiftKey) {
+          selectSeatRange(key);
+        } else if (halfInfo) {
+          togglePairSelection(key, halfInfo.pairKey);
+        } else {
+          toggleSeatSelection(key);
+        }
+        return;
+      }
+      openAssignModal(key, rowLabel, seatNum, type);
+    });
+  }
+
+  // Tooltip
+  el.addEventListener('mouseenter', (e) => {
+    const tooltip = document.getElementById('tooltip');
+    const label = theaterData.seatTypes[type]?.label || type;
+    const guest = getGuestName(key);
+    tooltip.textContent = `Row ${rowLabel}, Seat ${displaySeatNum(seatNum)} (${label})${guest ? ' — ' + guest : ''}`;
+    tooltip.classList.add('visible');
+    tooltip.style.left = e.clientX + 12 + 'px';
+    tooltip.style.top = e.clientY - 30 + 'px';
+  });
+
+  el.addEventListener('mousemove', (e) => {
+    const tooltip = document.getElementById('tooltip');
+    tooltip.style.left = e.clientX + 12 + 'px';
+    tooltip.style.top = e.clientY - 30 + 'px';
+  });
+
+  el.addEventListener('mouseleave', () => {
+    document.getElementById('tooltip').classList.remove('visible');
+  });
+
+  return el;
+}
+
+/* ── Assign Modal ── */
+function openAssignModal(key, rowLabel, seatNum, type) {
+  pendingSeat = key;
+  const label = theaterData.seatTypes[type]?.label || type;
+  document.getElementById('modal-seat-info').textContent = `Row ${rowLabel}, Seat ${displaySeatNum(seatNum)} — ${label}`;
+  const input = document.getElementById('modal-guest-name');
+  input.value = getGuestName(key);
+  document.getElementById('modal-buyer-select').value = '';
+  document.getElementById('assign-modal').classList.add('visible');
+  setTimeout(() => input.focus(), 50);
+}
+
+/* ── Buyer select auto-fills guest name ── */
+document.getElementById('modal-buyer-select').addEventListener('change', function() {
+  const id = this.value;
+  if (id === '') return;
+  const buyer = ticketBuyers.find(b => String(b.id) === String(id));
+  if (buyer) {
+    document.getElementById('modal-guest-name').value = buyer.contact || buyer.name;
+  }
+});
+
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  document.getElementById('assign-modal').classList.remove('visible');
+  pendingSeat = null;
+});
+
+document.getElementById('modal-assign').addEventListener('click', doAssign);
+
+/* ── "Select multiple →" on the Assign Seat modal: opens sponsor picker, ── */
+/* ──  closes the modal, enters placement mode with THIS seat pre-picked. ── */
+document.getElementById('modal-multi').addEventListener('click', () => {
+  if (!pendingSeat) return;
+  // Capture the seat the user tapped, close the single-seat modal
+  const seedKey = pendingSeat;
+  document.getElementById('assign-modal').classList.remove('visible');
+  pendingSeat = null;
+  openSponsorPicker(seedKey);
+});
+
+function openSponsorPicker(seedKey) {
+  const picker = document.getElementById('sponsor-picker');
+  const searchEl = document.getElementById('sponsor-picker-search');
+  searchEl.value = '';
+  renderSponsorPickerList(seedKey, '');
+  picker.classList.add('visible');
+  setTimeout(() => searchEl.focus(), 60);
+  searchEl.oninput = () => renderSponsorPickerList(seedKey, searchEl.value);
+}
+
+function renderSponsorPickerList(seedKey, filter) {
+  const list = document.getElementById('sponsor-picker-list');
+  const q = (filter || '').toLowerCase();
+  const candidates = (allSponsors || [])
+    .filter(s => s.seatsRemaining > 0)
+    .filter(s =>
+      !q ||
+      (s.company || '').toLowerCase().includes(q) ||
+      (s.contact || '').toLowerCase().includes(q)
+    )
+    .sort((a, b) => (TIER_PRIORITY[a.tier] || 99) - (TIER_PRIORITY[b.tier] || 99) ||
+                    (a.company || '').localeCompare(b.company || ''));
+
+  if (!candidates.length) {
+    list.innerHTML = `<div style="padding:24px 16px;text-align:center;color:var(--muted);font-size:0.85rem;">${q ? 'No matches.' : 'All sponsors are fully seated.'}</div>`;
+    return;
+  }
+
+  list.innerHTML = candidates.slice(0, 200).map(s => `
+    <button type="button" data-id="${s.id}" style="width:100%;text-align:left;padding:11px 14px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="min-width:0;flex:1;">
+        <div style="font-weight:600;color:var(--navy);font-size:0.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.company)}</div>
+        <div style="font-size:0.75rem;color:var(--muted);">${escapeHtml(s.contact || '')} · <strong>${s.seatsRemaining}</strong> to place</div>
+      </div>
+      <span class="${tierBadgeClass(s.tier)}" style="flex-shrink:0;">${escapeHtml(s.tier || '—')}</span>
+    </button>
+  `).join('');
+
+  list.querySelectorAll('button[data-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.dataset.id);
+      const sponsor = allSponsors.find(s => s.id === id);
+      if (!sponsor) return;
+      document.getElementById('sponsor-picker').classList.remove('visible');
+      // Enter placement mode and pre-seed the seat they already tapped
+      enterBulkMode(sponsor);
+      selection.add(seedKey);
+      updateSeatVisuals();
+      updateSelectionBar();
+    });
+  });
+}
+
+document.getElementById('sponsor-picker-cancel').addEventListener('click', () => {
+  document.getElementById('sponsor-picker').classList.remove('visible');
+});
+document.getElementById('sponsor-picker').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('visible');
+});
+
+document.getElementById('modal-guest-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doAssign();
+  if (e.key === 'Escape') {
+    document.getElementById('assign-modal').classList.remove('visible');
+    pendingSeat = null;
+  }
+});
+
+async function doAssign() {
+  const name = document.getElementById('modal-guest-name').value.trim();
+  if (!pendingSeat) return;
+
+  const parts = pendingSeat.split(':');
+  const theaterId = Number(parts[0]);
+  const rowLabel = parts[1];
+  const seatNum = parts[2];
+
+  // Get linked sponsor info
+  const buyerId = document.getElementById('modal-buyer-select').value;
+  const buyer = buyerId !== '' ? ticketBuyers.find(b => String(b.id) === String(buyerId)) : null;
+  const sponsorId = buyer?.id || null;
+
+  if (name) {
+    // Assign via API, fall back to local
+    if (USE_API) await apiAssign(theaterId, rowLabel, seatNum, name, sponsorId);
+    assignments[pendingSeat] = { guest_name: name, sponsor_id: sponsorId };
+  } else {
+    // Unassign via API
+    if (USE_API) await apiUnassign(theaterId, rowLabel, seatNum);
+    delete assignments[pendingSeat];
+  }
+
+  cacheToLocalStorage();
+  document.getElementById('assign-modal').classList.remove('visible');
+
+  // Update seat visual
+  const seatEl = document.querySelector(`[data-key="${pendingSeat}"]`);
+  if (seatEl) {
+    if (name) {
+      seatEl.classList.add('assigned');
+      seatEl.style.background = '';
+    } else {
+      seatEl.classList.remove('assigned');
+      seatEl.style.background = theaterData.seatTypes[seatEl.dataset.type]?.color || '#6c757d';
+    }
+  }
+
+  pendingSeat = null;
+  updateStats();
+  updateAssignmentList();
+  // Refresh the sponsor queue + venue bar (non-blocking)
+  loadVenueSummary();
+}
+
+/* ── Stats ── */
+function updateStats(total, blocked) {
+  if (total !== undefined) {
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-blocked').textContent = blocked;
+  }
+
+  const theaterId = currentTheater?.id;
+  if (!theaterId) return;
+
+  let assignedCount = 0;
+  for (const key in assignments) {
+    if (key.startsWith(theaterId + ':')) assignedCount++;
+  }
+
+  const totalVal = parseInt(document.getElementById('stat-total').textContent) || 0;
+  document.getElementById('stat-assigned').textContent = assignedCount;
+  document.getElementById('stat-available').textContent = totalVal - assignedCount;
+}
+
+/* Dinner options — mirrors /api/gala/dinner. */
+const DINNER_OPTIONS = [
+  { id: 'brisket',    label: 'Hot brisket french dip', short: 'Brisket' },
+  { id: 'turkey',     label: 'Cold turkey sandwich',   short: 'Turkey'  },
+  { id: 'veggie',     label: 'Veggie salad',           short: 'Veggie'  },
+  { id: 'kids',       label: 'Kids meal',              short: 'Kids'    },
+  { id: 'glutenfree', label: 'Gluten-free',            short: 'GF'      },
+];
+
+async function adminSetDinnerChoice(theaterId, rowLabel, seatNum, dinner) {
+  const showing = pickerState.currentShowingNumber || 1;
+  try {
+    const res = await fetch('/api/gala/dinner', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        theater_id: theaterId,
+        showing_number: showing,
+        row_label: rowLabel,
+        seat_num: String(seatNum),
+        dinner_choice: dinner || null,
+      }),
+    });
+    return res.ok;
+  } catch (_) { return false; }
+}
+
+/* ── Assignment List ── */
+function updateAssignmentList() {
+  const list = document.getElementById('assignment-list');
+  const theaterId = currentTheater?.id;
+  if (!theaterId) return;
+
+  const entries = Object.entries(assignments)
+    .filter(([k]) => k.startsWith(theaterId + ':'))
+    .sort((a, b) => a[0].localeCompare(b[0]));
+
+  if (!entries.length) {
+    list.innerHTML = '<li style="color: var(--text-muted); justify-content: center;">Click a seat to assign</li>';
+    return;
+  }
+
+  // Dinner summary header for the current auditorium
+  const counts = { brisket: 0, turkey: 0, veggie: 0, kids: 0, glutenfree: 0, _none: 0 };
+  for (const [, val] of entries) {
+    const dc = (val && typeof val === 'object') ? (val.dinner_choice || '') : '';
+    if (counts[dc] !== undefined) counts[dc] += 1;
+    else counts._none += 1;
+  }
+  const summaryParts = DINNER_OPTIONS
+    .filter(o => counts[o.id] > 0)
+    .map(o => `${o.short} ${counts[o.id]}`);
+  if (counts._none > 0) summaryParts.push(`<span style="color:var(--gala-red);">No dinner ${counts._none}</span>`);
+  const summaryHtml = summaryParts.length
+    ? `<li class="assignment-list__summary">${summaryParts.join(' · ')}</li>`
+    : '';
+
+  list.innerHTML = summaryHtml + entries.map(([key, val]) => {
+    const parts = key.split(':');
+    const seatLabel = `${parts[1]}${parts[2]}`;
+    const name = typeof val === 'string' ? val : val.guest_name;
+    const dinner = (typeof val === 'object' && val) ? (val.dinner_choice || '') : '';
+    const opts = ['<option value="">— dinner —</option>']
+      .concat(DINNER_OPTIONS.map(o =>
+        `<option value="${o.id}"${o.id === dinner ? ' selected' : ''}>${o.short}</option>`
+      ))
+      .join('');
+    return `<li>
+      <span><span class="assignment-list__seat">${seatLabel}</span> ${name}</span>
+      <span class="assignment-list__actions">
+        <select class="assignment-list__dinner" data-key="${key}" aria-label="Dinner for ${seatLabel}">${opts}</select>
+        <button class="assignment-list__remove" data-key="${key}" title="Remove">&times;</button>
+      </span>
+    </li>`;
+  }).join('');
+
+  // Wire dinner dropdown change handlers
+  list.querySelectorAll('.assignment-list__dinner').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const key = sel.dataset.key;
+      const parts = key.split(':');
+      const newVal = sel.value;
+      // Optimistically update local
+      if (assignments[key] && typeof assignments[key] === 'object') {
+        assignments[key].dinner_choice = newVal;
+      }
+      cacheToLocalStorage();
+      const ok = await adminSetDinnerChoice(Number(parts[0]), parts[1], parts[2], newVal);
+      if (!ok) {
+        // Revert UI on failure
+        sel.value = (assignments[key] && assignments[key].dinner_choice) || '';
+        alert('Could not save dinner choice. Make sure the seat is fully assigned (not just held).');
+        return;
+      }
+      // Refresh the summary header without re-rendering the whole list
+      updateAssignmentList();
+    });
+  });
+}
+
+document.getElementById('assignment-list').addEventListener('click', async e => {
+  const btn = e.target.closest('.assignment-list__remove');
+  if (!btn) return;
+  const key = btn.dataset.key;
+  const parts = key.split(':');
+
+  if (USE_API) await apiUnassign(Number(parts[0]), parts[1], parts[2]);
+  delete assignments[key];
+  cacheToLocalStorage();
+
+  const seatEl = document.querySelector(`[data-key="${key}"]`);
+  if (seatEl) {
+    seatEl.classList.remove('assigned');
+    seatEl.style.background = theaterData.seatTypes[seatEl.dataset.type]?.color || '#6c757d';
+  }
+
+  updateStats();
+  updateAssignmentList();
+  loadVenueSummary();
+});
+
+/* ── Export CSV ── */
+document.getElementById('export-btn').addEventListener('click', () => {
+  if (USE_API) {
+    // Use server-side export for full data
+    window.location.href = '/api/gala/seating?export=true';
+    return;
+  }
+  const theaterId = currentTheater?.id;
+  const theaterName = currentTheater?.name || 'Unknown';
+  const entries = Object.entries(assignments)
+    .filter(([k]) => k.startsWith(theaterId + ':'))
+    .sort((a, b) => a[0].localeCompare(b[0]));
+
+  let csv = 'Theater,Row,Seat,Guest\n';
+  entries.forEach(([key, val]) => {
+    const parts = key.split(':');
+    const name = typeof val === 'string' ? val : val.guest_name;
+    csv += `"${theaterName}","${parts[1]}","${parts[2]}","${name.replace(/"/g, '""')}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `seating-${theaterName.replace(/\s+/g, '-').toLowerCase()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ── Clear All ── */
+document.getElementById('clear-btn').addEventListener('click', async () => {
+  if (!confirm('Clear all assignments for this auditorium?')) return;
+  const theaterId = currentTheater?.id;
+  const keysToRemove = Object.keys(assignments).filter(k => k.startsWith(theaterId + ':'));
+
+  if (USE_API) {
+    for (const key of keysToRemove) {
+      const parts = key.split(':');
+      await apiUnassign(Number(parts[0]), parts[1], parts[2]);
+    }
+  }
+
+  for (const key of keysToRemove) delete assignments[key];
+  cacheToLocalStorage();
+  renderTheater(theaterId);
+  loadVenueSummary();
+});
+
+/* ── Close modal on overlay click ── */
+document.getElementById('assign-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) {
+    e.currentTarget.classList.remove('visible');
+    pendingSeat = null;
+  }
+});
+
+/* ═════════════════════════════════════════════════════════════════ */
+/* ═══ SPONSOR QUEUE + BULK ASSIGN + VENUE STATS ═══    */
+/* ═════════════════════════════════════════════════════════════════ */
+
+let allSponsors = [];
+let venueSummary = null;
+let queueFilter = 'unseated';
+let queueSearch = '';
+let bulkMode = { active: false, sponsor: null };
+
+const TIER_PRIORITY = {
+  'Platinum': 1,
+  'Cell Phone': 2,
+  'Gold': 3,
+  'Silver': 4,
+  'Bronze': 5,
+  'Friends and Family': 6,
+  'Split Friends & Family': 7,
+  'Individual Seats': 8,
+  'Indivudial Tickets': 8,
+  'Trade': 9,
+  'Foundation Guest': 9,
+  'Winner': 10,
+  'Individual': 10,
+};
+
+/* Tier → recommended theaters (closest to screen / largest / best view)
+   Note: Auds 11 and 14 are staging-only and excluded. */
+const TIER_RECOMMENDED_THEATERS = {
+  'Platinum': [8, 7, 12],       // biggest theaters, center
+  'Cell Phone': [8, 7, 12],
+  'Gold': [7, 8, 12, 5, 9],
+  'Silver': [5, 9, 12, 4, 2],
+  'Bronze': [2, 1, 4, 12],
+  'Friends and Family': [3, 6, 10, 13],
+  'Split Friends & Family': [3, 6, 10, 13],
+  'Individual Seats': [3, 6, 10, 13],
+  'Indivudial Tickets': [3, 6, 10, 13],
+};
+
+function tierBadgeClass(tier) {
+  if (!tier) return 'tier-badge--Other';
+  // Strip punctuation and spaces for class name
+  const safe = tier.replace(/[^a-zA-Z]/g, '');
+  return `tier-badge tier-badge--${safe}`;
+}
+
+/* ═══ TOAST SYSTEM ═══ */
+function toast({ type = 'info', title, message, duration = 3500 }) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast--${type}`;
+  const icon = { success: '✓', error: '✗', info: 'ℹ' }[type] || 'ℹ';
+  el.innerHTML = `
+    <div class="toast__icon">${icon}</div>
+    <div class="toast__body">
+      ${title ? `<div class="toast__title">${title}</div>` : ''}
+      <div>${message}</div>
+    </div>
+  `;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.3s, transform 0.3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+/* ═══ VENUE STATS ═══ */
+async function loadVenueSummary() {
+  try {
+    const res = await fetch('/api/gala/seating-summary');
+    if (!res.ok) return;
+    venueSummary = await res.json();
+    allSponsors = venueSummary.sponsors || [];
+    renderVenueBar();
+    renderSponsorQueue();
+  } catch (e) {
+    console.error('Failed to load venue summary', e);
+  }
+}
+
+function renderVenueBar() {
+  if (!venueSummary) return;
+  const t = venueSummary.totals;
+  document.getElementById('venue-ticketed').textContent = t.ticketedSeats.toLocaleString();
+  document.getElementById('venue-assigned').textContent = t.assignedSeats.toLocaleString();
+  document.getElementById('venue-remaining').textContent = t.remainingToPlace.toLocaleString();
+
+  const placed = t.sponsorsCount - t.sponsorsUnseated;
+  document.getElementById('venue-sponsors').textContent = `${placed} / ${t.sponsorsCount}`;
+
+  const pct = t.ticketedSeats ? (t.assignedSeats / t.ticketedSeats) * 100 : 0;
+  document.getElementById('venue-progress').style.width = `${pct}%`;
+}
+
+/* ═══ SPONSOR QUEUE ═══ */
+function filteredSponsors() {
+  let list = [...allSponsors];
+
+  // Filter
+  if (queueFilter === 'unseated') list = list.filter(s => s.seatsAssigned === 0 && s.seatsPurchased > 0);
+  else if (queueFilter === 'partial') list = list.filter(s => s.seatsAssigned > 0 && s.seatsRemaining > 0);
+  else if (['Platinum','Gold','Silver','Bronze'].includes(queueFilter)) {
+    list = list.filter(s => s.tier === queueFilter);
+  }
+
+  // Search
+  if (queueSearch) {
+    const q = queueSearch.toLowerCase();
+    list = list.filter(s =>
+      (s.company || '').toLowerCase().includes(q) ||
+      (s.contact || '').toLowerCase().includes(q)
+    );
+  }
+
+  // Sort: tier priority, then remaining seats desc, then alpha
+  list.sort((a, b) => {
+    const ap = TIER_PRIORITY[a.tier] || 99;
+    const bp = TIER_PRIORITY[b.tier] || 99;
+    if (ap !== bp) return ap - bp;
+    if (b.seatsRemaining !== a.seatsRemaining) return b.seatsRemaining - a.seatsRemaining;
+    return (a.company || '').localeCompare(b.company || '');
+  });
+
+  return list;
+}
+
+function renderSponsorQueue() {
+  const list = filteredSponsors();
+  const container = document.getElementById('queue-list');
+  document.getElementById('queue-count').textContent = list.length;
+
+  if (!list.length) {
+    container.innerHTML = `<div style="color: var(--text-muted); font-size:0.8rem; text-align:center; padding:20px;">No sponsors match.</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(s => {
+    const fullySeated = s.seatsRemaining === 0 && s.seatsPurchased > 0;
+    const pctAssigned = s.seatsPurchased ? (s.seatsAssigned / s.seatsPurchased) * 100 : 0;
+    const isSelected = bulkMode.active && bulkMode.sponsor?.id === s.id;
+    const seatsClass = fullySeated ? 'sponsor-card__seats--done' : (s.seatsAssigned > 0 ? 'sponsor-card__seats--low' : '');
+    return `
+      <div class="sponsor-card ${fullySeated ? 'fully-seated' : ''} ${isSelected ? 'selected' : ''}" data-id="${s.id}">
+        <div class="sponsor-card__header">
+          <div class="sponsor-card__name" title="${escapeHtml(s.company)}">${escapeHtml(s.company)}</div>
+          <span class="${tierBadgeClass(s.tier)}">${escapeHtml(s.tier || '—')}</span>
+        </div>
+        ${s.contact ? `<div class="sponsor-card__contact">${escapeHtml(s.contact)}</div>` : ''}
+        <div class="sponsor-card__meta">
+          <div class="sponsor-card__seats ${seatsClass}">
+            <strong>${s.seatsAssigned}</strong>/${s.seatsPurchased} seated
+            ${s.seatsRemaining > 0 ? `· <strong style="color:var(--pink-neon);">${s.seatsRemaining} to place</strong>` : ''}
+          </div>
+        </div>
+        ${s.seatsPurchased > 0 ? `
+          <div class="sponsor-card__remaining-bar">
+            <div class="sponsor-card__remaining-fill" style="width:${pctAssigned}%"></div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  // Wire click handlers
+  container.querySelectorAll('.sponsor-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = Number(card.dataset.id);
+      const sponsor = allSponsors.find(s => s.id === id);
+      if (!sponsor) return;
+      if (sponsor.seatsRemaining === 0) {
+        toast({ type: 'info', message: `${sponsor.company} is fully seated (${sponsor.seatsAssigned} seats).` });
+        return;
+      }
+      enterBulkMode(sponsor);
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+/* ═══ MANUAL PLACEMENT MODE (click to toggle, shift-click range, drag lasso) ═══ */
+
+/* Selection state */
+let selection = new Set();       // set of seat keys pending assignment
+let lastClickedKey = null;       // for shift-click range anchor
+let lassoJustEnded = false;      // swallow the click that fires after a drag
+let lassoDrag = null;            // { startX, startY, box }
+const LASSO_THRESHOLD = 4;       // px of movement before a drag becomes a lasso
+
+function enterBulkMode(sponsor) {
+  bulkMode = { active: true, sponsor };
+  document.body.classList.add('bulk-mode');
+  selection.clear();
+  lastClickedKey = null;
+  updateSelectionBar();
+  updateBulkBanner();
+  renderSponsorQueue();
+  // On mobile, drop the user into the chart (not back to the queue).
+  // On desktop, keep the selected sponsor card centered in the queue column.
+  setTimeout(() => {
+    if (window.innerWidth <= 900) {
+      const chart = document.querySelector('.chart-area');
+      if (chart) chart.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      const el = document.querySelector(`.sponsor-card[data-id="${sponsor.id}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 50);
+  toast({
+    type: 'info',
+    title: `Placing ${sponsor.company}`,
+    message: window.innerWidth <= 900
+      ? `Tap seats to select. Then hit Assign at the bottom.`
+      : `Click seats to select. Shift-click for a range. Drag a box to lasso. Then hit Assign.`,
+  });
+}
+
+function exitBulkMode() {
+  bulkMode = { active: false, sponsor: null };
+  document.body.classList.remove('bulk-mode');
+  document.getElementById('bulk-banner').classList.remove('active');
+  selection.clear();
+  lastClickedKey = null;
+  updateSeatVisuals();
+  updateSelectionBar();
+  renderSponsorQueue();
+}
+
+function updateBulkBanner() {
+  if (!bulkMode.active || !bulkMode.sponsor) return;
+  const sponsor = bulkMode.sponsor;
+  const rec = TIER_RECOMMENDED_THEATERS[sponsor.tier];
+  const recText = rec ? ` · Tier usually seats in Aud <strong>${rec.join(', ')}</strong>` : '';
+  document.getElementById('bulk-banner-text').innerHTML = `
+    <div style="font-size:0.92rem; margin-bottom:3px;">Placing <strong>${escapeHtml(sponsor.company)}</strong> · <span class="${tierBadgeClass(sponsor.tier)}" style="vertical-align:middle;">${escapeHtml(sponsor.tier || '—')}</span> · <strong>${sponsor.seatsRemaining}</strong> to place</div>
+    <div style="font-size:0.78rem; opacity:0.92;">Click seats to toggle · Shift-click for row range · Drag a box to lasso${recText}</div>
+  `;
+  document.getElementById('bulk-banner').classList.add('active');
+}
+
+/* Toggle a single seat in the selection */
+function toggleSeatSelection(key) {
+  if (!bulkMode.active || !bulkMode.sponsor) return;
+  const sponsor = bulkMode.sponsor;
+  if (assignments[key]) {
+    toast({ type: 'error', message: 'That seat is already assigned. Remove it from the Assignments panel first.' });
+    return;
+  }
+  if (selection.has(key)) {
+    selection.delete(key);
+  } else {
+    if (selection.size >= sponsor.seatsRemaining) {
+      toast({ type: 'error', message: `${sponsor.company} only needs ${sponsor.seatsRemaining} seat${sponsor.seatsRemaining===1?'':'s'}. Clear one first or hit Assign.` });
+      return;
+    }
+    selection.add(key);
+  }
+  lastClickedKey = key;
+  updateSeatVisuals();
+  updateSelectionBar();
+}
+
+/* Toggle a loveseat pair — add or remove BOTH halves atomically.
+   Loveseats are a single piece of furniture; selecting one half commits
+   the other automatically. Counts as 2 toward the sponsor's cap. */
+function togglePairSelection(keyA, keyB) {
+  if (!bulkMode.active || !bulkMode.sponsor) return;
+  const sponsor = bulkMode.sponsor;
+
+  if (assignments[keyA] || assignments[keyB]) {
+    toast({ type: 'error', message: 'That loveseat is already assigned. Remove it from the Assignments panel first.' });
+    return;
+  }
+
+  const bothSelected = selection.has(keyA) && selection.has(keyB);
+  if (bothSelected) {
+    selection.delete(keyA);
+    selection.delete(keyB);
+  } else {
+    // Need room for 2 in the cap (the pair).
+    const already = (selection.has(keyA) ? 1 : 0) + (selection.has(keyB) ? 1 : 0);
+    const need = 2 - already;
+    if (selection.size + need > sponsor.seatsRemaining) {
+      toast({ type: 'error', message: `Loveseat seats 2 people. ${sponsor.company} only has room for ${sponsor.seatsRemaining - selection.size} more. Clear a seat first or pick a single.` });
+      return;
+    }
+    selection.add(keyA);
+    selection.add(keyB);
+  }
+  lastClickedKey = keyA;
+  updateSeatVisuals();
+  updateSelectionBar();
+}
+
+/* Shift-click range (within the same row). Falls back to single toggle if cross-row. */
+function selectSeatRange(endKey) {
+  if (!bulkMode.active || !bulkMode.sponsor) return;
+  if (!lastClickedKey) { toggleSeatSelection(endKey); return; }
+  const [t1, r1, s1] = lastClickedKey.split(':');
+  const [t2, r2, s2] = endKey.split(':');
+  if (t1 !== t2 || r1 !== r2) { toggleSeatSelection(endKey); return; }
+  const theater = theaterData.theaters.find(tt => tt.id === Number(t1));
+  const row = theater?.rows.find(rr => rr.label === r1);
+  if (!row) return;
+  const seatList = getSeatNumbersInRow(row).filter(s => s.type !== 'gap' && s.type !== 'blocked');
+  const i1 = seatList.findIndex(s => String(s.num) === s1);
+  const i2 = seatList.findIndex(s => String(s.num) === s2);
+  if (i1 === -1 || i2 === -1) return;
+  const [lo, hi] = i1 < i2 ? [i1, i2] : [i2, i1];
+  const sponsor = bulkMode.sponsor;
+  let addedAny = false, skippedAssigned = 0;
+  for (let i = lo; i <= hi; i++) {
+    if (selection.size >= sponsor.seatsRemaining) break;
+    const k = seatKey(t1, r1, seatList[i].num);
+    if (assignments[k]) { skippedAssigned++; continue; }
+    if (!selection.has(k)) { selection.add(k); addedAny = true; }
+  }
+  lastClickedKey = endKey;
+  if (skippedAssigned > 0) {
+    toast({ type: 'info', message: `Skipped ${skippedAssigned} already-assigned seat${skippedAssigned===1?'':'s'} in that range.` });
+  }
+  updateSeatVisuals();
+  updateSelectionBar();
+}
+
+/* Paint selected class on DOM (idempotent) */
+function updateSeatVisuals() {
+  document.querySelectorAll('.seat.seat--selected').forEach(el => el.classList.remove('seat--selected'));
+  selection.forEach(key => {
+    const el = document.querySelector(`[data-key="${CSS.escape(key)}"]`);
+    if (el) el.classList.add('seat--selected');
+  });
+}
+
+/* Update the sticky bottom action bar */
+function updateSelectionBar() {
+  const bar = document.getElementById('selection-bar');
+  if (!bulkMode.active || !bulkMode.sponsor) { bar.classList.remove('active'); return; }
+  const sponsor = bulkMode.sponsor;
+  const count = selection.size;
+  document.getElementById('selection-count').innerHTML =
+    `<strong>${count}</strong> of <strong>${sponsor.seatsRemaining}</strong> selected for <strong>${escapeHtml(sponsor.company)}</strong>`;
+  document.getElementById('selection-assign').disabled = count === 0;
+  if (count === 0 && !bulkMode.active) {
+    bar.classList.remove('active');
+  } else {
+    bar.classList.add('active');
+  }
+}
+
+/* Clear pending selection (keeps sponsor active) */
+function clearSelection() {
+  selection.clear();
+  lastClickedKey = null;
+  updateSeatVisuals();
+  updateSelectionBar();
+}
+
+/* Commit selection → POST to D1 */
+async function commitSelection() {
+  if (!bulkMode.active || !bulkMode.sponsor || selection.size === 0) return;
+  const sponsor = bulkMode.sponsor;
+  const assignBtn = document.getElementById('selection-assign');
+  assignBtn.disabled = true;
+  assignBtn.textContent = 'Assigning…';
+
+  // Group by theater (selection can span rows/theaters, but API wants one theater per call)
+  const byTheater = {};
+  for (const key of selection) {
+    const [t, rowLabel, seatNum] = key.split(':');
+    (byTheater[t] = byTheater[t] || []).push({ row_label: rowLabel, seat_num: seatNum });
+  }
+
+  let totalPlaced = 0, failedAny = false;
+  const failureDetails = [];
+  for (const [theaterIdStr, items] of Object.entries(byTheater)) {
+    const theaterId = Number(theaterIdStr);
+    const payload = { theater_id: theaterId, sponsor_id: sponsor.id, assignments: items };
+    console.log('[seating] POST /api/gala/seating-bulk', payload);
+    try {
+      const res = await fetch('/api/gala/seating-bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload),
+      });
+      let data = null;
+      try { data = await res.json(); }
+      catch (_parseErr) { data = { error: `HTTP ${res.status} — non-JSON response` }; }
+      console.log('[seating] ← response', res.status, data);
+
+      if (!res.ok) {
+        failedAny = true;
+        failureDetails.push({ theaterId, status: res.status, error: data?.error || `HTTP ${res.status}` });
+        toast({ type: 'error', title: `Save failed (${res.status})`, message: data?.error || 'Check console for details.' });
+        continue;
+      }
+
+      // 200 but server reports zero successes — treat as failure so selection is preserved
+      const succeeded = Number(data.succeeded || 0);
+      if (succeeded === 0 && items.length > 0) {
+        failedAny = true;
+        const firstFailErr = data.failed?.[0]?.error || 'server accepted request but saved no seats';
+        failureDetails.push({ theaterId, status: 200, error: firstFailErr });
+        toast({ type: 'error', title: 'Save rejected by server', message: firstFailErr });
+        continue;
+      }
+
+      // Success — update local assignments map from the server's echo
+      (data.seats || []).forEach(s => {
+        const k = seatKey(theaterId, s.row_label, s.seat_num);
+        assignments[k] = { guest_name: s.guest_name, sponsor_id: sponsor.id, tier: sponsor.tier };
+      });
+      totalPlaced += succeeded;
+
+      // Report any partial failures even on success path
+      if (Array.isArray(data.failed) && data.failed.length) {
+        failureDetails.push(...data.failed.map(f => ({ theaterId, status: 200, error: f.error, row: f.row, seat: f.seat })));
+        toast({ type: 'info', title: `${data.failed.length} seat${data.failed.length===1?'':'s'} skipped`, message: data.failed[0].error });
+      }
+    } catch (err) {
+      failedAny = true;
+      failureDetails.push({ theaterId, status: 'network', error: err.message });
+      console.error('[seating] network error', err);
+      toast({ type: 'error', title: 'Network error', message: err.message });
+    }
+  }
+
+  // On ANY failure, preserve the selection so the user can retry.
+  // Only clear the set when every requested seat persisted.
+  if (!failedAny) {
+    selection.clear();
+    lastClickedKey = null;
+  }
+
+  cacheToLocalStorage();
+  if (currentTheater) renderTheater(currentTheater.id);
+  await loadVenueSummary();
+  updateStats();
+  updateAssignmentList();
+  updateSeatVisuals();
+
+  const updated = allSponsors.find(s => s.id === sponsor.id);
+  if (updated && updated.seatsRemaining > 0) {
+    bulkMode.sponsor = updated;
+    updateBulkBanner();
+    updateSelectionBar();
+    if (!failedAny && totalPlaced > 0) {
+      toast({ type: 'success', title: `${totalPlaced} seat${totalPlaced===1?'':'s'} placed`, message: `${sponsor.company} still needs ${updated.seatsRemaining} more.` });
+    }
+  } else if (!failedAny) {
+    exitBulkMode();
+    toast({ type: 'success', title: `${sponsor.company} fully seated`, message: `${totalPlaced} seat${totalPlaced===1?'':'s'} placed.` });
+  } else {
+    // Failure with no remaining seats: keep them in bulk mode so they can retry
+    updateSelectionBar();
+  }
+
+  if (failureDetails.length) {
+    console.warn('[seating] save details:', failureDetails);
+  }
+
+  assignBtn.disabled = selection.size === 0;
+  assignBtn.textContent = 'Assign';
+}
+
+/* Wire banner/bar buttons + keyboard */
+document.getElementById('bulk-exit').addEventListener('click', exitBulkMode);
+document.getElementById('selection-clear').addEventListener('click', clearSelection);
+document.getElementById('selection-assign').addEventListener('click', commitSelection);
+document.addEventListener('keydown', e => {
+  if (!bulkMode.active) return;
+  if (e.key === 'Escape') {
+    if (selection.size > 0) { clearSelection(); }
+    else { exitBulkMode(); }
+  }
+  if ((e.key === 'Enter' || e.key === 'Return') && selection.size > 0 && !e.target.matches('input,textarea,select')) {
+    e.preventDefault();
+    commitSelection();
+  }
+});
+
+/* ═══ DRAG LASSO ═══ */
+(function wireLasso() {
+  const map = document.getElementById('theater-map');
+  if (!map) return;
+
+  map.addEventListener('mousedown', (e) => {
+    if (!bulkMode.active) return;
+    if (e.button !== 0) return;                       // only left-click
+    if (e.target.closest('.seat')) return;            // let seat clicks pass through
+    lassoDrag = { startX: e.clientX, startY: e.clientY, box: null, moved: false };
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!lassoDrag) return;
+    const dx = e.clientX - lassoDrag.startX;
+    const dy = e.clientY - lassoDrag.startY;
+    if (!lassoDrag.moved && Math.hypot(dx, dy) < LASSO_THRESHOLD) return;
+    if (!lassoDrag.moved) {
+      lassoDrag.moved = true;
+      lassoDrag.box = document.createElement('div');
+      lassoDrag.box.className = 'lasso-box';
+      document.body.appendChild(lassoDrag.box);
+    }
+    const x = Math.min(lassoDrag.startX, e.clientX);
+    const y = Math.min(lassoDrag.startY, e.clientY);
+    lassoDrag.box.style.left = x + 'px';
+    lassoDrag.box.style.top = y + 'px';
+    lassoDrag.box.style.width = Math.abs(dx) + 'px';
+    lassoDrag.box.style.height = Math.abs(dy) + 'px';
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (!lassoDrag) return;
+    if (lassoDrag.moved && lassoDrag.box) {
+      const rect = lassoDrag.box.getBoundingClientRect();
+      const sponsor = bulkMode.sponsor;
+      let addedCount = 0, capped = false;
+
+      // First pass: find every candidate seat (or loveseat-pair) whose center
+      // falls inside the lasso box. Loveseats are treated as a single unit
+      // costing 2 against the cap; either half being inside pulls both in.
+      const pairsSeen = new Set();  // tracks pairs already queued
+      const queue = [];  // [{ keys: [k] | [kA, kB] }]
+      document.querySelectorAll('.seat:not(.blocked)').forEach(el => {
+        if (el.classList.contains('assigned')) return;
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        if (cx < rect.left || cx > rect.right || cy < rect.top || cy > rect.bottom) return;
+        const key = el.dataset.key;
+        if (!key) return;
+
+        const pairKey = el.dataset.pair;
+        if (pairKey) {
+          // Loveseat half. Dedupe by pair.
+          const pairId = [key, pairKey].sort().join('|');
+          if (pairsSeen.has(pairId)) return;
+          pairsSeen.add(pairId);
+          if (selection.has(key) && selection.has(pairKey)) return;
+          if (assignments[key] || assignments[pairKey]) return;
+          queue.push({ keys: [key, pairKey] });
+        } else {
+          if (selection.has(key)) return;
+          queue.push({ keys: [key] });
+        }
+      });
+
+      // Second pass: add to selection, honoring the cap
+      for (const item of queue) {
+        const cost = item.keys.filter(k => !selection.has(k)).length;
+        if (selection.size + cost > sponsor.seatsRemaining) { capped = true; break; }
+        item.keys.forEach(k => selection.add(k));
+        addedCount += cost;
+      }
+
+      lassoDrag.box.remove();
+      updateSeatVisuals();
+      updateSelectionBar();
+      if (capped) {
+        toast({ type: 'info', message: `Lasso capped at ${sponsor.seatsRemaining} — ${sponsor.company}'s seat limit.` });
+      } else if (addedCount > 0) {
+        toast({ type: 'info', message: `+${addedCount} seat${addedCount===1?'':'s'} from lasso.`, duration: 1500 });
+      }
+      lassoJustEnded = true;
+      setTimeout(() => { lassoJustEnded = false; }, 100);
+    }
+    lassoDrag = null;
+  });
+})();
+
+/* Normalize a row config into seat array { num, type } */
+function getSeatNumbersInRow(row) {
+  if (row.numbers && Array.isArray(row.numbers)) {
+    if (row.type === 'loveseat') {
+      // Loveseat numbers already include the L/R half suffix in the JSON.
+      // Each entry (e.g. "6L", "6R") is one half of a pair; both are needed
+      // for range-select to hit both halves of a pair.
+      return row.numbers.map(n => ({ num: String(n), type: 'loveseat' }));
+    }
+    return row.numbers.map(n => ({ num: n, type: row.type || 'standard' }));
+  }
+  if (row.segments && Array.isArray(row.segments)) {
+    const seats = [];
+    for (const seg of row.segments) {
+      if (seg.type === 'gap') {
+        seats.push({ num: '_gap', type: 'gap' });
+        continue;
+      }
+      if (seg.seats && Array.isArray(seg.seats)) {
+        seg.seats.forEach(s => seats.push({ num: s, type: seg.type }));
+      } else if (seg.count) {
+        for (let i = 0; i < seg.count; i++) {
+          seats.push({ num: `${seg.type[0].toUpperCase()}${i+1}`, type: seg.type });
+        }
+      }
+    }
+    return seats;
+  }
+  return [];
+}
+
+/* ═══ VENUE-WIDE DATA ═══ */
+async function refreshAll() {
+  await loadVenueSummary();
+  if (currentTheater) {
+    await loadAssignmentsFromAPI(currentTheater.id);
+    renderTheater(currentTheater.id);
+  }
+}
+
+/* ═══ QUEUE FILTERING ═══ */
+document.getElementById('queue-filter').addEventListener('click', e => {
+  const pill = e.target.closest('.queue-filter__pill');
+  if (!pill) return;
+  document.querySelectorAll('#queue-filter .queue-filter__pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  queueFilter = pill.dataset.filter;
+  renderSponsorQueue();
+});
+
+document.getElementById('queue-search').addEventListener('input', e => {
+  queueSearch = e.target.value;
+  renderSponsorQueue();
+});
+
+/* ═══ UNSEATED CSV EXPORT ═══ */
+document.getElementById('unseated-btn').addEventListener('click', () => {
+  if (!allSponsors.length) {
+    toast({ type: 'info', message: 'Still loading — try again in a moment.' });
+    return;
+  }
+  const unseated = allSponsors.filter(s => s.seatsRemaining > 0)
+    .sort((a, b) => (TIER_PRIORITY[a.tier] || 99) - (TIER_PRIORITY[b.tier] || 99));
+  const header = ['Priority','Company','Contact','Tier','Seats Purchased','Seats Assigned','Seats Remaining','Payment Status'];
+  const rows = unseated.map((s, i) => [
+    i + 1,
+    s.company,
+    s.contact || '',
+    s.tier || '',
+    s.seatsPurchased,
+    s.seatsAssigned,
+    s.seatsRemaining,
+    s.paymentStatus || '',
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gala-unseated-sponsors-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast({ type: 'success', title: 'CSV downloaded', message: `${unseated.length} unseated sponsor${unseated.length===1?'':'s'} exported.` });
+});
+
+/* ═══════════════════════════════════════════════════
+   MOVIE & AUDITORIUM MANAGER
+   ═══════════════════════════════════════════════════ */
+const SHOWING_LABEL = { 1: 'Early · 4:00 / 4:30', 2: 'Late · 7:30 PM' };
+const SHOWING_DEFAULTS = {
+  1: { dinner_time: '3:45 PM', show_start: '4:30 PM' },
+  2: { dinner_time: '6:45 PM', show_start: '7:30 PM' },
+};
+
+const mmState = {
+  theaters: [],          // from theater-layouts.json
+  searchAbort: null,     // AbortController for in-flight search
+  searchTimer: null,     // debounce
+  pending: null,         // current assign-modal context: { theater_id, showing_number }
+};
+
+function mmGetTheaters() {
+  if (mmState.theaters.length) return mmState.theaters;
+  // theater-layouts data is already loaded into pickerState.layouts (or fetch here)
+  if (pickerState && pickerState.layouts && pickerState.layouts.theaters) {
+    mmState.theaters = pickerState.layouts.theaters;
+  } else if (theaterData && theaterData.theaters) {
+    mmState.theaters = theaterData.theaters;
+  }
+  return mmState.theaters;
+}
+
+function mmTheaterById(id) {
+  return mmGetTheaters().find(t => t.id === id) || null;
+}
+
+function mmShowtimeFor(theaterId, showingNumber) {
+  return (pickerState.showtimes || []).find(
+    s => s.theater_id === theaterId && s.showing_number === showingNumber
+  ) || null;
+}
+
+function mmMovieById(id) {
+  return (pickerState.movies || []).find(m => m.id === id) || null;
+}
+
+/* ─── Open / close overlay ─── */
+function mmOpen(tab) {
+  document.getElementById('mm-overlay').classList.add('is-open');
+  if (tab) mmSwitchTab(tab);
+  mmRenderMatrix();
+  mmRenderLibrary();
+}
+function mmClose() {
+  document.getElementById('mm-overlay').classList.remove('is-open');
+  mmCloseAssign();
+}
+function mmSwitchTab(name) {
+  document.querySelectorAll('.mm-tab').forEach(t => {
+    t.classList.toggle('is-active', t.dataset.mmTab === name);
+  });
+  document.querySelectorAll('.mm-pane').forEach(p => {
+    p.hidden = p.dataset.mmPane !== name;
+  });
+}
+
+/* ─── Render auditorium matrix (per showing) ─── */
+function mmRenderMatrix() {
+  const theaters = mmGetTheaters();
+  const conflicts = pickerState.conflicts || [];
+  const conflictByTheater = {};
+  for (const c of conflicts) conflictByTheater[c.theater_id] = c;
+
+  // Conflict banner above the matrices
+  const banner = document.getElementById('mm-conflicts');
+  if (banner) {
+    const hardConflicts = conflicts.filter(c => !c.ok);
+    const tightConflicts = conflicts.filter(c => c.ok && c.tight);
+    if (!hardConflicts.length && !tightConflicts.length) {
+      banner.hidden = true;
+      banner.innerHTML = '';
+    } else {
+      banner.hidden = false;
+      const parts = [];
+      if (hardConflicts.length) {
+        parts.push(`<div class="mm-conflicts__head mm-conflicts__head--hard">⚠ ${hardConflicts.length} overlap${hardConflicts.length===1?'':'s'} between showings</div>`);
+        for (const c of hardConflicts) {
+          const t = theaters.find(x => x.id === c.theater_id);
+          parts.push(`<div class="mm-conflicts__item">${escapeHtml(t?.name || 'Aud ' + c.theater_id)} · ${escapeHtml(c.message)}</div>`);
+        }
+      }
+      if (tightConflicts.length) {
+        parts.push(`<div class="mm-conflicts__head mm-conflicts__head--tight">⏱ ${tightConflicts.length} tight turnaround${tightConflicts.length===1?'':'s'}</div>`);
+        for (const c of tightConflicts) {
+          const t = theaters.find(x => x.id === c.theater_id);
+          parts.push(`<div class="mm-conflicts__item">${escapeHtml(t?.name || 'Aud ' + c.theater_id)} · ${escapeHtml(c.message)}</div>`);
+        }
+      }
+      banner.innerHTML = parts.join('');
+    }
+  }
+
+  for (const showing of [1, 2]) {
+    const root = document.getElementById(`mm-matrix-${showing}`);
+    if (!root) continue;
+    if (!theaters.length) {
+      root.innerHTML = '<div class="mm-empty" style="grid-column:1/-1;">Loading auditoriums…</div>';
+      continue;
+    }
+    root.innerHTML = '';
+    for (const t of theaters) {
+      const st = mmShowtimeFor(t.id, showing);
+      const movie = st && st.movie_id ? mmMovieById(st.movie_id) : null;
+      const conflict = conflictByTheater[t.id];
+
+      const card = document.createElement('div');
+      card.className = 'mm-aud';
+      if (conflict && !conflict.ok) card.classList.add('mm-aud--conflict');
+      else if (conflict && conflict.tight) card.classList.add('mm-aud--tight');
+      card.dataset.theaterId = t.id;
+      card.dataset.showing = showing;
+
+      const posterStyle = movie && movie.poster_url
+        ? `background-image:url('${escapeHtml(movie.poster_url)}');`
+        : '';
+      const posterFallback = (!movie || !movie.poster_url) ? '🎬' : '';
+
+      const chipClass = showing === 2 ? 'mm-aud__chip--late' : '';
+      const chipLabel = SHOWING_LABEL[showing];
+
+      const movieLine = movie
+        ? `<div class="mm-aud__movie">${escapeHtml(movie.title)}${movie.year ? ` · ${movie.year}` : ''}</div>`
+        : `<div class="mm-aud__movie-empty">⚠ Unassigned — click to set</div>`;
+
+      // Build times line with end time
+      let timesLine = '';
+      if (st && (st.dinner_time || st.show_start)) {
+        const start = st.show_start ? fmtTime(st.show_start) : '—';
+        const dinner = st.dinner_time ? fmtTime(st.dinner_time) : '—';
+        const end = st.show_end_label || '';
+        timesLine = `<div class="mm-aud__times">Dinner ${escapeHtml(dinner)} · Show ${escapeHtml(start)}${end ? ` → <strong>${escapeHtml(end)}</strong>` : ''}</div>`;
+      }
+
+      // Movie metadata badges (rating, runtime)
+      const metaBadges = [];
+      if (movie?.rating) metaBadges.push(`<span class="mm-aud__metabadge mm-aud__metabadge--rating">${escapeHtml(movie.rating)}</span>`);
+      if (movie?.runtime_minutes) metaBadges.push(`<span class="mm-aud__metabadge">${movie.runtime_minutes} min</span>`);
+
+      card.innerHTML = `
+        <div class="mm-aud__poster" style="${posterStyle}">${posterFallback}</div>
+        <div class="mm-aud__body">
+          <div class="mm-aud__title">${escapeHtml(t.name || `Auditorium ${t.id}`)}</div>
+          <div class="mm-aud__sub">${t.totalSeats || '—'} seats</div>
+          <span class="mm-aud__chip ${movie ? chipClass : 'mm-aud__chip--empty'}">${movie ? chipLabel : 'Needs movie'}</span>
+          ${movieLine}
+          ${metaBadges.length ? `<div class="mm-aud__metabadges">${metaBadges.join('')}</div>` : ''}
+          ${timesLine}
+          ${conflict && !conflict.ok ? '<div class="mm-aud__conflict">⚠ Overlaps with other showing</div>' : ''}
+          ${conflict && conflict.tight ? '<div class="mm-aud__conflict mm-aud__conflict--tight">⏱ Tight turnaround</div>' : ''}
+        </div>
+      `;
+      card.addEventListener('click', () => mmOpenAssign(t.id, showing));
+      root.appendChild(card);
+    }
+  }
+}
+
+/* ─── Render movie library list ─── */
+function mmRenderLibrary() {
+  const root = document.getElementById('mm-library-list');
+  if (!root) return;
+  const movies = pickerState.movies || [];
+  if (!movies.length) {
+    root.innerHTML = '<div class="mm-empty">No movies in the library yet. Add some from the TMDB tab.</div>';
+    return;
+  }
+  root.innerHTML = '';
+  for (const m of movies) {
+    const item = document.createElement('div');
+    item.className = 'mm-lib-item';
+    const posterStyle = m.poster_url ? `background-image:url('${escapeHtml(m.poster_url)}');` : '';
+    const hasStream = !!m.stream_uid;
+    const hasTrailer = !!m.trailer_url;
+    const badges = [];
+    if (hasStream) badges.push(`<span class="mm-lib-item__badge mm-lib-item__badge--ok">📹 Stream ready</span>`);
+    else if (hasTrailer) badges.push(`<span class="mm-lib-item__badge">▶ YouTube</span>`);
+    else badges.push(`<span class="mm-lib-item__badge mm-lib-item__badge--warn">No trailer</span>`);
+
+    item.innerHTML = `
+      <div class="mm-lib-item__poster" style="${posterStyle}"></div>
+      <div class="mm-lib-item__body">
+        <div class="mm-lib-item__title">${escapeHtml(m.title)}${m.year ? ` <span style="color:var(--text-muted);font-weight:400;">· ${m.year}</span>` : ''}</div>
+        <div class="mm-lib-item__meta">${m.runtime_minutes ? m.runtime_minutes + ' min' : '—'}${m.rating ? ' · ' + escapeHtml(m.rating) : ''}${m.tmdb_id ? ' · TMDB #' + m.tmdb_id : ''}</div>
+        <div class="mm-lib-item__badges">${badges.join(' ')}</div>
+      </div>
+      <div class="mm-lib-item__actions">
+        <button class="mm-btn" data-mm-edit="${m.id}" title="Edit Cloudflare Stream UID, trailer URL, runtime">Edit</button>
+        <button class="mm-btn mm-btn--danger" data-mm-delete="${m.id}">Remove</button>
+      </div>
+    `;
+    root.appendChild(item);
+  }
+  root.querySelectorAll('[data-mm-edit]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mmOpenEdit(Number(btn.dataset.mmEdit));
+    });
+  });
+  root.querySelectorAll('[data-mm-delete]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = Number(btn.dataset.mmDelete);
+      const m = mmMovieById(id);
+      if (!m) return;
+      if (!confirm(`Remove "${m.title}" from the library?\n\nThis will also unassign it from any auditoriums.`)) return;
+      try {
+        await mmApi('delete_movie', { id });
+        toast({ type: 'success', title: 'Removed', message: `"${m.title}" removed from library.` });
+        await mmRefresh();
+      } catch (err) {
+        toast({ type: 'error', title: 'Failed to remove', message: err.message });
+      }
+    });
+  });
+}
+
+/* ─── Edit movie (Stream UID, trailer URL, runtime) ─── */
+function mmOpenEdit(movieId) {
+  const m = mmMovieById(movieId);
+  if (!m) return;
+  const synopsis = m.synopsis ? `\n\nSynopsis:\n${m.synopsis.slice(0, 280)}${m.synopsis.length > 280 ? '…' : ''}` : '';
+  const streamUid = prompt(
+    `Edit "${m.title}"\n\n` +
+    `Cloudflare Stream UID for the trailer (leave blank if none).\n` +
+    `Find this in your Cloudflare dashboard → Stream → Videos → click the video → "UID".\n` +
+    `Example: 5d5bc37ffcf54c9b82e996823bffbb81${synopsis}`,
+    m.stream_uid || ''
+  );
+  if (streamUid === null) return; // cancelled
+  const trailerUrl = prompt(
+    `YouTube trailer URL (used as fallback if no Stream UID).\n` +
+    `Leave blank for no trailer.`,
+    m.trailer_url || ''
+  );
+  if (trailerUrl === null) return;
+  const runtimeStr = prompt(
+    `Runtime in minutes:`,
+    m.runtime_minutes ? String(m.runtime_minutes) : ''
+  );
+  if (runtimeStr === null) return;
+  const runtime = runtimeStr.trim() ? Number(runtimeStr) : null;
+
+  mmApi('update_movie', {
+    id: movieId,
+    stream_uid: streamUid.trim() || null,
+    trailer_url: trailerUrl.trim() || null,
+    runtime_minutes: runtime,
+  })
+    .then(() => {
+      toast({ type: 'success', title: 'Saved', message: `"${m.title}" updated.` });
+      return mmRefresh();
+    })
+    .catch(err => toast({ type: 'error', title: 'Save failed', message: err.message }));
+}
+
+/* ─── TMDB search ─── */
+function mmRunSearch() {
+  const q = document.getElementById('mm-search-input').value.trim();
+  const results = document.getElementById('mm-search-results');
+  if (!q) {
+    results.innerHTML = '<div class="mm-empty" style="grid-column:1/-1;">Type a movie title above to search.</div>';
+    return;
+  }
+  if (q.length < 2) return;
+
+  if (mmState.searchAbort) mmState.searchAbort.abort();
+  mmState.searchAbort = new AbortController();
+
+  results.innerHTML = '<div class="mm-empty" style="grid-column:1/-1;">Searching TMDB…</div>';
+
+  fetch(`/api/gala/movies/search?q=${encodeURIComponent(q)}`, {
+    credentials: 'same-origin',
+    signal: mmState.searchAbort.signal,
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      const list = data.results || [];
+      if (!list.length) {
+        results.innerHTML = '<div class="mm-empty" style="grid-column:1/-1;">No results. Try a different title.</div>';
+        return;
+      }
+      results.innerHTML = '';
+      for (const r of list) {
+        const card = document.createElement('div');
+        card.className = 'mm-result';
+        const posterStyle = r.poster_url ? `background-image:url('${escapeHtml(r.poster_url)}');` : '';
+        card.innerHTML = `
+          <div class="mm-result__poster" style="${posterStyle}">${r.poster_url ? '' : '🎬'}</div>
+          <div class="mm-result__body">
+            <div class="mm-result__title">${escapeHtml(r.title)}</div>
+            <div class="mm-result__meta">${r.year || '—'}${r.vote_average ? ' · ★ ' + r.vote_average.toFixed(1) : ''}</div>
+          </div>
+        `;
+        card.addEventListener('click', () => mmAddFromTmdb(r));
+        results.appendChild(card);
+      }
+    })
+    .catch(err => {
+      if (err.name === 'AbortError') return;
+      results.innerHTML = `<div class="mm-empty" style="grid-column:1/-1;">Search failed: ${escapeHtml(err.message)}</div>`;
+    });
+}
+
+/* ─── Add a TMDB result to the library (fetches full details first) ─── */
+async function mmAddFromTmdb(result) {
+  if (!result.tmdb_id && !result.imdb_id) {
+    toast({ type: 'error', title: 'Cannot import', message: 'Result has no TMDB id.' });
+    return;
+  }
+  toast({ type: 'info', title: 'Importing…', message: result.title });
+  try {
+    let detail = result;
+    if (result.tmdb_id) {
+      const res = await fetch(`/api/gala/movies/search?tmdb_id=${result.tmdb_id}`, { credentials: 'same-origin' });
+      const data = await res.json();
+      if (data.movie) detail = data.movie;
+    }
+    const r = await mmApi('add_movie', {
+      title: detail.title,
+      year: detail.year,
+      runtime_minutes: detail.runtime_minutes,
+      poster_url: detail.poster_url,
+      backdrop_url: detail.backdrop_url,
+      synopsis: detail.synopsis,
+      tmdb_id: detail.tmdb_id,
+      rating: detail.rating,
+      release_date: detail.release_date,
+      trailer_url: detail.trailer_url,
+    });
+    if (r.deduped) {
+      toast({ type: 'info', title: 'Already in library', message: `"${detail.title}" is already saved.` });
+    } else {
+      toast({ type: 'success', title: 'Added to library', message: `"${detail.title}" saved. Now assign it to an auditorium.` });
+    }
+    await mmRefresh();
+    mmSwitchTab('library');
+  } catch (err) {
+    toast({ type: 'error', title: 'Import failed', message: err.message });
+  }
+}
+
+/* ─── Assignment modal ─── */
+function mmOpenAssign(theaterId, showingNumber) {
+  const t = mmTheaterById(theaterId);
+  const st = mmShowtimeFor(theaterId, showingNumber);
+  mmState.pending = { theater_id: theaterId, showing_number: showingNumber };
+
+  document.getElementById('mm-assign-title').textContent =
+    `${t ? t.name : 'Auditorium ' + theaterId} · ${SHOWING_LABEL[showingNumber]}`;
+  document.getElementById('mm-assign-sub').textContent =
+    `${t && t.totalSeats ? t.totalSeats + ' seats' : ''}${st && st.movie_id ? ' · currently: ' + (mmMovieById(st.movie_id)?.title || '?') : ' · no movie assigned'}`;
+
+  // Movie dropdown
+  const sel = document.getElementById('mm-assign-movie');
+  sel.innerHTML = '<option value="">— No movie —</option>';
+  for (const m of (pickerState.movies || [])) {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = `${m.title}${m.year ? ' (' + m.year + ')' : ''}${m.runtime_minutes ? ' · ' + m.runtime_minutes + 'min' : ''}${m.rating ? ' · ' + m.rating : ''}`;
+    if (st && st.movie_id === m.id) opt.selected = true;
+    sel.appendChild(opt);
+  }
+
+  const def = SHOWING_DEFAULTS[showingNumber] || {};
+  document.getElementById('mm-assign-dinner').value = (st && st.dinner_time) || def.dinner_time || '';
+
+  // Auto-suggest start time. For showing 2, derive it from showing 1's end + cleaning
+  // gap, with a 7:00 PM floor — never let the secondary show start earlier than 7 PM.
+  let suggestedStart = (st && st.show_start) || def.show_start || '';
+  if (showingNumber === 2 && !(st && st.show_start)) {
+    const rec = mmRecommendShowing2Start(theaterId);
+    if (rec && rec.startLabel) suggestedStart = rec.startLabel;
+  }
+  document.getElementById('mm-assign-show').value = suggestedStart;
+  document.getElementById('mm-assign-trailer-min').value =
+    (st && st.trailer_minutes != null) ? st.trailer_minutes : (pickerState.default_trailers_minutes ?? 5);
+
+  document.getElementById('mm-assign-clear').style.display = (st && st.movie_id) ? '' : 'none';
+  document.getElementById('mm-assign').classList.add('is-open');
+  mmUpdateAssignTimeline();
+}
+
+/* Compute the recommended start time for showing 2 in a given auditorium based
+   on showing 1's end + cleaning turnover, floored at 7:00 PM.
+   Mirrors recommendShowing2Start() in functions/api/gala/_movie_time.js. */
+function mmRecommendShowing2Start(theaterId) {
+  const s1 = mmShowtimeFor(theaterId, 1);
+  if (!s1 || !s1.movie_id || !s1.show_start) return null;
+  const s1Movie = mmMovieById(s1.movie_id);
+  if (!s1Movie || !s1Movie.runtime_minutes) return null;
+
+  const s1Start = mmParseTime(s1.show_start);
+  if (s1Start == null) return null;
+
+  const messagingMin = pickerState.messaging_minutes ?? 0;
+  const trailerMin = (s1.trailer_minutes != null) ? s1.trailer_minutes : (pickerState.default_trailers_minutes ?? 5);
+  const turnoverMin = pickerState.turnover_minutes ?? 30;
+  const floorMin = pickerState.showing_2_floor_minutes ?? (19 * 60 + 30); // 7:30 PM
+
+  const s1End = s1Start + messagingMin + trailerMin + s1Movie.runtime_minutes;
+  // Round up to next 5-minute mark for clean times
+  const rounded = (s1End + turnoverMin) % 5 === 0
+    ? (s1End + turnoverMin)
+    : (s1End + turnoverMin) + (5 - ((s1End + turnoverMin) % 5));
+  const startMin = Math.max(rounded, floorMin);
+  return { startMinutes: startMin, startLabel: mmFormatTime(startMin) };
+}
+
+/* Live timeline: shows end time + warns if it overlaps the OTHER showing in
+   the same auditorium. Recomputes whenever the user edits any field.
+   Total room occupancy = messaging (5 min) + trailers + movie runtime. */
+function mmUpdateAssignTimeline() {
+  const root = document.getElementById('mm-assign-timeline');
+  if (!root || !mmState.pending) return;
+
+  const movieId = document.getElementById('mm-assign-movie').value;
+  const movie = movieId ? mmMovieById(Number(movieId)) : null;
+  const showStart = document.getElementById('mm-assign-show').value.trim();
+  const trailerMin = Number(document.getElementById('mm-assign-trailer-min').value) || 0;
+  const messagingMin = pickerState.messaging_minutes ?? 0;
+
+  if (!movie || !movie.runtime_minutes || !showStart) {
+    root.className = 'mm-assign__timeline';
+    root.innerHTML = '';
+    return;
+  }
+  const startMin = mmParseTime(showStart);
+  if (startMin == null) {
+    root.className = 'mm-assign__timeline';
+    root.innerHTML = '';
+    return;
+  }
+  const endMin = startMin + messagingMin + trailerMin + movie.runtime_minutes;
+  const endLabel = mmFormatTime(endMin);
+  const totalRuntime = messagingMin + trailerMin + movie.runtime_minutes;
+
+  // Check overlap with the OTHER showing in this aud
+  const otherNum = mmState.pending.showing_number === 1 ? 2 : 1;
+  const otherSt = mmShowtimeFor(mmState.pending.theater_id, otherNum);
+  let warningHtml = '';
+  let cls = 'mm-assign__timeline';
+
+  if (otherSt && otherSt.movie_id) {
+    const otherMovie = mmMovieById(otherSt.movie_id);
+    const otherStart = otherSt.show_start ? mmParseTime(otherSt.show_start) : null;
+    const otherTrailer = otherSt.trailer_minutes ?? 5;
+    const otherEnd = (otherStart != null && otherMovie?.runtime_minutes)
+      ? otherStart + messagingMin + otherTrailer + otherMovie.runtime_minutes
+      : null;
+
+    if (mmState.pending.showing_number === 1 && otherStart != null) {
+      // We're editing showing 1 — its end must be ≤ showing 2 start (with turnover)
+      if (endMin > otherStart) {
+        cls += ' mm-assign__timeline--warn';
+        warningHtml = `<br><strong>⚠ Overlap:</strong> ends at ${endLabel} but Showing 2 starts at ${escapeHtml(fmtTime(otherSt.show_start))}.`;
+      } else if (otherStart - endMin < 30) {
+        cls += ' mm-assign__timeline--tight';
+        warningHtml = `<br>⏱ <strong>Tight turnaround:</strong> only ${otherStart - endMin} min before Showing 2 starts.`;
+      }
+    } else if (mmState.pending.showing_number === 2 && otherEnd != null) {
+      // Editing showing 2 — its start must be ≥ showing 1 end (with turnover)
+      if (startMin < otherEnd) {
+        cls += ' mm-assign__timeline--warn';
+        warningHtml = `<br><strong>⚠ Overlap:</strong> starts at ${escapeHtml(fmtTime(showStart))} but Showing 1 doesn't end until ~${mmFormatTime(otherEnd)}.`;
+      } else if (startMin - otherEnd < 30) {
+        cls += ' mm-assign__timeline--tight';
+        warningHtml = `<br>⏱ <strong>Tight turnaround:</strong> only ${startMin - otherEnd} min after Showing 1 ends.`;
+      }
+    }
+  }
+
+  root.className = cls;
+  root.innerHTML = `
+    <strong>${escapeHtml(movie.title)}</strong>
+    runs <strong>${movie.runtime_minutes} min</strong> + <strong>${trailerMin} min</strong> trailers + <strong>${messagingMin} min</strong> messaging.<br>
+    Show ends ~<strong>${endLabel}</strong> (${totalRuntime} min total).${warningHtml}
+  `;
+}
+
+/* Tiny helpers used only by the assignment timeline. Mirrors _movie_time.js
+   server-side logic for live UI feedback. */
+function mmParseTime(input) {
+  if (!input) return null;
+  const raw = String(input).trim();
+  const m12 = raw.match(/^(\d{1,2}):?(\d{2})?\s*([ap])\.?\s*m\.?$/i);
+  if (m12) {
+    let h = Number(m12[1]);
+    const min = Number(m12[2] || 0);
+    const isPm = m12[3].toLowerCase() === 'p';
+    if (h === 12) h = isPm ? 12 : 0;
+    else if (isPm) h += 12;
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return h * 60 + min;
+  }
+  const m24 = raw.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) return Number(m24[1]) * 60 + Number(m24[2]);
+  return null;
+}
+function mmFormatTime(mins) {
+  if (mins == null) return '';
+  const h24 = Math.floor(mins / 60) % 24;
+  const m = ((mins % 60) + 60) % 60;
+  const ampm = h24 >= 12 ? 'PM' : 'AM';
+  const h12 = h24 % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function mmCloseAssign() {
+  document.getElementById('mm-assign').classList.remove('is-open');
+  mmState.pending = null;
+}
+
+async function mmAssignSave() {
+  if (!mmState.pending) return;
+  const movieId = document.getElementById('mm-assign-movie').value;
+  const dinner = document.getElementById('mm-assign-dinner').value.trim();
+  const show = document.getElementById('mm-assign-show').value.trim();
+  const trailerMin = Number(document.getElementById('mm-assign-trailer-min').value);
+  try {
+    await mmApi('set_showtime', {
+      theater_id: mmState.pending.theater_id,
+      showing_number: mmState.pending.showing_number,
+      movie_id: movieId ? Number(movieId) : null,
+      dinner_time: dinner || null,
+      show_start: show || null,
+      trailer_minutes: !isNaN(trailerMin) ? trailerMin : 20,
+    });
+    toast({ type: 'success', title: 'Saved', message: 'Showtime updated.' });
+    mmCloseAssign();
+    await mmRefresh();
+    if (typeof autoSelectMovieAndAud === 'function') autoSelectMovieAndAud();
+    if (typeof buildPicker === 'function') buildPicker();
+  } catch (err) {
+    toast({ type: 'error', title: 'Save failed', message: err.message });
+  }
+}
+
+async function mmAssignClear() {
+  if (!mmState.pending) return;
+  if (!confirm('Clear the movie from this auditorium for this showing?')) return;
+  try {
+    await mmApi('clear_showtime', {
+      theater_id: mmState.pending.theater_id,
+      showing_number: mmState.pending.showing_number,
+    });
+    toast({ type: 'success', title: 'Cleared', message: 'Auditorium is now unassigned.' });
+    mmCloseAssign();
+    await mmRefresh();
+    if (typeof autoSelectMovieAndAud === 'function') autoSelectMovieAndAud();
+    if (typeof buildPicker === 'function') buildPicker();
+  } catch (err) {
+    toast({ type: 'error', title: 'Clear failed', message: err.message });
+  }
+}
+
+/* ─── API helper ─── */
+async function mmApi(action, payload) {
+  const res = await fetch('/api/gala/movies', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ action, ...payload }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) {
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+  return data;
+}
+
+/* ─── Refresh local picker state ─── */
+async function mmRefresh() {
+  const res = await fetch('/api/gala/movies', { credentials: 'same-origin' });
+  if (res.ok) {
+    const data = await res.json();
+    pickerState.movies = data.movies || [];
+    pickerState.showtimes = data.showtimes || [];
+    pickerState.conflicts = data.conflicts || [];
+    pickerState.default_trailers_minutes = data.default_trailers_minutes ?? 5;
+    pickerState.messaging_minutes = data.messaging_minutes ?? 0;
+    pickerState.turnover_minutes = data.turnover_minutes ?? 30;
+    pickerState.showing_2_floor_minutes = data.showing_2_floor_minutes ?? (19 * 60 + 30);
+    pickerState.showing_2_floor_label = data.showing_2_floor_label || '7:30 PM';
+    pickerState.showing2_recommendations = data.showing2_recommendations || {};
+  }
+  mmRenderMatrix();
+  mmRenderLibrary();
+}
+
+/* ─── Wire it all up ─── */
+document.getElementById('manage-movies-btn').addEventListener('click', () => mmOpen('auds'));
+document.getElementById('mm-close').addEventListener('click', mmClose);
+document.getElementById('mm-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'mm-overlay') mmClose();
+});
+document.querySelectorAll('.mm-tab').forEach(t => {
+  t.addEventListener('click', () => mmSwitchTab(t.dataset.mmTab));
+});
+document.getElementById('mm-search-input').addEventListener('input', () => {
+  clearTimeout(mmState.searchTimer);
+  mmState.searchTimer = setTimeout(mmRunSearch, 280);
+});
+document.getElementById('mm-search-clear').addEventListener('click', () => {
+  document.getElementById('mm-search-input').value = '';
+  mmRunSearch();
+});
+document.getElementById('mm-assign-cancel').addEventListener('click', mmCloseAssign);
+document.getElementById('mm-assign-save').addEventListener('click', mmAssignSave);
+document.getElementById('mm-assign-clear').addEventListener('click', mmAssignClear);
+// Live timeline updates
+['mm-assign-movie', 'mm-assign-show', 'mm-assign-trailer-min'].forEach(id => {
+  document.getElementById(id).addEventListener('change', mmUpdateAssignTimeline);
+  document.getElementById(id).addEventListener('input', mmUpdateAssignTimeline);
+});
+document.getElementById('mm-assign').addEventListener('click', (e) => {
+  if (e.target.id === 'mm-assign') mmCloseAssign();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('mm-assign').classList.contains('is-open')) mmCloseAssign();
+  else if (document.getElementById('mm-overlay').classList.contains('is-open')) mmClose();
+});
+
+/* ═══ INIT ═══ */
+init();
+</script>
+</body>
+</html>
