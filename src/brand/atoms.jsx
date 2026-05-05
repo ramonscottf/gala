@@ -97,6 +97,7 @@ export const Btn = ({
     <button
       onClick={onClick}
       disabled={disabled}
+      className={kind === 'primary' ? 'force-dark' : undefined}
       style={{
         height: s.h,
         padding: `0 ${s.px}px`,

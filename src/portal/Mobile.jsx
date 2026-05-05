@@ -153,15 +153,19 @@ const MegaplexLogo = ({ size = 14, dark = true }) => (
   />
 );
 
-const miniBtn = (kind) => ({
+const miniBtn = (kind, isLight = false) => ({
   padding: '8px 14px',
   borderRadius: 99,
   border: 0,
   cursor: 'pointer',
   fontSize: 12,
   fontWeight: 700,
-  background: kind === 'primary' ? BRAND.gradient : 'rgba(255,255,255,0.08)',
-  color: '#fff',
+  background: kind === 'primary'
+    ? BRAND.gradient
+    : isLight
+      ? 'rgba(13,18,36,0.08)'
+      : 'rgba(255,255,255,0.08)',
+  color: kind === 'primary' || !isLight ? '#fff' : BRAND.ink,
   fontFamily: FONT_UI,
   boxShadow: kind === 'primary' ? '0 3px 8px rgba(215,40,70,0.35)' : 'none',
 });
@@ -180,6 +184,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
     <div
+      className="force-dark-vars"
       style={{
         margin: '12px 18px 0',
         borderRadius: 18,
@@ -585,6 +590,7 @@ const TextMySeatsButton = ({ token, apiBase }) => {
 
 const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, token, apiBase }) => {
   const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl } = data;
+  const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
   const assignedCount = tickets
     .filter((t) => t.guestName || t.localGuestId)
@@ -607,7 +613,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, to
             fontSize: 10,
             fontWeight: 800,
             letterSpacing: 2,
-            color: 'rgba(255,255,255,0.45)',
+            color: isLight ? 'rgba(13,18,36,0.58)' : 'rgba(255,255,255,0.45)',
           }}
         >
           YOUR GALA
@@ -615,7 +621,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, to
         <div
           style={{
             fontSize: 11,
-            color: 'rgba(255,255,255,0.55)',
+            color: isLight ? 'rgba(13,18,36,0.62)' : 'rgba(255,255,255,0.55)',
             fontVariantNumeric: 'tabular-nums',
           }}
         >
@@ -681,7 +687,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, to
                 // list (read-only API guests + local additions).
                 onAssign(firstUnassigned);
               }}
-              style={miniBtn('ghost')}
+              style={miniBtn('ghost', isLight)}
             >
               Assign
             </button>
@@ -691,7 +697,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, to
               // HAPTIC: light — Phase 2 wires Capacitor Haptics here.
               onPlaceSeats();
             }}
-            style={miniBtn('primary')}
+            style={miniBtn('primary', isLight)}
           >
             {openCount > 0 ? 'Place' : 'Edit'}
           </button>
@@ -1002,6 +1008,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, to
 
 const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh }) => {
   const { tickets, blockSize } = data;
+  const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
 
   return (
@@ -1128,7 +1135,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                   </div>
                 </div>
               </div>
-              <button onClick={() => onOpenTicket(t)} style={miniBtn('ghost')}>
+              <button onClick={() => onOpenTicket(t)} style={miniBtn('ghost', isLight)}>
                 Manage
               </button>
             </div>
@@ -2354,6 +2361,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className={isDark ? 'force-dark-vars' : undefined}
         style={{
           width: '100%',
           maxHeight: '88%',

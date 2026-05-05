@@ -18,7 +18,9 @@ export function usePortal(token) {
 
   const refresh = useCallback(async () => {
     if (!token) return;
-    setLoading(true);
+    // Keep the shell mounted during post-load refreshes. Several UI flows
+    // refresh server state before opening a sheet; flipping loading=true
+    // after initial load unmounts the caller before its next setState runs.
     try {
       const res = await fetch(`${config.apiBase}/api/gala/portal/${token}`, {
         headers: { Accept: 'application/json' },
@@ -38,6 +40,9 @@ export function usePortal(token) {
   }, [token]);
 
   useEffect(() => {
+    setState(null);
+    setError(null);
+    setLoading(true);
     refresh();
   }, [refresh]);
 

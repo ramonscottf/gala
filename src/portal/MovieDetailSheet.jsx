@@ -91,7 +91,7 @@ export default function MovieDetailSheet({
       <div
         onClick={(e) => e.stopPropagation()}
         ref={innerRef}
-        className="scroll-container"
+        className="scroll-container force-dark-vars"
         style={{
           width: '100%',
           // Cap at 640px on desktop so the sheet doesn't stretch the

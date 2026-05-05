@@ -158,7 +158,7 @@ const FormatBadge = ({ format, size = 'sm' }) => {
 
 const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNightTap }) => (
   <div
-    className="page-header"
+    className="page-header force-dark-vars"
     style={{
       height: 72,
       padding: '0 36px',
@@ -307,7 +307,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="scroll-container"
+        className="scroll-container force-dark-vars"
         style={{
           width: '100%',
           maxWidth,

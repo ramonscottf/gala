@@ -103,6 +103,7 @@ const Sheet = ({ open, onClose, title, children }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="force-dark-vars"
         style={{
           width: '100%',
           maxHeight: '85%',
@@ -168,6 +169,7 @@ const Sheet = ({ open, onClose, title, children }) => {
 // ── header (step counter + progress) ──────────────────────────────────
 
 const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
+  const { isLight } = useTheme();
   const pct = blockSize > 0 ? (totalAssigned / blockSize) * 100 : 0;
   return (
     <div
@@ -194,7 +196,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
             borderRadius: 99,
             background: 'var(--surface)',
             border: 0,
-            color: '#fff',
+            color: isLight ? BRAND.ink : '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -217,7 +219,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
             flex: 1,
             height: 6,
             borderRadius: 3,
-            background: 'rgba(255,255,255,0.08)',
+            background: isLight ? 'rgba(13,18,36,0.10)' : 'rgba(255,255,255,0.08)',
             overflow: 'hidden',
           }}
         >
@@ -235,7 +237,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
           style={{
             fontSize: 11,
             fontWeight: 700,
-            color: '#a8b1ff',
+            color: 'var(--accent-italic)',
             fontVariantNumeric: 'tabular-nums',
             letterSpacing: 0.5,
           }}
@@ -250,7 +252,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
 
 const MStickyCTA = ({ children, helper }) => (
   <div
-    className="tab-bar"
+    className="tab-bar force-dark-vars"
     style={{
       padding: '14px 18px 10px',
       borderTop: `1px solid var(--rule)`,
@@ -271,7 +273,9 @@ const MStickyCTA = ({ children, helper }) => (
 
 // ── Step 1: Welcome ───────────────────────────────────────────────────
 
-const Step1Welcome = ({ onNext, blockSize, tier }) => (
+const Step1Welcome = ({ onNext, blockSize, tier }) => {
+  const { isLight } = useTheme();
+  return (
   <div
     className="scroll-container"
     style={{
@@ -306,7 +310,7 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => (
       </i>
     </h1>
     <p style={{ fontSize: 15, color: 'var(--mute)', lineHeight: 1.55, marginTop: 14 }}>
-      You've earned <b style={{ color: '#fff' }}>{blockSize} seats</b> at the {tier || 'sponsor'}{' '}
+      You've earned <b style={{ color: 'var(--ink-on-ground)' }}>{blockSize} seats</b> at the {tier || 'sponsor'}{' '}
       tier. Place them across two showtimes and the lineup of films — split or stay together,
       your call.
     </p>
@@ -317,7 +321,7 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => (
         padding: 18,
         border: `1px solid var(--rule)`,
         borderRadius: 14,
-        background: 'rgba(255,255,255,0.03)',
+        background: 'var(--surface)',
       }}
     >
       <div
@@ -343,14 +347,14 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => (
                 fontFamily: FONT_DISPLAY,
                 fontSize: 16,
                 fontWeight: 600,
-                color: '#a8b1ff',
+                color: 'var(--accent-italic)',
                 minWidth: 80,
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
               {t}
             </div>
-            <div style={{ fontSize: 14, color: '#fff' }}>{d}</div>
+            <div style={{ fontSize: 14, color: 'var(--ink-on-ground)' }}>{d}</div>
           </div>
         ))}
       </div>
@@ -368,7 +372,7 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => (
       }}
     >
       <Icon name="info" size={16} />
-      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 13, color: isLight ? 'var(--mute)' : 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
         You can come back anytime to change seats or invite guests until <b>June 5</b>.
       </div>
     </div>
@@ -384,7 +388,8 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => (
       Let's place your seats
     </Btn>
   </div>
-);
+  );
+};
 
 // ── Step 2: Pick ──────────────────────────────────────────────────────
 
@@ -405,6 +410,7 @@ export const Step2Pick = ({
   onMovieDetail,
 }) => {
   const navigate = useNavigate();
+  const { isLight } = useTheme();
   const showtimes = portal?.showtimes || [];
 
   const showings = useMemo(() => {
@@ -676,11 +682,13 @@ export const Step2Pick = ({
                 borderRadius: 99,
                 border: 0,
                 cursor: 'pointer',
-                background: active ? 'rgba(244,185,66,0.14)' : 'rgba(255,255,255,0.05)',
+                background: active
+                  ? (isLight ? 'rgba(244,185,66,0.20)' : 'rgba(244,185,66,0.14)')
+                  : (isLight ? 'var(--surface)' : 'rgba(255,255,255,0.05)'),
                 boxShadow: active
                   ? `inset 0 0 0 1.5px ${BRAND.gold}`
                   : `inset 0 0 0 1px var(--rule)`,
-                color: '#fff',
+                color: isLight ? BRAND.ink : '#fff',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 7,
@@ -755,7 +763,7 @@ export const Step2Pick = ({
               style={{
                 fontSize: 15,
                 fontWeight: 700,
-                color: '#fff',
+                color: 'var(--ink-on-ground)',
                 lineHeight: 1.2,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -788,8 +796,8 @@ export const Step2Pick = ({
                   style={{
                     padding: '2px 7px',
                     borderRadius: 4,
-                    background: 'rgba(255,255,255,0.08)',
-                    color: '#fff',
+                    background: isLight ? 'rgba(13,18,36,0.08)' : 'rgba(255,255,255,0.08)',
+                    color: 'var(--ink-on-ground)',
                     fontSize: 10,
                     fontWeight: 700,
                     fontVariantNumeric: 'tabular-nums',
@@ -860,7 +868,7 @@ export const Step2Pick = ({
                   border: 0,
                   borderRadius: 9,
                   cursor: 'pointer',
-                  color: active ? '#fff' : 'rgba(255,255,255,0.65)',
+                  color: active ? '#fff' : 'var(--mute)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-start',
@@ -883,7 +891,9 @@ export const Step2Pick = ({
                   style={{
                     fontSize: 10,
                     fontWeight: 500,
-                    color: active ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.45)',
+                    color: active
+                      ? 'rgba(255,255,255,0.78)'
+                      : (isLight ? 'rgba(13,18,36,0.62)' : 'rgba(255,255,255,0.45)'),
                     letterSpacing: 0.1,
                   }}
                 >
@@ -916,7 +926,7 @@ export const Step2Pick = ({
             borderRadius: 99,
             background: 'var(--surface)',
             border: `1px solid var(--rule)`,
-            color: '#fff',
+            color: 'var(--ink-on-ground)',
             cursor: theaterChoices.length > 1 ? 'pointer' : 'default',
             fontSize: 12,
             fontWeight: 600,
@@ -1158,7 +1168,7 @@ export const Step2Pick = ({
                       cursor:
                         m.id === 'assign' && !haveSelfHere ? 'not-allowed' : 'pointer',
                       background: active ? BRAND.indigoLight : 'transparent',
-                      color: active ? BRAND.ink : '#fff',
+                      color: active ? BRAND.ink : 'var(--ink-on-ground)',
                       fontSize: 11,
                       fontWeight: 700,
                       letterSpacing: 0.2,
@@ -1424,7 +1434,7 @@ export const Step2Pick = ({
         )}
         <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 18, lineHeight: 1.5 }}>
           You can always change these later — and you'll have{' '}
-          <b style={{ color: '#fff' }}>{Math.max(0, remaining - sel.size)}</b> seats left to place
+          <b style={{ color: 'var(--ink-on-ground)' }}>{Math.max(0, remaining - sel.size)}</b> seats left to place
           after this.
         </div>
         <Btn
@@ -1499,7 +1509,9 @@ export const Step2Pick = ({
 // who want to invite during the wizard can also do per-seat invites
 // from SeatAssignSheet (Phase 1.6 B2) which chain delegate→assign.
 
-const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => (
+const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
+  const { isLight } = useTheme();
+  return (
   <>
     <div
       className="scroll-container"
@@ -1541,8 +1553,8 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => (
           padding: 14,
           borderRadius: 12,
           border: `1.5px dashed var(--rule)`,
-          background: 'transparent',
-          color: '#fff',
+          background: isLight ? 'var(--surface)' : 'transparent',
+          color: 'var(--ink-on-ground)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1643,8 +1655,8 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => (
           padding: 14,
           borderRadius: 12,
           border: `1.5px solid var(--rule)`,
-          background: 'rgba(255,255,255,0.03)',
-          color: '#fff',
+          background: isLight ? 'var(--surface)' : 'rgba(255,255,255,0.03)',
+          color: 'var(--ink-on-ground)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1693,7 +1705,8 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => (
       </div>
     </MStickyCTA>
   </>
-);
+  );
+};
 
 // ── Step 4: Review ────────────────────────────────────────────────────
 
@@ -1707,6 +1720,7 @@ const Step4Review = ({
   apiBase,
   onRefresh,
 }) => {
+  const { isLight } = useTheme();
   // H2 — Done button gate. Disabled until every claimed seat has a
   // dinner_choice; copy reflects how many are missing so the sponsor
   // knows what's blocking them.
@@ -1830,7 +1844,7 @@ const Step4Review = ({
                       fontSize: 10,
                       fontWeight: 700,
                       letterSpacing: 1.4,
-                      color: '#ff8da4',
+                      color: isLight ? BRAND.red : '#ff8da4',
                     }}
                   >
                     {r.showLabel.toUpperCase()} ·{' '}
@@ -1860,7 +1874,7 @@ const Step4Review = ({
                       padding: '4px 9px',
                       borderRadius: 4,
                       background: 'rgba(168,177,255,0.2)',
-                      color: '#a8b1ff',
+                      color: 'var(--accent-italic)',
                       fontSize: 11,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',
@@ -1945,8 +1959,8 @@ const Step4Review = ({
               padding: 14,
               borderRadius: 12,
               border: `1.5px solid var(--rule)`,
-              background: 'rgba(255,255,255,0.03)',
-              color: 'rgba(255,255,255,0.55)',
+              background: isLight ? 'var(--surface)' : 'rgba(255,255,255,0.03)',
+              color: isLight ? 'rgba(13,18,36,0.55)' : 'rgba(255,255,255,0.55)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1965,8 +1979,8 @@ const Step4Review = ({
               padding: 14,
               borderRadius: 12,
               border: `1.5px solid var(--rule)`,
-              background: 'rgba(255,255,255,0.03)',
-              color: 'rgba(255,255,255,0.55)',
+              background: isLight ? 'var(--surface)' : 'rgba(255,255,255,0.03)',
+              color: isLight ? 'rgba(13,18,36,0.55)' : 'rgba(255,255,255,0.55)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
