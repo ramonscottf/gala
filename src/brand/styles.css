@@ -172,33 +172,24 @@ img,
 }
 
 /* Glass tab bar — what makes a webview app stop looking like a webview.
- * The OUTER wrapper used to add a translucent paper rectangle behind the
- * inner pill, which defeated the pill's own backdrop-filter (you'd see
- * a solid bar of cream, not glass). Removed May 5 2026. The actual
- * frosted-pill effect lives on the inner div in TabBar/TabBar.jsx — its
- * own backdrop-filter does the work. The wrapper now just provides the
- * safe-area padding and a faint top-edge fade so the content scrolling
- * underneath dissolves into the bar instead of slamming into a hard line. */
+ * History: the OUTER wrapper used to paint a solid paper rectangle behind
+ * the inner pill, which defeated the pill's own backdrop-filter. May 5
+ * 2026 swapped that for a transparent→18%-navy (or 45%-white) gradient,
+ * meant to fade content into the home-indicator safe area. But that
+ * gradient still painted a visible cream/navy wash UNDER the pill,
+ * leaving the pill looking grounded instead of floating. May 5 2026
+ * (later that day): drop the gradient entirely. The wrapper is now
+ * purely structural — safe-area padding and pointer-events handling.
+ * The pill carries its own backdrop-filter, drop-shadow, and border;
+ * it doesn't need a backdrop. Content scrolling underneath terminates
+ * into the safe area cleanly because the page itself owns the
+ * background color. */
 .tab-bar-glass {
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(13, 27, 61, 0.18) 100%
-  );
+  background: transparent;
   pointer-events: none;
 }
 .tab-bar-glass > * {
   pointer-events: auto;
-}
-
-@media (prefers-color-scheme: light) {
-  .tab-bar-glass {
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      rgba(255, 255, 255, 0.45) 100%
-    );
-  }
 }
 
 /* Slide-up sheet animation reused by all bottom sheets */
