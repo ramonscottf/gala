@@ -55,7 +55,7 @@ async function sendEmail(env, to, subject, html, text) {
       },
       body: JSON.stringify({
         from: env.GALA_FROM_EMAIL || 'gala@daviskids.org',
-        replyTo: 'smiggin@dsdmail.net',
+        replyTo: 'smiggin@dsdmail.net, sfoster@dsdmail.net',
         to,
         subject,
         html,
@@ -80,7 +80,7 @@ async function sendEmail(env, to, subject, html, text) {
     },
     body: JSON.stringify({
       from: env.GALA_FROM_EMAIL || 'gala@daviskids.org',
-      reply_to: 'smiggin@dsdmail.net',
+      reply_to: ['smiggin@dsdmail.net', 'sfoster@dsdmail.net'],
       to,
       subject,
       html,
