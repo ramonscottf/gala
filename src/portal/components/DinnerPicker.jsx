@@ -89,23 +89,25 @@ export default function DinnerPicker({
         onChange={handle}
         disabled={pending}
         aria-label={`Dinner for seat ${assignment?.row_label}-${assignment?.seat_num}`}
+        className="dinner-select"
         style={{
           height: heightPx,
           padding: '0 26px 0 10px',
           borderRadius: 99,
-          border: `1px solid ${current ? BRAND.indigoLight : BRAND.rule}`,
-          background: current ? 'rgba(168,177,255,0.10)' : 'rgba(255,255,255,0.04)',
-          color: current ? BRAND.indigoLight : 'rgba(255,255,255,0.85)',
+          // Theme-aware. CSS class .dinner-select handles the chevron
+          // SVG color (light vs dark) since inline backgroundImage can't
+          // see CSS custom properties cleanly.
+          border: `1px solid ${current ? BRAND.indigoLight : 'var(--rule)'}`,
+          background: current
+            ? 'rgba(168,177,255,0.18)'
+            : 'transparent',
+          color: current ? 'var(--accent-italic)' : 'var(--ink-on-ground)',
           fontSize: fontPx,
           fontWeight: 600,
           fontFamily: FONT_UI,
           outline: 'none',
           appearance: 'none',
           WebkitAppearance: 'none',
-          // Inline chevron via background image so the select stays
-          // single-line and doesn't grow vertical.
-          backgroundImage:
-            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffffaa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>\")",
           backgroundRepeat: 'no-repeat',
           backgroundPosition: `right 8px center`,
           cursor: pending ? 'wait' : 'pointer',

@@ -18,6 +18,7 @@
 // CSP — public/_headers allows frame-src for *.cloudflarestream.com
 // and youtube-nocookie.com so neither embed is blocked.
 
+import React from 'react';
 import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import { Icon } from '../brand/atoms.jsx';
 
@@ -60,6 +61,15 @@ export default function MovieDetailSheet({
   const backdrop = movie.backdropUrl || movie.posterUrl;
   const trailerSrc = buildTrailerSrc(movie);
   const isModal = variant === 'modal';
+  // Reset the inner scroll container to top whenever the sheet opens
+  // for a new movie. Without this, if the user previously opened a
+  // sheet and scrolled, the next open could remember scrollTop and
+  // start mid-content. (Browsers also occasionally try to maintain
+  // scroll position across slideUp animations.)
+  const innerRef = React.useRef(null);
+  React.useEffect(() => {
+    if (innerRef.current) innerRef.current.scrollTop = 0;
+  }, [movie?.id]);
 
   return (
     <div
@@ -80,6 +90,7 @@ export default function MovieDetailSheet({
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        ref={innerRef}
         className="scroll-container"
         style={{
           width: '100%',
@@ -104,11 +115,13 @@ export default function MovieDetailSheet({
           boxShadow: isModal ? '0 24px 64px rgba(0,0,0,0.55)' : 'none',
         }}
       >
-        {/* Hero backdrop with darkening gradient overlay + close X. */}
+        {/* Hero backdrop with darkening gradient overlay + close X.
+            Smaller on mobile sheet (180px) so more content fits above
+            the fold; full 240px on desktop modal. */}
         <div
           style={{
             position: 'relative',
-            height: 240,
+            height: isModal ? 240 : 180,
             background: backdrop
               ? `linear-gradient(to bottom, rgba(13,27,61,0.4), rgba(13,27,61,0.95)), url(${backdrop}) center/cover no-repeat`
               : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,

@@ -201,3 +201,15 @@ img,
 .accent-action {
   color: var(--accent-text-strong);
 }
+
+/* Dinner select chevron — inline SVG via background-image, color flips
+ * per theme. Dark mode: white-ish chevron over translucent navy.
+ * Light mode: navy chevron over translucent white. */
+.dinner-select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffffaa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+}
+@media (prefers-color-scheme: light) {
+  .dinner-select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231f2a5e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  }
+}
