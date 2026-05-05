@@ -106,6 +106,7 @@ export async function onRequestGet(context) {
             m.title AS movie_title, m.runtime_minutes, m.trailer_url,
             m.poster_url, m.thumbnail_url, m.backdrop_url, m.synopsis, m.rating, m.year,
             m.stream_uid, m.trailer_duration_seconds,
+            m.tmdb_score, m.tmdb_vote_count,
             t.tier AS theater_tier, t.notes AS theater_notes
        FROM showtimes s
        JOIN movies m ON m.id = s.movie_id

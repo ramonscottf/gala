@@ -220,6 +220,25 @@ export default function MovieDetailSheet({
                 {movie.runtime} min
               </span>
             )}
+            {movie.tmdbScore != null && movie.tmdbScore >= 1 && (
+              <span
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: 4,
+                  background: 'rgba(244,185,66,0.18)',
+                  color: '#f4b942',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 3,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+                title={`${movie.tmdbVoteCount?.toLocaleString() || 0} votes on TMDB`}
+              >
+                ★ {movie.tmdbScore.toFixed(1)}
+              </span>
+            )}
             {(showLabel || showTime) && (
               <span
                 style={{

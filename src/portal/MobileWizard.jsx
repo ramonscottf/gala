@@ -458,6 +458,8 @@ export const Step2Pick = ({
           year: s.year,
           rating: s.rating,
           runtime: s.runtime_minutes,
+          tmdbScore: s.tmdb_score,
+          tmdbVoteCount: s.tmdb_vote_count,
           // F3 aggregates: how many auds + total seats for this movie
           // at this showing. Used in the "1 aud · 94 seats" meta line.
           theaterIds: new Set([s.theater_id]),

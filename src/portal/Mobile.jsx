@@ -857,6 +857,35 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail }) 
                   {m.short || m.title}
                 </div>
               )}
+              {/* TMDB score badge — top-left corner of poster.
+                  Only shows if score >= 1 (filters out unreleased/zero-vote
+                  films like the 2026 releases that haven't been rated yet). */}
+              {m.tmdbScore != null && m.tmdbScore >= 1 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    left: 8,
+                    background: 'rgba(13,15,36,0.85)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
+                    color: '#fff',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    borderRadius: 99,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: 0.2,
+                    border: '1px solid rgba(255,255,255,0.14)',
+                  }}
+                >
+                  <span style={{ color: '#f4b942' }}>★</span>
+                  {m.tmdbScore.toFixed(1)}
+                </div>
+              )}
             </div>
             <div
               style={{
@@ -1944,6 +1973,8 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       rating: s.rating,
       runtime: s.runtime_minutes,
       posterUrl: s.poster_url,
+      tmdbScore: s.tmdb_score,
+      tmdbVoteCount: s.tmdb_vote_count,
     });
   });
   const lineup = [...movieMap.values()];
