@@ -570,6 +570,7 @@ export default function SeatPickSheet({
           {adaptedTheater ? (
             <SeatMap
               theater={adaptedTheater}
+              theme="dark"
               scale={compact ? 18 : 22}
               showLetters={false}
               allowZoom={true}

@@ -12,7 +12,7 @@
 // in myAssignments / myHolds (`row_label` + `seat_num` fields) and what the
 // design's wizards expect (e.g. 'F-7' in mobile-wizard.jsx).
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BRAND } from '../brand/tokens.js';
 
 // Brand-coherent palette over the navy ground. Real types from theater-
@@ -147,7 +147,7 @@ export function autoPickBlock(adapted, N, taken, opts = {}) {
 export const SeatMap = ({
   theater,
   scale = 22,
-  theme = 'dark',
+  theme = 'auto',
   assignedSelf = new Set(),
   assignedOther = new Set(),
   selected = new Set(),
@@ -170,7 +170,25 @@ export const SeatMap = ({
   const [lasso, setLasso] = useState(null);
   const dragging = useRef(null);
   const containerRef = useRef(null);
-  const dark = theme === 'dark';
+  // theme='auto' (new default): follow the page's data-theme. The seat map
+  // sits inline on the page (not inside a force-dark sheet) so light pages
+  // need dark row letters / "taken" overlay tints to be readable. Existing
+  // call sites with theme='dark' (sheets) keep their explicit override.
+  const isDarkExplicit = theme === 'dark';
+  const isLightExplicit = theme === 'light';
+  const [autoDark, setAutoDark] = useState(true);
+  useEffect(() => {
+    if (theme !== 'auto') return;
+    const read = () => {
+      const t = document.documentElement.getAttribute('data-theme');
+      setAutoDark(t !== 'light');
+    };
+    read();
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, [theme]);
+  const dark = isDarkExplicit ? true : isLightExplicit ? false : autoDark;
 
   const gap = 3;
   const cell = scale;
@@ -615,45 +633,60 @@ export const SeatMap = ({
 };
 
 export const SeatLegend = ({
-  dark = true,
+  dark, // legacy: when omitted, the legend follows the page theme via CSS vars
   types = ['luxury', 'standard', 'wheelchair', 'companion', 'loveseat', 'dbox'],
   showSelf = true,
-}) => (
-  <div
-    style={{
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: 14,
-      fontSize: 11,
-      color: dark ? 'rgba(255,255,255,0.7)' : 'rgba(13,15,36,0.6)',
-      alignItems: 'center',
-      fontFamily: 'Inter, system-ui, sans-serif',
-    }}
-  >
-    {types.map((t) => (
-      <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-        <span
-          style={{ width: 11, height: 11, borderRadius: 3, background: SEAT_TYPES[t].color }}
-        />
-        {SEAT_TYPES[t].label}
-      </span>
-    ))}
-    {showSelf && (
+}) => {
+  // When `dark` is explicitly set, honor it (some surfaces are force-dark
+  // regardless of the page theme — e.g., a sheet rendered over a light
+  // page). When omitted, fall through to var(--ink-on-ground) so light
+  // mode renders dark text and dark mode renders light text.
+  const textColor =
+    dark === true ? 'rgba(255,255,255,0.7)'
+    : dark === false ? 'rgba(13,15,36,0.6)'
+    : 'var(--ink-on-ground)';
+  const takenColor =
+    dark === true ? 'rgba(255,255,255,0.16)'
+    : dark === false ? 'rgba(13,15,36,0.16)'
+    : 'rgba(13,15,36,0.16)';
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 14,
+        fontSize: 11,
+        color: textColor,
+        alignItems: 'center',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        opacity: dark === undefined ? 0.75 : 1,
+      }}
+    >
+      {types.map((t) => (
+        <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span
+            style={{ width: 11, height: 11, borderRadius: 3, background: SEAT_TYPES[t].color }}
+          />
+          {SEAT_TYPES[t].label}
+        </span>
+      ))}
+      {showSelf && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 11, height: 11, borderRadius: 3, background: BRAND.indigoLight }} />
+          Yours
+        </span>
+      )}
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ width: 11, height: 11, borderRadius: 3, background: BRAND.indigoLight }} />
-        Yours
+        <span
+          style={{
+            width: 11,
+            height: 11,
+            borderRadius: 3,
+            background: takenColor,
+          }}
+        />
+        Taken
       </span>
-    )}
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-      <span
-        style={{
-          width: 11,
-          height: 11,
-          borderRadius: 3,
-          background: dark ? 'rgba(255,255,255,0.16)' : 'rgba(13,15,36,0.16)',
-        }}
-      />
-      Taken
-    </span>
-  </div>
-);
+    </div>
+  );
+};
