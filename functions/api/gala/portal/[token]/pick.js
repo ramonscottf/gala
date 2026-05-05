@@ -18,6 +18,55 @@ import {
 
 const HOLD_MINUTES = 15;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ORPHAN-SEAT VALIDATION
+// ─────────────────────────────────────────────────────────────────────────────
+// A row should never be left with a single empty seat sandwiched between two
+// occupied seats. We enforce this on the sponsor portal (hold + finalize) only.
+// Admin endpoints bypass pick.js, so admin can still place orphans manually.
+//
+// When a sponsor tries to claim seat N in row R, simulate the post-claim state
+// of the row: every seat that's either finalized in seat_assignments, held in
+// seat_holds (by anyone), or is N itself counts as "occupied." Then walk the
+// occupied set looking for any 1-wide gap between two occupied seats. If we
+// find one, reject with a useful error.
+//
+// Edge cases:
+//   - Filling an existing orphan is fine (5,7 occupied, claim 6 → no orphan).
+//   - Two-wide gaps are fine (5,8 occupied, claim 6 → 7 is still adjacent
+//     to free space).
+//   - End-of-row empties don't count — only gaps between two occupied seats.
+//   - Seat numbers in D1 are TEXT but always numeric strings; we cast to INT.
+async function checkOrphanCreation(env, theater_id, row_label, claimingSeat) {
+  // Get every seat in this row that's either already finalized OR currently
+  // held (by anyone — including the requesting sponsor's earlier holds).
+  // Cast seat_num to integer for proper numeric ordering.
+  const rs = await env.GALA_DB.prepare(
+    `SELECT CAST(seat_num AS INTEGER) AS n FROM seat_assignments
+        WHERE theater_id = ? AND row_label = ?
+      UNION
+      SELECT CAST(seat_num AS INTEGER) AS n FROM seat_holds
+        WHERE theater_id = ? AND row_label = ? AND expires_at > datetime('now')`
+  ).bind(theater_id, row_label, theater_id, row_label).all();
+
+  const occupied = new Set((rs.results || []).map(r => r.n));
+  const claiming = parseInt(claimingSeat, 10);
+  occupied.add(claiming); // simulate post-claim state
+
+  // Walk from min to max and find any single-seat gap between two occupied.
+  const sorted = [...occupied].sort((a, b) => a - b);
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (sorted[i + 1] - sorted[i] === 2) {
+      // Exactly one seat between sorted[i] and sorted[i+1] is empty.
+      const orphan = sorted[i] + 1;
+      return { ok: false, orphan };
+    }
+  }
+  return { ok: true };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export async function onRequestPost(context) {
   const { env, params, request } = context;
   const token = params.token;
@@ -128,6 +177,16 @@ export async function onRequestPost(context) {
 
   // ───── HOLD ─────
   if (action === 'hold') {
+    // Enforce no-orphan rule: this hold must not create a single empty seat
+    // wedged between two occupied seats elsewhere in the row.
+    const orphanCheck = await checkOrphanCreation(env, theater_id, row_label, seat_num);
+    if (!orphanCheck.ok) {
+      return jsonError(
+        `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
+        409,
+      );
+    }
+
     // Enforce seat budget (hold count + finalized count should not exceed available seats)
     const math = await getSeatsAvailableToPlace(env, resolved);
     const myHolds = await env.GALA_DB.prepare(
@@ -156,6 +215,17 @@ export async function onRequestPost(context) {
 
   // ───── FINALIZE ─────
   if (action === 'finalize') {
+    // Re-check the orphan rule at finalize time. The row state can change
+    // between hold and finalize (other sponsors hold/release/finalize seats
+    // in this row), so the hold-time check isn't sufficient on its own.
+    const orphanCheck = await checkOrphanCreation(env, theater_id, row_label, seat_num);
+    if (!orphanCheck.ok) {
+      return jsonError(
+        `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
+        409,
+      );
+    }
+
     const math = await getSeatsAvailableToPlace(env, resolved);
     const myPlaced = math.placed;
     const myQuota = math.total - math.delegated;

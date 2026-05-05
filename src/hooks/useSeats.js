@@ -165,6 +165,59 @@ export function useSeats(portal, token, refresh) {
 }
 
 /**
+ * Check whether a proposed batch of seat IDs would leave any single empty
+ * seat sandwiched between two occupied seats in the same row. Returns
+ * either { ok: true } or { ok: false, row, orphan, theaterId }.
+ *
+ * The check models the post-commit state of every affected row: every seat
+ * already finalized OR held (by anyone) in this theater, plus every seat
+ * about to be committed in this batch. Pre-flight only — the server has
+ * its own check in pick.js as a backstop for non-SPA clients.
+ *
+ * Same row only — gaps at row ends are fine.
+ */
+export function checkBatchOrphans(portal, theaterId, batchSeatIds) {
+  if (!portal || !batchSeatIds?.length) return { ok: true };
+
+  // Collect every seat in this theater that's already taken or held.
+  const taken = new Set();
+  const collect = (arr) => {
+    (arr || []).forEach((r) => {
+      if (r.theater_id !== theaterId) return;
+      taken.add(`${r.row_label}-${r.seat_num}`);
+    });
+  };
+  collect(portal.myAssignments);
+  collect(portal.myHolds);
+  collect(portal.allAssignments);
+  collect(portal.otherHolds);
+
+  // Add the batch to the picture.
+  batchSeatIds.forEach((id) => taken.add(id));
+
+  // Group by row_label, store seat numbers as ints.
+  const rows = new Map();
+  taken.forEach((id) => {
+    const dash = id.indexOf('-');
+    const row = id.slice(0, dash);
+    const num = parseInt(id.slice(dash + 1), 10);
+    if (!rows.has(row)) rows.set(row, []);
+    rows.get(row).push(num);
+  });
+
+  // Walk each row sorted; any 2-step gap means a single empty seat is wedged.
+  for (const [row, nums] of rows) {
+    nums.sort((a, b) => a - b);
+    for (let i = 0; i < nums.length - 1; i++) {
+      if (nums[i + 1] - nums[i] === 2) {
+        return { ok: false, row, orphan: nums[i] + 1, theaterId };
+      }
+    }
+  }
+  return { ok: true };
+}
+
+/**
  * Build the 'otherTaken' Set for a given theater — every seat in that theater
  * occupied by someone else (allAssignments + otherHolds) minus the user's own.
  * Used as the SeatMap `assignedOther` prop.

@@ -29,7 +29,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
 import { SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock } from '../SeatEngine.jsx';
-import { otherTakenForTheater } from '../../hooks/useSeats.js';
+import { otherTakenForTheater, checkBatchOrphans } from '../../hooks/useSeats.js';
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../../hooks/usePortal.js';
 import { formatShowTime } from '../Mobile.jsx';
 
@@ -196,10 +196,23 @@ export default function SeatPickSheet({
   const commit = async () => {
     if (!sel.size || !theaterId || mode !== 'place') return;
     const showingId = SHOWING_NUMBER_TO_ID[showingNumber];
+
+    // Pre-flight: this batch must not leave any single empty seat wedged
+    // between two occupied seats in the same row. Server has the same check
+    // for non-SPA clients, but the SPA-side check is friendlier (one error
+    // for the whole batch rather than a race between N parallel /pick calls).
+    const seatIds = [...sel];
+    const orphanCheck = checkBatchOrphans(portal, theaterId, seatIds);
+    if (!orphanCheck.ok) {
+      setError(
+        `That selection would leave seat ${orphanCheck.orphan} alone in row ${orphanCheck.row}. Please choose a different seat so no single seat is left empty.`
+      );
+      return;
+    }
+
     setCommitting(true);
     setError(null);
     try {
-      const seatIds = [...sel];
       await seats.place(showingId, theaterId, seatIds);
       // Hand off to host so PostPickSheet can open with these
       // freshly-placed seats. Pass the movie + showing context too so

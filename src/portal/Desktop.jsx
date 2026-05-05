@@ -30,7 +30,7 @@ import {
   TierBadge,
 } from '../brand/atoms.jsx';
 import { SeatMap, SeatLegend, adaptTheater, seatById } from './SeatEngine.jsx';
-import { otherTakenForTheater } from '../hooks/useSeats.js';
+import { otherTakenForTheater, checkBatchOrphans } from '../hooks/useSeats.js';
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../hooks/usePortal.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
@@ -1665,10 +1665,21 @@ const StepConfirm = ({
   const [err, setErr] = useState(null);
 
   const place = async () => {
+    // Pre-flight: see SeatPickSheet for the rationale. Same check as the
+    // mobile sheet so Desktop sponsors get the same friendly error.
+    const seatIds = [...sel];
+    const orphanCheck = checkBatchOrphans(portal, theaterId, seatIds);
+    if (!orphanCheck.ok) {
+      setErr(new Error(
+        `That selection would leave seat ${orphanCheck.orphan} alone in row ${orphanCheck.row}. Please choose a different seat so no single seat is left empty.`
+      ));
+      return;
+    }
+
     setPlacing(true);
     setErr(null);
     try {
-      await seats.place(showingId, theaterId, [...sel]);
+      await seats.place(showingId, theaterId, seatIds);
       onPlaced();
     } catch (e) {
       setErr(e);
