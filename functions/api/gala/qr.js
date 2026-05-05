@@ -19,7 +19,7 @@ export async function onRequestGet(context) {
   // Build the content to encode
   let content;
   if (token) {
-    content = `https://daviskids.org/gala-checkin?t=${encodeURIComponent(token)}`;
+    content = `https://gala.daviskids.org/checkin?t=${encodeURIComponent(token)}`;
   } else if (rawData) {
     content = rawData;
   } else {

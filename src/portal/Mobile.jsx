@@ -1278,7 +1278,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
   // Use the canonical production gala domain — this URL gets shared via
   // SMS/email to the delegate, so it must be absolute and stable across
   // sponsor browsing context (preview deploys, dev, etc.)
-  const portalUrl = `https://daviskids.org/gala-seats/${delegation.token}`;
+  const portalUrl = `https://gala.daviskids.org/sponsor/${delegation.token}`;
 
   const resend = async () => {
     setPending('resend');

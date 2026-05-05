@@ -38,7 +38,7 @@ export async function onRequestPost(context) {
   }
 
   // Build QR URL (group-level — scanning it loads the check-in view for this token)
-  const checkInUrl = `https://daviskids.org/gala-checkin?t=${token}`;
+  const checkInUrl = `https://gala.daviskids.org/checkin?t=${token}`;
   // Self-hosted QR — no third-party dependency, works reliably in Gmail/iOS Mail/etc.
   const qrImgUrl = `https://daviskids.org/api/gala/qr?t=${encodeURIComponent(token)}&size=400`;
 
