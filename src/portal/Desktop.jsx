@@ -2506,7 +2506,13 @@ export default function Desktop({
         {postPick && (
           <PostPickSheet
             placed={postPick}
-            missingDinnerCount={postPick.seatIds?.length || 0}
+            missingDinnerCount={
+              (portal?.myAssignments || [])
+                .filter((a) =>
+                  postPick.seatIds?.includes(`${a.row_label}-${a.seat_num}`)
+                )
+                .filter((a) => !a.dinner_choice).length
+            }
             onAssign={() => setAssignThese(postPick)}
             onPickDinners={() => setDinnerOpen(true)}
             onDone={() => {

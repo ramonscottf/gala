@@ -910,41 +910,76 @@ export const Step2Pick = ({
 
       {/* Auditorium picker — own row below the showtime pill. Phase 1.13:
           stays visible even with only one choice (disabled state) so users
-          never wonder whether something should change. */}
+          never wonder whether something should change. Phase 1.16: eyebrow
+          label + chevron caret so users read it as a tappable picker, not
+          a flat status pill. */}
       <div
         style={{
-          margin: '8px 14px 0',
+          margin: '10px 14px 0',
           display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
           flexShrink: 0,
         }}
       >
-        <select
-          aria-label="Auditorium"
-          value={theaterId || ''}
-          onChange={(e) => setTheaterId(Number(e.target.value))}
-          disabled={theaterChoices.length <= 1}
+        <div
           style={{
-            width: '100%',
-            padding: '8px 12px',
-            borderRadius: 99,
-            background: 'var(--surface)',
-            border: `1px solid var(--rule)`,
-            color: 'var(--ink-on-ground)',
-            cursor: theaterChoices.length > 1 ? 'pointer' : 'default',
-            fontSize: 12,
-            fontWeight: 600,
-            outline: 'none',
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            opacity: theaterChoices.length > 1 ? 1 : 0.7,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: 1.4,
+            textTransform: 'uppercase',
+            color: 'var(--accent-text)',
+            opacity: 0.85,
+            paddingLeft: 4,
           }}
         >
-          {theaterChoices.map((c) => (
-            <option key={c.theaterId} value={c.theaterId} style={{ color: BRAND.ink }}>
-              {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`} · {c.format}
-            </option>
-          ))}
-        </select>
+          {theaterChoices.length > 1 ? 'Choose auditorium' : 'Auditorium'}
+        </div>
+        <div style={{ position: 'relative', width: '100%' }}>
+          <select
+            aria-label="Auditorium"
+            value={theaterId || ''}
+            onChange={(e) => setTheaterId(Number(e.target.value))}
+            disabled={theaterChoices.length <= 1}
+            style={{
+              width: '100%',
+              padding: '8px 32px 8px 12px',
+              borderRadius: 99,
+              background: 'var(--surface)',
+              border: `1px solid var(--rule)`,
+              color: 'var(--ink-on-ground)',
+              cursor: theaterChoices.length > 1 ? 'pointer' : 'default',
+              fontSize: 12,
+              fontWeight: 600,
+              outline: 'none',
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              opacity: theaterChoices.length > 1 ? 1 : 0.7,
+            }}
+          >
+            {theaterChoices.map((c) => (
+              <option key={c.theaterId} value={c.theaterId} style={{ color: BRAND.ink }}>
+                {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`} · {c.format}
+              </option>
+            ))}
+          </select>
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              right: 12,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+              color: 'var(--ink-on-ground)',
+              opacity: theaterChoices.length > 1 ? 0.7 : 0.35,
+              fontSize: 10,
+              lineHeight: 1,
+            }}
+          >
+            ▾
+          </span>
+        </div>
       </div>
 
       {/* Phase 1.13 — selection caption. Reaffirms what the map below
