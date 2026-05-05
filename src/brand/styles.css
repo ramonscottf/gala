@@ -78,6 +78,18 @@
   .wizard-body [style*="color: #fff"]:not(.force-dark):not(.force-dark *) {
     color: var(--ink-on-ground) !important;
   }
+
+  /* Companion fix: cards whose background is rgba(255,255,255,0.03) or
+   * rgba(255,255,255,0.08) — these were designed to lift gently off the
+   * dark navy ground. Against a white page they're invisible, leaving
+   * card text floating with no container. Promote them to var(--surface)
+   * in light mode so the cards have visible edges and lift. */
+  .wizard-body [style*="background: rgba(255,255,255,0.03)"]:not(.force-dark):not(.force-dark *),
+  .wizard-body [style*="background: rgba(255, 255, 255, 0.03)"]:not(.force-dark):not(.force-dark *),
+  .wizard-body [style*="background: rgba(255,255,255,0.08)"]:not(.force-dark):not(.force-dark *),
+  .wizard-body [style*="background: rgba(255, 255, 255, 0.08)"]:not(.force-dark):not(.force-dark *) {
+    background: var(--surface) !important;
+  }
 }
 
 *,
