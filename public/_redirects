@@ -1,0 +1,12 @@
+# SPA fallback for the sponsor portal. Serves public/sponsor/index.html
+# for any path under /sponsor/ that isn't a static asset, so /sponsor/{token}
+# and /sponsor/{token}/seats both render the SPA shell.
+#
+# /sponsor/assets/* is intentionally NOT rewritten — those are real files
+# Pages serves directly with hashed names.
+/sponsor/assets/*  /sponsor/assets/:splat  200
+/sponsor/*         /sponsor/index.html     200
+
+# /checkin/{token} — same pattern. Without this, /checkin/{token} would 404
+# against static files. Middleware still gates auth.
+/checkin/*  /checkin/index.html  200

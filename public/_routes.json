@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/api/*", "/admin", "/admin/*", "/checkin", "/checkin/*", "/sponsor", "/sponsor/*"],
-  "exclude": ["/sponsor/assets/*", "/admin/seating.html", "/admin/sso-test.html", "/assets/*", "/data/*", "/favicon.ico", "/manifest.json", "/robots.txt", "/_redirects"]
+  "include": ["/api/*", "/admin", "/admin/*", "/checkin", "/checkin/*"],
+  "exclude": ["/admin/seating.html", "/admin/sso-test.html", "/assets/*", "/data/*", "/sponsor/assets/*", "/favicon.ico", "/manifest.json", "/robots.txt", "/_redirects"]
 }
