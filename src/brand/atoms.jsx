@@ -21,18 +21,23 @@ import { BRAND, TIERS, FONT_DISPLAY, FONT_UI } from './tokens.js';
 // Use `dark={true}` to indicate "this is on a dark background" → use the
 // LIGHT variant. The naming flip is intentional: the prop describes the
 // surface, not the variant.
-export const Logo = ({ size = 32, dark }) => (
-  <img
-    src={dark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
-    alt="Davis Education Foundation"
-    style={{
-      height: size,
-      width: 'auto',
-      display: 'inline-block',
-      verticalAlign: 'middle',
-    }}
-  />
-);
+export const Logo = ({ size = 32, dark }) => {
+  const width = dark ? size * 3 : Math.round(size * 4 / 3);
+  return (
+    <img
+      src={dark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
+      alt="Davis Education Foundation"
+      width={width}
+      height={size}
+      style={{
+        height: size,
+        width: 'auto',
+        display: 'inline-block',
+        verticalAlign: 'middle',
+      }}
+    />
+  );
+};
 
 export const GalaWordmark = ({ size = 14, color = BRAND.gold }) => (
   <div

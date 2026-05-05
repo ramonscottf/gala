@@ -146,18 +146,20 @@ function PortalContainer() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/:token" element={<PortalContainer />} />
-      <Route path="/:token/seats" element={<PortalContainer />} />
-      <Route
-        path="*"
-        element={
-          <FullScreenMessage>
-            Add your sponsor token to the URL —<br />
-            <span style={{ color: BRAND.gold, fontStyle: 'italic' }}>/sponsor/{'{your-token}'}</span>
-          </FullScreenMessage>
-        }
-      />
-    </Routes>
+    <main id="main-content" style={{ height: '100dvh' }}>
+      <Routes>
+        <Route path="/:token" element={<PortalContainer />} />
+        <Route path="/:token/seats" element={<PortalContainer />} />
+        <Route
+          path="*"
+          element={
+            <FullScreenMessage>
+              Add your sponsor token to the URL —<br />
+              <span style={{ color: BRAND.gold, fontStyle: 'italic' }}>/sponsor/{'{your-token}'}</span>
+            </FullScreenMessage>
+          }
+        />
+      </Routes>
+    </main>
   );
 }

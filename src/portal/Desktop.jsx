@@ -63,12 +63,7 @@ const colorFor = (name) => {
   return PALETTE[h % PALETTE.length];
 };
 const Avatar = ({ name, size = 28 }) => {
-  const initials = (name || '?')
-    .split(/\s+/)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = initialsFor(name);
   return (
     <span
       className="force-dark"
@@ -91,6 +86,13 @@ const Avatar = ({ name, size = 28 }) => {
     </span>
   );
 };
+
+const initialsFor = (name) => (name || '?')
+  .split(/\s+/)
+  .map((p) => p[0])
+  .join('')
+  .slice(0, 2)
+  .toUpperCase();
 
 const PosterMini = ({ poster, color, label, size = 46 }) => (
   <div
@@ -227,7 +229,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
       {tier && <TierBadge tier={tier} />}
       <button
         onClick={onSettingsTap}
-        aria-label="Open settings"
+        aria-label={`${initialsFor(name)} ${name || 'Sponsor'} settings`}
         style={{
           all: 'unset',
           cursor: 'pointer',

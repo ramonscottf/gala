@@ -73,11 +73,7 @@ const PosterMini = ({ poster, color, label, size = 44, showLabel = true }) => (
 );
 
 const Avatar = ({ name, size = 36, color }) => {
-  const initials = (name || '?')
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('');
+  const initials = initialsFor(name);
   return (
     <div
       style={{
@@ -100,6 +96,13 @@ const Avatar = ({ name, size = 36, color }) => {
     </div>
   );
 };
+
+const initialsFor = (name) => (name || '?')
+  .split(/\s+/)
+  .map((n) => n[0])
+  .slice(0, 2)
+  .join('')
+  .toUpperCase();
 
 const StatusPill = ({ status }) => {
   const map = {
@@ -1859,6 +1862,8 @@ const AppBar = ({ name, onAvatarTap }) => {
       <img
         src={isDark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
         alt="Davis Education Foundation"
+        width={isDark ? 84 : 37}
+        height={28}
         style={{
           height: 28,
           width: 'auto',
@@ -1885,7 +1890,7 @@ const AppBar = ({ name, onAvatarTap }) => {
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <button
         onClick={onAvatarTap}
-        aria-label="Open settings"
+        aria-label={`${initialsFor(name)} settings`}
         style={{
           all: 'unset',
           cursor: 'pointer',
