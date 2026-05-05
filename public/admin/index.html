@@ -197,7 +197,10 @@ body {
   color: #fff;
 }
 
-/* Countdown */
+/* Countdown — hidden in admin dashboard (took too much vertical space).
+   Kept in DOM so the ticker JS doesn't error. Remove this `display:none`
+   to restore. */
+.dash-countdown { display: none !important; }
 .dash-countdown {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.16);
