@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d1b3d">
+<title>Gala 2026 · Marketing Review</title>
+
+<!-- Open Graph / link preview (iMessage, Slack, FB, LinkedIn) -->
+<meta property="og:title" content="Gala 2026 — Marketing Review">
+<meta property="og:description" content="AI rewrites your copy. Undo any change. Sign in by email.">
+<meta property="og:image" content="https://assets.daviskids.org/gala-review/share.png">
+<meta property="og:image:width" content="1536">
+<meta property="og:image:height" content="1024">
+<meta property="og:url" content="https://gala.daviskids.org/review/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Davis Education Foundation">
+
+<!-- Twitter card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gala 2026 — Marketing Review">
+<meta name="twitter:description" content="AI rewrites your copy. Undo any change. Sign in by email.">
+<meta name="twitter:image" content="https://assets.daviskids.org/gala-review/share.png">
+
+<style>
+  /* === GALA THEME (matches email template) === */
+  :root {
+    --navy: #0d1b3d;
+    --navy-deep: #0a1530;
+    --red: #c8102e;
+    --red-soft: #fef7f7;
+    --blue: #0066ff;
+    --gold: #d4af6a;
+    --ink: #3d3d3d;
+    --ink-soft: #6b7280;
+    --ink-mute: #94a3b8;
+    --card-border: #c5cdd9;
+    --card-bg: #f3f5f9;
+    --page-bg: #ffffff;
+    --green: #16a34a;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+  }
+
+  /* === MASTHEAD (matches email header) === */
+  .masthead {
+    background: var(--navy);
+    color: #fff;
+    text-align: center;
+    padding: 28px 24px 24px;
+    position: relative;
+  }
+  .masthead .strip-top {
+    position: absolute; top: 0; left: 0; right: 0; height: 8px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%);
+  }
+  .masthead .strip-bot {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--blue) 100%);
+  }
+  .masthead .eyebrow {
+    color: #a7b3cc; font-size: 11px; letter-spacing: 0.18em;
+    font-weight: 700; margin: 8px 0 6px;
+  }
+  .masthead .wordmark {
+    font-size: 38px; font-weight: 800; letter-spacing: -1px;
+    margin: 0 0 8px; color: #fff;
+  }
+  .masthead .tag {
+    color: var(--gold); font-size: 13px; letter-spacing: 0.06em;
+    font-weight: 600; font-style: italic; margin: 0 0 8px;
+  }
+  .masthead .review-tag {
+    color: #a7b3cc; font-size: 12px; margin: 6px 0 0; letter-spacing: 0.04em;
+  }
+  .date-strip {
+    background: var(--navy-deep); color: #fff;
+    padding: 12px 24px; text-align: center;
+    font-size: 13px; letter-spacing: 0.04em;
+  }
+
+  /* === STICKY NAV === */
+  .toolbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 12px 16px;
+  }
+  .toolbar-inner {
+    max-width: 900px; margin: 0 auto;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .toolbar h2 {
+    margin: 0 12px 0 0; font-size: 14px; color: var(--navy); font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .pill {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    color: var(--navy); padding: 5px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    text-decoration: none; transition: all .15s;
+    display: inline-block;
+  }
+  .pill:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .pill.sms { color: var(--blue); border-color: #cfd9ff; background: #eff4ff; }
+  .pill.sms:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .pill.has-edit { border-color: var(--gold); background: #fff8e6; }
+  .pill.has-edit::after { content: ' ✎'; color: var(--gold); }
+  .pill.applied { border-color: var(--green); background: #eafff1; }
+  .pill.applied::after { content: ' ✓'; color: var(--green); }
+
+  /* === APPLY-ALL BAR === */
+  .apply-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: background 0.3s;
+  }
+  .apply-bar.pending { background: linear-gradient(90deg, #b8860b 0%, var(--gold) 100%); color: #1a1300; }
+  .apply-bar.applying { background: linear-gradient(90deg, #1f4484 0%, var(--blue) 100%); }
+  .apply-bar.success { background: linear-gradient(90deg, #15803d 0%, var(--green) 100%); }
+  .apply-bar.error { background: linear-gradient(90deg, #991b1b 0%, var(--red) 100%); }
+  .apply-bar-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .apply-bar-count {
+    background: rgba(255,255,255,0.18);
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .apply-bar.pending .apply-bar-count { background: rgba(0,0,0,0.18); }
+  .apply-bar-actions { display: flex; gap: 8px; }
+  .apply-btn {
+    background: #fff;
+    color: var(--navy);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  .apply-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+  .apply-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .apply-btn.primary { background: var(--gold); color: #000; }
+  .apply-bar.pending .apply-btn.primary { background: #000; color: var(--gold); }
+  .apply-bar.success .apply-btn,
+  .apply-bar.applying .apply-btn { background: rgba(255,255,255,0.95); }
+
+  /* === SIGN-IN GATE === */
+  .signin-gate {
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  }
+  .signin-card {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 36px 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  .signin-badge {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: #737373;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .signin-card h1 {
+    font-size: 26px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+    color: #f5f5f5;
+    font-family: inherit;
+  }
+  .signin-accent { color: #d4af6a; }
+  .signin-help {
+    color: #a3a3a3;
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 24px;
+  }
+  .signin-card input[type=email] {
+    width: 100%;
+    padding: 14px 16px;
+    background: #0a0a0a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: #f5f5f5;
+    font-size: 15px;
+    margin-bottom: 14px;
+    font-family: inherit;
+  }
+  .signin-card input[type=email]:focus { outline: none; border-color: #d4af6a; }
+  .signin-card button {
+    width: 100%;
+    padding: 14px;
+    background: #d4af6a;
+    border: none;
+    border-radius: 8px;
+    color: #0a0a0a;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .signin-card button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .signin-msg {
+    margin-top: 18px;
+    padding: 12px;
+    background: #1d1d1d;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #a3a3a3;
+    display: none;
+  }
+  .signin-msg.show { display: block; }
+  .signin-msg.success { background: #14271a; color: #6ee7b7; border: 1px solid #1f4d2e; }
+
+  /* === USER CHIP (signed-in indicator, top right) === */
+  .user-chip {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 5px 6px 5px 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    font-size: 12px;
+  }
+  .user-chip-email {
+    color: #475569;
+    font-weight: 600;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .user-chip-out {
+    background: var(--ink-soft, #475569);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .user-chip-out:hover { background: var(--red); }
+  @media (max-width: 600px) {
+    .user-chip { top: 8px; right: 8px; padding: 4px 4px 4px 10px; }
+    .user-chip-email { max-width: 110px; font-size: 11px; }
+  }
+
+  /* === AI REWRITE BUTTON & RELATED === */
+  .footer-cta .btn.ai {
+    background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+    color: #fff;
+    border-color: transparent;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(109, 40, 217, 0.25);
+  }
+  .footer-cta .btn.ai:hover {
+    background: linear-gradient(135deg, #5b21b6, #7c3aed);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.35);
+  }
+  .footer-cta .btn.ai:disabled {
+    background: #c4b5fd;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .footer-cta .btn.undo {
+    background: #fff;
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+  .footer-cta .btn.undo:hover {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold);
+  }
+  .ai-thinking {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #6d28d9;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .ai-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #c4b5fd;
+    border-top-color: #6d28d9;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-reasoning {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #f5f3ff;
+    border-left: 3px solid #8b5cf6;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #4c1d95;
+    line-height: 1.5;
+  }
+  .ai-reasoning strong { color: #5b21b6; }
+  .editor-meta {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .editor-meta strong { color: #475569; }
+
+  /* === STATUS BADGES on send cards === */
+  .send.applied { border-color: var(--green); background: #fbfffd; }
+  .send.applied .send-strip { background: linear-gradient(90deg, var(--green), #4ade80); }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .status-badge.pending { background: var(--gold); color: #000; }
+  .status-badge.applied { background: var(--green); color: #fff; }
+  .status-badge.applying { background: var(--blue); color: #fff; }
+  .status-badge.error { background: var(--red); color: #fff; }
+  .commit-link {
+    color: var(--green);
+    font-size: 11px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-decoration: none;
+    margin-left: 6px;
+  }
+  .commit-link:hover { text-decoration: underline; }
+  .footer-cta .btn.apply {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+  .footer-cta .btn.apply:hover { background: #b8860b; border-color: #b8860b; color: #fff; }
+  .footer-cta .btn.apply:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* === MAIN === */
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  .phase-marker {
+    margin: 32px 0 16px;
+    padding: 10px 16px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .phase-marker:first-of-type { margin-top: 0; }
+
+  /* === SEND CARDS (match email card aesthetics) === */
+  .send {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(13,27,61,0.06);
+  }
+  .send.has-edit { box-shadow: 0 4px 18px rgba(212,175,106,0.25); border-color: var(--gold); }
+
+  .send-strip {
+    height: 6px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%);
+  }
+
+  .send-head {
+    padding: 14px 20px;
+    background: #fff;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .send-head .id {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    color: var(--navy); font-weight: 800; font-size: 14px;
+  }
+  .send-head .type-badge {
+    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 4px; font-weight: 700;
+  }
+  .type-badge.email { background: var(--red); color: #fff; }
+  .type-badge.sms { background: var(--blue); color: #fff; }
+
+  .send-head .actions { margin-left: auto; display: flex; gap: 6px; }
+  .icon-btn {
+    background: transparent; border: 1px solid var(--card-border);
+    color: var(--ink-soft); width: 32px; height: 32px;
+    border-radius: 6px; cursor: pointer; padding: 0;
+    font-size: 13px; display: inline-flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .icon-btn:hover { background: #fff; color: var(--navy); border-color: var(--navy); }
+  .icon-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .send-subject {
+    padding: 14px 20px;
+    background: #fff;
+    border-bottom: 1px solid var(--card-border);
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .send-subject .subj-text {
+    display: block;
+    margin-top: 4px;
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    padding: 4px 6px;
+    margin-left: -6px;
+    border-radius: 4px;
+    transition: background .15s;
+  }
+  .send-subject .subj-text:hover { background: var(--card-bg); }
+  .send-subject .subj-text.editing {
+    background: #fff8e6;
+    outline: 2px solid var(--gold);
+  }
+
+  .send-body {
+    padding: 24px 20px;
+    background: var(--card-bg);
+  }
+  .email-render {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px 22px;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.6;
+    border: 1px solid var(--card-border);
+    cursor: text;
+  }
+  .email-render.editing {
+    outline: 2px solid var(--gold);
+    background: #fffef5;
+  }
+  .email-render h3 { color: var(--navy); font-size: 17px; margin: 24px 0 10px; }
+  .email-render a { color: var(--red); font-weight: 600; }
+  .email-render strong { color: var(--navy); }
+  .email-render ul { padding-left: 22px; }
+  .email-render li { margin-bottom: 6px; }
+  .email-render p { margin: 0 0 14px; }
+
+  /* SMS bubble (light-themed, blue iMessage style) */
+  .sms-render {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--card-border);
+    text-align: center;
+    cursor: text;
+  }
+  .sms-render.editing { outline: 2px solid var(--gold); background: #fffef5; }
+  .sms-bubble {
+    display: inline-block;
+    background: var(--blue);
+    color: #fff;
+    padding: 14px 20px;
+    border-radius: 18px 18px 18px 4px;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: left;
+    max-width: 86%;
+    word-wrap: break-word;
+  }
+  .sms-meta {
+    color: var(--ink-mute);
+    font-size: 11px;
+    margin-top: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Notes section */
+  .notes-section {
+    margin-top: 14px;
+    padding: 14px 18px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+  }
+  .notes-section.has-content { border-color: var(--gold); background: #fff8e6; }
+  .notes-label {
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .notes-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 36px;
+    padding: 0;
+    outline: none;
+  }
+  .notes-input::placeholder { color: var(--ink-mute); font-style: italic; }
+
+  /* Edit footer */
+  .edit-footer {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .edit-meta {
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .edit-meta.dirty { color: var(--gold); font-weight: 700; }
+  .edit-meta.saved { color: var(--green); }
+
+  .footer-cta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    border: 1px solid var(--card-border);
+    background: #fff;
+    color: var(--navy);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all .15s;
+  }
+  .btn:hover { border-color: var(--navy); }
+  .btn.primary {
+    background: var(--red); color: #fff; border-color: var(--red);
+    box-shadow: 0 2px 6px rgba(200,16,46,0.3);
+  }
+  .btn.primary:hover { background: #a30d24; border-color: #a30d24; }
+  .btn.ghost { background: transparent; color: var(--ink-soft); }
+  .btn.ghost:hover { color: var(--red); border-color: var(--red); }
+
+  /* === FOOTER === */
+  .page-footer {
+    margin-top: 48px;
+    padding: 24px 16px;
+    background: var(--card-bg);
+    border-top: 6px solid;
+    border-image: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%) 1;
+    text-align: center;
+  }
+  .page-footer p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--navy); color: #fff;
+    padding: 10px 22px; border-radius: 999px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 8px 28px rgba(13,27,61,0.28);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+  .toast.green { background: var(--green); }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    .masthead .wordmark { font-size: 32px; }
+    main { padding: 24px 12px 48px; }
+    .toolbar h2 { width: 100%; margin: 0 0 8px; }
+    .send-body { padding: 18px 14px; }
+    .email-render { padding: 18px 14px; font-size: 14px; }
+  }
+
+  /* Print */
+  @media print {
+    .toolbar, .send-head .actions, .icon-btn, .edit-footer { display: none; }
+    .send { box-shadow: none; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="strip-top"></div>
+  <p class="eyebrow">DAVIS EDUCATION FOUNDATION</p>
+  <h1 class="wordmark">GALA 2026</h1>
+  <p class="tag">Lights, Camera, Take Action!</p>
+  <p class="review-tag">Marketing Review · 29 sends · click anything to edit</p>
+  <div class="strip-bot"></div>
+</header>
+<div class="date-strip">Wednesday · June 10, 2026 · Megaplex Centerville</div>
+
+<div class="apply-bar" id="apply-bar">
+  <div class="apply-bar-status" id="apply-bar-status">
+    <span id="apply-bar-icon">📋</span>
+    <span id="apply-bar-text">No changes to apply</span>
+    <span class="apply-bar-count" id="apply-bar-count" style="display:none;">0</span>
+  </div>
+  <div class="apply-bar-actions">
+    <button class="apply-btn primary" id="apply-all-btn" disabled>Apply all to source &rarr;</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-inner" id="toolbar-pills">
+    <h2>Jump to:</h2>
+    <!-- pills injected by JS -->
+  </div>
+</div>
+
+<main id="sends">
+  <!-- sends injected by JS -->
+</main>
+
+<footer class="page-footer">
+  <p>Davis Education Foundation · Marketing Review · Edits save automatically</p>
+</footer>
+
+<div class="toast" id="toast">Saved</div>
+
+<script>
+const SENDS = [
+  {
+    "id": "s1a",
+    "type": "email",
+    "subject": "You're in. Here's what's new for 2026.",
+    "body": "\n      <p>You've already secured your seats for <strong>June 10 at Megaplex Centerville</strong>. We're writing to give you the first look at something we built for you this year:</p>\n      <p><strong>A new seat selection platform.</strong> No more \"where am I sitting?\" guessing games. When your sponsor window opens (we'll tell you exactly when), you'll get a private link to select your exact seats, choose your dinner, and finalize everything in under two minutes.</p>\n      <h3 style=\"color:#0b1b3c;font-size:16px;margin:24px 0 10px;\">What's coming up</h3>\n      <ul style=\"color:#1e293b;font-size:14px;line-height:1.8;padding-left:20px;margin:0 0 20px;\">\n        <li><strong>May 4</strong> — Platinum sponsors select first</li>\n        <li><strong>May 11</strong> — Gold sponsor window opens</li>\n        <li><strong>May 14</strong> — Silver</li>\n        <li><strong>May 17</strong> — Bronze</li>\n        <li><strong>May 28</strong> — Full event details, auction preview, food and showtime selections</li>\n      </ul>\n      <h3 style=\"color:#0b1b3c;font-size:16px;margin:24px 0 10px;\">And one more thing.</h3>\n      \n  <div style=\"background:linear-gradient(135deg,#fef7f7,#fff);border:2px solid #CB262C;border-radius:12px;padding:20px 22px;margin:24px 0;\">\n    <p style=\"margin:0 0 6px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Opportunity Drawing</p>\n    <p style=\"margin:0 0 8px;color:#0b1b3c;font-size:18px;font-weight:700;\">$100 donation supports school lunch — and enters you to win.</p>\n    <p style=\"margin:0 0 10px;color:#475569;font-size:14px;line-height:1.6;\">Six San Francisco 49ers home game tickets (lower bowl, 19th row) plus a $2,000 travel card. Each $100 donation to Davis school lunch is one entry. Limited to the first 200 donations. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;color:#475569;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">See full rules and how to enter →</a></p>\n  </div>\n      <p style=\"color:#475569;font-size:13px;\">Save the date. We'll be in touch.</p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry, Kara, and the entire DEF team</p>\n    ",
+    "phase": "Phase 1 · The Reset"
+  },
+  {
+    "id": "s1b",
+    "type": "email",
+    "subject": "Gala 2026 is back — and the seats are filling up",
+    "body": "\n      <p style=\"font-size:18px;font-weight:700;color:#0b1b3c;margin:0 0 16px;\">Wednesday, June 10, 2026 • Megaplex Centerville</p>\n      <p>Here's what's new this year:</p>\n      <p>🎟 <strong>A real seat selection platform.</strong> Select your exact seats, your dinner, and your showtime — all from your phone. No spreadsheets, no email chains.</p>\n      <p>🎬 <strong>Four films across two showings.</strong> The Mandalorian &amp; Grogu in IMAX, Breadwinner, Paddington 2, How to Train Your Dragon. Choose what you want to see.</p>\n      <p>🍱 <strong>Dinner — packed lunchbox style.</strong> Old-school school lunch, elevated. Five options including kids and gluten-free.</p>\n      \n  <div style=\"background:#fef7f7;border-left:3px solid #CB262C;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n    <p style=\"margin:0 0 4px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Drawing — supports school lunch</p>\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-size:14px;line-height:1.5;\"><strong>$100 donation = 1 entry. Limited to the first 200 donations.</strong> 6 49ers tickets + $2,000 travel card. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">Rules and how to enter →</a></p>\n  </div>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://daviskids.org/events-gala\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry, Kara, and the entire DEF team</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "s3",
+    "type": "email",
+    "subject": "Platinum sponsors: your seat selection is now open",
+    "body": "\n      <p>As one of our <strong>Platinum sponsors</strong>, you get the first selection of the house — every seat, every showing, every auditorium is open to you right now.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p>Your link is private and tied to your sponsorship. <strong>Choose by Friday, May 8</strong> to lock in your top choice.</p>\n      <h3 style=\"color:#0b1b3c;font-size:16px;margin:24px 0 10px;\">Two showings, four films, your call.</h3>\n      \n  <div style=\"margin:18px 0;\">\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-weight:700;font-size:15px;\">🎬 Four films, two showings — your call</p>\n    <p style=\"margin:0 0 12px;color:#1e293b;font-size:14px;line-height:1.6;\">The Mandalorian &amp; Grogu (IMAX) · Breadwinner · Paddington 2 · How to Train Your Dragon</p>\n    <p style=\"margin:0 0 4px;color:#CB262C;font-weight:700;font-size:14px;\">🔴 Early showing</p>\n    <p style=\"margin:0 0 14px;color:#475569;font-size:13px;\">Social hour 4:00 PM · Dinner 4:30 PM · Movie 5:00 PM</p>\n    <p style=\"margin:0 0 4px;color:#0b1b3c;font-weight:700;font-size:14px;\">🔵 Late showing</p>\n    <p style=\"margin:0;color:#475569;font-size:13px;\">Social hour 6:00 PM · Dinner 7:15 PM · Movie 7:45 PM</p>\n  </div>\n      <p style=\"color:#475569;font-size:13px;margin-top:20px;\"><strong>A note on the 49ers Drawing:</strong> A $100 donation to school lunch enters you to win 6 49ers tickets + a $2,000 travel card. <a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;\">See full rules and how to enter →</a></p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry &amp; Kara</p>\n    ",
+    "phase": "Phase 2 · Tiered Open — Platinum"
+  },
+  {
+    "id": "sms1",
+    "type": "sms",
+    "subject": "",
+    "body": "Platinum window is OPEN. Your private link to select seats: https://gala.daviskids.org/sponsor/{TOKEN} — Sherry & Kara, DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "s4",
+    "type": "email",
+    "subject": "Last day for Platinum seat selection",
+    "body": "\n      <p>Quick heads up — <strong>Platinum seat selection opens up to Gold tomorrow morning.</strong> Your top choices are still available, but they may not be after that.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats now →</a></p>\n      <p>It's quick — your dinner choice, your row, your showtime, all in one place.</p>\n      <p>If you've already finalized, you can ignore this. If you'd like help, just reply to this email.</p>\n      <p style=\"color:#475569;font-size:13px;\">— Kara</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "s5",
+    "type": "email",
+    "subject": "Gold sponsors: select your seats now",
+    "body": "\n      <p>Your private seat selection is live. You'll see what's left after Platinum, and there's still plenty of premium real estate in every auditorium.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p><strong>Your window closes Tuesday, May 13.</strong></p>\n      \n  <div style=\"margin:18px 0;\">\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-weight:700;font-size:15px;\">🎬 Four films, two showings — your call</p>\n    <p style=\"margin:0 0 12px;color:#1e293b;font-size:14px;line-height:1.6;\">The Mandalorian &amp; Grogu (IMAX) · Breadwinner · Paddington 2 · How to Train Your Dragon</p>\n    <p style=\"margin:0 0 4px;color:#CB262C;font-weight:700;font-size:14px;\">🔴 Early showing</p>\n    <p style=\"margin:0 0 14px;color:#475569;font-size:13px;\">Social hour 4:00 PM · Dinner 4:30 PM · Movie 5:00 PM</p>\n    <p style=\"margin:0 0 4px;color:#0b1b3c;font-weight:700;font-size:14px;\">🔵 Late showing</p>\n    <p style=\"margin:0;color:#475569;font-size:13px;\">Social hour 6:00 PM · Dinner 7:15 PM · Movie 7:45 PM</p>\n  </div>\n      <p style=\"color:#475569;font-size:14px;\">Mandalorian &amp; Grogu is in our biggest auditorium (IMAX, 308 seats) — those go quickest.</p>\n      \n  <div style=\"background:#fef7f7;border-left:3px solid #CB262C;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n    <p style=\"margin:0 0 4px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Drawing — supports school lunch</p>\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-size:14px;line-height:1.5;\"><strong>$100 donation = 1 entry. Limited to the first 200 donations.</strong> 6 49ers tickets + $2,000 travel card. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">Rules and how to enter →</a></p>\n  </div>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry &amp; Kara</p>\n    ",
+    "phase": "Gold"
+  },
+  {
+    "id": "sms2",
+    "type": "sms",
+    "subject": "",
+    "body": "Gold window is open. Select your seats: https://gala.daviskids.org/sponsor/{TOKEN} — closes Tuesday. DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "s6",
+    "type": "email",
+    "subject": "Gold seats — last call before Silver opens",
+    "body": "\n      <p>Silver opens tomorrow morning. If you'd still like to lock in your Gold seats, here's your link.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p style=\"color:#475569;font-size:13px;\">— Kara</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "s7",
+    "type": "email",
+    "subject": "Silver sponsors: your seat selection is live",
+    "body": "\n      <p>It is time to select your seats. Choose your row, your dinner, your showtime.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p><strong>Your window closes Friday, May 16.</strong></p>\n      <p>🔴 Early showing • 🔵 Late showing — both have The Mandalorian &amp; Grogu, Breadwinner, Paddington 2, and How to Train Your Dragon. Choose what you want to see.</p>\n      \n  <div style=\"background:#fef7f7;border-left:3px solid #CB262C;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n    <p style=\"margin:0 0 4px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Drawing — supports school lunch</p>\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-size:14px;line-height:1.5;\"><strong>$100 donation = 1 entry. Limited to the first 200 donations.</strong> 6 49ers tickets + $2,000 travel card. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">Rules and how to enter →</a></p>\n  </div>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry &amp; Kara</p>\n    ",
+    "phase": "Silver"
+  },
+  {
+    "id": "sms3",
+    "type": "sms",
+    "subject": "",
+    "body": "Silver window opens now. Your link: https://gala.daviskids.org/sponsor/{TOKEN} — closes Fri. DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "s8",
+    "type": "email",
+    "subject": "Silver seats close tonight",
+    "body": "\n      <p>If you're a Silver sponsor and haven't selected yet, this is the last call before the next tier opens.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p style=\"color:#475569;font-size:13px;\">— Kara</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "s9",
+    "type": "email",
+    "subject": "Bronze sponsors: select your seats",
+    "body": "\n      <p>You're up.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p><strong>Closes Tuesday, May 19.</strong></p>\n      <p>🔴 Early showing • 🔵 Late showing</p>\n      \n  <div style=\"background:#fef7f7;border-left:3px solid #CB262C;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n    <p style=\"margin:0 0 4px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Drawing — supports school lunch</p>\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-size:14px;line-height:1.5;\"><strong>$100 donation = 1 entry. Limited to the first 200 donations.</strong> 6 49ers tickets + $2,000 travel card. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">Rules and how to enter →</a></p>\n  </div>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry &amp; Kara</p>\n    ",
+    "phase": "Bronze"
+  },
+  {
+    "id": "sms4",
+    "type": "sms",
+    "subject": "",
+    "body": "Bronze window is OPEN. Last sponsor tier before general. Select: https://gala.daviskids.org/sponsor/{TOKEN} — closes Tue. DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "s10",
+    "type": "email",
+    "subject": "Bronze closes tonight — general opens tomorrow",
+    "body": "\n      <p>General access opens tomorrow morning. Get your seats locked in first.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <p style=\"color:#475569;font-size:13px;\">— Kara</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "s11",
+    "type": "email",
+    "subject": "General seat selection is open. The 49ers drawing is coming.",
+    "body": "\n      <p>If you bought individual seats, your portal is now live. Select your row, your dinner, your showtime — all in one place.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      <h3 style=\"color:#0b1b3c;font-size:16px;margin:24px 0 10px;\">And the big one is almost here.</h3>\n      \n  <div style=\"background:linear-gradient(135deg,#fef7f7,#fff);border:2px solid #CB262C;border-radius:12px;padding:20px 22px;margin:24px 0;\">\n    <p style=\"margin:0 0 6px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Opportunity Drawing</p>\n    <p style=\"margin:0 0 8px;color:#0b1b3c;font-size:18px;font-weight:700;\">$100 donation supports school lunch — and enters you to win.</p>\n    <p style=\"margin:0 0 10px;color:#475569;font-size:14px;line-height:1.6;\">Six San Francisco 49ers home game tickets (lower bowl, 19th row) plus a $2,000 travel card. Each $100 donation to Davis school lunch is one entry. Limited to the first 200 donations. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;color:#475569;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">See full rules and how to enter →</a></p>\n  </div>\n      <p style=\"color:#475569;font-size:13px;\">Drawing flow goes live with the main event email on <strong>May 28</strong>. Be ready.</p>\n      <h3 style=\"color:#0b1b3c;font-size:16px;margin:24px 0 10px;\">A few things to know</h3>\n      <p>🎬 <strong>Four films, two showings.</strong> The Mandalorian &amp; Grogu (IMAX) is going fastest.<br/>\n      🍱 <strong>Dinner is packed-lunch style</strong> — five options, kids and gluten-free included.<br/>\n      🅿 <strong>Parking and check-in details</strong> come in the May 28 email.</p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry &amp; Kara</p>\n    ",
+    "phase": "Phase 3 · General Push"
+  },
+  {
+    "id": "sms5",
+    "type": "sms",
+    "subject": "",
+    "body": "General seat selection is OPEN. Select yours: https://gala.daviskids.org/sponsor/{TOKEN} — and get ready for the 49ers drawing May 28. DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "s12",
+    "type": "email",
+    "subject": "Gala 2026 — everything you need for June 10",
+    "body": "\n      <p style=\"font-size:17px;color:#0b1b3c;font-weight:700;margin:0 0 8px;\">Two weeks. Here's everything.</p>\n      <p>Wednesday, <strong>June 10</strong>. Megaplex Centerville.</p>\n      <p>This email has everything you need: the auction preview, the 49ers drawing (it's now live), final seat selection, and the day-of flow.</p>\n\n      <div style=\"background:#aa0000;border-radius:12px;padding:24px;margin:24px 0;color:#fff;text-align:center;\">\n        <p style=\"margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#ffd76a;\">🏈 49ers Opportunity Drawing is live</p>\n        <p style=\"margin:0 0 10px;font-size:22px;font-weight:800;line-height:1.2;color:#fff;\">$100 donation = 1 entry</p>\n        <p style=\"margin:0 0 14px;font-size:15px;font-weight:600;color:#fff;\">6 49ers tickets + $2,000 travel card</p>\n        <p style=\"margin:0 0 16px;font-size:13px;line-height:1.5;color:#fff;opacity:0.95;\">Every donation supports school lunch for Davis kids. Limited to the first 200 donations.</p>\n        <p style=\"margin:0;\"><a href=\"https://daviskids.org/49ers\" style=\"display:inline-block;background:#fff;color:#aa0000;padding:12px 26px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">See rules and enter →</a></p>\n      </div>\n\n      <h3 style=\"color:#0b1b3c;font-size:17px;margin:28px 0 10px;\">🎟 Final seat selection</h3>\n      <p>Haven't selected yet? Now's the time. <strong>Selection closes May 31.</strong></p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      \n  <div style=\"margin:18px 0;\">\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-weight:700;font-size:15px;\">🎬 Four films, two showings — your call</p>\n    <p style=\"margin:0 0 12px;color:#1e293b;font-size:14px;line-height:1.6;\">The Mandalorian &amp; Grogu (IMAX) · Breadwinner · Paddington 2 · How to Train Your Dragon</p>\n    <p style=\"margin:0 0 4px;color:#CB262C;font-weight:700;font-size:14px;\">🔴 Early showing</p>\n    <p style=\"margin:0 0 14px;color:#475569;font-size:13px;\">Social hour 4:00 PM · Dinner 4:30 PM · Movie 5:00 PM</p>\n    <p style=\"margin:0 0 4px;color:#0b1b3c;font-weight:700;font-size:14px;\">🔵 Late showing</p>\n    <p style=\"margin:0;color:#475569;font-size:13px;\">Social hour 6:00 PM · Dinner 7:15 PM · Movie 7:45 PM</p>\n  </div>\n      \n  <div style=\"margin:14px 0;\">\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-weight:700;font-size:15px;\">🍱 Dinner — packed lunchbox style. Old school. Elevated.</p>\n    <p style=\"margin:0 0 14px;color:#475569;font-size:13px;line-height:1.5;\">Plated to your seat in a brown-paper-bag-meets-bistro-tray reveal. Choose one per ticket:</p>\n    <ul style=\"color:#1e293b;font-size:14px;line-height:1.85;padding-left:20px;margin:0;\">\n      <li><strong>The Cafeteria Champ</strong> — hot brisket French dip with au jus and crispy fries</li>\n      <li><strong>The Brown Bag Classic</strong> — cold turkey sandwich, chips, apple slices, the cookie</li>\n      <li><strong>The Garden Tray</strong> — veggie salad with seasonal toppings (vegetarian)</li>\n      <li><strong>The Lunch Lady Special</strong> — kids meal: chicken nuggets, fruit, juice box</li>\n      <li><strong>The Field Trip Fix</strong> — gluten-free option (chef's plate, GF-certified)</li>\n    </ul>\n  </div>\n\n      <h3 style=\"color:#0b1b3c;font-size:17px;margin:28px 0 10px;\">🔨 Auction preview</h3>\n      <p>Bidding opens <strong>June 8 at 6:00 AM</strong> and closes the evening of June 10. The full catalog is locked the week before — no surprise drops on gala night, just bid early and bid often.</p>\n      <p style=\"color:#1e293b;font-size:14px;line-height:1.7;margin:0 0 8px;\"><strong>What's on the block:</strong></p>\n      <ul style=\"color:#1e293b;font-size:14px;line-height:1.7;padding-left:20px;margin:0 0 18px;\">\n        <li>✈️ <strong>Disneyland Resort 5-day vacation</strong> — moderate hotel, 3-day Park Hopper, 2 adults + 2 kids</li>\n        <li>🌴 <strong>San Diego 5-day getaway</strong> — round-trip flights for two (up to $300/person), hotel, attractions</li>\n        <li>🏀 <strong>Utah Jazz tickets + Toyota Club access</strong> — Section 18, Row 5</li>\n        <li>🍕 <strong>Gozney Dome wood-fired pizza oven</strong> — backyard chef's dream, ~$1,400 retail</li>\n        <li>🐔 <strong>Chick-fil-A for an entire year</strong> — 52 gift cards, one per week</li>\n        <li>🎨 <strong>Signed limited-edition art collection</strong> — James Christensen, Bev Doolittle, Greg Olsen, Carl Brenders, Larry Fanning, and more (most with conservation framing)</li>\n        <li>🎢 <strong>Lagoon ticket bundles</strong> — multiple packages with single-day passes, picnic gear, and themed plushies</li>\n        <li>🏈 <strong>49ers experience packages</strong> <em>(separate from the drawing)</em></li>\n        <li>🎬 <strong>Plus 180+ more</strong> — kayaks, Cricut crafting bundle, Roomba, Nespresso, JBL headphones, Lego sets, restaurant gift cards, and a whole lot more</li>\n      </ul>\n\n      <div style=\"background:#f3f5f9;border-left:3px solid #1f4484;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n        <p style=\"margin:0 0 6px;color:#1f4484;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">📱 Bidding has gotten so much better</p>\n        <p style=\"margin:0 0 8px;color:#0b1b3c;font-size:14px;line-height:1.55;\">We're on <strong>Qgiv (Givi)</strong> this year — the bidding experience is a huge upgrade. Bid from your phone, get outbid alerts, set max bids, watch your favorites — all from anywhere. Register your account now and you'll be ready the moment bidding opens.</p>\n        <p style=\"margin:0;\"><a href=\"https://secure.qgiv.com/event/lcadefsa2/\" style=\"color:#1f4484;font-weight:700;text-decoration:underline;font-size:13px;\">Register on Givi now →</a></p>\n      </div>\n\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://secure.qgiv.com/event/lcadefsa2/\" style=\"display:inline-block;background:#1f4484;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Register to bid on Givi →</a></p>\n      <p style=\"color:#475569;font-size:13px;\">Register today, browse the catalog when it opens, and bid June 8–10 from anywhere.</p>\n\n      <h3 style=\"color:#0b1b3c;font-size:17px;margin:28px 0 10px;\">📍 Day-of basics</h3>\n      <p style=\"color:#1e293b;font-size:14px;line-height:1.8;\">401 N 75 W, Centerville, UT 84014<br/>\n      Dress: casual — wear what makes you feel great</p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry, Kara, and everyone at DEF</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "sms6",
+    "type": "sms",
+    "subject": "",
+    "body": "Gala main email is in your inbox. 49ers drawing is LIVE — $100 donation supports school lunch + enters you to win. Seats close May 31. https://gala.daviskids.org/sponsor/{TOKEN}",
+    "phase": null
+  },
+  {
+    "id": "s13",
+    "type": "email",
+    "subject": "Tomorrow is the seat selection deadline",
+    "body": "\n      <p>Seat selection closes tomorrow at 11:59 PM. After that, we'll assign remaining seats and you'll find out where you're sitting on the day of.</p>\n      <p>If you'd rather select yourself — and most of you would — now's the time.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://gala.daviskids.org/sponsor/{TOKEN}\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Select your seats →</a></p>\n      \n  <div style=\"background:#fef7f7;border-left:3px solid #CB262C;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n    <p style=\"margin:0 0 4px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Drawing — supports school lunch</p>\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-size:14px;line-height:1.5;\"><strong>$100 donation = 1 entry. Limited to the first 200 donations.</strong> 6 49ers tickets + $2,000 travel card. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">Rules and how to enter →</a></p>\n  </div>\n      <p style=\"color:#475569;font-size:13px;\">— Kara</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "sms7",
+    "type": "sms",
+    "subject": "",
+    "body": "Tomorrow night seat selection closes. After that we assign. Select now: https://gala.daviskids.org/sponsor/{TOKEN} — DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "sms8",
+    "type": "sms",
+    "subject": "",
+    "body": "6 hours left to select your gala seats. After midnight we assign. https://gala.daviskids.org/sponsor/{TOKEN}",
+    "phase": null
+  },
+  {
+    "id": "s14",
+    "type": "email",
+    "subject": "The auction preview is live on Givi. Bidding opens June 8.",
+    "body": "\n      <p>Bidding doesn't open until <strong>June 8 at 6:00 AM</strong>, but the full catalog is locked, loaded, and visible right now on <strong>Givi (Qgiv)</strong>.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://secure.qgiv.com/event/lcadefsa2/\" style=\"display:inline-block;background:#1f4484;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">Browse the catalog on Givi →</a></p>\n      <p>This year's bidding experience is a huge upgrade — bid from your phone, set max bids, get outbid alerts, watch your favorites. Register your account today and you'll be ready the moment bidding opens.</p>\n      <p style=\"color:#1e293b;font-size:14px;line-height:1.7;margin:0 0 8px;\"><strong>Headliners to watch:</strong></p>\n      <ul style=\"color:#1e293b;font-size:14px;line-height:1.7;padding-left:20px;margin:0 0 18px;\">\n        <li>✈️ Disneyland 5-day vacation (3-day Park Hopper, family of 4)</li>\n        <li>🌴 San Diego 5-day getaway with round-trip flights for two</li>\n        <li>🏀 Utah Jazz tickets + Toyota Club access</li>\n        <li>🐔 Chick-fil-A for a year (52 gift cards)</li>\n        <li>🍕 Gozney Dome wood-fired pizza oven</li>\n        <li>🎨 Signed limited-edition art (Christensen, Doolittle, Olsen, Brenders)</li>\n        <li>🎢 Multiple Lagoon ticket bundles</li>\n        <li>🏈 49ers experience packages (separate from the drawing)</li>\n      </ul>\n      <p style=\"color:#475569;font-size:13px;\">Plus 180+ more — figure out what you want, who you're bidding with, and how much you're willing to spend. Some of these will go fast.</p>\n      \n  <div style=\"background:#fef7f7;border-left:3px solid #CB262C;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n    <p style=\"margin:0 0 4px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Drawing — supports school lunch</p>\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-size:14px;line-height:1.5;\"><strong>$100 donation = 1 entry. Limited to the first 200 donations.</strong> 6 49ers tickets + $2,000 travel card. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">Rules and how to enter →</a></p>\n  </div>\n      <h3 style=\"color:#0b1b3c;font-size:16px;margin:24px 0 10px;\">Your seats are confirmed.</h3>\n      <p>If you selected seats before May 31, you should have received a confirmation email with your QR check-in code. If you didn't, reply to this email — we'll fix it.</p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry &amp; Kara</p>\n    ",
+    "phase": "Phase 4 · Auction Anticipation"
+  },
+  {
+    "id": "s15",
+    "type": "email",
+    "subject": "Two days to go — everything you need for gala night",
+    "body": "\n      <p style=\"color:#0b1b3c;font-size:16px;font-weight:700;\">Two days. Here's everything you need.</p>\n      <p style=\"color:#1e293b;font-size:14px;line-height:1.9;\">📍 <strong>Megaplex Centerville</strong> — 401 N 75 W, Centerville, UT 84014<br/>\n      🅿 <strong>Parking</strong> — free, on-site, fills up — arrive 45 min early<br/>\n      🎟 <strong>Check-in</strong> — opens 30 min before your social hour<br/>\n      &nbsp;&nbsp;&nbsp;Early showing: social 4:00 PM · dinner 4:30 PM · movie 5:00 PM<br/>\n      &nbsp;&nbsp;&nbsp;Late showing: social 6:00 PM · dinner 7:15 PM · movie 7:45 PM<br/>\n      🍽 <strong>Dinner is plated</strong> — you'll be seated, served, and rolling into the movie<br/>\n      👗 <strong>Dress</strong> — casual, comfy shoes (it's a theater)<br/>\n      📱 <strong>Your QR code</strong> — already in your inbox from when you finalized seats. Bring your phone.</p>\n      <div style=\"background:#f3f5f9;border-left:3px solid #1f4484;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n        <p style=\"margin:0 0 4px;color:#1f4484;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🔨 Bidding opens 6:00 AM, June 8 on Givi</p>\n        <p style=\"margin:0;color:#0b1b3c;font-size:14px;line-height:1.5;\">Browse now, register your Givi account, set up your max bids — bid Wednesday from anywhere. Disneyland trip, Jazz Toyota Club seats, Chick-fil-A for a year, signed art collection — and 180+ more.</p>\n        <p style=\"margin:8px 0 0;\"><a href=\"https://secure.qgiv.com/event/lcadefsa2/\" style=\"color:#1f4484;font-weight:700;text-decoration:underline;font-size:13px;\">Register on Givi →</a></p>\n      </div>\n      \n  <div style=\"background:#fef7f7;border-left:3px solid #CB262C;border-radius:8px;padding:14px 18px;margin:20px 0;\">\n    <p style=\"margin:0 0 4px;color:#CB262C;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;\">🏈 49ers Drawing — supports school lunch</p>\n    <p style=\"margin:0 0 6px;color:#0b1b3c;font-size:14px;line-height:1.5;\"><strong>$100 donation = 1 entry. Limited to the first 200 donations.</strong> 6 49ers tickets + $2,000 travel card. Drawing held at the gala on June 10.</p>\n    <p style=\"margin:0;font-size:13px;\"><a href=\"https://daviskids.org/49ers\" style=\"color:#CB262C;font-weight:600;text-decoration:underline;\">Rules and how to enter →</a></p>\n  </div>\n      <p>If you have any questions, reply to this email. We see them.</p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry, Kara, and the team</p>\n    ",
+    "phase": null
+  },
+  {
+    "id": "s16",
+    "type": "email",
+    "subject": "🔨 The auction is LIVE on Givi",
+    "body": "\n      <p style=\"font-size:18px;color:#0b1b3c;font-weight:700;margin:0 0 12px;\">It's gala day.</p>\n      <p>The auction is now live on <strong>Givi</strong>. Bid from anywhere — phone, laptop, table at the gala. Set your max bid, get outbid alerts, and watch your favorites all night.</p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://secure.qgiv.com/event/lcadefsa2/\" style=\"display:inline-block;background:#1f4484;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">🔨 BID NOW ON GIVI →</a></p>\n      <p style=\"text-align:center;margin:24px 0;\"><a href=\"https://daviskids.org/49ers\" style=\"display:inline-block;background:#CB262C;color:#fff;padding:13px 30px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;\">🏈 ENTER THE 49ERS DRAWING →</a></p>\n      <p>We'll see you tonight at Megaplex.</p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry, Kara, and everyone at DEF</p>\n    ",
+    "phase": "Phase 5 · Day Of"
+  },
+  {
+    "id": "sms9",
+    "type": "sms",
+    "subject": "",
+    "body": "🔨 Auction LIVE on Givi. Drawing LIVE. Bid from your phone: https://secure.qgiv.com/event/lcadefsa2/ — see you tonight. DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "sms10",
+    "type": "sms",
+    "subject": "",
+    "body": "Top items moving fast on Givi. 49ers drawing open. Bid: https://secure.qgiv.com/event/lcadefsa2/ — DEF Gala",
+    "phase": null
+  },
+  {
+    "id": "sms11",
+    "type": "sms",
+    "subject": "",
+    "body": "Auction closes in 15 min on Givi. Drawing closes with it. Last call: https://secure.qgiv.com/event/lcadefsa2/",
+    "phase": null
+  },
+  {
+    "id": "sms12",
+    "type": "sms",
+    "subject": "",
+    "body": "5 minutes left. Final bids on Givi. Final 49ers entries. https://secure.qgiv.com/event/lcadefsa2/",
+    "phase": null
+  },
+  {
+    "id": "s17",
+    "type": "email",
+    "subject": "Thank you. And here's who won.",
+    "body": "\n      <p style=\"font-size:18px;color:#0b1b3c;font-weight:700;margin:0 0 12px;\">Thank you for an unforgettable night.</p>\n      <p>Here's where we landed:</p>\n      <ul style=\"color:#1e293b;font-size:15px;line-height:1.8;padding-left:20px;\">\n        <li><strong>49ers Opportunity Drawing winner:</strong> [NAME]</li>\n        <li><strong>Top auction items:</strong> [TOP 3]</li>\n        <li><strong>Most-bid item:</strong> [ITEM]</li>\n      </ul>\n      <p>Thank you for showing up.</p>\n      <p style=\"color:#475569;font-size:13px;\">— Sherry, Kara, and everyone at the Davis Education Foundation</p>\n    ",
+    "phase": null
+  }
+];
+let EDITS = {};
+let CURRENT_USER = null;
+const SAVE_DEBOUNCE = 800;
+const saveTimers = {};
+
+function init() {
+  // Check for ?signed_in=1 query — show a welcome toast
+  const params = new URLSearchParams(location.search);
+  if (params.get('signed_in') === '1') {
+    setTimeout(() => toast('✓ Signed in', true), 400);
+    history.replaceState({}, '', location.pathname + location.hash);
+  }
+
+  loadEdits().then((authed) => {
+    if (!authed) {
+      showSigninGate();
+      return;
+    }
+    renderToolbar();
+    renderSends();
+    renderUserChip();
+  });
+}
+
+async function loadEdits() {
+  try {
+    const r = await fetch('/api/gala/review?action=loadEdits');
+    if (r.status === 401) return false;
+    if (!r.ok) return false;
+    const d = await r.json();
+    EDITS = d.edits || {};
+    CURRENT_USER = d.currentUser || null;
+    return true;
+  } catch (e) {
+    console.warn('loadEdits failed', e);
+    return false;
+  }
+}
+
+function renderUserChip() {
+  if (!CURRENT_USER) return;
+  let chip = document.getElementById('user-chip');
+  if (!chip) {
+    chip = document.createElement('div');
+    chip.id = 'user-chip';
+    chip.className = 'user-chip';
+    document.body.appendChild(chip);
+  }
+  chip.innerHTML = `
+    <span class="user-chip-email">${escapeHtml(CURRENT_USER)}</span>
+    <button class="user-chip-out" id="signout-btn" title="Sign out">Sign out</button>
+  `;
+  document.getElementById('signout-btn').onclick = async () => {
+    if (!confirm('Sign out?')) return;
+    await fetch('/api/gala/review/auth/signout', { method: 'POST' });
+    location.reload();
+  };
+}
+
+function showSigninGate() {
+  const gate = document.createElement('div');
+  gate.className = 'signin-gate';
+  gate.innerHTML = `
+    <div class="signin-card">
+      <div class="signin-badge">DAVIS EDUCATION FOUNDATION</div>
+      <h1>Gala 2026 <span class="signin-accent">Review</span></h1>
+      <p class="signin-help">Enter your email to receive a one-tap sign-in link. Access is limited to Sherry, Kara, and Scott.</p>
+      <form id="signin-form" autocomplete="on">
+        <input type="email" id="signin-email" placeholder="you@dsdmail.net" autocomplete="email" required>
+        <button type="submit" id="signin-btn">Send sign-in link</button>
+      </form>
+      <div class="signin-msg" id="signin-msg"></div>
+    </div>
+  `;
+  document.body.appendChild(gate);
+
+  document.getElementById('signin-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('signin-email').value.trim();
+    const btn = document.getElementById('signin-btn');
+    const msg = document.getElementById('signin-msg');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    msg.className = 'signin-msg';
+    msg.textContent = '';
+    try {
+      const r = await fetch('/api/gala/review/auth/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        msg.className = 'signin-msg show success';
+        msg.textContent = d.message || 'Check your email for the sign-in link.';
+        btn.textContent = 'Sent ✓';
+      } else {
+        msg.className = 'signin-msg show';
+        msg.textContent = d.error || 'Could not send link.';
+        btn.disabled = false;
+        btn.textContent = 'Send sign-in link';
+      }
+    } catch (err) {
+      msg.className = 'signin-msg show';
+      msg.textContent = err.message || 'Network error';
+      btn.disabled = false;
+      btn.textContent = 'Send sign-in link';
+    }
+  });
+}
+
+function getEffective(send) {
+  const e = EDITS[send.id] || {};
+  const isApplied = e.status === 'applied';
+  // hasEdit means there's a content override; we treat 'applied' as no longer pending
+  const hasContentOverride = !!(e.subject || e.body);
+  const hasNotes = !!e.notes;
+  return {
+    subject: e.subject != null ? e.subject : send.subject,
+    body: e.body != null ? e.body : send.body,
+    notes: e.notes || '',
+    hasEdit: hasContentOverride || hasNotes,
+    hasContentOverride,
+    isPending: hasContentOverride && !isApplied,
+    isApplied,
+    updatedAt: e.updatedAt,
+    appliedAt: e.appliedAt,
+    appliedCommit: e.appliedCommit,
+  };
+}
+
+function renderToolbar() {
+  const inner = document.getElementById('toolbar-pills');
+  // keep h2
+  inner.innerHTML = '<h2>Jump to:</h2>';
+  for (const s of SENDS) {
+    const eff = getEffective(s);
+    const a = document.createElement('a');
+    let cls = 'pill ' + s.type;
+    if (eff.isApplied) cls += ' applied';
+    else if (eff.isPending) cls += ' has-edit';
+    else if (eff.hasEdit) cls += ' has-edit';
+    a.className = cls;
+    a.href = '#' + s.id;
+    a.textContent = s.id;
+    a.dataset.id = s.id;
+    inner.appendChild(a);
+  }
+  renderApplyBar();
+}
+
+function renderApplyBar() {
+  const bar = document.getElementById('apply-bar');
+  const text = document.getElementById('apply-bar-text');
+  const count = document.getElementById('apply-bar-count');
+  const icon = document.getElementById('apply-bar-icon');
+  const btn = document.getElementById('apply-all-btn');
+
+  const pending = SENDS.filter(s => getEffective(s).isPending).length;
+  const applied = SENDS.filter(s => getEffective(s).isApplied).length;
+
+  bar.className = 'apply-bar';
+  if (pending > 0) {
+    bar.classList.add('pending');
+    icon.textContent = '⚡';
+    text.textContent = pending === 1 ? '1 change ready to apply' : `${pending} changes ready to apply`;
+    count.style.display = 'inline-block';
+    count.textContent = pending;
+    btn.disabled = false;
+    btn.textContent = `Apply ${pending} to source →`;
+  } else if (applied > 0) {
+    icon.textContent = '✓';
+    text.textContent = applied === 1 ? '1 edit applied to source' : `${applied} edits applied to source`;
+    count.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Nothing pending';
+  } else {
+    icon.textContent = '📋';
+    text.textContent = 'No changes to apply';
+    count.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Apply to source →';
+  }
+}
+
+function renderSends() {
+  const main = document.getElementById('sends');
+  main.innerHTML = '';
+  for (const s of SENDS) {
+    if (s.phase) {
+      const ph = document.createElement('div');
+      ph.className = 'phase-marker';
+      ph.textContent = s.phase;
+      main.appendChild(ph);
+    }
+    main.appendChild(renderOne(s));
+  }
+}
+
+function renderOne(s) {
+  const eff = getEffective(s);
+  const wrap = document.createElement('div');
+  let cls = 'send';
+  if (eff.isApplied) cls += ' applied';
+  else if (eff.hasEdit) cls += ' has-edit';
+  wrap.className = cls;
+  wrap.id = s.id;
+
+  let statusBadge = '';
+  if (eff.isApplied) statusBadge = '<span class="status-badge applied">Applied</span>';
+  else if (eff.isPending) statusBadge = '<span class="status-badge pending">Pending apply</span>';
+
+  let commitLink = '';
+  if (eff.isApplied && eff.appliedCommit) {
+    commitLink = `<a class="commit-link" href="https://github.com/ramonscottf/def-site/commit/${eff.appliedCommit}" target="_blank" rel="noopener">${eff.appliedCommit.slice(0,7)}</a>`;
+  }
+
+  const metaText = eff.isApplied
+    ? `✓ Applied${eff.appliedAt ? ' · ' + formatTime(eff.appliedAt) : ''}`
+    : eff.hasEdit
+      ? '✎ Edited' + (eff.updatedAt ? ' · ' + formatTime(eff.updatedAt) : '')
+      : 'No edits';
+
+  const applyBtn = eff.isPending
+    ? `<button class="btn apply" data-act="apply" data-id="${s.id}">⚡ Apply to source</button>`
+    : '';
+  const resetBtn = eff.hasEdit && !eff.isApplied
+    ? '<button class="btn ghost" data-act="reset" data-id="'+s.id+'">Reset to default</button>'
+    : '';
+  const aiBtn = `<button class="btn ai" data-act="ai-rewrite" data-id="${s.id}">✨ Rewrite with AI</button>`;
+  // Undo is shown if there's anything in this send's history. We don't pre-load
+  // history (would be 29 extra requests on page load), so we show the button
+  // optimistically and handle "Nothing to undo" via the API response.
+  const undoBtn = eff.hasEdit && !eff.isApplied
+    ? `<button class="btn undo" data-act="undo" data-id="${s.id}">↶ Undo</button>`
+    : '';
+
+  const editorMeta = eff.updatedBy
+    ? `<div class="editor-meta">Last edit by <strong>${escapeHtml(eff.updatedBy)}</strong></div>`
+    : '';
+
+  wrap.innerHTML = `
+    <div class="send-strip"></div>
+    <div class="send-head">
+      <span class="id">#${s.id}</span>
+      <span class="type-badge ${s.type}">${s.type}</span>
+      ${statusBadge}
+      ${commitLink}
+      <div class="actions">
+        ${eff.hasEdit && !eff.isApplied ? '<button class="icon-btn" title="Reset to default" data-act="reset" data-id="'+s.id+'">↺</button>' : ''}
+      </div>
+    </div>
+    ${s.type === 'email' ? `
+      <div class="send-subject">
+        Subject
+        <span class="subj-text" contenteditable="true" data-field="subject" data-id="${s.id}">${escapeHtml(eff.subject)}</span>
+      </div>
+    ` : ''}
+    <div class="send-body">
+      ${s.type === 'email'
+        ? `<div class="email-render" contenteditable="true" data-field="body" data-id="${s.id}">${eff.body}</div>`
+        : `<div class="sms-render"><div class="sms-bubble" contenteditable="true" data-field="body" data-id="${s.id}">${escapeHtml(eff.body)}</div><div class="sms-meta">${eff.body.length} characters</div></div>`}
+      <div class="notes-section ${eff.notes ? 'has-content' : ''}">
+        <div class="notes-label">📝 Notes for this send <span style="color:#94a3b8;font-weight:400;font-size:11px;">— or tell AI what to change here</span></div>
+        <textarea class="notes-input" data-field="notes" data-id="${s.id}" placeholder="What needs to change? Type instructions then tap ✨ Rewrite with AI to apply them.">${escapeHtml(eff.notes)}</textarea>
+      </div>
+      <div class="ai-reasoning-slot" id="ai-reason-${s.id}"></div>
+      <div class="edit-footer">
+        <div>
+          <span class="edit-meta" data-meta="${s.id}">${metaText}</span>
+          ${editorMeta}
+        </div>
+        <div class="footer-cta">
+          ${aiBtn}
+          ${applyBtn}
+          ${undoBtn}
+          ${resetBtn}
+        </div>
+      </div>
+    </div>
+  `;
+  return wrap;
+}
+
+// Event delegation for editing
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  const id = t.dataset.id;
+  const field = t.dataset.field;
+  if (!id || !field) return;
+  scheduleSave(id, field, t);
+});
+
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const id = t.dataset.id;
+  const act = t.dataset.act;
+  if (act === 'reset') {
+    if (!confirm('Reset #' + id + ' to default? This wipes your subject/body edits and notes.')) return;
+    await fetch('/api/gala/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sendId: id, action: 'reset' }),
+    });
+    delete EDITS[id];
+    renderToolbar();
+    renderSends();
+    toast('Reset #' + id, true);
+  } else if (act === 'apply') {
+    if (!confirm('Apply edits for #' + id + ' to the live source?\n\nThis will commit a change to def-site/main and trigger a deploy. Send the next test to confirm it landed.')) return;
+    await applySend(id);
+  } else if (act === 'ai-rewrite') {
+    await aiRewrite(id, t);
+  } else if (act === 'undo') {
+    if (!confirm('Undo last change for #' + id + '?')) return;
+    await undoLast(id);
+  }
+});
+
+document.getElementById('apply-all-btn').addEventListener('click', async () => {
+  const pending = SENDS.filter(s => getEffective(s).isPending).map(s => s.id);
+  if (pending.length === 0) return;
+  if (!confirm(`Apply all ${pending.length} pending edits in one commit?\n\nSends: ${pending.join(', ')}\n\nThis commits to main and triggers a deploy.`)) return;
+  await applyAll();
+});
+
+async function aiRewrite(id, btnEl) {
+  const send = SENDS.find(x => x.id === id);
+  if (!send) return;
+
+  const eff = getEffective(send);
+  const notesEl = document.querySelector(`textarea[data-field="notes"][data-id="${id}"]`);
+  const notes = notesEl ? notesEl.value.trim() : '';
+
+  if (!notes) {
+    toast('✗ Add notes first — tell AI what to change');
+    if (notesEl) {
+      notesEl.focus();
+      notesEl.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.3)';
+      setTimeout(() => { notesEl.style.boxShadow = ''; }, 2000);
+    }
+    return;
+  }
+
+  if (!confirm(`Rewrite #${id} with AI based on these notes?\n\n"${notes.slice(0, 200)}${notes.length > 200 ? '…' : ''}"\n\nThe rewrite replaces in place. You can undo with the ↶ Undo button.`)) return;
+
+  // Show thinking state on the button
+  const originalLabel = btnEl ? btnEl.textContent : '';
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<span class="ai-spinner"></span> Rewriting…';
+  }
+
+  try {
+    const r = await fetch('/api/gala/review/rewrite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sendId: id,
+        currentSubject: eff.subject,
+        currentBody: eff.body,
+        notes: notes,
+        type: send.type,
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      toast('✗ ' + (data.error || 'AI rewrite failed'));
+      if (btnEl) { btnEl.disabled = false; btnEl.textContent = originalLabel; }
+      return;
+    }
+
+    // Save the rewrite to the server (which snapshots current to history first)
+    const payload = { sendId: id, body: data.body, changeKind: 'ai-rewrite' };
+    if (data.subject && send.type === 'email') payload.subject = data.subject;
+
+    const saveResp = await fetch('/api/gala/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!saveResp.ok) {
+      toast('✗ Save failed after rewrite');
+      if (btnEl) { btnEl.disabled = false; btnEl.textContent = originalLabel; }
+      return;
+    }
+    const saveData = await saveResp.json();
+
+    // Update local state
+    EDITS[id] = EDITS[id] || {};
+    if (data.subject && send.type === 'email') EDITS[id].subject = data.subject;
+    EDITS[id].body = data.body;
+    EDITS[id].status = 'draft';
+    EDITS[id].updatedAt = new Date().toISOString();
+    EDITS[id].updatedBy = saveData.by || CURRENT_USER;
+
+    // Re-render sends so the new content + undo button appears
+    renderToolbar();
+    renderSends();
+
+    // Show the AI's reasoning under the send
+    setTimeout(() => {
+      const slot = document.getElementById('ai-reason-' + id);
+      if (slot && data.reasoning) {
+        slot.innerHTML = `<div class="ai-reasoning"><strong>✨ AI:</strong> ${escapeHtml(data.reasoning)}</div>`;
+      }
+      // Scroll send into view
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+
+    toast('✓ Rewritten — review and apply', true);
+  } catch (err) {
+    toast('✗ ' + err.message);
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = originalLabel; }
+  }
+}
+
+async function undoLast(id) {
+  try {
+    const r = await fetch('/api/gala/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sendId: id, action: 'undo' }),
+    });
+    if (r.status === 404) {
+      toast('Nothing to undo for #' + id);
+      return;
+    }
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({}));
+      toast('✗ ' + (data.error || 'Undo failed'));
+      return;
+    }
+    // Reload edits to pick up the restored snapshot
+    await loadEdits();
+    renderToolbar();
+    renderSends();
+    toast('↶ Undone #' + id, true);
+  } catch (err) {
+    toast('✗ ' + err.message);
+  }
+}
+
+async function applySend(id) {
+  setApplyBarState('applying', `Applying #${id}…`);
+  try {
+    const r = await fetch('/api/gala/review/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sendId: id, appliedBy: 'review-page' }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) {
+      const msg = data.error || data.message || 'Apply failed';
+      setApplyBarState('error', `Failed: ${msg}`);
+      toast('✗ ' + msg);
+      // Auto-recover after a few seconds
+      setTimeout(() => renderApplyBar(), 4500);
+      return;
+    }
+    // Update the local state to reflect applied
+    if (EDITS[id]) {
+      EDITS[id].status = 'applied';
+      EDITS[id].appliedAt = new Date().toISOString();
+      EDITS[id].appliedCommit = data.commit && data.commit.sha;
+    }
+    setApplyBarState('success', `✓ Applied #${id} → ${(data.commit && data.commit.sha || '').slice(0,7)}`);
+    toast('✓ Applied #' + id, true);
+    setTimeout(() => {
+      renderToolbar();
+      renderSends();
+    }, 800);
+  } catch (e) {
+    setApplyBarState('error', 'Apply error: ' + e.message);
+    toast('✗ ' + e.message);
+    setTimeout(() => renderApplyBar(), 4500);
+  }
+}
+
+async function applyAll() {
+  const pending = SENDS.filter(s => getEffective(s).isPending).map(s => s.id);
+  setApplyBarState('applying', `Applying ${pending.length} edits…`);
+  try {
+    const r = await fetch('/api/gala/review/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applyAll: true, appliedBy: 'review-page' }),
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) {
+      const msg = data.error || data.message || 'Apply failed';
+      setApplyBarState('error', `Failed: ${msg}`);
+      toast('✗ ' + msg);
+      setTimeout(() => renderApplyBar(), 5000);
+      return;
+    }
+    // Update local state for all applied sends
+    const sha = data.commit && data.commit.sha;
+    for (const sid of (data.sendIds || [])) {
+      if (EDITS[sid]) {
+        EDITS[sid].status = 'applied';
+        EDITS[sid].appliedAt = new Date().toISOString();
+        EDITS[sid].appliedCommit = sha;
+      }
+    }
+    setApplyBarState('success', `✓ ${data.applied} applied → ${(sha || '').slice(0,7)}`);
+    toast('✓ Applied ' + data.applied + ' edits', true);
+    setTimeout(() => {
+      renderToolbar();
+      renderSends();
+    }, 800);
+  } catch (e) {
+    setApplyBarState('error', 'Apply error: ' + e.message);
+    toast('✗ ' + e.message);
+    setTimeout(() => renderApplyBar(), 5000);
+  }
+}
+
+function setApplyBarState(state, text) {
+  const bar = document.getElementById('apply-bar');
+  const txt = document.getElementById('apply-bar-text');
+  const icon = document.getElementById('apply-bar-icon');
+  const btn = document.getElementById('apply-all-btn');
+  bar.className = 'apply-bar ' + state;
+  txt.textContent = text;
+  document.getElementById('apply-bar-count').style.display = 'none';
+  if (state === 'applying') { icon.textContent = '⏳'; btn.disabled = true; btn.textContent = 'Applying…'; }
+  else if (state === 'success') { icon.textContent = '✓'; btn.disabled = true; btn.textContent = 'Done'; }
+  else if (state === 'error') { icon.textContent = '✗'; btn.disabled = false; btn.textContent = 'Try again'; }
+}
+
+function scheduleSave(id, field, el) {
+  clearTimeout(saveTimers[id]);
+  // Mark dirty
+  const meta = document.querySelector('[data-meta="' + id + '"]');
+  if (meta) {
+    meta.textContent = '✎ Editing...';
+    meta.className = 'edit-meta dirty';
+  }
+  saveTimers[id] = setTimeout(() => save(id, field, el), SAVE_DEBOUNCE);
+}
+
+async function save(id, field, el) {
+  const value = field === 'notes' ? el.value : (field === 'body' && SENDS.find(x=>x.id===id).type === 'email' ? el.innerHTML : el.textContent);
+  const send = SENDS.find(x => x.id === id);
+  // Only save if changed
+  const currentEff = getEffective(send);
+  if (field === 'subject' && value === send.subject) return;
+  if (field === 'body' && value === send.body) return;
+
+  EDITS[id] = EDITS[id] || {};
+  EDITS[id][field] = value;
+  EDITS[id].updatedAt = new Date().toISOString();
+
+  try {
+    const payload = { sendId: id };
+    payload[field] = value;
+    const r = await fetch('/api/gala/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) throw new Error('Save failed');
+    const respData = await r.json().catch(() => ({}));
+    if (respData.by) EDITS[id].updatedBy = respData.by;
+    const meta = document.querySelector('[data-meta="' + id + '"]');
+    if (meta) {
+      meta.textContent = '✓ Saved · ' + formatTime(EDITS[id].updatedAt);
+      meta.className = 'edit-meta saved';
+    }
+    // Update toolbar pill state
+    const pill = document.querySelector('.pill[data-id="' + id + '"]');
+    if (pill) pill.classList.add('has-edit');
+    const card = document.getElementById(id);
+    if (card) card.classList.add('has-edit');
+    toast('Saved #' + id);
+  } catch (e) {
+    const meta = document.querySelector('[data-meta="' + id + '"]');
+    if (meta) {
+      meta.textContent = '✗ Save failed';
+      meta.style.color = 'var(--red)';
+    }
+  }
+}
+
+function toast(msg, green) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('green', !!green);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return d.toLocaleDateString();
+}
+
+init();
+</script>
+</body>
+</html>
