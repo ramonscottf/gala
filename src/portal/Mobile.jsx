@@ -506,9 +506,83 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
   );
 };
 
+// ── Text-my-seats button ─────────────────────────────────────────────
+// Quick action that POSTs to /api/gala/portal/[token]/sms with kind=self.
+// Inline state machine: idle → sending → sent (3s) → idle. Errors render
+// inline with retry. No phone input — uses the sponsor's phone on file.
+
+const TextMySeatsButton = ({ token, apiBase }) => {
+  const [state, setState] = useState('idle'); // idle | sending | sent | error
+  const [error, setError] = useState('');
+
+  const send = async () => {
+    if (state === 'sending') return;
+    setState('sending');
+    setError('');
+    try {
+      const r = await fetch(`${apiBase || ''}/api/gala/portal/${token}/sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'self' }),
+      });
+      const data = await r.json();
+      if (!r.ok || !data.ok) {
+        setState('error');
+        setError(data.error || `Failed (${r.status})`);
+        return;
+      }
+      setState('sent');
+      setTimeout(() => setState('idle'), 3500);
+    } catch (e) {
+      setState('error');
+      setError(String(e.message || e));
+    }
+  };
+
+  const label =
+    state === 'sending' ? 'Sending…'
+    : state === 'sent' ? '✓ Texted'
+    : state === 'error' ? 'Try again'
+    : 'Text my seats to me';
+
+  return (
+    <div style={{ padding: '14px 18px 0' }}>
+      <button
+        onClick={send}
+        disabled={state === 'sending'}
+        style={{
+          all: 'unset',
+          cursor: state === 'sending' ? 'wait' : 'pointer',
+          width: '100%',
+          padding: '12px 16px',
+          borderRadius: 12,
+          background: state === 'sent' ? 'rgba(99,201,118,0.14)' : 'var(--surface)',
+          border: `1px solid ${state === 'sent' ? 'rgba(99,201,118,0.4)' : 'var(--rule)'}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          fontSize: 13,
+          fontWeight: 600,
+          color: state === 'sent' ? '#63c976' : 'var(--ink-on-ground)',
+          transition: 'background .2s, border-color .2s',
+        }}
+      >
+        <Icon name={state === 'sent' ? 'check' : 'msg'} size={15} stroke={2} />
+        {label}
+      </button>
+      {error && state === 'error' && (
+        <div style={{ fontSize: 11, color: '#ff8da4', marginTop: 6, paddingLeft: 4 }}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Home tab ──────────────────────────────────────────────────────────
 
-const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail }) => {
+const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, token, apiBase }) => {
   const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl } = data;
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
   const assignedCount = tickets
@@ -622,6 +696,14 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail }) 
           </button>
         </div>
       </div>
+
+      {/* "Text my seats to me" — sponsor-only quick action. Sends the
+          seats summary as SMS to the phone on file. Uses the existing
+          /api/gala/portal/[token]/sms endpoint. Hidden if no seats
+          are placed yet (nothing to send). */}
+      {placed > 0 && token && (
+        <TextMySeatsButton token={token} apiBase={apiBase} />
+      )}
 
       <div
         style={{
@@ -2807,6 +2889,8 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
           onOpenTicket={openTicket}
           onAssign={openTicket}
           onMovieDetail={setMovieDetail}
+          token={token}
+          apiBase={config.apiBase}
         />
       )}
       {tab === 'tickets' && (
