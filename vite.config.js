@@ -3,15 +3,18 @@ import react from '@vitejs/plugin-react';
 
 // Sponsor portal SPA. Production URL: gala.daviskids.org/sponsor/{token}
 //
-// `base: '/sponsor/'` means asset URLs in the served HTML reference
-// /sponsor/assets/index-{hash}.js. The router uses basename: '/sponsor'
-// to match. See src/portal/index.jsx.
+// The gala repo's public/ directory holds 4 OTHER apps (admin/, review/,
+// volunteer/, checkin/) that this Vite build must NOT touch. publicDir:
+// false prevents Vite from copying anything from public/ into the SPA
+// build output. The SPA assets land at public/sponsor/assets/* via outDir.
 //
-// Build output goes to public/sponsor/ so the Pages CDN serves it
-// alongside the other 4 static apps.
+// base: '/sponsor/' means built HTML references /sponsor/assets/...
+// matching the routing scheme. The router uses basename: '/sponsor'
+// (set in src/main.jsx).
 export default defineConfig({
   plugins: [react()],
   base: '/sponsor/',
+  publicDir: false,
   build: {
     outDir: 'public/sponsor',
     emptyOutDir: true,
@@ -26,5 +29,19 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      // Dev proxy → live functions on production domain so the SPA can
+      // call /api/gala/portal/{token} etc. without running wrangler locally.
+      '/api': {
+        target: 'https://gala.daviskids.org',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/data': {
+        target: 'https://gala.daviskids.org',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
 });

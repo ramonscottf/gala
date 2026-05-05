@@ -1,0 +1,6658 @@
+{
+  "venue": "Megaplex Theatres at Legacy Crossing",
+  "address": "Centerville, UT",
+  "lastUpdated": "2026-04-29",
+  "seatTypes": {
+    "luxury": {
+      "label": "Luxury Recliner",
+      "color": "#CB262C",
+      "icon": null
+    },
+    "standard": {
+      "label": "Standard",
+      "color": "#8b6f47",
+      "icon": null
+    },
+    "wheelchair": {
+      "label": "Wheelchair",
+      "color": "#0d6efd",
+      "icon": "wheelchair"
+    },
+    "companion": {
+      "label": "Wheelchair Companion",
+      "color": "#6f42c1",
+      "icon": "wheelchair-companion"
+    },
+    "loveseat": {
+      "label": "Loveseat (Pairs)",
+      "color": "#0dcaf0",
+      "icon": null
+    },
+    "dbox": {
+      "label": "D-BOX",
+      "color": "#f0a830",
+      "icon": null,
+      "note": "D-BOX motion-synced luxury recliners"
+    },
+    "blocked": {
+      "label": "Blocked/Unavailable",
+      "color": "#6c757d",
+      "icon": "x"
+    }
+  },
+  "theaters": [
+    {
+      "id": 1,
+      "name": "Auditorium 1",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 123,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 13,
+          "type": "luxury",
+          "numbers": [
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 16,
+          "type": "luxury",
+          "numbers": [
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                13
+              ],
+              "cols": [
+                3
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                12
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                5,
+                6,
+                7
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                8
+              ],
+              "cols": [
+                8
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7,
+                6
+              ],
+              "cols": [
+                9,
+                10
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                5
+              ],
+              "cols": [
+                11
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4
+              ],
+              "cols": [
+                12
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                3
+              ],
+              "cols": [
+                15
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                16
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                1
+              ],
+              "cols": [
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                3,
+                4
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                6,
+                7
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                8,
+                9
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                13,
+                14
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                16,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 16,
+          "type": "luxury",
+          "numbers": [
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 16,
+          "type": "luxury",
+          "numbers": [
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "G",
+          "seats": 16,
+          "type": "luxury",
+          "numbers": [
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "H",
+          "seats": 21,
+          "type": "luxury",
+          "numbers": [
+            21,
+            20,
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 21
+    },
+    {
+      "id": 2,
+      "name": "Auditorium 2",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 145,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 14,
+          "type": "luxury",
+          "numbers": [
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 18,
+          "type": "luxury",
+          "numbers": [
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                14
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                13
+              ],
+              "cols": [
+                6
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                12
+              ],
+              "cols": [
+                7
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                11
+              ],
+              "cols": [
+                11
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                10
+              ],
+              "cols": [
+                12
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                9,
+                8
+              ],
+              "cols": [
+                13,
+                14
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                7
+              ],
+              "cols": [
+                15
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                6,
+                5,
+                4,
+                3
+              ],
+              "cols": [
+                16,
+                17,
+                18,
+                19
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                20
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                1
+              ],
+              "cols": [
+                21
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                5,
+                6
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                8,
+                9
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                14,
+                15
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                20,
+                21
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "G",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "H",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                19,
+                18,
+                17
+              ],
+              "cols": [
+                1,
+                2,
+                3
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21
+              ]
+            }
+          ]
+        },
+        {
+          "label": "J",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 22
+    },
+    {
+      "id": 3,
+      "name": "Auditorium 3",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 84,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "B",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                15
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                14
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                13,
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                8
+              ],
+              "cols": [
+                11
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7,
+                6
+              ],
+              "cols": [
+                12,
+                13
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                5
+              ],
+              "cols": [
+                14
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                15,
+                16
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                17
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                1
+              ],
+              "cols": [
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "label": "C",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "D",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 18,
+          "type": "luxury",
+          "numbers": [
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 21
+    },
+    {
+      "id": 4,
+      "name": "Auditorium 4",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 93,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 12,
+          "type": "luxury",
+          "numbers": [
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 15,
+          "type": "luxury",
+          "numbers": [
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                11
+              ],
+              "cols": [
+                3
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                10
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                9
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                8
+              ],
+              "cols": [
+                6
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7,
+                6
+              ],
+              "cols": [
+                7,
+                8
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                5
+              ],
+              "cols": [
+                9
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4
+              ],
+              "cols": [
+                10
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                3
+              ],
+              "cols": [
+                13
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                14
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                1
+              ],
+              "cols": [
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                3,
+                4
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                6,
+                7
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                9,
+                9
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                14,
+                15
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 13,
+          "type": "luxury",
+          "numbers": [
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 13,
+          "type": "luxury",
+          "numbers": [
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ]
+        },
+        {
+          "label": "G",
+          "seats": 19,
+          "type": "luxury",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 19
+    },
+    {
+      "id": 5,
+      "name": "Auditorium 5",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 135,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 16,
+          "type": "luxury",
+          "numbers": [
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 18,
+          "type": "luxury",
+          "numbers": [
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                14
+              ],
+              "cols": [
+                3
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                13
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                8
+              ],
+              "cols": [
+                9
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7,
+                6
+              ],
+              "cols": [
+                10,
+                11
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                5
+              ],
+              "cols": [
+                12
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4
+              ],
+              "cols": [
+                13
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                3
+              ],
+              "cols": [
+                16
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                17
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                1
+              ],
+              "cols": [
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                3,
+                4
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                6,
+                7
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                9,
+                10
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                14,
+                15
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "G",
+          "seats": 19,
+          "type": "luxury",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "H",
+          "seats": 22,
+          "type": "luxury",
+          "numbers": [
+            22,
+            21,
+            20,
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 22
+    },
+    {
+      "id": 6,
+      "name": "Auditorium 6",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 85,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "B",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                15
+              ],
+              "cols": [
+                3
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                14
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                13,
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                8
+              ],
+              "cols": [
+                10
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7,
+                6
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                5
+              ],
+              "cols": [
+                13
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                14,
+                15
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                16
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                1
+              ],
+              "cols": [
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "label": "C",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "D",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 19,
+          "type": "luxury",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 19
+    },
+    {
+      "id": 7,
+      "name": "Auditorium 7",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 241,
+      "rows": [
+        {
+          "label": "A",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10
+              ],
+              "cols": [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            }
+          ]
+        },
+        {
+          "label": "B",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11
+              ],
+              "cols": [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ]
+            }
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                19,
+                18
+              ],
+              "cols": [
+                5,
+                6
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                17
+              ],
+              "cols": [
+                7
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                16
+              ],
+              "cols": [
+                8
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                15
+              ],
+              "cols": [
+                11
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                14
+              ],
+              "cols": [
+                12
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                13
+              ],
+              "cols": [
+                13
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                12
+              ],
+              "cols": [
+                15
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                11
+              ],
+              "cols": [
+                16
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                10,
+                9,
+                8
+              ],
+              "cols": [
+                17,
+                18,
+                19
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "dbox",
+              "seats": [
+                7
+              ],
+              "cols": [
+                21
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                6
+              ],
+              "cols": [
+                22
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                5
+              ],
+              "cols": [
+                23
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                4
+              ],
+              "cols": [
+                26
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                3
+              ],
+              "cols": [
+                27
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                28,
+                29
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "dbox",
+              "seats": [
+                18,
+                17,
+                16,
+                15
+              ],
+              "cols": [
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "dbox",
+              "seats": [
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5
+              ],
+              "cols": [
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "dbox",
+              "seats": [
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                26,
+                27,
+                28,
+                29
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                18,
+                17
+              ],
+              "cols": [
+                5,
+                6
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                16,
+                15
+              ],
+              "cols": [
+                7,
+                8
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                14,
+                13
+              ],
+              "cols": [
+                13,
+                14
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                15,
+                16
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                19,
+                20
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                21,
+                22
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                26,
+                27
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                28,
+                29
+              ]
+            }
+          ]
+        },
+        {
+          "label": "F",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                18,
+                17
+              ],
+              "cols": [
+                5,
+                6
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                16,
+                15
+              ],
+              "cols": [
+                7,
+                8
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                14,
+                13
+              ],
+              "cols": [
+                13,
+                14
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                15,
+                16
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                19,
+                20
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                21,
+                22
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                26,
+                27
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                28,
+                29
+              ]
+            }
+          ]
+        },
+        {
+          "label": "G",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                21,
+                20,
+                19,
+                18
+              ],
+              "cols": [
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5
+              ],
+              "cols": [
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                26,
+                27,
+                28,
+                29
+              ]
+            }
+          ]
+        },
+        {
+          "label": "H",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                23,
+                22,
+                21,
+                20,
+                19
+              ],
+              "cols": [
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6
+              ],
+              "cols": [
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                26,
+                27,
+                28,
+                29,
+                30
+              ]
+            }
+          ]
+        },
+        {
+          "label": "J",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                29,
+                28,
+                27,
+                26,
+                25,
+                24,
+                23,
+                22
+              ],
+              "cols": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33
+              ]
+            }
+          ]
+        },
+        {
+          "label": "K",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                29,
+                28,
+                27,
+                26,
+                25,
+                24,
+                23,
+                22
+              ],
+              "cols": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33
+              ]
+            }
+          ]
+        },
+        {
+          "label": "L",
+          "seats": 28,
+          "type": "luxury",
+          "numbers": [
+            28,
+            27,
+            26,
+            25,
+            24,
+            23,
+            22,
+            21,
+            20,
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 33
+    },
+    {
+      "id": 8,
+      "name": "Auditorium 8",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 308,
+      "rows": [
+        {
+          "label": "A",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11
+              ],
+              "cols": [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31
+              ]
+            }
+          ]
+        },
+        {
+          "label": "B",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                22,
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12
+              ],
+              "cols": [
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32
+              ]
+            }
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                23,
+                22,
+                21,
+                20
+              ],
+              "cols": [
+                8,
+                9,
+                10,
+                11
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                19
+              ],
+              "cols": [
+                12
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                18
+              ],
+              "cols": [
+                13
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                17
+              ],
+              "cols": [
+                16
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                16,
+                15
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                14,
+                13
+              ],
+              "cols": [
+                19,
+                20
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                12
+              ],
+              "cols": [
+                21
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                11
+              ],
+              "cols": [
+                22
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                10
+              ],
+              "cols": [
+                24
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                9
+              ],
+              "cols": [
+                25
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                8
+              ],
+              "cols": [
+                26
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7
+              ],
+              "cols": [
+                29
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                6
+              ],
+              "cols": [
+                30
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                31,
+                32,
+                33,
+                34,
+                35
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                22,
+                21
+              ],
+              "cols": [
+                7,
+                8
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                20,
+                19
+              ],
+              "cols": [
+                9,
+                10
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                18,
+                17
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                16,
+                15
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                14,
+                13
+              ],
+              "cols": [
+                19,
+                20
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                21,
+                22
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                23,
+                24
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                25,
+                26
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                32,
+                33
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                34,
+                35
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                36,
+                37
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                22,
+                21
+              ],
+              "cols": [
+                7,
+                8
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                20,
+                19
+              ],
+              "cols": [
+                9,
+                10
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                18,
+                17
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                16,
+                15
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                14,
+                13
+              ],
+              "cols": [
+                19,
+                20
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                21,
+                22
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                23,
+                24
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                25,
+                26
+              ]
+            },
+            {
+              "type": "aisle"
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                32,
+                33
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                34,
+                35
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                36,
+                37
+              ]
+            }
+          ]
+        },
+        {
+          "label": "F",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                29,
+                28,
+                27,
+                26,
+                25,
+                24,
+                23,
+                22
+              ],
+              "cols": [
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37
+              ]
+            }
+          ]
+        },
+        {
+          "label": "G",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                29,
+                28,
+                27,
+                26,
+                25,
+                24,
+                23,
+                22
+              ],
+              "cols": [
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37
+              ]
+            }
+          ]
+        },
+        {
+          "label": "H",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                31,
+                30,
+                29,
+                28,
+                27,
+                26,
+                25,
+                24,
+                23
+              ],
+              "cols": [
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                22,
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10
+              ],
+              "cols": [
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38
+              ]
+            }
+          ]
+        },
+        {
+          "label": "J",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                35,
+                34,
+                33,
+                32,
+                31,
+                30,
+                29,
+                28,
+                27,
+                26,
+                25
+              ],
+              "cols": [
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                24,
+                23,
+                22,
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12
+              ],
+              "cols": [
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40
+              ]
+            }
+          ]
+        },
+        {
+          "label": "K",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "luxury",
+              "seats": [
+                35,
+                34,
+                33,
+                32,
+                31,
+                30,
+                29,
+                28,
+                27,
+                26,
+                25
+              ],
+              "cols": [
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                24,
+                23,
+                22,
+                21,
+                20,
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12
+              ],
+              "cols": [
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3,
+                2,
+                1
+              ],
+              "cols": [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40
+              ]
+            }
+          ]
+        },
+        {
+          "label": "L",
+          "seats": 40,
+          "type": "luxury",
+          "numbers": [
+            40,
+            39,
+            38,
+            37,
+            36,
+            35,
+            34,
+            33,
+            32,
+            31,
+            30,
+            29,
+            28,
+            27,
+            26,
+            25,
+            24,
+            23,
+            22,
+            21,
+            20,
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 40
+    },
+    {
+      "id": 9,
+      "name": "Auditorium 9",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 135,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 16,
+          "type": "luxury",
+          "numbers": [
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                15
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                14
+              ],
+              "cols": [
+                6
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                13
+              ],
+              "cols": [
+                7
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                10,
+                11
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                10
+              ],
+              "cols": [
+                12
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                9,
+                8
+              ],
+              "cols": [
+                13,
+                14
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                7
+              ],
+              "cols": [
+                15
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                6,
+                5,
+                4,
+                3
+              ],
+              "cols": [
+                16,
+                17,
+                18,
+                19
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                20
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                1
+              ],
+              "cols": [
+                21
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                12,
+                11
+              ],
+              "cols": [
+                5,
+                6
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                8,
+                9
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                14,
+                15
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                17,
+                18
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                20,
+                21
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "G",
+          "seats": 19,
+          "type": "luxury",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "H",
+          "seats": 22,
+          "type": "luxury",
+          "numbers": [
+            22,
+            21,
+            20,
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 22
+    },
+    {
+      "id": 10,
+      "name": "Auditorium 10",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 84,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        },
+        {
+          "label": "B",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                15
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                14
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                13,
+                12,
+                11,
+                10,
+                9
+              ],
+              "cols": [
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                8
+              ],
+              "cols": [
+                11
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7,
+                6
+              ],
+              "cols": [
+                12,
+                13
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                5
+              ],
+              "cols": [
+                14
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                15,
+                16
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                17
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                1
+              ],
+              "cols": [
+                18
+              ]
+            }
+          ]
+        },
+        {
+          "label": "C",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "D",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 18,
+          "type": "luxury",
+          "numbers": [
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 21
+    },
+    {
+      "id": 11,
+      "name": "Auditorium 11",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 168,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 18,
+          "type": "standard",
+          "numbers": [
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 19,
+          "type": "standard",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "C",
+          "seats": 19,
+          "type": "standard",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                14
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                13
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "standard",
+              "seats": [
+                12
+              ],
+              "cols": [
+                6
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 17,
+          "type": "standard",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 15,
+          "type": "standard",
+          "numbers": [
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "G",
+          "seats": 15,
+          "type": "standard",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        },
+        {
+          "label": "H",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "standard",
+              "seats": [
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3
+              ],
+              "cols": [
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "standard",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                23,
+                24
+              ]
+            }
+          ]
+        },
+        {
+          "label": "J",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "standard",
+              "seats": [
+                19,
+                18,
+                17,
+                16,
+                15,
+                14,
+                13,
+                12,
+                11,
+                10,
+                9,
+                8,
+                7,
+                6,
+                5,
+                4,
+                3
+              ],
+              "cols": [
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "standard",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                23,
+                24
+              ]
+            }
+          ]
+        },
+        {
+          "label": "K",
+          "seats": 24,
+          "type": "standard",
+          "numbers": [
+            24,
+            23,
+            22,
+            21,
+            20,
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24
+          ]
+        }
+      ],
+      "staging": true,
+      "notes": "Staging only \u2014 not used for guest seating",
+      "minCol": 1,
+      "maxCol": 24
+    },
+    {
+      "id": 12,
+      "name": "Auditorium 12",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 94,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 12,
+          "type": "luxury",
+          "numbers": [
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 15,
+          "type": "luxury",
+          "numbers": [
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                11
+              ],
+              "cols": [
+                3
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                10
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                9
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                8
+              ],
+              "cols": [
+                6
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                7,
+                6
+              ],
+              "cols": [
+                7,
+                8
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                5
+              ],
+              "cols": [
+                9
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                4
+              ],
+              "cols": [
+                10
+              ]
+            },
+            {
+              "type": "gap"
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                3
+              ],
+              "cols": [
+                14
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                15
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                1
+              ],
+              "cols": [
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "loveseat",
+              "seats": [
+                10,
+                9
+              ],
+              "cols": [
+                3,
+                4
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                8,
+                7
+              ],
+              "cols": [
+                6,
+                7
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                6,
+                5
+              ],
+              "cols": [
+                9,
+                10
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                4,
+                3
+              ],
+              "cols": [
+                12,
+                13
+              ]
+            },
+            {
+              "type": "loveseat",
+              "seats": [
+                2,
+                1
+              ],
+              "cols": [
+                15,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 14,
+          "type": "luxury",
+          "numbers": [
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 14,
+          "type": "luxury",
+          "numbers": [
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16
+          ]
+        },
+        {
+          "label": "G",
+          "seats": 18,
+          "type": "luxury",
+          "numbers": [
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 18
+    },
+    {
+      "id": 13,
+      "name": "Auditorium 13",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 85,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        },
+        {
+          "label": "B",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "wheelchair",
+              "seats": [
+                15
+              ],
+              "cols": [
+                5
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                14
+              ],
+              "cols": [
+                6
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                13,
+                12,
+                11
+              ],
+              "cols": [
+                7,
+                8,
+                9
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                10
+              ],
+              "cols": [
+                10
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                9,
+                8
+              ],
+              "cols": [
+                11,
+                12
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                7
+              ],
+              "cols": [
+                13
+              ]
+            },
+            {
+              "type": "luxury",
+              "seats": [
+                6,
+                5,
+                4,
+                3
+              ],
+              "cols": [
+                14,
+                15,
+                16,
+                17
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                2
+              ],
+              "cols": [
+                18
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                1
+              ],
+              "cols": [
+                19
+              ]
+            }
+          ]
+        },
+        {
+          "label": "C",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "D",
+          "seats": 17,
+          "type": "luxury",
+          "numbers": [
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 19,
+          "type": "luxury",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21
+          ]
+        }
+      ],
+      "minCol": 1,
+      "maxCol": 21
+    },
+    {
+      "id": 14,
+      "name": "Auditorium 14",
+      "sections": 1,
+      "exitSide": "right",
+      "totalSeats": 93,
+      "rows": [
+        {
+          "label": "A",
+          "seats": 18,
+          "type": "standard",
+          "numbers": [
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "B",
+          "seats": 19,
+          "type": "standard",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "C",
+          "type": "mixed",
+          "segments": [
+            {
+              "type": "standard",
+              "seats": [
+                13
+              ],
+              "cols": [
+                3
+              ]
+            },
+            {
+              "type": "companion",
+              "seats": [
+                12
+              ],
+              "cols": [
+                4
+              ]
+            },
+            {
+              "type": "wheelchair",
+              "seats": [
+                11
+              ],
+              "cols": [
+                5
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D",
+          "seats": 19,
+          "type": "standard",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "E",
+          "seats": 19,
+          "type": "standard",
+          "numbers": [
+            19,
+            18,
+            17,
+            16,
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "label": "F",
+          "seats": 15,
+          "type": "standard",
+          "numbers": [
+            15,
+            14,
+            13,
+            12,
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2,
+            1
+          ],
+          "cols": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17
+          ]
+        }
+      ],
+      "staging": true,
+      "notes": "Staging only \u2014 not used for guest seating",
+      "minCol": 1,
+      "maxCol": 19
+    }
+  ]
+}

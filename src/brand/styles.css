@@ -1,0 +1,137 @@
+/* Global styles for the gala portal SPA. Capacitor-readiness rules baked in:
+ * 100dvh (not 100vh — URL bar safe), env(safe-area-inset-*), no text-select on
+ * chrome, no callout menus, no tap highlight, scroll-lock on the shell. */
+
+:root {
+  --ground: #0f1639;
+  --ink-on-ground: #fff;
+  --rule: rgba(255, 255, 255, 0.10);
+  --surface: rgba(255, 255, 255, 0.04);
+  --mute: rgba(255, 255, 255, 0.65);
+  --accent-italic: #a8b1ff;  /* indigoLight — italic accent in headlines */
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --ground: #fbf8f3;          /* BRAND.paper */
+    --ink-on-ground: #0b1233;   /* BRAND.ink */
+    --rule: rgba(13, 15, 36, 0.12);  /* BRAND.ruleDark */
+    --surface: rgba(13, 15, 36, 0.04);
+    --mute: rgba(13, 15, 36, 0.6);
+    --accent-italic: #2a2f7a;   /* indigoDeep — readable on paper */
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-touch-callout: none;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--ground);
+  color: var(--ink-on-ground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+#root {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+img,
+.tab-item,
+.page-header {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scroll containers — use this inside the shell rather than body scroll */
+.scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Page header sits below the iOS status bar. Use max() so phones without
+ * notches get a sensible minimum and notched phones get the inset. */
+.page-header {
+  padding-top: max(16px, env(safe-area-inset-top));
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Tab bar sits above the iOS home indicator. Same max() pattern. */
+.tab-bar {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Glass tab bar — what makes a webview app stop looking like a webview. */
+.tab-bar-glass {
+  background: rgba(13, 27, 61, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+@media (prefers-color-scheme: light) {
+  .tab-bar-glass {
+    background: rgba(251, 248, 243, 0.78);
+    box-shadow: 0 -1px 0 rgba(13, 18, 36, 0.08);
+  }
+}
+
+/* Slide-up sheet animation reused by all bottom sheets */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Phase 1.13 — brief opacity dip when the seat map's showing/theater
+ * changes. Visual confirmation when the underlying layout happens to
+ * be identical (e.g. same auditorium across both showings). */
+@keyframes mapFlash {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Hide scrollbars on horizontal pill rails (movie pickers, etc.) */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
