@@ -187,15 +187,24 @@ export async function onRequestPost(context) {
       );
     }
 
-    // Enforce seat budget (hold count + finalized count should not exceed available seats)
+    // Enforce seat budget. The user is allowed to hold up to their quota
+    // (total - delegated). Holding exactly N seats when quota is N is the
+    // GOAL state, not an error — error only when adding THIS hold would
+    // push the total OVER quota. Off-by-one fix May 5 2026: was using
+    // '>=' on the BEFORE-this-hold count, which wrongly rejected the
+    // user's last legitimate seat (e.g. quota 2: pick seat 1 succeeds,
+    // then pick seat 2 saw myHoldCount=1, math.placed=0 and 1+0 >= 2
+    // fired despite this hold being legal).
     const math = await getSeatsAvailableToPlace(env, resolved);
     const myHolds = await env.GALA_DB.prepare(
       `SELECT COUNT(*) AS n FROM seat_holds
         WHERE held_by_token = ? AND expires_at > datetime('now')`
     ).bind(token).first();
     const myHoldCount = myHolds.n || 0;
-    if (myHoldCount + math.placed >= math.total - math.delegated) {
-      return jsonError(`You've already selected your full ${math.total - math.delegated} seats`, 400);
+    const quota = math.total - math.delegated;
+    // Count *after* adding this hold = myHoldCount + 1 + placed.
+    if (myHoldCount + 1 + math.placed > quota) {
+      return jsonError(`You've already selected your full ${quota} seats`, 400);
     }
 
     const expiresAt = new Date(Date.now() + HOLD_MINUTES * 60 * 1000).toISOString();
