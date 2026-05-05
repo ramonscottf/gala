@@ -153,6 +153,7 @@ export const SeatMap = ({
   selected = new Set(),
   onSelect,
   showLetters = true,
+  showSeatNumbers = false,
   allowZoom = true,
   allowLasso = true,
   zoom: zoomProp,
@@ -225,6 +226,36 @@ export const SeatMap = ({
     if (st === 'other') return dark ? 'rgba(255,255,255,0.16)' : 'rgba(13,15,36,0.16)';
     return SEAT_TYPES[seatType]?.color || '#999';
   };
+  const numberColorFor = (id, seatType) => {
+    const st = status(id);
+    if (st === 'other') return dark ? 'rgba(255,255,255,0.46)' : 'rgba(13,15,36,0.42)';
+    if (st === 'self') return 'rgba(13,18,36,0.86)';
+    if (seatType === 'wheelchair' || seatType === 'companion' || seatType === 'dbox') {
+      return 'rgba(13,18,36,0.82)';
+    }
+    return 'rgba(255,255,255,0.78)';
+  };
+  const seatNumberNode = (seat, x, y, w = cell, h = cell, key = 'num') => {
+    if (!showSeatNumbers || !seat?.n) return null;
+    const digits = String(seat.n).length;
+    return (
+      <text
+        key={key}
+        x={x + w / 2}
+        y={y + h / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontFamily="Inter, system-ui, sans-serif"
+        fontSize={cell * (digits > 2 ? 0.3 : digits > 1 ? 0.36 : 0.43)}
+        fontWeight="800"
+        fill={numberColorFor(seat.id, seat.t)}
+        opacity={status(seat.id) === 'other' ? 0.62 : 1}
+        pointerEvents="none"
+      >
+        {seat.n}
+      </text>
+    );
+  };
 
   const handleSeatClick = (id, ev) => {
     if (status(id) === 'other') return;
@@ -258,7 +289,7 @@ export const SeatMap = ({
 
   const onMouseDown = (e) => {
     if (!allowLasso) return;
-    if (e.target.tagName === 'rect' && e.target.dataset.seat) return;
+    if (e.target.dataset?.seat) return;
     const rect = containerRef.current.getBoundingClientRect();
     dragging.current = { x0: e.clientX - rect.left, y0: e.clientY - rect.top };
     setLasso({ x: dragging.current.x0, y: dragging.current.y0, w: 0, h: 0 });
@@ -447,6 +478,7 @@ export const SeatMap = ({
                           onClick={(e) => handleSeatClick(s.id, e)}
                           opacity={st === 'other' ? 0.4 : 1}
                         />
+                        {seatNumberNode(s, x, y, w, lvHeight)}
                         {/* seam highlight — drawn on the left-half so it's
                             rendered once per pair. Skipped if either half
                             is in 'other' status (faded fill makes it noise). */}
@@ -480,10 +512,38 @@ export const SeatMap = ({
                       `Z`,
                     ].join(' ');
                     return (
-                      <path
-                        key={`${row.label}-${cIdx}`}
+                      <g key={`${row.label}-${cIdx}`}>
+                        <path
+                          data-seat={s.id}
+                          d={path}
+                          fill={fill}
+                          stroke={strokeColor}
+                          strokeWidth={sw}
+                          style={{
+                            cursor: st === 'other' ? 'not-allowed' : 'pointer',
+                            transition: 'fill 0.12s',
+                          }}
+                          onClick={(e) => handleSeatClick(s.id, e)}
+                          opacity={st === 'other' ? 0.4 : 1}
+                        />
+                        {seatNumberNode(s, xR, y, w, lvHeight)}
+                      </g>
+                    );
+                  }
+                }
+
+                // Single (unpaired) loveseat — same width/height as standard
+                // but with hint-rounded corners to read as a single armchair.
+                if (isLoveseat) {
+                  return (
+                    <g key={`${row.label}-${cIdx}`}>
+                      <rect
                         data-seat={s.id}
-                        d={path}
+                        x={x}
+                        y={y}
+                        width={cell}
+                        height={cell}
+                        rx={cell * 0.32}
                         fill={fill}
                         stroke={strokeColor}
                         strokeWidth={sw}
@@ -494,22 +554,21 @@ export const SeatMap = ({
                         onClick={(e) => handleSeatClick(s.id, e)}
                         opacity={st === 'other' ? 0.4 : 1}
                       />
-                    );
-                  }
+                      {seatNumberNode(s, x, y)}
+                    </g>
+                  );
                 }
 
-                // Single (unpaired) loveseat — same width/height as standard
-                // but with hint-rounded corners to read as a single armchair.
-                if (isLoveseat) {
-                  return (
+                // Standard seats — unchanged from prior behavior.
+                return (
+                  <g key={`${row.label}-${cIdx}`}>
                     <rect
-                      key={`${row.label}-${cIdx}`}
                       data-seat={s.id}
                       x={x}
                       y={y}
                       width={cell}
                       height={cell}
-                      rx={cell * 0.32}
+                      rx={seatRadius}
                       fill={fill}
                       stroke={strokeColor}
                       strokeWidth={sw}
@@ -520,29 +579,8 @@ export const SeatMap = ({
                       onClick={(e) => handleSeatClick(s.id, e)}
                       opacity={st === 'other' ? 0.4 : 1}
                     />
-                  );
-                }
-
-                // Standard seats — unchanged from prior behavior.
-                return (
-                  <rect
-                    key={`${row.label}-${cIdx}`}
-                    data-seat={s.id}
-                    x={x}
-                    y={y}
-                    width={cell}
-                    height={cell}
-                    rx={seatRadius}
-                    fill={fill}
-                    stroke={strokeColor}
-                    strokeWidth={sw}
-                    style={{
-                      cursor: st === 'other' ? 'not-allowed' : 'pointer',
-                      transition: 'fill 0.12s',
-                    }}
-                    onClick={(e) => handleSeatClick(s.id, e)}
-                    opacity={st === 'other' ? 0.4 : 1}
-                  />
+                    {seatNumberNode(s, x, y)}
+                  </g>
                 );
               })}
             </g>
@@ -569,7 +607,7 @@ export const SeatMap = ({
           style={{
             position: 'absolute',
             right: 8,
-            bottom: 8,
+            top: 8,
             display: 'flex',
             flexDirection: 'column',
             gap: 4,

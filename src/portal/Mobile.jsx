@@ -2351,7 +2351,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
     <div
       onClick={onClose}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
         background: 'rgba(0,0,0,0.55)',
         zIndex: 50,

@@ -1622,6 +1622,7 @@ const StepSeats = ({
                 assignedOther={otherTaken}
                 selected={sel}
                 onSelect={handleSelect}
+                showSeatNumbers={true}
                 allowZoom
                 allowLasso
               />

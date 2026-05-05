@@ -563,17 +563,23 @@ export default function SeatPickSheet({
           padding: 10,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: compact ? 'flex-start' : 'center',
         }}
       >
-        <div style={{ width: '100%' }}>
+        <div
+          style={{
+            width: '100%',
+            minWidth: compact && adaptedTheater ? Math.max(540, adaptedTheater.cols * 24 + 84) : 0,
+          }}
+        >
           {adaptedTheater ? (
             <SeatMap
               theater={adaptedTheater}
               theme="dark"
-              scale={compact ? 18 : 22}
-              showLetters={false}
-              allowZoom={true}
+              scale={compact ? 20 : 22}
+              showLetters={true}
+              showSeatNumbers={true}
+              allowZoom={false}
               allowLasso={!compact}
               assignedSelf={seats.allSelfIds}
               assignedOther={otherTaken}

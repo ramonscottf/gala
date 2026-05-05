@@ -992,20 +992,27 @@ export const Step2Pick = ({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 12,
-            background: 'rgba(0,0,0,0.2)',
+            background: BRAND.navyDeep,
             border: `1px solid var(--rule)`,
             padding: 10,
             animation: 'mapFlash 0.32s ease-out',
             position: 'relative',
           }}
         >
-          <div style={{ width: '100%' }}>
+          <div
+            style={{
+              width: '100%',
+              minWidth: adaptedTheater ? Math.max(560, adaptedTheater.cols * 25 + 90) : 0,
+            }}
+          >
             {adaptedTheater ? (
               <SeatMap
                 theater={adaptedTheater}
+                theme="dark"
                 scale={24}
                 showLetters={true}
-                allowZoom={true}
+                showSeatNumbers={true}
+                allowZoom={false}
                 allowLasso={true}
                 assignedSelf={seats.allSelfIds}
                 assignedOther={otherTaken}
