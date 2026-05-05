@@ -34,6 +34,7 @@ import NightOfContent from './components/NightOfContent.jsx';
 import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
+import MovieDetailSheet from './MovieDetailSheet.jsx';
 
 // ── shared mini-components ─────────────────────────────────────────────
 
@@ -2601,6 +2602,15 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);
 
+  // F4 / Phase 1.15.x — MovieDetailSheet open state. Wired on May 5
+  // 2026 — previously SeatPickSheet was passed an inert onMovieDetail
+  // callback because the wizard already had its own movieDetail state
+  // and the new sheet path was added without porting the same wiring.
+  // Result: tapping the movie card did literally nothing. Mirrors the
+  // Desktop.jsx + MobileWizard.jsx pattern (set state, render sheet
+  // conditionally).
+  const [movieDetail, setMovieDetail] = useState(null);
+
   const data = useMemo(
     () => adaptPortalToMobileData(portal, theaterLayouts),
     [portal, theaterLayouts]
@@ -2848,11 +2858,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
             token={token}
             apiBase={config.apiBase}
             onRefresh={onRefresh}
-            onMovieDetail={() => {
-              // Out of scope for the initial sheet adoption; leaving the
-              // affordance visible but inert maintains layout parity
-              // with the wizard's StepShowing.
-            }}
+            onMovieDetail={setMovieDetail}
             onCommitted={(placed) => {
               setSeatPickOpen(false);
               setPostPick(placed);
@@ -2963,6 +2969,28 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
           </div>
         )}
       </Sheet>
+
+      {/* MovieDetailSheet — opened from the SeatPickSheet movie card.
+          Same pattern as MobileWizard.jsx and Desktop.jsx: the parent
+          holds open-state and the sheet renders conditionally. The
+          movie object carries __showLabel / __showTime / __showingNumber
+          tagged on by SeatPickSheet's onMoreInfo so the sheet header
+          can show "Early showing · 6:00 PM" without a re-lookup. */}
+      {movieDetail && (
+        <MovieDetailSheet
+          movie={movieDetail}
+          showLabel={
+            movieDetail.__showLabel ||
+            (movieDetail.__showingNumber === 1
+              ? 'Early showing'
+              : movieDetail.__showingNumber === 2
+                ? 'Late showing'
+                : '')
+          }
+          showTime={movieDetail.__showTime}
+          onClose={() => setMovieDetail(null)}
+        />
+      )}
     </div>
   );
 }
