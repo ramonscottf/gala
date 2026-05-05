@@ -118,17 +118,33 @@ img,
   -webkit-user-select: none;
 }
 
-/* Glass tab bar — what makes a webview app stop looking like a webview. */
+/* Glass tab bar — what makes a webview app stop looking like a webview.
+ * The OUTER wrapper used to add a translucent paper rectangle behind the
+ * inner pill, which defeated the pill's own backdrop-filter (you'd see
+ * a solid bar of cream, not glass). Removed May 5 2026. The actual
+ * frosted-pill effect lives on the inner div in TabBar/TabBar.jsx — its
+ * own backdrop-filter does the work. The wrapper now just provides the
+ * safe-area padding and a faint top-edge fade so the content scrolling
+ * underneath dissolves into the bar instead of slamming into a hard line. */
 .tab-bar-glass {
-  background: rgba(13, 27, 61, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(13, 27, 61, 0.18) 100%
+  );
+  pointer-events: none;
+}
+.tab-bar-glass > * {
+  pointer-events: auto;
 }
 
 @media (prefers-color-scheme: light) {
   .tab-bar-glass {
-    background: rgba(251, 248, 243, 0.78);
-    box-shadow: 0 -1px 0 rgba(13, 18, 36, 0.08);
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 100%
+    );
   }
 }
 
