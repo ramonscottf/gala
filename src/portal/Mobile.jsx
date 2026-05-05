@@ -546,12 +546,13 @@ const TextMySeatsButton = ({ token, apiBase }) => {
     : 'Text my seats to me';
 
   return (
-    <div style={{ padding: '14px 18px 0' }}>
+    <div style={{ margin: '14px 18px 0' }}>
       <button
         onClick={send}
         disabled={state === 'sending'}
         style={{
           all: 'unset',
+          boxSizing: 'border-box',
           cursor: state === 'sending' ? 'wait' : 'pointer',
           width: '100%',
           padding: '12px 16px',
@@ -2055,6 +2056,16 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       rating: s.rating,
       runtime: s.runtime_minutes,
       posterUrl: s.poster_url,
+      // Carry the rest of the movie metadata so the MovieDetailSheet
+      // (opened from the home tab lineup) has a synopsis, year,
+      // backdrop, and trailer to render. Without these the sheet
+      // shows just a poster + title and looks broken.
+      thumbnailUrl: s.thumbnail_url,
+      backdropUrl: s.backdrop_url,
+      trailerUrl: s.trailer_url,
+      streamUid: s.stream_uid,
+      synopsis: s.synopsis,
+      year: s.year,
       tmdbScore: s.tmdb_score,
       tmdbVoteCount: s.tmdb_vote_count,
     });
