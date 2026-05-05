@@ -9,6 +9,14 @@
   --surface: rgba(255, 255, 255, 0.04);
   --mute: rgba(255, 255, 255, 0.65);
   --accent-italic: #a8b1ff;  /* indigoLight — italic accent in headlines */
+
+  /* Theme-adaptive "highlight text" — replaces the old habit of using
+   * BRAND.gold for emphasized/eyebrow text. On dark grounds the gold
+   * reads fine; on light grounds it's unreadable. This token flips to
+   * navy in light mode (see media query below). Use --accent-text for
+   * any text that was previously gold but isn't a tiny ornament. */
+  --accent-text: #f4b942;     /* gold on dark ground */
+  --accent-text-strong: #ffffff;  /* hi-contrast variant for callouts */
 }
 
 @media (prefers-color-scheme: light) {
@@ -19,6 +27,11 @@
     --surface: rgba(13, 15, 36, 0.04);
     --mute: rgba(13, 15, 36, 0.6);
     --accent-italic: #2a2f7a;   /* indigoDeep — readable on paper */
+
+    /* Light-mode accent flips to navy. Red is reserved for active
+     * states / CTAs so it doesn't compete with primary buttons. */
+    --accent-text: #0b1233;     /* navy on paper */
+    --accent-text-strong: #cb262c;  /* red for action emphasis */
   }
 }
 
@@ -134,4 +147,25 @@ img,
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Theme-aware accent-text utility (May 5 2026).
+ * Replaces hard-coded BRAND.gold for "highlight text" — eyebrows,
+ * italic emphasis in headlines, status numbers. Reads gold on dark
+ * navy ground, navy on paper. The .accent-action variant flips to red
+ * in light mode for active-state callouts ("X remaining" counters,
+ * "needs attention" badges).
+ *
+ * Usage in components:
+ *   <div className="accent-text">DEF GALA · 2026</div>
+ *   <i className="accent-text">{restName}.</i>
+ *
+ * Pair with !important when overriding inline color styles. The token
+ * variables (--accent-text, --accent-text-strong) flip via the
+ * prefers-color-scheme media query in :root above. */
+.accent-text {
+  color: var(--accent-text);
+}
+.accent-action {
+  color: var(--accent-text-strong);
 }

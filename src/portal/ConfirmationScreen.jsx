@@ -211,7 +211,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             fontSize: 11,
             fontWeight: 800,
             letterSpacing: 1.6,
-            color: BRAND.gold,
+            color: 'var(--accent-text)',
             marginBottom: 14,
             textTransform: 'uppercase',
           }}

@@ -196,7 +196,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
       {daysOut != null && (
-        <span style={{ fontSize: 11, color: BRAND.gold, fontWeight: 700, letterSpacing: 1.4 }}>
+        <span style={{ fontSize: 11, color: 'var(--accent-text)', fontWeight: 700, letterSpacing: 1.4 }}>
           {daysOut} DAYS OUT
         </span>
       )}
@@ -420,14 +420,14 @@ const Stepper = ({ step, setStep, step1Label }) => (
               width: 24,
               height: 24,
               borderRadius: 99,
-              background: s.n <= step ? BRAND.gold : 'transparent',
+              background: s.n <= step ? 'var(--accent-text-strong)' : 'transparent',
               border: s.n > step ? `1.5px solid rgba(255,255,255,0.3)` : 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 11,
               fontWeight: 700,
-              color: s.n <= step ? BRAND.ink : '#fff',
+              color: s.n <= step ? '#fff' : '#fff',
             }}
           >
             {s.n < step ? <Icon name="check" size={12} /> : s.n}
@@ -693,7 +693,7 @@ const StepWelcome = ({
                 background: 'rgba(255,255,255,0.03)',
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: BRAND.gold }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--accent-text)' }}>
                 {s.label.toUpperCase()}
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 6, lineHeight: 1.45 }}>
@@ -758,7 +758,7 @@ const StepWelcome = ({
             borderRadius: 999,
             border: `1px solid rgba(244,185,66,0.35)`,
             background: 'rgba(244,185,66,0.08)',
-            color: BRAND.gold,
+            color: 'var(--accent-text)',
             fontSize: 12,
             fontWeight: 700,
             letterSpacing: 0.3,
@@ -843,7 +843,7 @@ const StepWelcome = ({
                       fontWeight: 800,
                       letterSpacing: 0.6,
                       background: 'rgba(244,185,66,0.18)',
-                      color: BRAND.gold,
+                      color: 'var(--accent-text)',
                       textTransform: 'uppercase',
                     }}
                   >
@@ -974,7 +974,7 @@ const StepShowing = ({
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: 1.4,
-          color: BRAND.gold,
+          color: 'var(--accent-text)',
           marginBottom: 10,
         }}
       >
@@ -1050,7 +1050,7 @@ const StepShowing = ({
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: 1.4,
-          color: BRAND.gold,
+          color: 'var(--accent-text)',
           marginBottom: 10,
         }}
       >
@@ -1190,7 +1190,7 @@ const StepShowing = ({
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: 1.4,
-            color: BRAND.gold,
+            color: 'var(--accent-text)',
             marginBottom: 10,
           }}
         >
@@ -1208,8 +1208,8 @@ const StepShowing = ({
                   cursor: 'pointer',
                   padding: '10px 14px',
                   borderRadius: 10,
-                  border: `1.5px solid ${active ? BRAND.gold : BRAND.rule}`,
-                  background: active ? 'rgba(244,185,66,0.08)' : 'rgba(255,255,255,0.02)',
+                  border: `1.5px solid ${active ? 'var(--accent-text-strong)' : 'var(--rule)'}`,
+                  background: active ? 'rgba(203,38,44,0.08)' : 'var(--surface)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 10,
@@ -1508,7 +1508,7 @@ const StepSeats = ({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Selected here</span>
-            <span style={{ color: BRAND.gold, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ color: 'var(--accent-text)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
               {sel.size}
             </span>
           </div>
@@ -1873,7 +1873,7 @@ const StepConfirm = ({
                     fontSize: 11,
                     fontWeight: 800,
                     letterSpacing: 1.4,
-                    color: BRAND.gold,
+                    color: 'var(--accent-text)',
                   }}
                 >
                   {g.showLabel.toUpperCase()} ·{' '}
@@ -2264,7 +2264,7 @@ export default function Desktop({
           </span>
           <span>·</span>
           <span>
-            <b style={{ color: remaining > 0 ? BRAND.gold : '#7fcfa0' }}>{remaining}</b> remaining
+            <b style={{ color: remaining > 0 ? 'var(--accent-text-strong)' : '#7fcfa0' }}>{remaining}</b> remaining
           </span>
         </div>
       </div>

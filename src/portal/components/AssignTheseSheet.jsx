@@ -93,7 +93,7 @@ export default function AssignTheseSheet({
             fontSize: 11,
             fontWeight: 800,
             letterSpacing: 1.6,
-            color: BRAND.gold,
+            color: 'var(--accent-text)',
             textTransform: 'uppercase',
           }}
         >
@@ -184,7 +184,7 @@ export default function AssignTheseSheet({
             borderRadius: 99,
             border: `1.5px dashed rgba(244,185,66,0.4)`,
             background: 'rgba(244,185,66,0.06)',
-            color: BRAND.gold,
+            color: 'var(--accent-text)',
             fontSize: 12,
             fontWeight: 700,
             display: 'inline-flex',

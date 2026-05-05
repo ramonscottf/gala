@@ -93,7 +93,7 @@ export default function PostPickSheet({
           fontSize: 11,
           fontWeight: 800,
           letterSpacing: 1.6,
-          color: BRAND.gold,
+          color: 'var(--accent-text)',
           textTransform: 'uppercase',
           marginTop: 4,
         }}

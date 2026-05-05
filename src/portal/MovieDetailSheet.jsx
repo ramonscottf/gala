@@ -258,7 +258,7 @@ export default function MovieDetailSheet({
                   fontSize: 11,
                   fontWeight: 800,
                   letterSpacing: 1.4,
-                  color: BRAND.gold,
+                  color: 'var(--accent-text)',
                   marginBottom: 8,
                   textTransform: 'uppercase',
                 }}

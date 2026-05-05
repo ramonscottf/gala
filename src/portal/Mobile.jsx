@@ -283,7 +283,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 fontSize: 9,
                 fontWeight: 800,
                 letterSpacing: 2,
-                color: BRAND.gold,
+                color: 'var(--accent-text)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -335,7 +335,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
         >
           {firstName}{' '}
           {restName && (
-            <i style={{ color: BRAND.gold, fontWeight: 500 }}>{restName}.</i>
+            <i style={{ color: 'var(--accent-text)', fontWeight: 500 }}>{restName}.</i>
           )}
         </h1>
         {subline && (
@@ -731,7 +731,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign }) => {
               justifyContent: 'center',
               gap: 8,
               background: 'rgba(244,185,66,0.06)',
-              color: BRAND.gold,
+              color: 'var(--accent-text)',
               fontSize: 13,
               fontWeight: 700,
             }}
@@ -853,7 +853,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
             lineHeight: 1,
           }}
         >
-          All <i style={{ color: BRAND.gold, fontWeight: 500 }}>{blockSize} seats.</i>
+          All <i style={{ color: 'var(--accent-text)', fontWeight: 500 }}>{blockSize} seats.</i>
         </h1>
         <div style={{ fontSize: 13, color: 'var(--mute)' }}>
           {placed} placed · {Math.max(0, blockSize - placed)} still open · tap any seat to reassign
@@ -887,7 +887,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                     fontSize: 10,
                     fontWeight: 800,
                     letterSpacing: 1.6,
-                    color: BRAND.gold,
+                    color: 'var(--accent-text)',
                   }}
                 >
                   {(t.showLabel || '').toUpperCase()} ·{' '}
@@ -1008,7 +1008,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                   fontSize: 10,
                   fontWeight: 800,
                   letterSpacing: 1.4,
-                  color: BRAND.gold,
+                  color: 'var(--accent-text)',
                   marginBottom: 2,
                 }}
               >
@@ -1681,26 +1681,17 @@ const AppBar = ({ name, onAvatarTap }) => {
       justifyContent: 'space-between',
     }}
   >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <img
+        src={isDark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
+        alt="Davis Education Foundation"
         style={{
-          width: 30,
-          height: 30,
-          borderRadius: 8,
-          background: `linear-gradient(135deg, ${BRAND.gold}, ${BRAND.goldDeep})`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: FONT_DISPLAY,
-          fontSize: 13,
-          fontWeight: 700,
-          color: BRAND.ink,
-          fontStyle: 'italic',
-          boxShadow: '0 3px 8px rgba(244,185,66,0.35)',
+          height: 28,
+          width: 'auto',
+          display: 'block',
         }}
-      >
-        D
-      </div>
+      />
+      <div style={{ width: 1, height: 22, background: isDark ? 'rgba(255,255,255,0.16)' : 'rgba(13,18,36,0.14)' }} />
       <div>
         <div
           style={{
@@ -1710,7 +1701,7 @@ const AppBar = ({ name, onAvatarTap }) => {
             color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(13,18,36,0.6)',
           }}
         >
-          DEF GALA · 2026
+          GALA · 2026
         </div>
         <div style={{ fontSize: 12, fontWeight: 600, color: isDark ? '#fff' : BRAND.ink, marginTop: 0 }}>
           Sponsor portal
@@ -1934,7 +1925,7 @@ const GuestField = ({ label, value, onChange, placeholder, type = 'text' }) => (
         fontSize: 10,
         fontWeight: 800,
         letterSpacing: 1.4,
-        color: BRAND.gold,
+        color: 'var(--accent-text)',
         marginBottom: 6,
       }}
     >
@@ -2310,7 +2301,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
-            style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.6, color: BRAND.gold }}
+            style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.6, color: 'var(--accent-text)' }}
           >
             {(ticket.showLabel || '').toUpperCase()} ·{' '}
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ticket.showTime}</span>

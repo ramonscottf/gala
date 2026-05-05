@@ -120,7 +120,7 @@ export default function NightOfContent({ compact = false }) {
                 fontFamily: FONT_DISPLAY,
                 fontSize: 16,
                 fontWeight: 600,
-                color: BRAND.gold,
+                color: 'var(--accent-text)',
                 fontVariantNumeric: 'tabular-nums',
                 letterSpacing: -0.2,
                 whiteSpace: 'nowrap',

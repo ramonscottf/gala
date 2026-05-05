@@ -939,7 +939,7 @@ export const Step2Pick = ({
         style={{
           margin: '8px 14px 0',
           fontSize: 11,
-          color: BRAND.gold,
+          color: 'var(--accent-text)',
           letterSpacing: 0.4,
           fontWeight: 700,
           textTransform: 'uppercase',
@@ -1373,7 +1373,7 @@ export const Step2Pick = ({
             }}
           >
             <div
-              style={{ fontSize: 13, fontWeight: 700, color: BRAND.gold, marginBottom: 4 }}
+              style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-text)', marginBottom: 4 }}
             >
               You've placed your full block.
             </div>
@@ -1888,7 +1888,7 @@ const Step4Review = ({
                       fontSize: 10,
                       fontWeight: 800,
                       letterSpacing: 1.4,
-                      color: BRAND.gold,
+                      color: 'var(--accent-text)',
                     }}
                   >
                     DINNER

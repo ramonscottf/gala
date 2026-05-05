@@ -8,53 +8,30 @@
 
 import { BRAND, TIERS, FONT_DISPLAY, FONT_UI } from './tokens.js';
 
-export const Logo = ({ size = 20, dark }) => (
-  <div
+// Real DEF logo (replaces the previous SVG placeholder of a circle + "D").
+// Two variants:
+//   - light = white wordmark on transparent (for dark navy backgrounds)
+//   - dark  = navy wordmark on transparent (for paper/light backgrounds)
+// Both have the gold "D" mark.
+//
+// Files at public/assets/brand/def-logo-{light,dark}.png — fetched once
+// from media.daviskids.org during the May 5 migration. Aspect ratio 3:1
+// for light, 4:3 for dark (preserve via height-only sizing).
+//
+// Use `dark={true}` to indicate "this is on a dark background" → use the
+// LIGHT variant. The naming flip is intentional: the prop describes the
+// surface, not the variant.
+export const Logo = ({ size = 32, dark }) => (
+  <img
+    src={dark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
+    alt="Davis Education Foundation"
     style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 8,
-      color: dark ? '#fff' : BRAND.ink,
+      height: size,
+      width: 'auto',
+      display: 'inline-block',
+      verticalAlign: 'middle',
     }}
-  >
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="20" r="19" stroke="currentColor" strokeWidth="1.5" opacity="0.9" />
-      <path d="M13 12h7c4.4 0 8 3.6 8 8s-3.6 8-8 8h-7V12z" fill="currentColor" />
-    </svg>
-    <span
-      style={{
-        fontFamily: FONT_DISPLAY,
-        fontSize: size * 0.7,
-        letterSpacing: 0.4,
-        fontWeight: 600,
-        lineHeight: 1,
-      }}
-    >
-      <div
-        style={{
-          fontSize: size * 0.36,
-          letterSpacing: 1.6,
-          textTransform: 'uppercase',
-          fontWeight: 700,
-          fontFamily: FONT_UI,
-        }}
-      >
-        Davis Education
-      </div>
-      <div
-        style={{
-          fontSize: size * 0.36,
-          letterSpacing: 1.6,
-          textTransform: 'uppercase',
-          fontWeight: 700,
-          fontFamily: FONT_UI,
-          marginTop: 1,
-        }}
-      >
-        Foundation
-      </div>
-    </span>
-  </div>
+  />
 );
 
 export const GalaWordmark = ({ size = 14, color = BRAND.gold }) => (

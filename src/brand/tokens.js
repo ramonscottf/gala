@@ -1,10 +1,35 @@
 // DEF Gala brand tokens — locked to daviskids.org/gala visual system.
 // Deep navy ground with cool purple/indigo accents. Brand gradient runs
 // CRIMSON → INDIGO (left→right), used on tier cards, headings, CTAs.
-// Gold reserved as a subtle warm accent (Donate button, sponsor portal accents).
 //
-// Lifted verbatim from uploads/seating-chart/project/components/brand.jsx so
-// production designs and dev portal stay byte-identical on color values.
+// ─────────────────────────────────────────────────────────────────────────
+// USE OF GOLD — DOCTRINE (May 5 2026)
+// ─────────────────────────────────────────────────────────────────────────
+// Gold is the smallest brand color, NOT a primary text or UI surface.
+// It is reserved for ornamental accents that read as "trim" — not as
+// content the user has to read.
+//
+// ALLOWED (small accents only):
+//   - The DEF "D" mark inside the logo image
+//   - The 1.5px gradient strip on banner tops
+//   - Tiny badge dots (gold-tier sponsor tier dot only)
+//   - Single-character punctuation flourishes
+//
+// FORBIDDEN (must be navy or red instead):
+//   - Body text, eyebrow text, labels
+//   - Headlines or italic-emphasis words inside headlines
+//   - Numbers, counts, "remaining" displays, status text
+//   - Buttons, button outlines, icon strokes
+//   - Step indicators, stage badges, progress dots
+//
+// Components needing "highlight text" should use BRAND.red (or
+// BRAND.navy on dark grounds) instead of gold. For theme-adaptive
+// highlights, use the CSS variable --accent-text (defined in
+// brand/styles.css) which flips gold→navy in light mode.
+//
+// This rule is enforced visually but not statically — grep for
+// BRAND.gold periodically to catch new violations.
+// ─────────────────────────────────────────────────────────────────────────
 
 export const BRAND = {
   navy: '#1a2350', // deep navy ground (matches site hero)
@@ -48,3 +73,30 @@ export const TIERS = {
 
 export const FONT_DISPLAY = '"Source Serif 4", "Source Serif Pro", Georgia, serif';
 export const FONT_UI = '"Inter", system-ui, -apple-system, sans-serif';
+
+// ─────────────────────────────────────────────────────────────────────────
+// Theme-aware color helpers (May 5 2026)
+// ─────────────────────────────────────────────────────────────────────────
+// Components that previously hard-coded BRAND.gold for "highlight text"
+// — eyebrows, italic emphasis in headlines, status numbers, badge text —
+// should call these helpers with the current `isLight` from useTheme().
+// The gold-on-paper combo was illegible; navy-on-paper / red-on-paper
+// is the corrected mapping.
+//
+// Usage:
+//   const { isLight } = useTheme();
+//   <div style={{ color: accentText(isLight) }}>...
+//
+// Pick `accentText` for non-action accents (eyebrow text, italic flair).
+// Pick `accentAction` for active-state callouts (a pulsing "remaining"
+// counter, a "needs attention" badge) where you want red emphasis on
+// paper. On dark grounds both helpers return gold for now since gold
+// reads fine on navy — split if a future light-on-dark callout appears.
+//
+// See src/brand/tokens.js "USE OF GOLD" doctrine for the full rationale.
+export function accentText(isLight) {
+  return isLight ? BRAND.ink : BRAND.gold;
+}
+export function accentAction(isLight) {
+  return isLight ? BRAND.red : BRAND.gold;
+}

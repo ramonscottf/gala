@@ -26,7 +26,9 @@
   --navy: #0d1b3d;
   --navy-700: #182a55;
   --navy-300: #5a6a8c;
-  --gold: #c9a45c;
+  /* Gold kept ONLY for the 3px banner strip — see USE OF GOLD doctrine
+   * in src/brand/tokens.js. No text element should reference --gold. */
+  --gold: #f4b942;
   --red: #cb262c;
   --red-light: #e84e53;
   --paper: #faf8f3;
@@ -91,6 +93,13 @@ body {
   font-style: italic;
   color: var(--gold);
   font-weight: 600;
+}
+.banner .def-logo {
+  display: block;
+  height: 38px;
+  width: auto;
+  margin: 0 auto 14px;
+  opacity: 0.95;
 }
 .banner .meta {
   margin-top: 10px;
@@ -189,6 +198,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 <main class="shell">
   <div class="banner">
+    <img class="def-logo" src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation" />
     <div class="eyebrow">Davis Education Foundation</div>
     <h1>Gala <em>2026</em></h1>
     <div class="meta">Wednesday · June 10, 2026 · Megaplex Legacy Crossing</div>
