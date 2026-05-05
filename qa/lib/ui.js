@@ -1,10 +1,31 @@
 import { expect } from '@playwright/test';
 import { preparePage, QA_TOKEN } from './config.js';
 
+async function gotoPortalPath(page, path) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
+
+    try {
+      await expect(page.locator('body')).not.toContainText(/couldn't load your portal|failed to fetch/i, {
+        timeout: 10_000,
+      });
+      await expect(page.locator('body')).toContainText(/Sponsor portal|Kara Toone|Auditorium|Choose your seats|Welcome/i, {
+        timeout: 10_000,
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await page.waitForTimeout(750 * attempt);
+    }
+  }
+  throw lastError;
+}
+
 export async function gotoSponsor(page, suffix = '') {
   await preparePage(page);
-  await page.goto(`/sponsor/${QA_TOKEN}${suffix}`, { waitUntil: 'networkidle' });
-  await expect(page.locator('body')).not.toContainText(/couldn't load your portal/i);
+  await gotoPortalPath(page, `/sponsor/${QA_TOKEN}${suffix}`);
 }
 
 export async function openSeatPicker(page, testInfo) {
@@ -22,7 +43,7 @@ export async function openSeatPicker(page, testInfo) {
     }
   }
 
-  await page.goto(`/sponsor/${QA_TOKEN}/seats`, { waitUntil: 'networkidle' });
+  await gotoPortalPath(page, `/sponsor/${QA_TOKEN}/seats`);
   const start = page.getByRole('button', { name: /place your seats/i }).first();
   if ((await start.isVisible().catch(() => false)) && (await start.isEnabled().catch(() => false))) {
     await start.click();

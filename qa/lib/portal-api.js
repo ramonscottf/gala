@@ -6,13 +6,25 @@ function apiUrl(path) {
 }
 
 export async function apiJson(path, options = {}) {
-  const res = await fetch(apiUrl(path), {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
+  const url = apiUrl(path);
+  let res = null;
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      res = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.headers || {}),
+        },
+      });
+      break;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+    }
+  }
+  if (!res) throw lastError;
   const text = await res.text();
   let body = null;
   if (text) {
@@ -198,4 +210,3 @@ export async function ensurePlacedState(token = QA_TOKEN, count = 2) {
   }
   return block;
 }
-
