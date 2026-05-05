@@ -238,7 +238,12 @@ export async function onRequestPost(context) {
     const math = await getSeatsAvailableToPlace(env, resolved);
     const myPlaced = math.placed;
     const myQuota = math.total - math.delegated;
-    if (myPlaced >= myQuota) {
+    // After-this-finalize count = myPlaced + 1. Reject only when adding
+    // this seat would push us OVER quota. (Same off-by-one fix as the
+    // hold path above; protects against over-finalize when the SPA
+    // races multiple parallel finalize calls or a stale SPA sends an
+    // out-of-quota request.)
+    if (myPlaced + 1 > myQuota) {
       return jsonError(`You've already placed your full ${myQuota} seats`, 400);
     }
 
