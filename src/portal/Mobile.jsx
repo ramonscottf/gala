@@ -2803,9 +2803,17 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   // Merge real guests (from myAssignments.guest_name) with local additions.
   // Real takes precedence on name collision.
   // Phase 1.15 — `goSeats` opens SeatPickSheet (the canonical sheet
-  // adopted from PR #56). The legacy wizard route ?step=seats still
-  // resolves for back-compat with existing email deep links.
-  const goSeats = () => setSeatPickOpen(true);
+  // Phase 1.15 — `goSeats` opens SeatPickSheet (the canonical sheet
+  // adopted from PR #56). Always refreshes portal state first so the
+  // picker has accurate myAssignments/allAssignments/holds — without
+  // this, stale state from page-load could let the user click their
+  // own already-placed seats (filter logic depends on allSelfIds being
+  // current) or miss seats that other sponsors just took.
+  // The legacy wizard route ?step=seats still resolves for back-compat.
+  const goSeats = async () => {
+    if (onRefresh) await onRefresh();
+    setSeatPickOpen(true);
+  };
   const openTicket = (t) => setTicketSheet(t);
   const openInvite = () => setInviteOpen(true);
   const openSeatPicker = (seat) => {

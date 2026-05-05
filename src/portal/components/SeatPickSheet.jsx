@@ -177,6 +177,10 @@ export default function SeatPickSheet({
       return mode === 'assign' ? isSelf : !isSelf;
     });
     if (!filtered.length) return;
+    // Clear any prior pre-flight error — the user changed their selection,
+    // the previous error (orphan rule, quota) may no longer apply. The
+    // error reasserts itself if they hit Commit again with a new bad batch.
+    setError(null);
     setSel((prev) => {
       const n = new Set(prev);
       if (op === 'add') filtered.forEach((id) => n.add(id));
