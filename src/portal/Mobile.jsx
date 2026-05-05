@@ -668,7 +668,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail }) 
               borderRadius: 14,
               background: 'var(--surface)',
               border: `1px solid ${
-                t.guestName ? 'rgba(255,255,255,0.08)' : 'rgba(244,185,66,0.22)'
+                t.guestName ? 'var(--rule)' : 'rgba(244,185,66,0.22)'
               }`,
               boxShadow:
                 '0 4px 12px -8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.02) inset',
@@ -696,7 +696,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail }) 
                   style={{
                     fontSize: 14,
                     fontWeight: 600,
-                    color: '#fff',
+                    color: 'var(--ink-on-ground)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -744,7 +744,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail }) 
               style={{
                 fontSize: 11,
                 fontWeight: 700,
-                color: 'rgba(255,255,255,0.6)',
+                color: 'var(--mute)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 2,
@@ -995,8 +995,8 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                       fontWeight: 600,
                       color:
                         t.guestName || t.delegationName
-                          ? '#fff'
-                          : 'rgba(255,255,255,0.55)',
+                          ? 'var(--ink-on-ground)'
+                          : 'var(--mute)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -1251,7 +1251,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
                 style={{
                   fontSize: 14,
                   fontWeight: 600,
-                  color: '#fff',
+                  color: 'var(--ink-on-ground)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -1404,7 +1404,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       >
         <Avatar name={delegation.delegateName} size={48} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink-on-ground)' }}>
             {delegation.delegateName}
           </div>
           {(delegation.phone || delegation.email) && (
@@ -1692,7 +1692,9 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
               padding: '8px 0',
               borderRadius: 24,
               background: isActive
-                ? 'radial-gradient(ellipse at 50% 0%, rgba(244,185,66,0.32) 0%, rgba(244,185,66,0.14) 60%, rgba(244,185,66,0) 100%)'
+                ? isDark
+                  ? 'radial-gradient(ellipse at 50% 0%, rgba(244,185,66,0.32) 0%, rgba(244,185,66,0.14) 60%, rgba(244,185,66,0) 100%)'
+                  : 'radial-gradient(ellipse at 50% 0%, rgba(168,177,255,0.34) 0%, rgba(168,177,255,0.16) 55%, rgba(168,177,255,0) 100%)'
                 : 'transparent',
               // Phase 1.15 — inactive label uses var(--mute) so it
               // flips to a readable dark on paper in light mode.
