@@ -252,11 +252,32 @@ export async function onRequestPost(context) {
       ? `${resolved.record.company}${resolved.record.first_name ? ' (' + resolved.record.first_name + ' ' + (resolved.record.last_name || '') + ')' : ''}`
       : `${resolved.record.parent_company} / ${resolved.record.delegate_name}`;
 
-    await env.GALA_DB.prepare(
-      `INSERT INTO seat_assignments
-         (theater_id, row_label, seat_num, guest_name, sponsor_id, delegation_id, finalized_at, assigned_by)
-       VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 'portal')`
-    ).bind(theater_id, row_label, seat_num, guestName, sponsorId, delegationId).run();
+    try {
+      await env.GALA_DB.prepare(
+        `INSERT INTO seat_assignments
+           (theater_id, row_label, seat_num, guest_name, sponsor_id, delegation_id, finalized_at, assigned_by)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 'portal')`
+      ).bind(theater_id, row_label, seat_num, guestName, sponsorId, delegationId).run();
+    } catch (err) {
+      // A true two-client race can pass the pre-insert availability check in
+      // both requests, then lose at the DB unique constraint. Convert that
+      // expected race into a stable response instead of leaking a 500.
+      const raced = await env.GALA_DB.prepare(
+        `SELECT sponsor_id, delegation_id FROM seat_assignments
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?`
+      ).bind(theater_id, row_label, seat_num).first();
+      if (raced) {
+        const sameSponsor = Number(raced.sponsor_id) === Number(sponsorId);
+        const sameDelegation =
+          (raced.delegation_id == null && delegationId == null) ||
+          Number(raced.delegation_id) === Number(delegationId);
+        if (sameSponsor && sameDelegation) {
+          return jsonOk({ ok: true, action: 'finalized', already_finalized: true });
+        }
+        return jsonError('Seat already taken', 409);
+      }
+      throw err;
+    }
 
     // Clear hold if it exists
     await env.GALA_DB.prepare(

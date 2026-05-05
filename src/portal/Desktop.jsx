@@ -339,6 +339,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
               {title}
             </div>
             <button
+              aria-label="Close dialog"
               onClick={onClose}
               style={{
                 width: 32,
@@ -354,7 +355,6 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
                 fontSize: 18,
                 lineHeight: 1,
               }}
-              aria-label="Close"
             >
               ×
             </button>

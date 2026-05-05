@@ -140,6 +140,7 @@ const Sheet = ({ open, onClose, title, children }) => {
           >
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>{title}</div>
             <button
+              aria-label="Close dialog"
               onClick={onClose}
               style={{
                 width: 32,
@@ -189,6 +190,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
         }}
       >
         <button
+          aria-label={step > 1 ? 'Go back to previous step' : 'Return to portal'}
           onClick={onBack}
           style={{
             width: 36,
@@ -917,6 +919,7 @@ export const Step2Pick = ({
         }}
       >
         <select
+          aria-label="Auditorium"
           value={theaterId || ''}
           onChange={(e) => setTheaterId(Number(e.target.value))}
           disabled={theaterChoices.length <= 1}
@@ -984,6 +987,9 @@ export const Step2Pick = ({
       >
         <div
           key={mapFlashKey}
+          role="region"
+          aria-label="Seat map"
+          tabIndex={0}
           style={{
             flex: 1,
             minHeight: 0,

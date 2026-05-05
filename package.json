@@ -6,7 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "qa:install": "playwright install chromium",
+    "qa:smoke": "playwright test -c qa/playwright.config.js qa/smoke.spec.js",
+    "qa:visual": "playwright test -c qa/playwright.config.js qa/visual.spec.js",
+    "qa:visual:update": "playwright test -c qa/playwright.config.js qa/visual.spec.js --update-snapshots",
+    "qa:a11y": "playwright test -c qa/playwright.config.js qa/a11y.spec.js",
+    "qa:stress": "node qa/api-stress.mjs --yes",
+    "qa:lighthouse": "node qa/performance.mjs",
+    "qa:webpagetest": "node qa/webpagetest.mjs",
+    "qa:all": "npm run qa:smoke && npm run qa:visual && npm run qa:a11y && npm run qa:stress && npm run qa:lighthouse"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -14,7 +23,11 @@
     "react-router-dom": "^6.27.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@playwright/test": "^1.59.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^13.2.0",
     "vite": "^5.4.21"
   }
 }

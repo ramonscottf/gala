@@ -466,7 +466,7 @@ export default function SeatPickSheet({
                 </span>
               )}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: BRAND.red }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#ff6f86' }}>
               More about this movie →
             </div>
           </div>
@@ -512,7 +512,7 @@ export default function SeatPickSheet({
                 <span
                   style={{
                     fontSize: 9,
-                    color: active ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.45)',
+                    color: active ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.72)',
                   }}
                 >
                   {s.label}
@@ -523,6 +523,7 @@ export default function SeatPickSheet({
           })}
         </div>
         <select
+          aria-label="Auditorium"
           value={theaterId || ''}
           onChange={(e) => setTheaterId(Number(e.target.value))}
           style={{
@@ -553,6 +554,9 @@ export default function SeatPickSheet({
           Mobile sheet caps at 88vh; modal at 90vh. We give the map a
           comfortable 360px (compact) / 440px (modal) ceiling. */}
       <div
+        role="region"
+        aria-label="Seat map"
+        tabIndex={0}
         style={{
           maxHeight: compact ? 360 : 440,
           minHeight: 240,
@@ -727,6 +731,7 @@ export default function SeatPickSheet({
       {mode === 'assign' && sel.size > 0 && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <select
+            aria-label="Reassign selected seats to"
             value={assignTo}
             onChange={(e) => setAssignTo(e.target.value)}
             style={{

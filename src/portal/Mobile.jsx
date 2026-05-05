@@ -2401,6 +2401,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
               {title}
             </div>
             <button
+              aria-label="Close dialog"
               onClick={onClose}
               style={{
                 width: 32,
