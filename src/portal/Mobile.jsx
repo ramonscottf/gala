@@ -591,7 +591,7 @@ const TextMySeatsButton = ({ token, apiBase }) => {
 
 // ── Home tab ──────────────────────────────────────────────────────────
 
-const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, token, apiBase }) => {
+const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, onManageTickets, token, apiBase }) => {
   const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl } = data;
   const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
@@ -713,6 +713,60 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, to
           are placed yet (nothing to send). */}
       {placed > 0 && token && (
         <TextMySeatsButton token={token} apiBase={apiBase} />
+      )}
+
+      {/* Phase 1.16 — Manage tickets. Surfaces the Tickets tab on Home
+          so repeat visitors immediately see how to view per-seat details
+          (guest names, dinners, QR). The bottom tab bar already exposes
+          Tickets but it doesn't read as the action you take after
+          placing — this button bridges that. Hidden when nothing is
+          placed yet (Place CTA above is the right action then). */}
+      {placed > 0 && onManageTickets && (
+        <div style={{ margin: '12px 18px 0' }}>
+          <button
+            onClick={onManageTickets}
+            style={{
+              all: 'unset',
+              cursor: 'pointer',
+              boxSizing: 'border-box',
+              width: '100%',
+              padding: '12px 14px',
+              borderRadius: 14,
+              background: 'var(--surface)',
+              border: `1px solid var(--rule)`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              boxShadow:
+                '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
+            }}
+          >
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: 'rgba(168,177,255,0.16)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: BRAND.indigoLight,
+                flexShrink: 0,
+              }}
+            >
+              <Icon name="ticket" size={18} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
+                Manage tickets
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+                View seats, assign guests, choose dinners
+              </div>
+            </div>
+            <Icon name="chev" size={14} />
+          </button>
+        </div>
       )}
 
       <div
@@ -2922,6 +2976,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
           onOpenTicket={openTicket}
           onAssign={openTicket}
           onMovieDetail={setMovieDetail}
+          onManageTickets={() => setTab('tickets')}
           token={token}
           apiBase={config.apiBase}
         />

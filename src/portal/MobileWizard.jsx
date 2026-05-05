@@ -13,7 +13,7 @@
 //   3 → 4    user taps "Review & finish" or "Skip for now"
 //   4 → exit user taps "Done", we navigate back to the boarding pass
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
@@ -527,6 +527,24 @@ export const Step2Pick = ({
     if (!list.find((t) => t.theaterId === theaterId)) setTheaterId(list[0]?.theaterId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showingNumber, movieId, theatersForCombo]);
+
+  // Phase 1.16 — Bug #5 fix mirror of SeatPickSheet. When the wizard
+  // opens and the sponsor has placed seats, default to that
+  // showing/movie/theater so the "Reassign yours" toggle (gated on
+  // haveSelfHere) is reachable without manual navigation.
+  const didInitFromAssignments = useRef(false);
+  useEffect(() => {
+    if (didInitFromAssignments.current) return;
+    const placed = portal?.myAssignments || [];
+    if (!placed.length || !showtimes.length) return;
+    const first = placed[0];
+    const match = showtimes.find((s) => s.theater_id === first.theater_id);
+    if (!match) return;
+    didInitFromAssignments.current = true;
+    setShowingNumber(match.showing_number);
+    setMovieId(match.movie_id);
+    setTheaterId(match.theater_id);
+  }, [portal, showtimes]);
 
   const adaptedTheater = useMemo(
     () => (theaterId ? adaptTheater(theatersById[theaterId]) : null),

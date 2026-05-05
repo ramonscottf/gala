@@ -25,7 +25,7 @@
 // Commit calls seats.place() then fires onCommitted(theaterId, seatIds,
 // movieMeta) so the host can hand off to PostPickSheet.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
 import { SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock } from '../SeatEngine.jsx';
@@ -145,6 +145,28 @@ export default function SeatPickSheet({
     if (!list.find((t) => t.theaterId === theaterId)) setTheaterId(list[0]?.theaterId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showingNumber, movieId, theatersForCombo]);
+
+  // Phase 1.16 — Bug #5 fix: when the sheet opens and the sponsor already
+  // has placed seats, default the showing/movie/theater to where those
+  // seats live. Without this, the picker opens on showing[0]/movie[0]/
+  // theater[0] regardless of where the sponsor's seats are — so the
+  // "Reassign yours" toggle (gated on haveSelfHere) never appears, and
+  // the only way to edit is to unplace and re-place. We do this once,
+  // on mount, so the user can still navigate away to place additional
+  // seats in another auditorium afterward.
+  const didInitFromAssignments = useRef(false);
+  useEffect(() => {
+    if (didInitFromAssignments.current) return;
+    const placed = portal?.myAssignments || [];
+    if (!placed.length || !showtimes.length) return;
+    const first = placed[0];
+    const match = showtimes.find((s) => s.theater_id === first.theater_id);
+    if (!match) return;
+    didInitFromAssignments.current = true;
+    setShowingNumber(match.showing_number);
+    setMovieId(match.movie_id);
+    setTheaterId(match.theater_id);
+  }, [portal, showtimes]);
 
   const adaptedTheater = useMemo(
     () => (theaterId ? adaptTheater(theatersById[theaterId]) : null),

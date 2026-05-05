@@ -17,7 +17,7 @@
 //
 // Visual fidelity: 1fr/340px grid, stepper bar, navy ground, gold accents.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import {
@@ -2149,6 +2149,28 @@ export default function Desktop({
     if (!list.find((t) => t.theaterId === theaterId)) setTheaterId(list[0]?.theaterId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showingNumber, movieId, ctx.theatersForCombo]);
+
+  // Phase 1.16 — Bug #5 fix mirror of SeatPickSheet/MobileWizard. When
+  // Desktop mounts and the sponsor already has placed seats, default
+  // showing/movie/theater to where those seats live so the
+  // "Reassign yours" toggle (gated on haveSelfHere inside SeatPickSheet)
+  // is reachable without manual navigation. Without this, returning
+  // sponsors hit the picker on showing[0]/movie[0]/theater[0] regardless
+  // of where their seats actually are.
+  const didInitFromAssignments = useRef(false);
+  const showtimes = portal?.showtimes || [];
+  useEffect(() => {
+    if (didInitFromAssignments.current) return;
+    const placed = portal?.myAssignments || [];
+    if (!placed.length || !showtimes.length) return;
+    const first = placed[0];
+    const match = showtimes.find((s) => s.theater_id === first.theater_id);
+    if (!match) return;
+    didInitFromAssignments.current = true;
+    setShowingNumber(match.showing_number);
+    setMovieId(match.movie_id);
+    setTheaterId(match.theater_id);
+  }, [portal, showtimes]);
 
   const adaptedTheater = useMemo(
     () => (theaterId ? adaptTheater(ctx.theatersById[theaterId]) : null),
