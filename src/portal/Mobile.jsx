@@ -223,9 +223,10 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
         <span style={{ width: 14, height: 14, borderRadius: 99, background: BRAND.ink }} />
         <span style={{ width: 14, height: 14, borderRadius: 99, background: BRAND.ink }} />
       </div>
-      {/* Top gradient strip — replaces the old 3px gold left edge per
-          F7b. Crimson→indigo across the full width of the boarding pass
-          card top. */}
+      {/* Top gold perforation strip — boarding-pass trim. Sits ABOVE the
+          red→indigo gradient, taking 1.5px of the 3px header band so
+          both reads visible. May 5 2026 add per Scott — original boarding
+          pass had this and it got lost in the migration. */}
       <div
         style={{
           position: 'absolute',
@@ -235,6 +236,30 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           height: 3,
           background: BRAND.gradient,
           zIndex: 3,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 1.5,
+          background: BRAND.gold,
+          zIndex: 4,
+        }}
+      />
+      {/* Bottom gold perforation strip — mirrors the top, sitting just
+          below the dashed perforation line at the bottom of the stub. */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 1.5,
+          background: BRAND.gold,
+          zIndex: 4,
         }}
       />
 
@@ -467,7 +492,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
 
 // ── Home tab ──────────────────────────────────────────────────────────
 
-const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign }) => {
+const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail }) => {
   const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl } = data;
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
   const assignedCount = tickets
@@ -774,7 +799,18 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign }) => {
         }}
       >
         {lineup.map((m) => (
-          <div key={m.id} style={{ flexShrink: 0, width: 160, scrollSnapAlign: 'start' }}>
+          <button
+            key={m.id}
+            onClick={() => onMovieDetail && onMovieDetail(m)}
+            style={{
+              all: 'unset',
+              cursor: 'pointer',
+              flexShrink: 0,
+              width: 160,
+              scrollSnapAlign: 'start',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
             <div
               style={{
                 width: '100%',
@@ -810,7 +846,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign }) => {
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#fff',
+                color: 'var(--ink-on-ground)',
                 marginTop: 8,
                 lineHeight: 1.25,
               }}
@@ -827,7 +863,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign }) => {
             >
               {m.rating} · {m.runtime}m
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
@@ -1699,7 +1735,7 @@ const AppBar = ({ name, onAvatarTap }) => {
             fontSize: 9,
             fontWeight: 800,
             letterSpacing: 1.6,
-            color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(13,18,36,0.6)',
+            color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(13,18,36,0.78)',
           }}
         >
           GALA · 2026
@@ -2179,7 +2215,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
         style={{
           width: '100%',
           maxHeight: '88%',
-          background: isDark ? BRAND.navyDeep : BRAND.paper,
+          background: isDark ? BRAND.navyDeep : '#ffffff',
           color: isDark ? '#fff' : BRAND.ink,
           borderTopLeftRadius: 22,
           borderTopRightRadius: 22,
@@ -2705,7 +2741,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
         position: 'relative',
         background: isDark
           ? BRAND.groundDeep
-          : `radial-gradient(ellipse 120% 60% at 50% -10%, #fff 0%, ${BRAND.paper} 60%)`,
+          : `radial-gradient(ellipse 120% 60% at 50% -10%, #fff 0%, #f7f8fb 60%)`,
         color: isDark ? '#fff' : BRAND.ink,
         fontFamily: FONT_UI,
         display: 'flex',
@@ -2721,6 +2757,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
           onPlaceSeats={goSeats}
           onOpenTicket={openTicket}
           onAssign={openTicket}
+          onMovieDetail={setMovieDetail}
         />
       )}
       {tab === 'tickets' && (

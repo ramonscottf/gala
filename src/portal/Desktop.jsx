@@ -374,7 +374,7 @@ const PortalShell = ({ children }) => {
         overflow: 'hidden',
         background: isDark
           ? BRAND.groundDeep
-          : `radial-gradient(ellipse 120% 60% at 50% -10%, #fff 0%, ${BRAND.paper} 60%)`,
+          : `radial-gradient(ellipse 120% 60% at 50% -10%, #fff 0%, #f7f8fb 60%)`,
         color: isDark ? '#fff' : BRAND.ink,
         fontFamily: FONT_UI,
         display: 'flex',

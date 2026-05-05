@@ -129,7 +129,7 @@ export default function NightOfContent({ compact = false }) {
               {row.time}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', lineHeight: 1.3 }}>
                 {row.title}
               </div>
               <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 3, lineHeight: 1.5 }}>
@@ -160,7 +160,7 @@ export default function NightOfContent({ compact = false }) {
                 style={{
                   fontSize: 13,
                   fontWeight: 700,
-                  color: '#fff',
+                  color: 'var(--ink-on-ground)',
                   marginBottom: 4,
                   letterSpacing: 0.1,
                 }}

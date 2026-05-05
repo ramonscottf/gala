@@ -77,10 +77,13 @@ export const Btn = ({
   const s = sizes[size];
   const styles = {
     primary: { background: BRAND.red, color: '#fff', border: 'none' },
+    // secondary is the bordered/transparent button. Uses --ink-on-ground
+    // and --rule so it works in both dark (white text + faint white
+    // border) and light (navy text + visible navy border) modes.
     secondary: {
       background: 'transparent',
-      color: '#fff',
-      border: `1.5px solid rgba(255,255,255,0.35)`,
+      color: 'var(--ink-on-ground)',
+      border: `1.5px solid var(--rule)`,
     },
     secondaryDark: {
       background: 'transparent',

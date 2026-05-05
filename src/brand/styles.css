@@ -21,16 +21,32 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --ground: #fbf8f3;          /* BRAND.paper */
-    --ink-on-ground: #0b1233;   /* BRAND.ink */
-    --rule: rgba(13, 15, 36, 0.12);  /* BRAND.ruleDark */
-    --surface: rgba(13, 15, 36, 0.04);
-    --mute: rgba(13, 15, 36, 0.6);
-    --accent-italic: #2a2f7a;   /* indigoDeep — readable on paper */
+    /* Light mode redesigned May 5 2026 (Scott) — moved from "warm paper
+     * + faded text" to "pure white + sharp navy." The paper aesthetic
+     * was muddying the contrast: 60%-opacity navy on warm-cream paper
+     * had a ~3.5:1 contrast ratio, well below WCAG AA for body text.
+     *
+     * New baseline:
+     *   --ground:      pure white (was #fbf8f3 paper)
+     *   --ink:         true navy at 100% opacity (was 100% but mixed
+     *                  with translucent rules)
+     *   --mute:        80% navy (was 60%) — secondary text now ~9:1
+     *                  contrast on white instead of ~5:1
+     *   --rule:        crisper border at 18% (was 12%) for visible
+     *                  card edges and dividers
+     *   --surface:     near-white panel fill (was 4% navy on paper) so
+     *                  cards have a faint outline/lift without the
+     *                  paper-on-paper visual fatigue. */
+    --ground: #ffffff;
+    --ink-on-ground: #0b1233;
+    --rule: rgba(13, 15, 36, 0.18);
+    --surface: #f7f8fb;        /* near-white card fill */
+    --mute: rgba(13, 15, 36, 0.78);  /* was 0.6 — now hits AA on body */
+    --accent-italic: #1f2a5e;  /* navyMid — slightly lighter for italic flair */
 
     /* Light-mode accent flips to navy. Red is reserved for active
      * states / CTAs so it doesn't compete with primary buttons. */
-    --accent-text: #0b1233;     /* navy on paper */
+    --accent-text: #0b1233;     /* navy on white */
     --accent-text-strong: #cb262c;  /* red for action emphasis */
   }
 }
