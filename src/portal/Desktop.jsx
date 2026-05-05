@@ -71,6 +71,7 @@ const Avatar = ({ name, size = 28 }) => {
     .toUpperCase();
   return (
     <span
+      className="force-dark"
       style={{
         width: size,
         height: size,
@@ -93,6 +94,7 @@ const Avatar = ({ name, size = 28 }) => {
 
 const PosterMini = ({ poster, color, label, size = 46 }) => (
   <div
+    className="force-dark"
     style={{
       width: size,
       height: size * 1.4,
@@ -211,7 +213,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
             cursor: 'pointer',
             fontSize: 12,
             fontWeight: 600,
-            color: 'var(--ink-on-ground)',
+            color: 'rgba(255,255,255,0.78)',
             padding: '5px 10px',
             borderRadius: 99,
             border: `1px solid var(--rule)`,
@@ -253,7 +255,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
             style={{
               fontSize: 13,
               fontWeight: 600,
-              color: 'var(--ink-on-ground)',
+              color: '#fff',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -696,7 +698,7 @@ const StepWelcome = ({
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--accent-text)' }}>
                 {s.label.toUpperCase()}
               </div>
-              <div style={{ fontSize: 13, color: 'var(--ink-on-ground)', marginTop: 6, lineHeight: 1.45, opacity: 0.85 }}>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 6, lineHeight: 1.45 }}>
                 {s.copy}
               </div>
             </div>
@@ -1121,6 +1123,7 @@ const StepShowing = ({
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {m.rating && (
                     <span
+                      className="force-dark"
                       style={{
                         padding: '2px 8px',
                         borderRadius: 4,
@@ -1461,16 +1464,16 @@ const StepSeats = ({
                       cursor: 'pointer',
                       padding: '6px 10px',
                       borderRadius: 8,
-                      border: `1.5px solid ${active ? BRAND.indigoLight : 'var(--rule)'}`,
+                      border: `1.5px solid ${active ? BRAND.indigoLight : BRAND.rule}`,
                       background: active
                         ? 'rgba(168,177,255,0.10)'
-                        : 'transparent',
+                        : 'rgba(255,255,255,0.02)',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6,
                       fontSize: 11,
                       fontWeight: 600,
-                      color: 'var(--ink-on-ground)',
+                      color: '#fff',
                     }}
                   >
                     <FormatBadge format={c.format} />
@@ -1514,7 +1517,7 @@ const StepSeats = ({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Placed total</span>
-            <span style={{ color: 'var(--ink-on-ground)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
               {seats.totalAssigned}/{blockSize}
             </span>
           </div>
@@ -1590,7 +1593,7 @@ const StepSeats = ({
                     padding: '2px 6px',
                     border: `1px solid var(--rule)`,
                     borderRadius: 3,
-                    color: 'var(--ink-on-ground)',
+                    color: '#fff',
                     fontSize: 9,
                   }}
                 >
@@ -1629,7 +1632,7 @@ const StepSeats = ({
             )}
           </div>
         </div>
-        <SeatLegend />
+        <SeatLegend dark />
       </div>
     </div>
   );
@@ -1784,12 +1787,12 @@ const StepConfirm = ({
           <>
             {sel.size} seats in {theatersById[theaterMeta?.theaterId]?.name} for the{' '}
             {showingNumber === 1 ? 'early' : 'late'} showing of <b>{movie?.title}</b>. You'll have{' '}
-            <b style={{ color: 'var(--ink-on-ground)' }}>{remaining - sel.size}</b> seats left to place after this.
+            <b style={{ color: '#fff' }}>{remaining - sel.size}</b> seats left to place after this.
           </>
         ) : (
           <>
             {seats.totalAssigned} of {blockSize} seats placed. Tap{' '}
-            <b style={{ color: 'var(--ink-on-ground)' }}>Done — send me my QR</b> to finalize and we'll text +
+            <b style={{ color: '#fff' }}>Done — send me my QR</b> to finalize and we'll text +
             email your check-in code. Seats stay editable until June 9.
           </>
         )}
@@ -1879,7 +1882,7 @@ const StepConfirm = ({
                   {g.showLabel.toUpperCase()} ·{' '}
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{g.showTime}</span>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
                   {g.movieTitle}
                 </div>
                 <div
@@ -2236,6 +2239,7 @@ export default function Desktop({
       />
 
       <div
+        className="wizard-body"
         style={{
           padding: '16px 36px',
           borderBottom: `1px solid var(--rule)`,
@@ -2260,7 +2264,7 @@ export default function Desktop({
           }}
         >
           <span>
-            <b style={{ color: 'var(--ink-on-ground)' }}>{seats.totalAssigned}</b> / {blockSize} placed
+            <b style={{ color: '#fff' }}>{seats.totalAssigned}</b> / {blockSize} placed
           </span>
           <span>·</span>
           <span>
@@ -2274,6 +2278,7 @@ export default function Desktop({
           supports it; mirrors mobile hiding the Group tab). Wizard
           fills full width when the rail is suppressed. */}
       <div
+        className="wizard-body"
         style={{
           flex: 1,
           display: 'grid',
