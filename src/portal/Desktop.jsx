@@ -1632,7 +1632,7 @@ const StepSeats = ({
             )}
           </div>
         </div>
-        <SeatLegend dark />
+        <SeatLegend />
       </div>
     </div>
   );

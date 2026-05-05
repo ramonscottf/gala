@@ -54,23 +54,27 @@
    * Light-mode white-text rescue (added May 5 2026, post-Mobile sweep).
    *
    * Many components in Desktop.jsx use inline style={{ color: '#fff' }}
-   * which made sense when the only ground was dark navy. In light mode
-   * those become invisible white text on the white page. Rather than
-   * touch every call site (high risk of breaking the dark-on-dark spots
-   * that legitimately need white — movie poster cards, accent chips,
-   * the avatar gradient), this scopes a CSS rule to .wizard-body (the
-   * desktop wizard middle column + stepper strip) and rewrites pure
-   * white inline colors to ink.
+   * or color: 'rgba(255,255,255,0.85)' which made sense when the only
+   * ground was dark navy. In light mode those become invisible white
+   * text on the white page. Rather than touch every call site (high
+   * risk of breaking the dark-on-dark spots that legitimately need
+   * white — movie poster cards, accent chips, the avatar gradient),
+   * this scopes a CSS rule to .wizard-body (the desktop wizard middle
+   * column + stepper strip) and rewrites pure white inline colors.
    *
    * Elements that own a dark inline backdrop AND have white text
    * children — Avatar, PosterMini, anything wrapped in .force-dark —
    * opt out so their child text stays white as designed.
    *
-   * Targets the two forms React serializes inline color into:
-   *   style={{ color: '#fff' }}    → "color: rgb(255, 255, 255)"
-   *   style={{ color: '#ffffff' }} → also rgb(255, 255, 255)
-   * ───────────────────────────────────────────────────────────────── */
+   * Targets the forms React serializes inline color into:
+   *   '#fff' / '#ffffff'  → "color: rgb(255, 255, 255)"
+   *   'rgba(255,255,255,0.X)' → "color: rgba(255, 255, 255, 0.X)"
+   *
+   * The attribute selector uses substring match `[style*="..."]` so it
+   * catches all alpha values for rgba (0.5, 0.7, 0.85, 0.9, etc.)
+   * without needing one selector per opacity. */
   .wizard-body [style*="color: rgb(255, 255, 255)"]:not(.force-dark):not(.force-dark *),
+  .wizard-body [style*="color: rgba(255, 255, 255"]:not(.force-dark):not(.force-dark *),
   .wizard-body [style*="color: #fff"]:not(.force-dark):not(.force-dark *) {
     color: var(--ink-on-ground) !important;
   }

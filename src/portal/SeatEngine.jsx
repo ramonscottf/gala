@@ -170,23 +170,33 @@ export const SeatMap = ({
   const [lasso, setLasso] = useState(null);
   const dragging = useRef(null);
   const containerRef = useRef(null);
-  // theme='auto' (new default): follow the page's data-theme. The seat map
-  // sits inline on the page (not inside a force-dark sheet) so light pages
-  // need dark row letters / "taken" overlay tints to be readable. Existing
-  // call sites with theme='dark' (sheets) keep their explicit override.
+  // theme='auto' (new default): follow the OS color scheme via the
+  // `prefers-color-scheme` media query. This is the same signal the
+  // CSS @media block uses to flip --ground / --ink-on-ground, so the
+  // SVG row letters and the "taken" tint stay in sync with the page.
+  // Earlier versions tried to read document.documentElement[data-theme]
+  // but nothing in this app sets that attribute — the theme is purely
+  // media-query driven, so matchMedia is the right hook.
   const isDarkExplicit = theme === 'dark';
   const isLightExplicit = theme === 'light';
-  const [autoDark, setAutoDark] = useState(true);
+  const [autoDark, setAutoDark] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return true;
+    return !window.matchMedia('(prefers-color-scheme: light)').matches;
+  });
   useEffect(() => {
     if (theme !== 'auto') return;
-    const read = () => {
-      const t = document.documentElement.getAttribute('data-theme');
-      setAutoDark(t !== 'light');
-    };
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const read = () => setAutoDark(!mq.matches);
     read();
-    const obs = new MutationObserver(read);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => obs.disconnect();
+    // addEventListener is the modern API; some older WebKit needs addListener.
+    if (mq.addEventListener) {
+      mq.addEventListener('change', read);
+      return () => mq.removeEventListener('change', read);
+    } else if (mq.addListener) {
+      mq.addListener(read);
+      return () => mq.removeListener(read);
+    }
   }, [theme]);
   const dark = isDarkExplicit ? true : isLightExplicit ? false : autoDark;
 
