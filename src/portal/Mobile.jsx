@@ -125,34 +125,24 @@ const StatusPill = ({ status }) => {
   );
 };
 
-const MegaplexLogo = ({ color = 'rgba(255,255,255,0.7)', size = 12 }) => (
-  <span
+// Megaplex venue logo. Originally a hand-drawn SVG (filmstrip + Megaplex
+// wordmark) — replaced May 5 2026 with the real Megaplex logo image
+// hosted on R2 at assets.daviskids.org. The SVG version has been kept
+// in git history but is no longer used. The image renders at a fixed
+// height; size prop now controls only the height in px.
+const MegaplexLogo = ({ size = 14 }) => (
+  <img
+    src="https://assets.daviskids.org/gala-2026/megaplex-light.png"
+    alt="Megaplex"
+    loading="lazy"
     style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 6,
-      color,
-      fontFamily: FONT_UI,
-      fontSize: size,
-      letterSpacing: 1.6,
-      fontWeight: 800,
-      textTransform: 'uppercase',
+      height: size + 6,         // ~20px when size=14, slightly taller than text feel
+      width: 'auto',
+      display: 'block',
+      marginLeft: 'auto',       // right-align inside its container
+      objectFit: 'contain',
     }}
-  >
-    <svg
-      width={size * 1.05}
-      height={size * 0.85}
-      viewBox="0 0 22 18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    >
-      <rect x="1" y="1" width="20" height="14" rx="1" />
-      <path d="M5 5l6 4 6-4M5 9l6 4 6-4" strokeLinejoin="round" />
-      <path d="M7 17h8" strokeLinecap="round" />
-    </svg>
-    Megaplex
-  </span>
+  />
 );
 
 const miniBtn = (kind) => ({
@@ -309,10 +299,11 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 fontSize: 9,
                 fontWeight: 800,
                 letterSpacing: 2,
-                color: 'var(--accent-text)',
+                color: BRAND.gold,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+                textShadow: '0 0 12px rgba(244,185,66,0.3)',
               }}
             >
               LIGHTS · CAMERA · TAKE ACTION · 2026
@@ -326,12 +317,18 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 gap: 5,
                 padding: '4px 10px 4px 9px',
                 borderRadius: 99,
-                background: 'var(--surface)',
-                border: `1px solid rgba(255,255,255,0.18)`,
+                // Light pill on dark navy ticket. Was 'var(--surface)' which
+                // resolved to near-black in dark mode and near-white on light
+                // mode — neither read well as a "tier badge" against the
+                // always-dark ticket. Hardcoded to a soft white.
+                background: 'rgba(255,255,255,0.92)',
+                border: `1px solid rgba(255,255,255,0.6)`,
                 fontSize: 10,
                 fontWeight: 700,
                 letterSpacing: 1.4,
-                color: '#fff',
+                // Dark text on light pill — was '#fff' which was invisible
+                // against the new white-ish bg.
+                color: BRAND.ink,
                 flexShrink: 0,
               }}
             >
@@ -361,11 +358,22 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
         >
           {firstName}{' '}
           {restName && (
-            <i style={{ color: 'var(--accent-text)', fontWeight: 500 }}>{restName}.</i>
+            <i
+              style={{
+                color: BRAND.gold,
+                fontWeight: 500,
+                // Slight text-shadow gives the gold italic a bit of pop on
+                // the navy gradient, especially on small phone screens
+                // where the iOS sample-bottom-bar dims everything above.
+                textShadow: '0 0 18px rgba(244,185,66,0.25)',
+              }}
+            >
+              {restName}.
+            </i>
           )}
         </h1>
         {subline && (
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.62)', marginTop: 4 }}>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.95)', marginTop: 4, fontWeight: 600, letterSpacing: 0.1 }}>
             {subline}
           </div>
         )}
@@ -453,7 +461,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           <div
             style={{
               fontSize: 11,
-              color: 'rgba(255,255,255,0.55)',
+              color: 'rgba(255,255,255,0.75)',
               marginTop: 2,
               fontVariantNumeric: 'tabular-nums',
             }}
@@ -462,12 +470,12 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <MegaplexLogo size={11} />
+          <MegaplexLogo size={14} />
           <div
             style={{
               fontSize: 10,
-              color: 'rgba(255,255,255,0.4)',
-              marginTop: 3,
+              color: 'rgba(255,255,255,0.7)',
+              marginTop: 5,
               letterSpacing: 0.4,
             }}
           >
@@ -930,7 +938,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                   {(t.showLabel || '').toUpperCase()} ·{' '}
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{t.showTime}</span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginTop: 2 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', marginTop: 2 }}>
                   {t.movieTitle}
                 </div>
               </div>
@@ -2343,7 +2351,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
             {(ticket.showLabel || '').toUpperCase()} ·{' '}
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ticket.showTime}</span>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginTop: 2 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', marginTop: 2 }}>
             {ticket.movieTitle}
           </div>
           <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>
