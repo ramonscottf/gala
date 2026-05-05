@@ -125,21 +125,29 @@ const StatusPill = ({ status }) => {
   );
 };
 
-// Megaplex venue logo. Originally a hand-drawn SVG (filmstrip + Megaplex
-// wordmark) — replaced May 5 2026 with the real Megaplex logo image
-// hosted on R2 at assets.daviskids.org. The SVG version has been kept
-// in git history but is no longer used. The image renders at a fixed
-// height; size prop now controls only the height in px.
-const MegaplexLogo = ({ size = 14 }) => (
+// Megaplex venue logo. Originally a hand-drawn SVG placeholder (filmstrip
+// icon + lowercase "Megaplex" type) Skippy invented while we waited for
+// the official asset. May 5 2026: Scott uploaded the real Megaplex
+// wordmark; processed into transparent-PNG variants and committed them
+// into the repo at /assets/brand/megaplex-{light,dark}.png. We now serve
+// from the local Pages domain instead of R2 because (a) the previous R2
+// upload was an outline-only version that read as line-art noise on
+// navy, and (b) the local file is ~32 KB vs the R2 one's 313 KB. The
+// `dark` prop picks the variant: dark=true (boarding pass on navy) →
+// light variant, dark=false → dark variant. Size prop controls height
+// in px; width is computed from the wordmark's native aspect ratio
+// (1136 × 128 ≈ 8.875 : 1).
+const MEGAPLEX_RATIO = 1136 / 128;
+const MegaplexLogo = ({ size = 14, dark = true }) => (
   <img
-    src="https://assets.daviskids.org/gala-2026/megaplex-light.png"
+    src={dark ? '/assets/brand/megaplex-light.png' : '/assets/brand/megaplex-dark.png'}
     alt="Megaplex"
     loading="lazy"
+    width={Math.round((size + 6) * MEGAPLEX_RATIO)}
+    height={size + 6}
     style={{
-      height: size + 6,         // ~20px when size=14, slightly taller than text feel
-      width: 'auto',
       display: 'block',
-      marginLeft: 'auto',       // right-align inside its container
+      marginLeft: 'auto',
       objectFit: 'contain',
     }}
   />
