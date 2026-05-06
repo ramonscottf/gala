@@ -1,28 +1,18 @@
 // Brand atoms — Logo, GalaWordmark, Btn, CountCard, TierBadge, SectionEyebrow,
-// Display, Icon. Lifted from uploads/seating-chart/project/components/brand.jsx
-// and converted from window globals to proper ES exports.
+// Display, Icon. Linear-themed primitives.
 //
 // Inline-style approach matches the design's source so visual fidelity is
 // guaranteed by code review against the .jsx originals. CSS Modules would
 // have meant rewriting every style which is a translation step + a bug surface.
 
-import { BRAND, TIERS, FONT_DISPLAY, FONT_UI } from './tokens.js';
+import { TOKENS, TIERS } from './tokens.js';
 
-// Real DEF logo (replaces the previous SVG placeholder of a circle + "D").
-// Two variants:
-//   - light = white wordmark on transparent (for dark navy backgrounds)
-//   - dark  = navy wordmark on transparent (for paper/light backgrounds)
-// Both have the gold "D" mark.
-//
-// Files at public/assets/brand/def-logo-{light,dark}.png — fetched once
-// from media.daviskids.org during the May 5 migration. Aspect ratio 3:1
-// for light, 4:3 for dark (preserve via height-only sizing).
-//
-// Use `dark={true}` to indicate "this is on a dark background" → use the
-// LIGHT variant. The naming flip is intentional: the prop describes the
-// surface, not the variant.
+// Real DEF logo. Two variants:
+//   - dark={true}  → light wordmark, for dark navy backgrounds (hero card)
+//   - dark={false} → dark navy wordmark, for white surfaces
+// Files at public/assets/brand/def-logo-{light,dark}.png.
 export const Logo = ({ size = 32, dark }) => {
-  const width = dark ? size * 3 : Math.round(size * 4 / 3);
+  const width = dark ? size * 3 : Math.round((size * 4) / 3);
   return (
     <img
       src={dark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
@@ -39,7 +29,7 @@ export const Logo = ({ size = 32, dark }) => {
   );
 };
 
-export const GalaWordmark = ({ size = 14, color = BRAND.gold }) => (
+export const GalaWordmark = ({ size = 12, color = TOKENS.brand.gold }) => (
   <div
     style={{
       display: 'inline-flex',
@@ -47,23 +37,21 @@ export const GalaWordmark = ({ size = 14, color = BRAND.gold }) => (
       gap: 8,
       color,
       fontSize: size,
-      letterSpacing: 2,
-      fontWeight: 700,
+      letterSpacing: 1.5,
+      fontWeight: 600,
       textTransform: 'uppercase',
-      fontFamily: FONT_UI,
+      fontFamily: TOKENS.font.ui,
     }}
   >
-    <span style={{ width: 24, height: 1.5, background: 'currentColor' }} />
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-      <svg width={size * 0.9} height={size * 0.9} viewBox="0 0 16 16" fill="currentColor">
-        <circle cx="3" cy="8" r="2" />
-        <rect x="6" y="6" width="9" height="4" rx="0.5" />
-      </svg>
+    <span style={{ width: 16, height: 1, background: 'currentColor', opacity: 0.6 }} />
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
       Annual Gala
     </span>
   </div>
 );
 
+// Linear-style buttons: tight radius, no pill except where the chrome
+// pattern (tab bar) demands it. Primary = flat red, no shadow.
 export const Btn = ({
   children,
   kind = 'primary',
@@ -75,38 +63,52 @@ export const Btn = ({
   style = {},
 }) => {
   const sizes = {
-    sm: { h: 34, px: 14, fs: 13 },
-    md: { h: 44, px: 22, fs: 14 },
-    lg: { h: 52, px: 28, fs: 15 },
+    sm: { h: 30, px: 12, fs: 13 },
+    md: { h: 36, px: 20, fs: 14 },
+    lg: { h: 44, px: 24, fs: 14 },
   };
   const s = sizes[size];
   const styles = {
-    primary: { background: BRAND.red, color: '#fff', border: 'none' },
-    // secondary is the bordered/transparent button. Uses --ink-on-ground
-    // and --rule so it works in both dark (white text + faint white
-    // border) and light (navy text + visible navy border) modes.
+    primary: {
+      background: TOKENS.brand.red,
+      color: TOKENS.text.onBrand,
+      border: 'none',
+      boxShadow: TOKENS.shadow.button,
+    },
     secondary: {
-      background: 'transparent',
-      color: 'var(--ink-on-ground)',
-      border: `1.5px solid var(--rule)`,
+      background: TOKENS.surface.card,
+      color: TOKENS.text.primary,
+      border: `1px solid ${TOKENS.ruleStrong}`,
     },
     secondaryDark: {
       background: 'transparent',
-      color: BRAND.ink,
-      border: `1.5px solid ${BRAND.ruleDark}`,
+      color: TOKENS.text.onBrand,
+      border: `1px solid ${TOKENS.ruleOnBrand}`,
     },
-    gold: { background: BRAND.gold, color: BRAND.ink, border: 'none' },
-    ghost: { background: 'transparent', color: 'inherit', border: 'none' },
+    gold: {
+      background: TOKENS.brand.gold,
+      color: TOKENS.text.primary,
+      border: 'none',
+    },
+    ghost: {
+      background: 'transparent',
+      color: TOKENS.text.primary,
+      border: 'none',
+    },
+    danger: {
+      background: TOKENS.brand.red,
+      color: TOKENS.text.onBrand,
+      border: 'none',
+    },
   }[kind];
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={kind === 'primary' ? 'force-dark' : undefined}
       style={{
         height: s.h,
         padding: `0 ${s.px}px`,
-        borderRadius: 999,
+        borderRadius: TOKENS.radius.md,
         fontSize: s.fs,
         fontWeight: 600,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -116,7 +118,8 @@ export const Btn = ({
         gap: 8,
         width: full ? '100%' : 'auto',
         opacity: disabled ? 0.4 : 1,
-        fontFamily: FONT_UI,
+        fontFamily: TOKENS.font.ui,
+        letterSpacing: 0,
         ...styles,
         ...style,
       }}
@@ -127,25 +130,26 @@ export const Btn = ({
   );
 };
 
+// CountCard — used inside the navy hero. Numbers in mono, labels uppercase
+// micro. Reads like a Linear stat block.
 export const CountCard = ({ value, label, accent }) => (
   <div
     style={{
-      border: '1px solid rgba(255,255,255,0.18)',
-      borderRadius: 8,
-      padding: '14px 12px',
-      textAlign: 'center',
-      background: 'rgba(255,255,255,0.03)',
-      minWidth: 74,
+      borderRight: `1px solid ${TOKENS.ruleOnBrand}`,
+      padding: '4px 12px',
+      textAlign: 'left',
+      minWidth: 64,
     }}
   >
     <div
       style={{
-        fontFamily: FONT_DISPLAY,
-        fontSize: 30,
-        fontWeight: 700,
-        color: accent || '#fff',
-        lineHeight: 1,
+        fontFamily: TOKENS.font.mono,
+        fontSize: 22,
+        fontWeight: 600,
+        color: accent || TOKENS.text.onBrand,
+        lineHeight: 1.1,
         fontVariantNumeric: 'tabular-nums',
+        letterSpacing: '-0.02em',
       }}
     >
       {value}
@@ -153,11 +157,12 @@ export const CountCard = ({ value, label, accent }) => (
     <div
       style={{
         fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: 1.6,
-        color: BRAND.gold,
-        marginTop: 6,
+        fontWeight: 600,
+        letterSpacing: 0.6,
+        color: TOKENS.text.onBrandSecondary,
+        marginTop: 4,
         textTransform: 'uppercase',
+        fontFamily: TOKENS.font.ui,
       }}
     >
       {label}
@@ -165,68 +170,71 @@ export const CountCard = ({ value, label, accent }) => (
   </div>
 );
 
+// TierBadge — small pill with tier dot. White on white surfaces (uses
+// 1px border), or transparent on brand surfaces (uses on-brand rule).
 export const TierBadge = ({ tier = 'Platinum', dark }) => {
-  const c = TIERS[tier]?.color || '#fff';
+  const c = TIERS[tier]?.color || TOKENS.text.tertiary;
   return (
     <span
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
-        padding: '4px 10px 4px 8px',
-        borderRadius: 999,
-        border: `1px solid ${dark ? 'rgba(13,15,36,0.15)' : 'rgba(255,255,255,0.25)'}`,
+        padding: '3px 8px 3px 7px',
+        borderRadius: TOKENS.radius.sm,
+        border: `1px solid ${dark ? TOKENS.ruleOnBrand : TOKENS.rule}`,
         fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: 1.4,
+        fontWeight: 600,
+        letterSpacing: 0.6,
         textTransform: 'uppercase',
-        color: dark ? BRAND.ink : '#fff',
-        fontFamily: FONT_UI,
+        color: dark ? TOKENS.text.onBrand : TOKENS.text.secondary,
+        fontFamily: TOKENS.font.ui,
+        background: dark ? 'transparent' : TOKENS.surface.card,
       }}
     >
-      <span style={{ width: 6, height: 6, borderRadius: 99, background: c }} />
+      <span style={{ width: 5, height: 5, borderRadius: 99, background: c }} />
       {tier}
     </span>
   );
 };
 
-export const SectionEyebrow = ({ children, color = BRAND.red }) => (
+// SectionEyebrow — Linear's signature uppercase 11px tertiary recipe.
+export const SectionEyebrow = ({ children, color = TOKENS.text.tertiary }) => (
   <div
     style={{
       display: 'inline-flex',
       alignItems: 'center',
-      gap: 10,
       fontSize: 11,
-      fontWeight: 700,
-      letterSpacing: 2,
+      fontWeight: 600,
+      letterSpacing: 0.5,
       color,
       textTransform: 'uppercase',
-      fontFamily: FONT_UI,
+      fontFamily: TOKENS.font.ui,
     }}
   >
-    <span style={{ width: 24, height: 1.5, background: 'currentColor', opacity: 0.7 }} />
     {children}
   </div>
 );
 
+// Display — Linear-style headline: Inter, tight letter-spacing, no italic.
 export const Display = ({
   children,
-  size = 64,
-  dark = true,
+  size = 28,
+  dark = false,
   italic = false,
   gold = false,
   style = {},
 }) => (
   <h1
     style={{
-      fontFamily: FONT_DISPLAY,
+      fontFamily: TOKENS.font.display,
       fontSize: size,
-      lineHeight: 1.05,
-      letterSpacing: -1,
+      lineHeight: 1.15,
+      letterSpacing: '-0.02em',
       margin: 0,
-      fontWeight: italic ? 500 : 700,
+      fontWeight: 600,
       fontStyle: italic ? 'italic' : 'normal',
-      color: gold ? BRAND.gold : dark ? '#fff' : BRAND.ink,
+      color: gold ? TOKENS.brand.gold : dark ? TOKENS.text.onBrand : TOKENS.text.primary,
       ...style,
     }}
   >
@@ -286,7 +294,7 @@ const ICON_PATHS = {
   grip: 'M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01',
 };
 
-export const Icon = ({ name, size = 18, stroke = 1.6 }) => {
+export const Icon = ({ name, size = 16, stroke = 1.5 }) => {
   const p = ICON_PATHS[name];
   if (!p) return null;
   return (
@@ -304,3 +312,78 @@ export const Icon = ({ name, size = 18, stroke = 1.6 }) => {
     </svg>
   );
 };
+
+// ListRow — Linear-style 36px row, 12px horizontal padding, optional 16px
+// leading icon (in secondary text), title 14px medium, optional trailing
+// data in mono. Border-bottom unless `last`.
+export const ListRow = ({
+  icon,
+  title,
+  subtitle,
+  trailing,
+  trailingMono,
+  onClick,
+  last,
+  style = {},
+}) => (
+  <div
+    onClick={onClick}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      minHeight: 36,
+      padding: '6px 12px',
+      borderBottom: last ? 'none' : `1px solid ${TOKENS.rule}`,
+      cursor: onClick ? 'pointer' : 'default',
+      color: TOKENS.text.primary,
+      fontSize: 14,
+      fontFamily: TOKENS.font.ui,
+      ...style,
+    }}
+  >
+    {icon && (
+      <span style={{ display: 'inline-flex', color: TOKENS.text.secondary, flexShrink: 0 }}>
+        {icon}
+      </span>
+    )}
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ fontWeight: 500, color: TOKENS.text.primary, lineHeight: 1.3 }}>
+        {title}
+      </div>
+      {subtitle && (
+        <div style={{ fontSize: 12, color: TOKENS.text.secondary, marginTop: 2 }}>
+          {subtitle}
+        </div>
+      )}
+    </div>
+    {trailing && (
+      <span
+        style={{
+          color: TOKENS.text.secondary,
+          fontFamily: trailingMono ? TOKENS.font.mono : TOKENS.font.ui,
+          fontSize: trailingMono ? 13 : 14,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {trailing}
+      </span>
+    )}
+  </div>
+);
+
+// Card — Linear default: white surface, 1px border, 8px radius, no shadow.
+export const Card = ({ children, padding = 16, elevated = false, style = {} }) => (
+  <div
+    style={{
+      background: TOKENS.surface.card,
+      border: `1px solid ${TOKENS.rule}`,
+      borderRadius: TOKENS.radius.lg,
+      padding,
+      boxShadow: elevated ? TOKENS.shadow.cardElevated : TOKENS.shadow.card,
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);

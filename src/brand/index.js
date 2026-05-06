@@ -1,7 +1,7 @@
 // Brand barrel — single import point so portal components can write
-// `import { BRAND, Icon, Btn } from '../brand';` instead of three separate
-// import lines.
-export { BRAND, TIERS, FONT_DISPLAY, FONT_UI } from './tokens.js';
+// `import { TOKENS, Icon, Btn } from '../brand';` instead of multiple
+// separate import lines.
+export { TOKENS, TIERS, FONT_DISPLAY, FONT_UI, FONT_MONO } from './tokens.js';
 export {
   Logo,
   GalaWordmark,
@@ -11,4 +11,6 @@ export {
   SectionEyebrow,
   Display,
   Icon,
+  ListRow,
+  Card,
 } from './atoms.jsx';
