@@ -602,7 +602,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
   const firstUnassigned = tickets.find((t) => !t.guestName && !t.localGuestId);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+    <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
       <div
         style={{
           display: 'flex',
@@ -1069,7 +1069,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+    <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
       <div style={{ padding: '18px 22px 0' }}>
         <SectionEyebrow>Tickets</SectionEyebrow>
         <h1
@@ -1348,7 +1348,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
   const available = seatMath?.available ?? Math.max(0, blockSize - totalAllocated);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+    <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
       <div style={{ padding: '18px 22px 0' }}>
         <SectionEyebrow>Group</SectionEyebrow>
         <h1
@@ -1764,7 +1764,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 // served IN auditoriums, Sherry not Sasha, Apple Maps deep link on
 // parking).
 const NightTab = () => (
-  <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+  <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
     <div style={{ padding: '18px 22px 14px' }}>
       <SectionEyebrow>The night</SectionEyebrow>
       <h1
@@ -1913,14 +1913,26 @@ const AppBar = ({ name, onAvatarTap }) => {
   <div
     className="page-header"
     style={{
-      flexShrink: 0,
-      padding: '4px 22px 8px',
+      // Edge-to-edge: AppBar overlays the scroll container; content
+      // runs full-height from safe-area top to safe-area bottom, with
+      // logo + sponsor portal label floating over it. No background
+      // chrome, no flex height — just an overlay.
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 15,
+      paddingTop: 'max(4px, env(safe-area-inset-top))',
+      paddingRight: 22,
+      paddingBottom: 8,
+      paddingLeft: 22,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
+      pointerEvents: 'none',
     }}
   >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'auto' }}>
       <img
         src={isDark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
         alt="Davis Education Foundation"
@@ -1949,7 +1961,7 @@ const AppBar = ({ name, onAvatarTap }) => {
         </div>
       </div>
     </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
       <button
         onClick={onAvatarTap}
         aria-label={`${initialsFor(name)} settings`}
@@ -2965,9 +2977,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
         height: '100dvh',
         overflow: 'hidden',
         position: 'relative',
-        background: isDark
-          ? BRAND.groundDeep
-          : `radial-gradient(ellipse 120% 60% at 50% -10%, #fff 0%, #f7f8fb 60%)`,
+        background: isDark ? BRAND.groundDeep : 'var(--ground)',
         color: isDark ? '#fff' : BRAND.ink,
         fontFamily: FONT_UI,
         display: 'flex',

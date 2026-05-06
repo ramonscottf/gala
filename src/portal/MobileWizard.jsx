@@ -2170,7 +2170,7 @@ export default function MobileWizard({
         overflow: 'hidden',
         background: isDark
           ? `radial-gradient(ellipse 100% 50% at 50% 0%, ${BRAND.navyMid}, ${BRAND.navyDeep} 70%, ${BRAND.ink})`
-          : `radial-gradient(ellipse 100% 50% at 50% 0%, #fff, #f7f8fb 70%, #eef0f9)`,
+          : 'var(--ground)',
         color: isDark ? '#fff' : BRAND.ink,
         fontFamily: FONT_UI,
         display: 'flex',
