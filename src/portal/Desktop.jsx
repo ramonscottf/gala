@@ -55,7 +55,7 @@ import {
 
 // ── Avatar (deterministic palette from name) ──────────────────────────
 
-const PALETTE = ['#a8b1ff', '#ff8da4', '#7fcfa0', '#f4b942', '#c9a3ff', '#ff9d6c'];
+const PALETTE = ['#a8b1ff', TOKENS.semantic.danger, TOKENS.semantic.success, '#f4b942', '#c9a3ff', '#ff9d6c'];
 const colorFor = (name) => {
   let h = 0;
   for (const c of name || '?') h = (h * 31 + c.charCodeAt(0)) >>> 0;
@@ -131,7 +131,7 @@ const PosterMini = ({ poster, color, label, size = 46 }) => (
 const FormatBadge = ({ format, size = 'sm' }) => {
   const map = {
     IMAX: { bg: 'rgba(244,185,66,0.18)', c: TOKENS.brand.gold, border: 'rgba(244,185,66,0.4)' },
-    Premier: { bg: 'rgba(212,38,74,0.16)', c: '#ff6b8a', border: 'rgba(212,38,74,0.4)' },
+    Premier: { bg: 'rgba(212,38,74,0.16)', c: TOKENS.semantic.danger, border: 'rgba(212,38,74,0.4)' },
     Standard: { bg: 'rgba(255,255,255,0.06)', c: 'var(--mute)', border: TOKENS.rule },
   };
   const s = map[format] || map.Standard;
@@ -417,7 +417,7 @@ const Stepper = ({ step, setStep, step1Label }) => (
               justifyContent: 'center',
               fontSize: 11,
               fontWeight: 700,
-              color: s.n <= step ? '#fff' : '#fff',
+              color: s.n <= step ? TOKENS.text.onBrand : TOKENS.text.onBrand,
             }}
           >
             {s.n < step ? <Icon name="check" size={12} /> : s.n}
@@ -891,7 +891,7 @@ const StepWelcome = ({
                             width: 5,
                             height: 5,
                             borderRadius: 99,
-                            background: hasDinner ? '#7fcfa0' : 'transparent',
+                            background: hasDinner ? TOKENS.semantic.success : 'transparent',
                             border: hasDinner ? 'none' : `1px solid rgba(244,185,66,0.6)`,
                           }}
                         />
@@ -991,7 +991,7 @@ const StepShowing = ({
                 cursor: 'pointer',
                 padding: '12px 24px',
                 background: active ? TOKENS.brand.navy : 'transparent',
-                color: active ? '#fff' : 'rgba(255,255,255,0.65)',
+                color: active ? TOKENS.text.onBrand : 'rgba(255,255,255,0.65)',
                 borderRadius: 9,
                 display: 'flex',
                 flexDirection: 'column',
@@ -1322,7 +1322,7 @@ const StepSeats = ({
                       padding: '8px 10px',
                       borderRadius: 7,
                       background: active ? TOKENS.brand.navy : 'transparent',
-                      color: active ? '#fff' : 'rgba(255,255,255,0.65)',
+                      color: active ? TOKENS.text.onBrand : 'rgba(255,255,255,0.65)',
                       fontSize: 12,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',
@@ -1513,7 +1513,7 @@ const StepSeats = ({
             <span>Remaining</span>
             <span
               style={{
-                color: remaining > 0 ? '#ff8da4' : '#7fcfa0',
+                color: remaining > 0 ? TOKENS.semantic.danger : TOKENS.semantic.success,
                 fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums',
               }}
@@ -1940,7 +1940,7 @@ const StepConfirm = ({
             borderRadius: 10,
             background: 'rgba(212,38,74,0.12)',
             border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
+            color: TOKENS.semantic.danger,
             fontSize: 13,
             maxWidth: 720,
           }}
@@ -2279,7 +2279,7 @@ export default function Desktop({
           </span>
           <span>·</span>
           <span>
-            <b style={{ color: remaining > 0 ? 'var(--accent-text-strong)' : '#7fcfa0' }}>{remaining}</b> remaining
+            <b style={{ color: remaining > 0 ? 'var(--accent-text-strong)' : TOKENS.semantic.success }}>{remaining}</b> remaining
           </span>
         </div>
       </div>

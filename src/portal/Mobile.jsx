@@ -107,7 +107,7 @@ const StatusPill = ({ status }) => {
   const map = {
     claimed: { c: TOKENS.semantic.info, bg: 'rgba(168,177,255,0.16)', t: 'CLAIMED' },
     pending: { c: TOKENS.brand.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
-    placed: { c: '#7fcfa0', bg: 'rgba(127,207,160,0.14)', t: 'PLACED' },
+    placed: { c: TOKENS.semantic.success, bg: 'rgba(127,207,160,0.14)', t: 'PLACED' },
     open: { c: 'rgba(255,255,255,0.7)', bg: 'rgba(255,255,255,0.06)', t: 'OPEN' },
   }[status] || { c: 'rgba(255,255,255,0.7)', bg: 'rgba(255,255,255,0.06)', t: '—' };
   return (
@@ -403,7 +403,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 fontSize: 10,
                 fontWeight: 700,
                 letterSpacing: 1.4,
-                // Dark text on light pill — was '#fff' which was invisible
+                // Dark text on light pill — was TOKENS.text.onBrand which was invisible
                 // against the new white-ish bg.
                 color: TOKENS.text.primary,
                 flexShrink: 0,
@@ -642,7 +642,7 @@ const TextMySeatsButton = ({ token, apiBase }) => {
         {label}
       </button>
       {error && state === 'error' && (
-        <div style={{ fontSize: 11, color: '#ff8da4', marginTop: 6, paddingLeft: 4 }}>
+        <div style={{ fontSize: 11, color: TOKENS.semantic.danger, marginTop: 6, paddingLeft: 4 }}>
           {error}
         </div>
       )}
@@ -1644,7 +1644,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             borderRadius: 10,
             background: 'rgba(212,38,74,0.12)',
             border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
+            color: TOKENS.semantic.danger,
             fontSize: 12,
             marginBottom: 14,
           }}
@@ -1686,7 +1686,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             borderRadius: 12,
             border: `1px solid var(--rule)`,
             background: 'var(--surface)',
-            color: copied ? TOKENS.semantic.info : '#fff',
+            color: copied ? TOKENS.semantic.info : TOKENS.text.onBrand,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1733,7 +1733,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             border: `1px solid rgba(212,38,74,0.32)`,
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#ff8da4', marginBottom: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: TOKENS.semantic.danger, marginBottom: 6 }}>
             Reclaim {delegation.seatsAllocated} seat
             {delegation.seatsAllocated === 1 ? '' : 's'}?
           </div>
@@ -2318,7 +2318,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
             borderRadius: 10,
             background: 'rgba(212,38,74,0.12)',
             border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
+            color: TOKENS.semantic.danger,
             fontSize: 12,
             marginBottom: 14,
           }}
@@ -2681,7 +2681,7 @@ const SeatAssignSheet = ({
             borderRadius: 10,
             background: 'rgba(212,38,74,0.12)',
             border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
+            color: TOKENS.semantic.danger,
             fontSize: 12,
             marginBottom: 14,
           }}
