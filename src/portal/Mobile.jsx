@@ -602,7 +602,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
   const firstUnassigned = tickets.find((t) => !t.guestName && !t.localGuestId);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 30 }}>
+    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
       <div
         style={{
           display: 'flex',
@@ -1069,7 +1069,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 30 }}>
+    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
       <div style={{ padding: '18px 22px 0' }}>
         <SectionEyebrow>Tickets</SectionEyebrow>
         <h1
@@ -1348,7 +1348,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
   const available = seatMath?.available ?? Math.max(0, blockSize - totalAllocated);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 30 }}>
+    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
       <div style={{ padding: '18px 22px 0' }}>
         <SectionEyebrow>Group</SectionEyebrow>
         <h1
@@ -1764,7 +1764,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 // served IN auditoriums, Sherry not Sasha, Apple Maps deep link on
 // parking).
 const NightTab = () => (
-  <div className="scroll-container" style={{ flex: 1, paddingBottom: 30 }}>
+  <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
     <div style={{ padding: '18px 22px 14px' }}>
       <SectionEyebrow>The night</SectionEyebrow>
       <h1
@@ -1802,8 +1802,15 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
   <div
     className="tab-bar tab-bar-glass"
     style={{
-      flexShrink: 0,
-      position: 'relative',
+      // Phase 1.16 — bar overlays the scroll content instead of taking
+      // its own row in the flex column. The scroll container below is
+      // bottom-padded so content can scroll past the pill, and you see
+      // movie posters / cards passing UNDER the floating glass pill.
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 20,
       padding: '10px 18px 0',
       display: 'flex',
       justifyContent: 'center',
