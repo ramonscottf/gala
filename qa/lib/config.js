@@ -1,8 +1,26 @@
+function isLocalhost(url) {
+  try {
+    const host = new URL(url).hostname;
+    return host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost');
+  } catch {
+    return false;
+  }
+}
+
 export const QA_BASE_URL = (process.env.QA_BASE_URL || 'https://gala.daviskids.org').replace(
   /\/+$/,
   ''
 );
-export const QA_TOKEN = process.env.QA_TOKEN || 'sgohonmgwicha15n';
+
+const rawToken = process.env.QA_TOKEN || '';
+if (!rawToken && !isLocalhost(QA_BASE_URL)) {
+  throw new Error(
+    'QA_TOKEN is required when QA_BASE_URL points at a non-localhost host. ' +
+    'Copy .env.example, set QA_TOKEN to a dedicated test sponsor token, and re-run. ' +
+    'See qa/README.md.'
+  );
+}
+export const QA_TOKEN = rawToken;
 export const QA_RIVAL_TOKEN = process.env.QA_RIVAL_TOKEN || '';
 export const QA_FIXED_NOW = process.env.QA_FIXED_NOW || '2026-05-05T18:00:00-06:00';
 export const SPONSOR_PATH = `/sponsor/${QA_TOKEN}`;

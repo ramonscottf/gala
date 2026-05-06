@@ -95,7 +95,7 @@ Empty result → safe to create the branch. Non-empty → another agent or sessi
 - Modify: `qa/README.md`
 - Test: `qa/lib/config.test.mjs`
 
-- [ ] **Step 1: Read current `qa/lib/config.js`.**
+- [x] **Step 1: Read current `qa/lib/config.js`.**
 
 Already known; the relevant excerpt is:
 ```js
@@ -103,7 +103,7 @@ export const QA_BASE_URL = (process.env.QA_BASE_URL || 'https://gala.daviskids.o
 export const QA_TOKEN = process.env.QA_TOKEN || 'sgohonmgwicha15n';
 ```
 
-- [ ] **Step 2: Write the failing test.**
+- [x] **Step 2: Write the failing test.**
 
 Create `qa/lib/config.test.mjs`:
 ```js
@@ -136,12 +136,12 @@ test('uses the provided QA_TOKEN when set', async () => {
 });
 ```
 
-- [ ] **Step 3: Run test to verify it fails.**
+- [x] **Step 3: Run test to verify it fails.**
 
 Run: `node --test qa/lib/config.test.mjs`
 Expected: FAIL — first test does not reject because `config.js` currently defaults to `'sgohonmgwicha15n'` instead of throwing.
 
-- [ ] **Step 4: Implement the fix in `qa/lib/config.js`.**
+- [x] **Step 4: Implement the fix in `qa/lib/config.js`.**
 
 Replace lines 1–8 with:
 ```js
@@ -175,12 +175,12 @@ export const SPONSOR_PATH = `/sponsor/${QA_TOKEN}`;
 
 (Preserve the `sponsorUrl`, `freezeClockScript`, and `preparePage` exports below this — only the top block changes.)
 
-- [ ] **Step 5: Run test to verify it passes.**
+- [x] **Step 5: Run test to verify it passes.**
 
 Run: `node --test qa/lib/config.test.mjs`
 Expected: 3/3 PASS.
 
-- [ ] **Step 6: Create `.env.example`.**
+- [x] **Step 6: Create `.env.example`.**
 
 ```bash
 # Sponsor portal QA — required env vars when targeting non-localhost.
@@ -201,7 +201,7 @@ QA_RIVAL_TOKEN=
 QA_FIXED_NOW=2026-05-05T18:00:00-06:00
 ```
 
-- [ ] **Step 7: Update `qa/README.md`.**
+- [x] **Step 7: Update `qa/README.md`.**
 
 Replace the "Default target" + first override block (lines 5–14) with:
 ```markdown
@@ -221,12 +221,12 @@ QA_BASE_URL=http://localhost:8788 npm run qa:smoke
 ```
 (Keep the rest of the README intact.)
 
-- [ ] **Step 8: Verify the existing harness still loads.**
+- [x] **Step 8: Verify the existing harness still loads.**
 
 Run: `QA_TOKEN=dgu5lwmfmgtecky3 npm run qa:smoke -- --list`
 Expected: Playwright lists tests without throwing config errors. (We're not running them — `--list` only resolves config.)
 
-- [ ] **Step 9: Commit.**
+- [x] **Step 9: Commit.**
 
 ```bash
 git add qa/lib/config.js qa/lib/config.test.mjs qa/README.md .env.example

@@ -2,15 +2,18 @@
 
 These checks target the sponsor portal without using Cloudflare API or Wrangler.
 
-Default target:
+## Setup
 
-- Base URL: `https://gala.daviskids.org`
-- Token: `sgohonmgwicha15n`
+Copy `.env.example` to `.env.local` (or export the vars in your shell) before running any `qa:*` script. `QA_TOKEN` is **required** unless `QA_BASE_URL` points at `localhost`. See `.env.example` for the full list.
 
-Override with:
-
+Run against prod (default base URL):
 ```bash
-QA_BASE_URL=https://gala.daviskids.org QA_TOKEN=... npm run qa:smoke
+QA_TOKEN=<your-test-sponsor-token> npm run qa:smoke
+```
+
+Run against local wrangler:
+```bash
+QA_BASE_URL=http://localhost:8788 npm run qa:smoke
 ```
 
 ## Commands
