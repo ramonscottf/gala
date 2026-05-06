@@ -182,14 +182,14 @@ const miniBtn = (kind, isLight = false) => ({
 // perforation circles cut at calc(100%-78px), dashed border between
 // body and stub, MEGAPLEX wordmark, "YOUR GALA / N days out" eyebrow.
 
-const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl }) => {
+const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut }) => {
   const firstName = (name || '').split(' ')[0];
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
     <div
       className="force-dark-vars"
       style={{
-        margin: '12px 18px 0',
+        margin: 'calc(env(safe-area-inset-top) + 8px) 14px 0',
         borderRadius: 18,
         overflow: 'hidden',
         background: `linear-gradient(170deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 60%, ${BRAND.navyDeep} 100%)`,
@@ -270,6 +270,74 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
       />
 
       <div style={{ padding: '18px 20px 22px', position: 'relative', zIndex: 1 }}>
+        {/* Sponsor portal header row (added May 5 2026 with the AppBar
+            removal). Replaces the standalone top app bar — the DEF logo
+            + GALA · 2026 / Sponsor portal label live INSIDE the hero
+            card now. Avatar/settings is a separate floating button at
+            the viewport's top-right. Days-out chip sits right side as
+            a calm running counter (replaces the loose row that used to
+            sit above the card). Padding-right reserves room for the
+            floating avatar button which overlaps the card's top-right. */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            paddingRight: 44,
+            marginBottom: 14,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+            <img
+              src="/assets/brand/def-logo-light.png"
+              alt="Davis Education Foundation"
+              height={22}
+              style={{ height: 22, width: 'auto', display: 'block', flexShrink: 0 }}
+            />
+            <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.16)', flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  letterSpacing: 1.6,
+                  color: 'rgba(255,255,255,0.55)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                GALA · 2026
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: '#fff',
+                  marginTop: 1,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Sponsor portal
+              </div>
+            </div>
+          </div>
+          {daysOut != null && (
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: 0.4,
+                color: 'rgba(255,255,255,0.7)',
+                fontVariantNumeric: 'tabular-nums',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              {daysOut} days out
+            </div>
+          )}
+        </div>
+
         {/* Phase 1.14 — sponsor logo inline with the eyebrow caps row.
             Logo sits left of "LIGHTS · CAMERA · TAKE ACTION · 2026",
             tier badge stays right. Falls back gracefully when logoUrl
@@ -602,36 +670,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
   const firstUnassigned = tickets.find((t) => !t.guestName && !t.localGuestId);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '4px 22px 0',
-        }}
-      >
-        <div
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: 2,
-            color: isLight ? 'rgba(13,18,36,0.58)' : 'rgba(255,255,255,0.45)',
-          }}
-        >
-          YOUR GALA
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: isLight ? 'rgba(13,18,36,0.62)' : 'rgba(255,255,255,0.55)',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {daysOut != null ? `${daysOut} days out` : ''}
-        </div>
-      </div>
-
+    <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
       <TicketHero
         tier={tier}
         name={name}
@@ -641,6 +680,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
         assigned={assignedCount}
         openCount={openCount}
         logoUrl={logoUrl}
+        daysOut={daysOut}
       />
 
       <div
@@ -1069,8 +1109,8 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
-      <div style={{ padding: '18px 22px 0' }}>
+    <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
+      <div style={{ padding: '18px 56px 0 22px' }}>
         <SectionEyebrow>Tickets</SectionEyebrow>
         <h1
           style={{
@@ -1348,8 +1388,8 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
   const available = seatMath?.available ?? Math.max(0, blockSize - totalAllocated);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
-      <div style={{ padding: '18px 22px 0' }}>
+    <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
+      <div style={{ padding: '18px 56px 0 22px' }}>
         <SectionEyebrow>Group</SectionEyebrow>
         <h1
           style={{
@@ -1764,8 +1804,8 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 // served IN auditoriums, Sherry not Sasha, Apple Maps deep link on
 // parking).
 const NightTab = () => (
-  <div className="scroll-container" style={{ flex: 1, paddingTop: 'calc(env(safe-area-inset-top) + 44px)', paddingBottom: 130 }}>
-    <div style={{ padding: '18px 22px 14px' }}>
+  <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
+    <div style={{ padding: '18px 56px 14px 22px' }}>
       <SectionEyebrow>The night</SectionEyebrow>
       <h1
         style={{
@@ -1905,76 +1945,31 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
   );
 };
 
-// ── Top app bar ───────────────────────────────────────────────────────
-
-const AppBar = ({ name, onAvatarTap }) => {
-  const { isDark } = useTheme();
+// ── Floating avatar button ─────────────────────────────────────────────
+//
+// May 5 2026: AppBar removed entirely. The DEF logo + GALA·2026 / Sponsor
+// portal text moved INTO the navy hero card on the Home tab — gala now
+// follows childspree's pattern: zero top chrome, content bleeds edge to
+// edge into the iOS safe area. Only the avatar/settings tap target
+// remains as a floating circle in the top-right corner. Pinned to the
+// safe-area inset so it clears the notch / dynamic island.
+const FloatingAvatar = ({ name, onTap }) => {
   return (
-  <div
-    className="page-header"
-    style={{
-      // Edge-to-edge: AppBar overlays the scroll container; content
-      // runs full-height from safe-area top to safe-area bottom, with
-      // logo + sponsor portal label floating over it. No background
-      // chrome, no flex height — just an overlay.
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 15,
-      paddingTop: 'max(4px, env(safe-area-inset-top))',
-      paddingRight: 22,
-      paddingBottom: 8,
-      paddingLeft: 22,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      pointerEvents: 'none',
-    }}
-  >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'auto' }}>
-      <img
-        src={isDark ? '/assets/brand/def-logo-light.png' : '/assets/brand/def-logo-dark.png'}
-        alt="Davis Education Foundation"
-        width={isDark ? 84 : 37}
-        height={28}
-        style={{
-          height: 28,
-          width: 'auto',
-          display: 'block',
-        }}
-      />
-      <div style={{ width: 1, height: 22, background: isDark ? 'rgba(255,255,255,0.16)' : 'rgba(13,18,36,0.14)' }} />
-      <div>
-        <div
-          style={{
-            fontSize: 9,
-            fontWeight: 800,
-            letterSpacing: 1.6,
-            color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(13,18,36,0.78)',
-          }}
-        >
-          GALA · 2026
-        </div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: isDark ? '#fff' : BRAND.ink, marginTop: 0 }}>
-          Sponsor portal
-        </div>
-      </div>
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-      <button
-        onClick={onAvatarTap}
-        aria-label={`${initialsFor(name)} settings`}
-        style={{
-          all: 'unset',
-          cursor: 'pointer',
-          borderRadius: 99,
-        }}
-      >
-        <Avatar name={name} size={34} />
-      </button>
-    </div>
-  </div>
+    <button
+      onClick={onTap}
+      aria-label={`${initialsFor(name)} settings`}
+      style={{
+        position: 'absolute',
+        top: 'calc(env(safe-area-inset-top) + 6px)',
+        right: 14,
+        zIndex: 25,
+        all: 'unset',
+        cursor: 'pointer',
+        borderRadius: 99,
+      }}
+    >
+      <Avatar name={name} size={34} />
+    </button>
   );
 };
 
@@ -2985,7 +2980,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
       }}
     >
       {isDev && <DevBanner />}
-      <AppBar name={data.name} onAvatarTap={() => setSettingsOpen(true)} />
+      <FloatingAvatar name={data.name} onTap={() => setSettingsOpen(true)} />
 
       {tab === 'home' && (
         <HomeTab
