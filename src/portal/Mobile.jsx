@@ -1802,10 +1802,11 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
   <div
     className="tab-bar tab-bar-glass"
     style={{
-      // Phase 1.16 — bar overlays the scroll content instead of taking
-      // its own row in the flex column. The scroll container below is
-      // bottom-padded so content can scroll past the pill, and you see
-      // movie posters / cards passing UNDER the floating glass pill.
+      // Pill anchored flush to viewport bottom. No safe-area gap, no
+      // wrapper padding below the pill — those gaps left a strip of
+      // page background visible between the pill and the iOS Safari
+      // URL bar, reading as a docked band. iOS URL bar floats over
+      // the bottom of the pill; the pill IS the bottom of the page.
       position: 'absolute',
       left: 0,
       right: 0,
@@ -1823,7 +1824,7 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 2,
-        padding: '8px 8px',
+        padding: '8px 8px max(8px, env(safe-area-inset-bottom)) 8px',
         width: '100%',
         maxWidth: 340,
         borderRadius: 32,
