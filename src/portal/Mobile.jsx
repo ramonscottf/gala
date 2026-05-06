@@ -677,13 +677,11 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
 
       <div
         style={{
-          margin: '14px 18px 0',
+          margin: '14px 16px 0',
           padding: '12px 14px',
-          borderRadius: 14,
-          background: 'var(--surface)',
-          border: `1px solid var(--rule)`,
-          boxShadow:
-            '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
+          borderRadius: TOKENS.radius.lg,
+          background: TOKENS.surface.card,
+          boxShadow: TOKENS.shadow.card,
           display: 'flex',
           alignItems: 'center',
           gap: 12,
@@ -693,14 +691,13 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
           style={{
             width: 38,
             height: 38,
-            borderRadius: 10,
-            background: openCount > 0 ? TOKENS.brand.navy : 'rgba(127,207,160,0.18)',
+            borderRadius: TOKENS.radius.md,
+            background: openCount > 0 ? TOKENS.fill.tertiary : 'rgba(52,199,89,0.16)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: openCount > 0 ? '#fff' : '#7fcfa0',
+            color: openCount > 0 ? TOKENS.text.primary : TOKENS.semantic.success,
             flexShrink: 0,
-            boxShadow: openCount > 0 ? '0 4px 12px rgba(215,40,70,0.35)' : 'none',
           }}
         >
           <Icon name={openCount > 0 ? 'seat' : 'check'} size={18} />
@@ -754,7 +751,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
           placing — this button bridges that. Hidden when nothing is
           placed yet (Place CTA above is the right action then). */}
       {placed > 0 && onManageTickets && (
-        <div style={{ margin: '12px 18px 0' }}>
+        <div style={{ margin: '12px 16px 0' }}>
           <button
             onClick={onManageTickets}
             style={{
@@ -763,22 +760,20 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               boxSizing: 'border-box',
               width: '100%',
               padding: '12px 14px',
-              borderRadius: 14,
-              background: 'var(--surface)',
-              border: `1px solid var(--rule)`,
+              borderRadius: TOKENS.radius.lg,
+              background: TOKENS.surface.card,
+              boxShadow: TOKENS.shadow.card,
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              boxShadow:
-                '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
             }}
           >
             <div
               style={{
                 width: 38,
                 height: 38,
-                borderRadius: 10,
-                background: 'rgba(168,177,255,0.16)',
+                borderRadius: TOKENS.radius.md,
+                background: TOKENS.fill.tertiary,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -789,14 +784,14 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               <Icon name="ticket" size={18} />
             </div>
             <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: TOKENS.text.primary }}>
                 Manage tickets
               </div>
-              <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+              <div style={{ fontSize: 13, color: TOKENS.text.secondary, marginTop: 2 }}>
                 View seats, assign guests, choose dinners
               </div>
             </div>
-            <Icon name="chev" size={14} />
+            <span style={{ color: TOKENS.text.tertiary }}><Icon name="chev" size={14} /></span>
           </button>
         </div>
       )}
@@ -1827,72 +1822,44 @@ const ALL_TABS = [
   { id: 'night', label: 'Night', icon: 'moon' },
 ];
 
+// iOS-native floating tab pill — solid white surface, pill shadow, no blur.
+// Active tab gets a tertiary-fill pill behind the icon/label; inactive
+// labels use secondary text. Anchored above the home-indicator safe area.
 const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
   return (
   <div
-    className="tab-bar tab-bar-glass"
     style={{
-      // Pill anchored flush to viewport bottom. No safe-area gap, no
-      // wrapper padding below the pill — those gaps left a strip of
-      // page background visible between the pill and the iOS Safari
-      // URL bar, reading as a docked band. iOS URL bar floats over
-      // the bottom of the pill; the pill IS the bottom of the page.
-      position: 'absolute',
+      position: 'fixed',
       left: 0,
       right: 0,
-      bottom: 0,
+      bottom: 'calc(env(safe-area-inset-bottom) + 12px)',
       zIndex: 20,
-      padding: '10px 18px 0',
       display: 'flex',
       justifyContent: 'center',
+      pointerEvents: 'none',
     }}
   >
     <div
       style={{
-        position: 'relative',
+        pointerEvents: 'auto',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 2,
-        padding: 8,
-        width: '100%',
+        padding: 6,
+        width: 'calc(100% - 32px)',
         maxWidth: 340,
-        borderRadius: 32,
-        // Phase 1.15 — glass background flips for light mode so the bar
-        // doesn't disappear into the cream paper. Dark mode keeps the
-        // existing translucent white glass; light mode uses translucent
-        // ink for the same frosted-pill effect.
-        background: 'rgba(13,15,36,0.06)',
-        backdropFilter: 'blur(28px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-        border: '0.5px solid rgba(13,15,36,0.10)',
-        boxShadow: [
-          '0 1px 0 0 rgba(255,255,255,0.30) inset',
-          '0 -0.5px 0 0 rgba(255,255,255,0.08) inset',
-          '0 8px 32px rgba(0,0,0,0.35)',
-          '0 2px 8px rgba(0,0,0,0.25)',
-        ].join(', '),
+        borderRadius: TOKENS.radius.pill,
+        background: TOKENS.surface.card,
+        boxShadow: TOKENS.shadow.pill,
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 1,
-          borderRadius: 31,
-          pointerEvents: 'none',
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.06) 100%)',
-        }}
-      />
       {tabs.map((t) => {
         const isActive = active === t.id;
         return (
           <button
             key={t.id}
-            onClick={() => {
-              // HAPTIC: light — tab tap.
-              onChange(t.id);
-            }}
+            onClick={() => onChange(t.id)}
             style={{
               all: 'unset',
               cursor: 'pointer',
@@ -1904,23 +1871,18 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
               alignItems: 'center',
               gap: 2,
               padding: '8px 0',
-              borderRadius: 24,
-              background: isActive
-                ? 'radial-gradient(ellipse at 50% 0%, rgba(168,177,255,0.34) 0%, rgba(168,177,255,0.16) 55%, rgba(168,177,255,0) 100%)'
-                : 'transparent',
-              // Phase 1.15 — inactive label uses var(--mute) so it
-              // flips to a readable dark on paper in light mode.
-              color: isActive ? TOKENS.semantic.info : 'var(--mute)',
-              transition: 'background .25s ease, color .2s',
+              borderRadius: TOKENS.radius.pill,
+              background: isActive ? TOKENS.fill.tertiary : 'transparent',
+              color: isActive ? TOKENS.text.primary : TOKENS.text.secondary,
+              transition: 'background .2s ease, color .2s',
             }}
           >
-            <Icon name={t.icon} size={20} stroke={isActive ? 2.4 : 1.9} />
+            <Icon name={t.icon} size={20} stroke={isActive ? 2.2 : 1.8} />
             <span
               style={{
-                fontSize: 9,
-                fontWeight: isActive ? 800 : 600,
-                letterSpacing: 0.4,
-                textTransform: 'uppercase',
+                fontSize: 10,
+                fontWeight: isActive ? 700 : 500,
+                letterSpacing: 0.2,
               }}
             >
               {t.label}
@@ -1947,13 +1909,16 @@ const FloatingAvatar = ({ name, onTap }) => {
       onClick={onTap}
       aria-label={`${initialsFor(name)} settings`}
       style={{
-        position: 'absolute',
-        top: 'calc(env(safe-area-inset-top) + 6px)',
+        position: 'fixed',
+        top: 'calc(env(safe-area-inset-top) + 10px)',
         right: 14,
         zIndex: 25,
         all: 'unset',
         cursor: 'pointer',
-        borderRadius: 99,
+        borderRadius: TOKENS.radius.pill,
+        background: TOKENS.surface.card,
+        boxShadow: TOKENS.shadow.card,
+        padding: 3,
       }}
     >
       <Avatar name={name} size={34} />

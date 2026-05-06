@@ -159,34 +159,31 @@ const FormatBadge = ({ format, size = 'sm' }) => {
 
 const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNightTap }) => (
   <div
-    className="page-header"
     style={{
-      height: 72,
-      padding: '0 36px',
+      height: 56,
+      padding: '0 24px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      borderBottom: `1px solid var(--rule)`,
-      background: 'rgba(11,14,38,0.75)',
-      backdropFilter: 'blur(14px)',
-      WebkitBackdropFilter: 'blur(14px)',
+      borderBottom: `1px solid ${TOKENS.rule}`,
+      background: TOKENS.surface.card,
       flexShrink: 0,
     }}
   >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-      <Logo size={26} dark />
-      <span style={{ width: 1, height: 24, background: TOKENS.rule }} />
-      <GalaWordmark size={11} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+      <Logo size={22} />
+      <span style={{ width: 1, height: 20, background: TOKENS.rule }} />
+      <GalaWordmark size={11} color={TOKENS.text.secondary} />
       {logoUrl && (
         <>
-          <span style={{ width: 1, height: 24, background: TOKENS.rule }} />
+          <span style={{ width: 1, height: 20, background: TOKENS.rule }} />
           <img
             src={logoUrl}
             alt=""
             loading="lazy"
             style={{
-              maxHeight: 28,
-              maxWidth: 140,
+              maxHeight: 24,
+              maxWidth: 120,
               objectFit: 'contain',
               opacity: 0.9,
             }}
@@ -197,34 +194,29 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
         </>
       )}
     </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       {daysOut != null && (
-        <span style={{ fontSize: 11, color: 'var(--accent-text)', fontWeight: 700, letterSpacing: 1.4 }}>
-          {daysOut} DAYS OUT
+        <span style={{ fontSize: 13, color: TOKENS.text.secondary, fontWeight: 600 }}>
+          {daysOut} days out
         </span>
       )}
-      {/* M1 — Night of trigger. Mobile gets the dedicated NIGHT tab in
-          its bottom tab bar; desktop wizard has no equivalent surface,
-          so we expose the same content via a top-nav link → modal. */}
       {onNightTap && (
         <button
           onClick={onNightTap}
           style={{
             all: 'unset',
             cursor: 'pointer',
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: 600,
-            color: 'rgba(255,255,255,0.78)',
-            padding: '5px 10px',
-            borderRadius: 99,
-            border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            color: TOKENS.text.primary,
+            padding: '6px 12px',
+            borderRadius: TOKENS.radius.md,
+            background: TOKENS.fill.tertiary,
           }}
         >
           Night of
         </button>
       )}
-      <span style={{ width: 1, height: 20, background: TOKENS.rule }} />
       {tier && <TierBadge tier={tier} />}
       <button
         onClick={onSettingsTap}
@@ -235,11 +227,10 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
           display: 'inline-flex',
           alignItems: 'center',
           gap: 10,
-          padding: '5px 14px 5px 5px',
-          borderRadius: 999,
-          background: 'var(--surface)',
-          transition: 'background 0.15s',
-          maxWidth: 360,
+          padding: '4px 12px 4px 4px',
+          borderRadius: TOKENS.radius.pill,
+          background: TOKENS.fill.quaternary,
+          maxWidth: 320,
         }}
       >
         <Avatar name={name} size={28} />
@@ -256,7 +247,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
             style={{
               fontSize: 13,
               fontWeight: 600,
-              color: '#fff',
+              color: TOKENS.text.primary,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -269,7 +260,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
               style={{
                 fontSize: 11,
                 fontWeight: 500,
-                color: 'var(--mute)',
+                color: TOKENS.text.secondary,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',

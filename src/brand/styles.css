@@ -43,6 +43,14 @@
   /* Type */
   --font-display: Cardo, "Times New Roman", serif;
   --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+
+  /* Aliases — kept while inline styles still reference the legacy names.
+   * These all resolve to iOS-native values, so no dual-mode behavior. */
+  --ink-on-ground: var(--text-primary);
+  --mute: var(--text-secondary);
+  --surface: var(--card);
+  --accent-text: var(--text-primary);
+  --accent-italic: var(--text-secondary);
 }
 
 *,
