@@ -13,7 +13,7 @@
 // Skip dismisses without changes.
 
 import { useState } from 'react';
-import { TOKENS, FONT_DISPLAY } from '../../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_MONO } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
 
 export default function AssignTheseSheet({
@@ -86,14 +86,14 @@ export default function AssignTheseSheet({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <div
           style={{
             fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: 1.6,
-            color: 'var(--brand-red)',
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            color: TOKENS.text.tertiary,
             textTransform: 'uppercase',
           }}
         >
@@ -104,41 +104,44 @@ export default function AssignTheseSheet({
           style={{
             fontFamily: FONT_DISPLAY,
             fontSize: 18,
-            fontWeight: 700,
-            color: 'var(--text-primary)',
+            fontWeight: 600,
+            color: TOKENS.text.primary,
             marginTop: 4,
+            letterSpacing: '-0.01em',
           }}
         >
           {placed.theaterName}
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {[...placed.seatIds].sort().map((seatId) => (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          background: TOKENS.surface.card,
+          border: `1px solid ${TOKENS.rule}`,
+          borderRadius: TOKENS.radius.lg,
+          overflow: 'hidden',
+        }}
+      >
+        {[...placed.seatIds].sort().map((seatId, i, arr) => (
           <div
             key={seatId}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              padding: 12,
-              borderRadius: 12,
-              background: 'var(--card)',
-              border: `1px solid var(--rule)`,
+              padding: '10px 14px',
+              borderBottom: i < arr.length - 1 ? `1px solid ${TOKENS.rule}` : 'none',
             }}
           >
             <span
               style={{
-                padding: '6px 10px',
-                borderRadius: 6,
-                background: 'rgba(168,177,255,0.18)',
-                color: 'var(--text-secondary)',
+                fontFamily: FONT_MONO,
+                color: TOKENS.text.primary,
                 fontSize: 13,
-                fontWeight: 800,
                 fontVariantNumeric: 'tabular-nums',
-                letterSpacing: 0.4,
-                minWidth: 56,
-                textAlign: 'center',
+                minWidth: 48,
               }}
             >
               {seatId.replace('-', '')}
@@ -148,23 +151,21 @@ export default function AssignTheseSheet({
               onChange={(e) => setSeat(seatId, e.target.value)}
               style={{
                 flex: 1,
-                padding: '10px 12px',
-                borderRadius: 10,
-                background: 'var(--card)',
-                border: `1px solid var(--rule)`,
-                color: 'var(--text-primary)',
-                fontSize: 12,
-                fontWeight: 600,
+                padding: '8px 10px',
+                borderRadius: TOKENS.radius.md,
+                background: TOKENS.surface.card,
+                border: `1px solid ${TOKENS.ruleStrong}`,
+                color: TOKENS.text.primary,
+                fontSize: 13,
+                fontWeight: 500,
                 outline: 'none',
                 appearance: 'none',
                 WebkitAppearance: 'none',
               }}
             >
-              <option value="" style={{ color: TOKENS.text.primary }}>
-                Pick guest…
-              </option>
+              <option value="">Pick guest…</option>
               {delegations.map((d) => (
-                <option key={d.id} value={d.id} style={{ color: TOKENS.text.primary }}>
+                <option key={d.id} value={d.id}>
                   {d.delegateName || `Delegation ${d.id}`}
                 </option>
               ))}
@@ -180,19 +181,19 @@ export default function AssignTheseSheet({
             all: 'unset',
             cursor: 'pointer',
             alignSelf: 'flex-start',
-            padding: '8px 14px',
-            borderRadius: 99,
-            border: `1.5px dashed rgba(244,185,66,0.4)`,
-            background: 'rgba(244,185,66,0.06)',
-            color: 'var(--brand-red)',
-            fontSize: 12,
-            fontWeight: 700,
+            padding: '7px 12px',
+            borderRadius: TOKENS.radius.md,
+            border: `1px dashed ${TOKENS.ruleStrong}`,
+            background: 'transparent',
+            color: TOKENS.brand.red,
+            fontSize: 13,
+            fontWeight: 500,
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
           }}
         >
-          <Icon name="plus" size={12} stroke={2.4} /> Invite a new guest
+          <Icon name="plus" size={12} stroke={2} /> Invite a new guest
         </button>
       )}
 
@@ -200,11 +201,11 @@ export default function AssignTheseSheet({
         <div
           style={{
             padding: '8px 12px',
-            borderRadius: 8,
-            background: 'rgba(215,40,70,0.12)',
-            color: '#ff8da4',
+            borderRadius: TOKENS.radius.md,
+            background: TOKENS.surface.card,
+            color: TOKENS.brand.red,
             fontSize: 12,
-            border: `1px solid rgba(215,40,70,0.3)`,
+            border: `1px solid ${TOKENS.brand.red}`,
           }}
         >
           {error}
@@ -213,7 +214,7 @@ export default function AssignTheseSheet({
 
       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
         <Btn kind="secondary" size="lg" onClick={onSkip}>
-          Skip for now
+          Skip
         </Btn>
         <Btn
           kind="primary"
@@ -221,7 +222,7 @@ export default function AssignTheseSheet({
           full
           disabled={pending}
           onClick={save}
-          icon={<Icon name="check" size={16} />}
+          icon={<Icon name="check" size={14} />}
         >
           {pending ? 'Saving…' : 'Save assignments'}
         </Btn>

@@ -4,18 +4,19 @@
 //   - Sign out → returns to https://daviskids.org/gala
 
 import { useState } from 'react';
-import { TOKENS, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
+import { TOKENS, FONT_UI, FONT_MONO } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
 
 const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
-  <label style={{ display: 'block', marginBottom: 14 }}>
+  <label style={{ display: 'block', marginBottom: 12 }}>
     <div
       style={{
-        fontSize: 10,
-        fontWeight: 800,
-        letterSpacing: 1.4,
-        color: 'var(--text-secondary)',
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: 0.5,
+        color: TOKENS.text.tertiary,
         marginBottom: 6,
+        textTransform: 'uppercase',
       }}
     >
       {label}
@@ -27,12 +28,12 @@ const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
       placeholder={placeholder}
       style={{
         width: '100%',
-        padding: '14px',
-        borderRadius: 12,
-        border: `1px solid var(--rule)`,
-        background: 'var(--card)',
-        color: '#fff',
-        fontSize: 15,
+        padding: '8px 12px',
+        borderRadius: TOKENS.radius.md,
+        border: `1px solid ${TOKENS.ruleStrong}`,
+        background: TOKENS.surface.card,
+        color: TOKENS.text.primary,
+        fontSize: 14,
         fontFamily: FONT_UI,
         outline: 'none',
         boxSizing: 'border-box',
@@ -41,10 +42,47 @@ const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
   </label>
 );
 
+const HelpRow = ({ icon, title, sub, href }) => (
+  <a
+    href={href}
+    style={{
+      padding: '12px 14px',
+      borderRadius: TOKENS.radius.md,
+      border: `1px solid ${TOKENS.rule}`,
+      background: TOKENS.surface.card,
+      color: TOKENS.text.primary,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+      textDecoration: 'none',
+      fontSize: 14,
+      fontWeight: 500,
+    }}
+  >
+    <span style={{ color: TOKENS.text.secondary, display: 'inline-flex' }}>
+      <Icon name={icon} size={16} stroke={1.6} />
+    </span>
+    <div style={{ flex: 1 }}>
+      <div>{title}</div>
+      <div
+        style={{
+          fontSize: 12,
+          color: TOKENS.text.secondary,
+          marginTop: 2,
+          fontFamily: FONT_MONO,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {sub}
+      </div>
+    </div>
+    <span style={{ color: TOKENS.text.tertiary }}>
+      <Icon name="chev" size={14} />
+    </span>
+  </a>
+);
+
 export default function SettingsSheet({ identity, isDelegation, token, apiBase, onClose, onSaved }) {
-  // Sponsors store first/last separately; delegations store a single
-  // delegate_name. We always render two fields and concat server-side
-  // for the delegation case (handled by the /profile endpoint).
   const initialFirst = isDelegation
     ? (identity?.delegateName || '').split(' ')[0] || ''
     : identity?.contactName?.split(' ')[0] || '';
@@ -92,43 +130,37 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
 
   return (
     <>
-      <div
-        style={{
-          marginBottom: 18,
-          paddingBottom: 12,
-          borderBottom: `1px solid var(--rule)`,
-        }}
-      >
-        <SectionEyebrow color={TOKENS.brand.red}>Profile</SectionEyebrow>
+      <div style={{ marginBottom: 12 }}>
+        <SectionEyebrow>Profile</SectionEyebrow>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
         <div style={{ flex: 1 }}>
-          <Field label="FIRST NAME" value={first} onChange={setFirst} placeholder="First" />
+          <Field label="First name" value={first} onChange={setFirst} placeholder="First" />
         </div>
         <div style={{ flex: 1 }}>
-          <Field label="LAST NAME" value={last} onChange={setLast} placeholder="Last" />
+          <Field label="Last name" value={last} onChange={setLast} placeholder="Last" />
         </div>
       </div>
       <Field
-        label="EMAIL"
+        label="Email"
         value={email}
         onChange={setEmail}
         placeholder="you@example.com"
         type="email"
       />
-      <Field label="PHONE" value={phone} onChange={setPhone} placeholder="(801) 555-0100" type="tel" />
+      <Field label="Phone" value={phone} onChange={setPhone} placeholder="(801) 555-0100" type="tel" />
 
       {error && (
         <div
           style={{
-            padding: 12,
-            borderRadius: 10,
-            background: 'rgba(212,38,74,0.12)',
-            border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
+            padding: 10,
+            borderRadius: TOKENS.radius.md,
+            background: TOKENS.surface.card,
+            border: `1px solid ${TOKENS.brand.red}`,
+            color: TOKENS.brand.red,
             fontSize: 12,
-            marginBottom: 14,
+            marginBottom: 12,
           }}
         >
           {error.message}
@@ -146,97 +178,28 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
         {pending ? 'Saving…' : saved ? 'Saved' : 'Save profile'}
       </Btn>
 
-      <div
-        style={{
-          marginTop: 28,
-          marginBottom: 12,
-          paddingBottom: 12,
-          borderBottom: `1px solid var(--rule)`,
-        }}
-      >
-        <SectionEyebrow color={TOKENS.brand.red}>Help</SectionEyebrow>
+      <div style={{ marginTop: 32, marginBottom: 12 }}>
+        <SectionEyebrow>Help</SectionEyebrow>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-        <a
+        <HelpRow
+          icon="msg"
+          title="Call Sherry Miggin"
+          sub="(801) 512-9370 · DEF Foundation"
           href="tel:8015129370"
-          style={{
-            padding: '14px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'var(--card)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          <Icon name="msg" size={16} />
-          <div style={{ flex: 1 }}>
-            <div>Call Sherry Miggin</div>
-            <div
-              style={{
-                fontSize: 11,
-                color: 'var(--text-secondary)',
-                marginTop: 2,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              (801) 512-9370 · DEF Foundation
-            </div>
-          </div>
-          <Icon name="chev" size={14} />
-        </a>
-        <a
+        />
+        <HelpRow
+          icon="mail"
+          title="Email Sherry directly"
+          sub="smiggin@dsdmail.net"
           href="mailto:smiggin@dsdmail.net"
-          style={{
-            padding: '14px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'var(--card)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          <Icon name="mail" size={16} />
-          <div style={{ flex: 1 }}>
-            <div>Email Sherry directly</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>smiggin@dsdmail.net</div>
-          </div>
-          <Icon name="chev" size={14} />
-        </a>
-        <a
+        />
+        <HelpRow
+          icon="mail"
+          title="Email the gala inbox"
+          sub="gala@daviskids.org"
           href="mailto:gala@daviskids.org"
-          style={{
-            padding: '14px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'var(--card)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          <Icon name="mail" size={16} />
-          <div style={{ flex: 1 }}>
-            <div>Email the gala inbox</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
-              gala@daviskids.org
-            </div>
-          </div>
-          <Icon name="chev" size={14} />
-        </a>
+        />
       </div>
 
       <button
@@ -245,13 +208,13 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
         }}
         style={{
           width: '100%',
-          padding: '14px',
-          borderRadius: 99,
-          border: `1.5px solid rgba(212,38,74,0.4)`,
-          background: 'transparent',
+          padding: '10px 16px',
+          borderRadius: TOKENS.radius.md,
+          border: `1px solid ${TOKENS.ruleStrong}`,
+          background: TOKENS.surface.card,
           color: TOKENS.brand.red,
-          fontWeight: 700,
-          fontSize: 13,
+          fontWeight: 500,
+          fontSize: 14,
           cursor: 'pointer',
           fontFamily: FONT_UI,
         }}

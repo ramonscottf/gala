@@ -226,7 +226,7 @@ export default function MovieDetailSheet({
                   padding: '3px 8px',
                   borderRadius: 4,
                   background: 'rgba(244,185,66,0.18)',
-                  color: '#f4b942',
+                  color: TOKENS.brand.gold,
                   fontSize: 10,
                   fontWeight: 700,
                   display: 'inline-flex',

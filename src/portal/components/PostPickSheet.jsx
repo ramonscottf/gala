@@ -16,7 +16,7 @@
 //   onPickDinners() — opens DinnerPicker scoped to placed.seatIds
 //   onDone() — dismiss everything, return to overview
 
-import { TOKENS, FONT_DISPLAY } from '../../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_MONO } from '../../brand/tokens.js';
 import { Icon } from '../../brand/atoms.jsx';
 
 export default function PostPickSheet({
@@ -30,56 +30,68 @@ export default function PostPickSheet({
   const N = placed.seatIds?.length || 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Success header */}
       <div
         style={{
           display: 'flex',
           gap: 12,
           alignItems: 'flex-start',
-          padding: 14,
-          borderRadius: 14,
-          background: 'rgba(127,207,160,0.10)',
-          border: `1px solid rgba(127,207,160,0.25)`,
+          padding: 16,
+          borderRadius: TOKENS.radius.lg,
+          background: TOKENS.surface.card,
+          border: `1px solid ${TOKENS.rule}`,
         }}
       >
         <div
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 99,
-            background: '#7fcfa0',
-            color: TOKENS.text.primary,
+            width: 28,
+            height: 28,
+            borderRadius: TOKENS.radius.sm,
+            background: TOKENS.fill.secondary,
+            color: TOKENS.semantic.success,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
           }}
         >
-          <Icon name="check" size={18} stroke={2.4} />
+          <Icon name="check" size={16} stroke={2} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
               fontFamily: FONT_DISPLAY,
-              fontSize: 16,
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              lineHeight: 1.25,
+              fontSize: 15,
+              fontWeight: 600,
+              color: TOKENS.text.primary,
+              lineHeight: 1.3,
+              letterSpacing: '-0.01em',
             }}
           >
-            {N} seat{N === 1 ? '' : 's'} placed in {placed.movieTitle}
-            {placed.showLabel ? ` (${placed.showLabel})` : ''}
+            <span style={{ fontFamily: FONT_MONO, fontWeight: 600 }}>{N}</span> seat
+            {N === 1 ? '' : 's'} placed
           </div>
           <div
             style={{
               fontSize: 12,
-              color: 'var(--text-secondary)',
-              marginTop: 4,
-              fontVariantNumeric: 'tabular-nums',
+              color: TOKENS.text.secondary,
+              marginTop: 2,
             }}
           >
-            {placed.theaterName} ·{' '}
+            {placed.movieTitle}
+            {placed.showLabel ? ` · ${placed.showLabel}` : ''}
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              color: TOKENS.text.primary,
+              marginTop: 8,
+              fontFamily: FONT_MONO,
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '-0.01em',
+            }}
+          >
             {[...placed.seatIds]
               .sort()
               .map((s) => s.replace('-', ''))
@@ -91,11 +103,12 @@ export default function PostPickSheet({
       <div
         style={{
           fontSize: 11,
-          fontWeight: 800,
-          letterSpacing: 1.6,
-          color: 'var(--brand-red)',
+          fontWeight: 600,
+          letterSpacing: 0.5,
+          color: TOKENS.text.tertiary,
           textTransform: 'uppercase',
-          marginTop: 4,
+          marginTop: 12,
+          marginBottom: 4,
         }}
       >
         What next?
@@ -117,11 +130,11 @@ export default function PostPickSheet({
             : `Choose meals for the seats you just placed`
         }
         onClick={onPickDinners}
-        accent={missingDinnerCount > 0 ? TOKENS.brand.gold : null}
+        flag={missingDinnerCount > 0}
       />
       <ActionCard
         icon="check"
-        title="Done — back to overview"
+        title="Done"
         sub="Return to your tickets"
         onClick={onDone}
         primary
@@ -130,49 +143,62 @@ export default function PostPickSheet({
   );
 }
 
-const ActionCard = ({ icon, title, sub, onClick, accent, primary }) => (
+const ActionCard = ({ icon, title, sub, onClick, flag, primary }) => (
   <button
     onClick={onClick}
     style={{
       all: 'unset',
       cursor: 'pointer',
       padding: 14,
-      borderRadius: 14,
-      background: primary ? TOKENS.brand.red : 'rgba(255,255,255,0.04)',
+      borderRadius: TOKENS.radius.lg,
+      background: primary ? TOKENS.brand.red : TOKENS.surface.card,
       border: primary
         ? 'none'
-        : `1px solid ${accent ? `${accent}55` : 'var(--rule)'}`,
+        : `1px solid ${flag ? TOKENS.brand.red : TOKENS.rule}`,
       display: 'flex',
       alignItems: 'center',
-      gap: 14,
-      transition: 'border-color 0.15s, background 0.15s',
+      gap: 12,
+      boxShadow: primary ? TOKENS.shadow.button : 'none',
     }}
   >
     <div
       style={{
-        width: 38,
-        height: 38,
-        borderRadius: 10,
-        background: primary
-          ? 'rgba(255,255,255,0.18)'
-          : accent
-            ? `${accent}1f`
-            : 'rgba(255,255,255,0.06)',
-        color: primary ? '#fff' : accent || TOKENS.semantic.info,
+        width: 28,
+        height: 28,
+        borderRadius: TOKENS.radius.sm,
+        background: primary ? 'rgba(255,255,255,0.16)' : TOKENS.fill.secondary,
+        color: primary ? TOKENS.text.onBrand : TOKENS.text.primary,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
       }}
     >
-      <Icon name={icon} size={18} />
+      <Icon name={icon} size={16} stroke={1.8} />
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{title}</div>
-      <div style={{ fontSize: 11, color: primary ? 'rgba(255,255,255,0.85)' : 'var(--text-secondary)', marginTop: 2 }}>
+      <div
+        style={{
+          fontSize: 14,
+          fontWeight: 600,
+          color: primary ? TOKENS.text.onBrand : TOKENS.text.primary,
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {title}
+      </div>
+      <div
+        style={{
+          fontSize: 12,
+          color: primary ? TOKENS.text.onBrandSecondary : TOKENS.text.secondary,
+          marginTop: 2,
+        }}
+      >
         {sub}
       </div>
     </div>
-    <Icon name="chev" size={14} />
+    <span style={{ color: primary ? TOKENS.text.onBrandSecondary : TOKENS.text.tertiary }}>
+      <Icon name="chev" size={14} />
+    </span>
   </button>
 );

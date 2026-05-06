@@ -55,7 +55,7 @@ import {
 
 // ── Avatar (deterministic palette from name) ──────────────────────────
 
-const PALETTE = ['#a8b1ff', '#ff8da4', '#7fcfa0', '#f4b942', '#c9a3ff', '#ff9d6c'];
+const PALETTE = ['#a8b1ff', TOKENS.brand.red, TOKENS.semantic.success, TOKENS.brand.gold, '#c9a3ff', '#ff9d6c'];
 const colorFor = (name) => {
   let h = 0;
   for (const c of name || '?') h = (h * 31 + c.charCodeAt(0)) >>> 0;
@@ -65,7 +65,6 @@ const Avatar = ({ name, size = 28 }) => {
   const initials = initialsFor(name);
   return (
     <span
-      
       style={{
         width: size,
         height: size,
@@ -74,7 +73,7 @@ const Avatar = ({ name, size = 28 }) => {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#fff',
+        color: TOKENS.text.onBrand,
         fontWeight: 700,
         fontSize: size * 0.38,
         letterSpacing: 0.2,
@@ -256,7 +255,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
             style={{
               fontSize: 13,
               fontWeight: 600,
-              color: '#fff',
+              color: TOKENS.text.onBrand,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -316,7 +315,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
           background: TOKENS.brand.navyDeep,
           borderRadius: 22,
           overflow: 'auto',
-          color: '#fff',
+          color: TOKENS.text.onBrand,
           fontFamily: FONT_UI,
           boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
           border: `1px solid var(--rule)`,
@@ -348,7 +347,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
                 borderRadius: 99,
                 background: 'rgba(255,255,255,0.08)',
                 border: 0,
-                color: '#fff',
+                color: TOKENS.text.onBrand,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -426,7 +425,7 @@ const Stepper = ({ step, setStep, step1Label }) => (
               justifyContent: 'center',
               fontSize: 11,
               fontWeight: 700,
-              color: s.n <= step ? '#fff' : '#fff',
+              color: s.n <= step ? TOKENS.text.onBrand : TOKENS.text.onBrand,
             }}
           >
             {s.n < step ? <Icon name="check" size={12} /> : s.n}
@@ -826,7 +825,7 @@ const StepWelcome = ({
                     style={{
                       fontSize: 12,
                       fontWeight: 600,
-                      color: '#fff',
+                      color: TOKENS.text.onBrand,
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
@@ -854,7 +853,7 @@ const StepWelcome = ({
                 style={{
                   fontSize: 15,
                   fontWeight: 700,
-                  color: '#fff',
+                  color: TOKENS.text.onBrand,
                   marginTop: 4,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -900,7 +899,7 @@ const StepWelcome = ({
                             width: 5,
                             height: 5,
                             borderRadius: 99,
-                            background: hasDinner ? '#7fcfa0' : 'transparent',
+                            background: hasDinner ? TOKENS.semantic.success : 'transparent',
                             border: hasDinner ? 'none' : `1px solid rgba(244,185,66,0.6)`,
                           }}
                         />
@@ -1000,7 +999,7 @@ const StepShowing = ({
                 cursor: 'pointer',
                 padding: '12px 24px',
                 background: active ? TOKENS.brand.red : 'transparent',
-                color: active ? '#fff' : 'rgba(255,255,255,0.65)',
+                color: active ? TOKENS.text.onBrand : 'rgba(255,255,255,0.65)',
                 borderRadius: 9,
                 display: 'flex',
                 flexDirection: 'column',
@@ -1108,7 +1107,7 @@ const StepShowing = ({
                   style={{
                     fontSize: 16,
                     fontWeight: 700,
-                    color: '#fff',
+                    color: TOKENS.text.onBrand,
                     lineHeight: 1.2,
                   }}
                 >
@@ -1125,7 +1124,7 @@ const StepShowing = ({
                         padding: '2px 8px',
                         borderRadius: 4,
                         background: TOKENS.text.primary,
-                        color: '#fff',
+                        color: TOKENS.text.onBrand,
                         fontSize: 10,
                         fontWeight: 800,
                         letterSpacing: 0.6,
@@ -1140,7 +1139,7 @@ const StepShowing = ({
                         padding: '2px 8px',
                         borderRadius: 4,
                         background: 'rgba(255,255,255,0.08)',
-                        color: '#fff',
+                        color: TOKENS.text.onBrand,
                         fontSize: 10,
                         fontWeight: 700,
                         fontVariantNumeric: 'tabular-nums',
@@ -1331,7 +1330,7 @@ const StepSeats = ({
                       padding: '8px 10px',
                       borderRadius: 7,
                       background: active ? TOKENS.brand.red : 'transparent',
-                      color: active ? '#fff' : 'rgba(255,255,255,0.65)',
+                      color: active ? TOKENS.text.onBrand : 'rgba(255,255,255,0.65)',
                       fontSize: 12,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',
@@ -1405,7 +1404,7 @@ const StepSeats = ({
                         style={{
                           fontSize: 12,
                           fontWeight: 600,
-                          color: '#fff',
+                          color: TOKENS.text.onBrand,
                           lineHeight: 1.25,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
@@ -1470,7 +1469,7 @@ const StepSeats = ({
                       gap: 6,
                       fontSize: 11,
                       fontWeight: 600,
-                      color: '#fff',
+                      color: TOKENS.text.onBrand,
                     }}
                   >
                     <FormatBadge format={c.format} />
@@ -1514,7 +1513,7 @@ const StepSeats = ({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Placed total</span>
-            <span style={{ color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ color: TOKENS.text.onBrand, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
               {seats.totalAssigned}/{blockSize}
             </span>
           </div>
@@ -1522,7 +1521,7 @@ const StepSeats = ({
             <span>Remaining</span>
             <span
               style={{
-                color: remaining > 0 ? '#ff8da4' : '#7fcfa0',
+                color: remaining > 0 ? TOKENS.brand.red : TOKENS.semantic.success,
                 fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums',
               }}
@@ -1590,7 +1589,7 @@ const StepSeats = ({
                     padding: '2px 6px',
                     border: `1px solid var(--rule)`,
                     borderRadius: 3,
-                    color: '#fff',
+                    color: TOKENS.text.onBrand,
                     fontSize: 9,
                   }}
                 >
@@ -1785,12 +1784,12 @@ const StepConfirm = ({
           <>
             {sel.size} seats in {theatersById[theaterMeta?.theaterId]?.name} for the{' '}
             {showingNumber === 1 ? 'early' : 'late'} showing of <b>{movie?.title}</b>. You'll have{' '}
-            <b style={{ color: '#fff' }}>{remaining - sel.size}</b> seats left to place after this.
+            <b style={{ color: TOKENS.text.onBrand }}>{remaining - sel.size}</b> seats left to place after this.
           </>
         ) : (
           <>
             {seats.totalAssigned} of {blockSize} seats placed. Tap{' '}
-            <b style={{ color: '#fff' }}>Done — send me my QR</b> to finalize and we'll text +
+            <b style={{ color: TOKENS.text.onBrand }}>Done — send me my QR</b> to finalize and we'll text +
             email your check-in code. Seats stay editable until June 9.
           </>
         )}
@@ -1880,7 +1879,7 @@ const StepConfirm = ({
                   {g.showLabel.toUpperCase()} ·{' '}
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{g.showTime}</span>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: TOKENS.text.onBrand }}>
                   {g.movieTitle}
                 </div>
                 <div
@@ -1949,7 +1948,7 @@ const StepConfirm = ({
             borderRadius: 10,
             background: 'rgba(212,38,74,0.12)',
             border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
+            color: TOKENS.brand.red,
             fontSize: 13,
             maxWidth: 720,
           }}
@@ -2284,11 +2283,11 @@ export default function Desktop({
           }}
         >
           <span>
-            <b style={{ color: '#fff' }}>{seats.totalAssigned}</b> / {blockSize} placed
+            <b style={{ color: TOKENS.text.onBrand }}>{seats.totalAssigned}</b> / {blockSize} placed
           </span>
           <span>·</span>
           <span>
-            <b style={{ color: remaining > 0 ? 'var(--brand-red)' : '#7fcfa0' }}>{remaining}</b> remaining
+            <b style={{ color: remaining > 0 ? 'var(--brand-red)' : TOKENS.semantic.success }}>{remaining}</b> remaining
           </span>
         </div>
       </div>

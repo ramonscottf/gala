@@ -93,17 +93,12 @@ export default function DinnerPicker({
         style={{
           height: heightPx,
           padding: '0 26px 0 10px',
-          borderRadius: 99,
-          // Theme-aware. CSS class .dinner-select handles the chevron
-          // SVG color (light vs dark) since inline backgroundImage can't
-          // see CSS custom properties cleanly.
-          border: `1px solid ${current ? TOKENS.semantic.info : 'var(--rule)'}`,
-          background: current
-            ? 'rgba(168,177,255,0.18)'
-            : 'transparent',
-          color: current ? 'var(--text-secondary)' : 'var(--text-primary)',
+          borderRadius: TOKENS.radius.md,
+          border: `1px solid ${TOKENS.ruleStrong}`,
+          background: current ? TOKENS.surface.card : TOKENS.surface.card,
+          color: current ? TOKENS.text.primary : TOKENS.text.tertiary,
           fontSize: fontPx,
-          fontWeight: 600,
+          fontWeight: 500,
           fontFamily: FONT_UI,
           outline: 'none',
           appearance: 'none',
@@ -128,7 +123,7 @@ export default function DinnerPicker({
         <span
           style={{
             fontSize: 10,
-            color: '#ff8da4',
+            color: TOKENS.brand.red,
             marginTop: 2,
             paddingLeft: 8,
           }}

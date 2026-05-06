@@ -30,7 +30,7 @@ import { useDinnerCompleteness } from './components/useDinnerCompleteness.js';
 const FormatBadge = ({ format }) => {
   const map = {
     IMAX: { bg: 'rgba(244,185,66,0.18)', c: TOKENS.brand.gold, border: 'rgba(244,185,66,0.45)' },
-    Premier: { bg: 'rgba(212,38,74,0.18)', c: '#ff8da4', border: 'rgba(212,38,74,0.45)' },
+    Premier: { bg: 'rgba(212,38,74,0.18)', c: TOKENS.brand.red, border: 'rgba(212,38,74,0.45)' },
     Standard: { bg: 'rgba(255,255,255,0.06)', c: 'var(--text-secondary)', border: TOKENS.rule },
   };
   const s = map[format] || map.Standard;
@@ -147,7 +147,7 @@ const Sheet = ({ open, onClose, title, children }) => {
                 borderRadius: 99,
                 background: 'rgba(255,255,255,0.08)',
                 border: 0,
-                color: '#fff',
+                color: TOKENS.text.onBrand,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -798,7 +798,7 @@ export const Step2Pick = ({
                     padding: '2px 7px',
                     borderRadius: 4,
                     background: TOKENS.text.primary,
-                    color: '#fff',
+                    color: TOKENS.text.onBrand,
                     fontSize: 10,
                     fontWeight: 800,
                     letterSpacing: 0.6,
@@ -884,7 +884,7 @@ export const Step2Pick = ({
                   border: 0,
                   borderRadius: 9,
                   cursor: 'pointer',
-                  color: active ? '#fff' : 'var(--text-secondary)',
+                  color: active ? TOKENS.text.onBrand : 'var(--text-secondary)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-start',
@@ -1275,7 +1275,7 @@ export const Step2Pick = ({
                 borderRadius: 99,
                 border: `1.5px solid var(--rule)`,
                 background: 'transparent',
-                color: '#fff',
+                color: TOKENS.text.onBrand,
                 fontWeight: 600,
                 fontSize: 13,
                 cursor: 'pointer',
@@ -1297,7 +1297,7 @@ export const Step2Pick = ({
                 borderRadius: 99,
                 border: 0,
                 background: TOKENS.brand.red,
-                color: '#fff',
+                color: TOKENS.text.onBrand,
                 fontWeight: 700,
                 fontSize: 14,
                 cursor: 'pointer',
@@ -1333,7 +1333,7 @@ export const Step2Pick = ({
               borderRadius: 10,
               background: 'rgba(212,38,74,0.12)',
               border: `1px solid rgba(212,38,74,0.4)`,
-              color: '#ff8da4',
+              color: TOKENS.brand.red,
               fontSize: 12,
               marginBottom: 14,
             }}
@@ -1361,7 +1361,7 @@ export const Step2Pick = ({
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TOKENS.text.onBrand }}>
                   {d ? d.delegateName : 'No one yet (clear assignment)'}
                 </div>
                 {d && (d.phone || d.email) && (
@@ -1485,7 +1485,7 @@ export const Step2Pick = ({
                 borderRadius: 10,
                 background: 'rgba(212,38,74,0.12)',
                 border: `1px solid rgba(212,38,74,0.4)`,
-                color: '#ff8da4',
+                color: TOKENS.brand.red,
                 fontSize: 12,
                 marginBottom: 12,
               }}
@@ -1535,7 +1535,7 @@ export const Step2Pick = ({
             >
               ALL SEATS PLACED
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2, color: '#fff' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2, color: TOKENS.text.onBrand }}>
               Ready to invite guests?
             </div>
           </div>
@@ -1545,7 +1545,7 @@ export const Step2Pick = ({
               padding: '10px 16px',
               borderRadius: 99,
               border: 0,
-              background: '#fff',
+              background: TOKENS.text.onBrand,
               color: TOKENS.text.primary,
               fontWeight: 700,
               fontSize: 13,
@@ -1739,7 +1739,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
             borderRadius: 99,
             border: `1.5px solid var(--rule)`,
             background: 'transparent',
-            color: '#fff',
+            color: TOKENS.text.onBrand,
             fontWeight: 600,
             fontSize: 13,
             cursor: 'pointer',
@@ -1755,7 +1755,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
             borderRadius: 99,
             border: 0,
             background: TOKENS.brand.red,
-            color: '#fff',
+            color: TOKENS.text.onBrand,
             fontWeight: 700,
             fontSize: 14,
             cursor: 'pointer',
@@ -2063,7 +2063,7 @@ const Step4Review = ({
             borderRadius: 10,
             background: 'rgba(212,38,74,0.12)',
             border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
+            color: TOKENS.brand.red,
             fontSize: 12,
           }}
         >

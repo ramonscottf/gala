@@ -355,7 +355,7 @@ export default function SeatPickSheet({
               <b style={{ color: TOKENS.semantic.info }}>{remaining}</b> to place
             </>
           ) : (
-            <span style={{ color: '#7fcfa0' }}>All placed</span>
+            <span style={{ color: TOKENS.semantic.success }}>All placed</span>
           )}
         </div>
       </div>
@@ -833,7 +833,7 @@ export default function SeatPickSheet({
             padding: '8px 12px',
             borderRadius: 8,
             background: 'rgba(215,40,70,0.12)',
-            color: '#ff8da4',
+            color: TOKENS.brand.red,
             fontSize: 12,
             border: `1px solid rgba(215,40,70,0.3)`,
           }}
