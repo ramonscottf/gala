@@ -15,9 +15,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI, FONT_MONO } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
-import { useTheme } from '../hooks/useTheme.js';
 import { adaptTheater, autoPickBlock, SeatMap, SEAT_TYPES, seatById } from './SeatEngine.jsx';
 import { otherTakenForTheater } from '../hooks/useSeats.js';
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../hooks/usePortal.js';
@@ -30,9 +29,9 @@ import { useDinnerCompleteness } from './components/useDinnerCompleteness.js';
 
 const FormatBadge = ({ format }) => {
   const map = {
-    IMAX: { bg: 'rgba(244,185,66,0.18)', c: BRAND.gold, border: 'rgba(244,185,66,0.45)' },
+    IMAX: { bg: 'rgba(244,185,66,0.18)', c: TOKENS.brand.gold, border: 'rgba(244,185,66,0.45)' },
     Premier: { bg: 'rgba(212,38,74,0.18)', c: '#ff8da4', border: 'rgba(212,38,74,0.45)' },
-    Standard: { bg: 'rgba(255,255,255,0.06)', c: 'var(--mute)', border: BRAND.rule },
+    Standard: { bg: 'rgba(255,255,255,0.06)', c: 'var(--text-secondary)', border: TOKENS.rule },
   };
   const s = map[format] || map.Standard;
   return (
@@ -61,7 +60,7 @@ const PosterMiniM = ({ poster, color, label, size = 42 }) => (
       borderRadius: 5,
       background: poster
         ? `url(${poster}) center/cover`
-        : `linear-gradient(160deg, ${color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+        : `linear-gradient(160deg, ${color || TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
       display: 'flex',
       alignItems: 'flex-end',
       padding: 4,
@@ -103,11 +102,11 @@ const Sheet = ({ open, onClose, title, children }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="force-dark-vars"
+        
         style={{
           width: '100%',
           maxHeight: '85%',
-          background: BRAND.navyDeep,
+          background: TOKENS.brand.navyDeep,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           padding: '8px 0 24px',
@@ -170,7 +169,6 @@ const Sheet = ({ open, onClose, title, children }) => {
 // ── header (step counter + progress) ──────────────────────────────────
 
 const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
-  const { isLight } = useTheme();
   const pct = blockSize > 0 ? (totalAssigned / blockSize) * 100 : 0;
   return (
     <div
@@ -196,9 +194,9 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
             width: 36,
             height: 36,
             borderRadius: 99,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             border: 0,
-            color: isLight ? BRAND.ink : '#fff',
+            color: TOKENS.text.primary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -208,7 +206,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
           <Icon name="chevL" size={18} />
         </button>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: BRAND.red }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: TOKENS.brand.red }}>
             STEP {step} OF {total}
           </div>
           <div style={{ fontSize: 13, fontWeight: 600, marginTop: 2 }}>Sponsor Seats</div>
@@ -221,7 +219,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
             flex: 1,
             height: 6,
             borderRadius: 3,
-            background: isLight ? 'rgba(13,18,36,0.10)' : 'rgba(255,255,255,0.08)',
+            background: 'rgba(13,18,36,0.10)',
             overflow: 'hidden',
           }}
         >
@@ -239,13 +237,13 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
           style={{
             fontSize: 11,
             fontWeight: 700,
-            color: 'var(--accent-italic)',
+            color: 'var(--text-secondary)',
             fontVariantNumeric: 'tabular-nums',
             letterSpacing: 0.5,
           }}
         >
           {totalAssigned}
-          <span style={{ color: 'var(--mute)' }}>/{blockSize}</span>
+          <span style={{ color: 'var(--text-secondary)' }}>/{blockSize}</span>
         </div>
       </div>
     </div>
@@ -254,7 +252,7 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
 
 const MStickyCTA = ({ children, helper }) => (
   <div
-    className="tab-bar force-dark-vars"
+    className="tab-bar"
     style={{
       padding: '14px 18px 10px',
       borderTop: `1px solid var(--rule)`,
@@ -265,7 +263,7 @@ const MStickyCTA = ({ children, helper }) => (
     }}
   >
     {helper && (
-      <div style={{ fontSize: 11, color: 'var(--mute)', marginBottom: 8, textAlign: 'center' }}>
+      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8, textAlign: 'center' }}>
         {helper}
       </div>
     )}
@@ -276,7 +274,6 @@ const MStickyCTA = ({ children, helper }) => (
 // ── Step 1: Welcome ───────────────────────────────────────────────────
 
 const Step1Welcome = ({ onNext, blockSize, tier }) => {
-  const { isLight } = useTheme();
   return (
   <div
     className="scroll-container"
@@ -301,7 +298,7 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => {
       Lights, camera,{' '}
       <i
         style={{
-          background: BRAND.gradient,
+          background: TOKENS.brand.red,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
@@ -311,8 +308,8 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => {
         your seats.
       </i>
     </h1>
-    <p style={{ fontSize: 15, color: 'var(--mute)', lineHeight: 1.55, marginTop: 14 }}>
-      You've earned <b style={{ color: 'var(--ink-on-ground)' }}>{blockSize} seats</b> at the {tier || 'sponsor'}{' '}
+    <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.55, marginTop: 14 }}>
+      You've earned <b style={{ color: 'var(--text-primary)' }}>{blockSize} seats</b> at the {tier || 'sponsor'}{' '}
       tier. Place them across two showtimes and the lineup of films — split or stay together,
       your call.
     </p>
@@ -323,7 +320,7 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => {
         padding: 18,
         border: `1px solid var(--rule)`,
         borderRadius: 14,
-        background: 'var(--surface)',
+        background: 'var(--card)',
       }}
     >
       <div
@@ -349,14 +346,14 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => {
                 fontFamily: FONT_DISPLAY,
                 fontSize: 16,
                 fontWeight: 600,
-                color: 'var(--accent-italic)',
+                color: 'var(--text-secondary)',
                 minWidth: 80,
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
               {t}
             </div>
-            <div style={{ fontSize: 14, color: 'var(--ink-on-ground)' }}>{d}</div>
+            <div style={{ fontSize: 14, color: 'var(--text-primary)' }}>{d}</div>
           </div>
         ))}
       </div>
@@ -374,7 +371,7 @@ const Step1Welcome = ({ onNext, blockSize, tier }) => {
       }}
     >
       <Icon name="info" size={16} />
-      <div style={{ fontSize: 13, color: isLight ? 'var(--mute)' : 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
         You can come back anytime to change seats or invite guests until <b>June 5</b>.
       </div>
     </div>
@@ -412,7 +409,6 @@ export const Step2Pick = ({
   onMovieDetail,
 }) => {
   const navigate = useNavigate();
-  const { isLight } = useTheme();
   const showtimes = portal?.showtimes || [];
 
   const showings = useMemo(() => {
@@ -703,12 +699,12 @@ export const Step2Pick = ({
                 border: 0,
                 cursor: 'pointer',
                 background: active
-                  ? (isLight ? 'rgba(244,185,66,0.20)' : 'rgba(244,185,66,0.14)')
-                  : (isLight ? 'var(--surface)' : 'rgba(255,255,255,0.05)'),
+                  ? ('rgba(244,185,66,0.20)')
+                  : ('var(--card)'),
                 boxShadow: active
-                  ? `inset 0 0 0 1.5px ${BRAND.gold}`
+                  ? `inset 0 0 0 1.5px ${TOKENS.brand.gold}`
                   : `inset 0 0 0 1px var(--rule)`,
-                color: isLight ? BRAND.ink : '#fff',
+                color: TOKENS.text.primary,
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 7,
@@ -729,7 +725,7 @@ export const Step2Pick = ({
                   // for movies without a custom thumbnail upload.
                   background: m.thumbnailUrl || m.posterUrl
                     ? `url(${m.thumbnailUrl || m.posterUrl}) center/cover`
-                    : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+                    : `linear-gradient(160deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
                   flexShrink: 0,
                 }}
               />
@@ -752,7 +748,7 @@ export const Step2Pick = ({
             margin: '10px 14px 0',
             display: 'flex',
             gap: 0,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             border: `1.5px solid var(--rule)`,
             borderRadius: 14,
             overflow: 'hidden',
@@ -766,7 +762,7 @@ export const Step2Pick = ({
               minHeight: 110,
               background: movie.posterUrl
                 ? `url(${movie.posterUrl}) center/cover no-repeat`
-                : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+                : `linear-gradient(160deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
             }}
           />
           <div
@@ -783,7 +779,7 @@ export const Step2Pick = ({
               style={{
                 fontSize: 15,
                 fontWeight: 700,
-                color: 'var(--ink-on-ground)',
+                color: 'var(--text-primary)',
                 lineHeight: 1.2,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -792,7 +788,7 @@ export const Step2Pick = ({
             >
               {movie.title}
               {movie.year ? (
-                <span style={{ color: 'var(--mute)', fontWeight: 500 }}> ({movie.year})</span>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}> ({movie.year})</span>
               ) : null}
             </div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -801,7 +797,7 @@ export const Step2Pick = ({
                   style={{
                     padding: '2px 7px',
                     borderRadius: 4,
-                    background: BRAND.ink,
+                    background: TOKENS.text.primary,
                     color: '#fff',
                     fontSize: 10,
                     fontWeight: 800,
@@ -816,8 +812,8 @@ export const Step2Pick = ({
                   style={{
                     padding: '2px 7px',
                     borderRadius: 4,
-                    background: isLight ? 'rgba(13,18,36,0.08)' : 'rgba(255,255,255,0.08)',
-                    color: 'var(--ink-on-ground)',
+                    background: 'rgba(13,18,36,0.08)',
+                    color: 'var(--text-primary)',
                     fontSize: 10,
                     fontWeight: 700,
                     fontVariantNumeric: 'tabular-nums',
@@ -830,7 +826,7 @@ export const Step2Pick = ({
             <div
               style={{
                 fontSize: 11,
-                color: 'var(--mute)',
+                color: 'var(--text-secondary)',
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
@@ -840,7 +836,7 @@ export const Step2Pick = ({
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: BRAND.red,
+                color: TOKENS.brand.red,
                 marginTop: 2,
               }}
             >
@@ -852,7 +848,7 @@ export const Step2Pick = ({
 
       {/* Showtime segmented pill — single shared container with two
           stacked slots showing time + dinner-time subtitle. Active slot
-          uses BRAND.gradient (Decision A swap from old solid red).
+          uses TOKENS.brand.red (Decision A swap from old solid red).
           Pattern from gala-seats-app.html .picker__showtimes (358-397).
           Phase 1.7 F2. */}
       <div
@@ -870,7 +866,7 @@ export const Step2Pick = ({
             border: `1.5px solid var(--rule)`,
             borderRadius: 12,
             padding: 3,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             width: '100%',
             maxWidth: 360,
           }}
@@ -884,11 +880,11 @@ export const Step2Pick = ({
                 style={{
                   flex: 1,
                   padding: '10px 14px',
-                  background: active ? BRAND.gradient : 'transparent',
+                  background: active ? TOKENS.brand.red : 'transparent',
                   border: 0,
                   borderRadius: 9,
                   cursor: 'pointer',
-                  color: active ? '#fff' : 'var(--mute)',
+                  color: active ? '#fff' : 'var(--text-secondary)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-start',
@@ -913,7 +909,7 @@ export const Step2Pick = ({
                     fontWeight: 500,
                     color: active
                       ? 'rgba(255,255,255,0.78)'
-                      : (isLight ? 'rgba(13,18,36,0.62)' : 'rgba(255,255,255,0.45)'),
+                      : ('rgba(13,18,36,0.62)'),
                     letterSpacing: 0.1,
                   }}
                 >
@@ -946,7 +942,7 @@ export const Step2Pick = ({
             fontWeight: 700,
             letterSpacing: 1.4,
             textTransform: 'uppercase',
-            color: 'var(--accent-text)',
+            color: 'var(--brand-red)',
             opacity: 0.85,
             paddingLeft: 4,
           }}
@@ -963,9 +959,9 @@ export const Step2Pick = ({
               width: '100%',
               padding: '8px 32px 8px 12px',
               borderRadius: 99,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               border: `1px solid var(--rule)`,
-              color: 'var(--ink-on-ground)',
+              color: 'var(--text-primary)',
               cursor: theaterChoices.length > 1 ? 'pointer' : 'default',
               fontSize: 12,
               fontWeight: 600,
@@ -976,7 +972,7 @@ export const Step2Pick = ({
             }}
           >
             {theaterChoices.map((c) => (
-              <option key={c.theaterId} value={c.theaterId} style={{ color: BRAND.ink }}>
+              <option key={c.theaterId} value={c.theaterId} style={{ color: TOKENS.text.primary }}>
                 {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`} · {c.format}
               </option>
             ))}
@@ -989,7 +985,7 @@ export const Step2Pick = ({
               top: '50%',
               transform: 'translateY(-50%)',
               pointerEvents: 'none',
-              color: 'var(--ink-on-ground)',
+              color: 'var(--text-primary)',
               opacity: theaterChoices.length > 1 ? 0.7 : 0.35,
               fontSize: 10,
               lineHeight: 1,
@@ -1007,7 +1003,7 @@ export const Step2Pick = ({
         style={{
           margin: '8px 14px 0',
           fontSize: 11,
-          color: 'var(--accent-text)',
+          color: 'var(--brand-red)',
           letterSpacing: 0.4,
           fontWeight: 700,
           textTransform: 'uppercase',
@@ -1051,7 +1047,7 @@ export const Step2Pick = ({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: 12,
-            background: BRAND.navyDeep,
+            background: TOKENS.brand.navyDeep,
             border: `1px solid var(--rule)`,
             padding: 10,
             animation: 'mapFlash 0.32s ease-out',
@@ -1079,7 +1075,7 @@ export const Step2Pick = ({
                 onSelect={onSelect}
               />
             ) : (
-              <div style={{ padding: 24, color: 'var(--mute)', textAlign: 'center' }}>
+              <div style={{ padding: 24, color: 'var(--text-secondary)', textAlign: 'center' }}>
                 No theater selected
               </div>
             )}
@@ -1092,7 +1088,7 @@ export const Step2Pick = ({
             flexWrap: 'wrap',
             gap: 10,
             fontSize: 10,
-            color: 'var(--mute)',
+            color: 'var(--text-secondary)',
             justifyContent: 'center',
           }}
         >
@@ -1111,7 +1107,7 @@ export const Step2Pick = ({
           ))}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <span
-              style={{ width: 9, height: 9, borderRadius: 2, background: BRAND.indigoLight }}
+              style={{ width: 9, height: 9, borderRadius: 2, background: TOKENS.semantic.info }}
             />
             Yours
           </span>
@@ -1138,7 +1134,7 @@ export const Step2Pick = ({
               borderRadius: 99,
               border: `1px solid var(--rule)`,
               background: 'rgba(168,177,255,0.10)',
-              color: 'var(--accent-italic)',
+              color: 'var(--text-secondary)',
               fontSize: 11,
               fontWeight: 700,
               display: 'inline-flex',
@@ -1177,7 +1173,7 @@ export const Step2Pick = ({
                 padding: '3px 8px',
                 borderRadius: 4,
                 background: 'rgba(168,177,255,0.18)',
-                color: 'var(--accent-italic)',
+                color: 'var(--text-secondary)',
                 fontSize: 11,
                 fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums',
@@ -1213,7 +1209,7 @@ export const Step2Pick = ({
                 display: 'flex',
                 padding: 3,
                 borderRadius: 99,
-                background: 'var(--surface)',
+                background: 'var(--card)',
                 border: `1px solid var(--rule)`,
               }}
             >
@@ -1233,8 +1229,8 @@ export const Step2Pick = ({
                       border: 0,
                       cursor:
                         m.id === 'assign' && !haveSelfHere ? 'not-allowed' : 'pointer',
-                      background: active ? BRAND.indigoLight : 'transparent',
-                      color: active ? BRAND.ink : 'var(--ink-on-ground)',
+                      background: active ? TOKENS.semantic.info : 'transparent',
+                      color: active ? TOKENS.text.primary : 'var(--text-primary)',
                       fontSize: 11,
                       fontWeight: 700,
                       letterSpacing: 0.2,
@@ -1253,16 +1249,16 @@ export const Step2Pick = ({
       {/* Sticky CTA */}
       <MStickyCTA>
         {sel.size === 0 ? (
-          <div style={{ padding: '14px 0', textAlign: 'center', fontSize: 13, color: 'var(--mute)' }}>
+          <div style={{ padding: '14px 0', textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
             {mode === 'assign' ? (
               <>
-                Tap your <b style={{ color: 'var(--accent-italic)' }}>indigo</b> seats to reassign them.
+                Tap your <b style={{ color: 'var(--text-secondary)' }}>indigo</b> seats to reassign them.
               </>
             ) : (
               <>
                 Tap seats to select ·{' '}
                 <b
-                  style={{ color: 'var(--accent-italic)', fontVariantNumeric: 'tabular-nums' }}
+                  style={{ color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}
                 >
                   {remaining}
                 </b>{' '}
@@ -1300,7 +1296,7 @@ export const Step2Pick = ({
                 padding: '14px 18px',
                 borderRadius: 99,
                 border: 0,
-                background: BRAND.gradient,
+                background: TOKENS.brand.red,
                 color: '#fff',
                 fontWeight: 700,
                 fontSize: 14,
@@ -1326,7 +1322,7 @@ export const Step2Pick = ({
         onClose={() => setAssignPickerOpen(false)}
         title={`Assign ${sel.size} seat${sel.size === 1 ? '' : 's'}`}
       >
-        <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 14, lineHeight: 1.55 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.55 }}>
           Assigning to a guest hands these seats off for night-of identification. Their portal
           link still points at their own block — this just labels who's sitting where.
         </div>
@@ -1369,7 +1365,7 @@ export const Step2Pick = ({
                   {d ? d.delegateName : 'No one yet (clear assignment)'}
                 </div>
                 {d && (d.phone || d.email) && (
-                  <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
                     {d.phone || d.email}
                   </div>
                 )}
@@ -1381,7 +1377,7 @@ export const Step2Pick = ({
       </Sheet>
 
       <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Confirm these seats?">
-        <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 14 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 14 }}>
           {showingNumber === 1 ? 'Early' : 'Late'} showing · {movie?.title} ·{' '}
           {theatersById[theaterId]?.name} ({theaterMeta?.format})
         </div>
@@ -1451,11 +1447,11 @@ export const Step2Pick = ({
             }}
           >
             <div
-              style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-text)', marginBottom: 4 }}
+              style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand-red)', marginBottom: 4 }}
             >
               You've placed your full block.
             </div>
-            <div style={{ fontSize: 12, color: 'var(--mute)', marginBottom: 12, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.5 }}>
               Want to swap some seats? Unplace a few from your tickets first, then come back
               here.
             </div>
@@ -1468,8 +1464,8 @@ export const Step2Pick = ({
                 padding: '10px 14px',
                 borderRadius: 99,
                 border: 0,
-                background: BRAND.gold,
-                color: BRAND.ink,
+                background: TOKENS.brand.gold,
+                color: TOKENS.text.primary,
                 fontWeight: 700,
                 fontSize: 13,
                 cursor: 'pointer',
@@ -1498,9 +1494,9 @@ export const Step2Pick = ({
             </div>
           )
         )}
-        <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 18, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18, lineHeight: 1.5 }}>
           You can always change these later — and you'll have{' '}
-          <b style={{ color: 'var(--ink-on-ground)' }}>{Math.max(0, remaining - sel.size)}</b> seats left to place
+          <b style={{ color: 'var(--text-primary)' }}>{Math.max(0, remaining - sel.size)}</b> seats left to place
           after this.
         </div>
         <Btn
@@ -1525,7 +1521,7 @@ export const Step2Pick = ({
             right: 18,
             padding: 14,
             borderRadius: 14,
-            background: BRAND.gradient,
+            background: TOKENS.brand.red,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -1550,7 +1546,7 @@ export const Step2Pick = ({
               borderRadius: 99,
               border: 0,
               background: '#fff',
-              color: BRAND.ink,
+              color: TOKENS.text.primary,
               fontWeight: 700,
               fontSize: 13,
               cursor: 'pointer',
@@ -1576,7 +1572,6 @@ export const Step2Pick = ({
 // from SeatAssignSheet (Phase 1.6 B2) which chain delegate→assign.
 
 const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
-  const { isLight } = useTheme();
   return (
   <>
     <div
@@ -1597,7 +1592,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
         Invite your{' '}
         <i
           style={{
-            background: BRAND.gradient,
+            background: TOKENS.brand.red,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -1606,7 +1601,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
           guests.
         </i>
       </h1>
-      <p style={{ fontSize: 14, color: 'var(--mute)', lineHeight: 1.5 }}>
+      <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
         Share a link so each guest claims their own seat — they'll get directions, dietary
         prompts, and a calendar invite.
       </p>
@@ -1619,8 +1614,8 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
           padding: 14,
           borderRadius: 12,
           border: `1.5px dashed var(--rule)`,
-          background: isLight ? 'var(--surface)' : 'transparent',
-          color: 'var(--ink-on-ground)',
+          background: 'var(--card)',
+          color: 'var(--text-primary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1634,7 +1629,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
       </button>
 
       <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.4, color: 'var(--mute)' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.4, color: 'var(--text-secondary)' }}>
           INVITED
         </div>
         {guests.length === 0 && (
@@ -1644,7 +1639,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
               borderRadius: 12,
               border: `1px dashed var(--rule)`,
               fontSize: 12,
-              color: 'var(--mute)',
+              color: 'var(--text-secondary)',
               fontStyle: 'italic',
               textAlign: 'center',
               lineHeight: 1.5,
@@ -1660,7 +1655,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
               padding: '14px 14px',
               borderRadius: 12,
               border: `1px solid var(--rule)`,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -1672,7 +1667,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
                 <div
                   style={{
                     fontSize: 12,
-                    color: 'var(--mute)',
+                    color: 'var(--text-secondary)',
                     marginTop: 2,
                     fontVariantNumeric: 'tabular-nums',
                   }}
@@ -1686,7 +1681,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
-                  color: BRAND.red,
+                  color: TOKENS.brand.red,
                   letterSpacing: 1.2,
                   background: 'rgba(212,38,74,0.12)',
                   padding: '4px 10px',
@@ -1721,8 +1716,8 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
           padding: 14,
           borderRadius: 12,
           border: `1.5px solid var(--rule)`,
-          background: isLight ? 'var(--surface)' : 'rgba(255,255,255,0.03)',
-          color: 'var(--ink-on-ground)',
+          background: 'var(--card)',
+          color: 'var(--text-primary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1759,7 +1754,7 @@ const Step3Invite = ({ guests, onAddPlaceholder, onNext, onSkip }) => {
             padding: '14px 18px',
             borderRadius: 99,
             border: 0,
-            background: BRAND.gradient,
+            background: TOKENS.brand.red,
             color: '#fff',
             fontWeight: 700,
             fontSize: 14,
@@ -1786,7 +1781,6 @@ const Step4Review = ({
   apiBase,
   onRefresh,
 }) => {
-  const { isLight } = useTheme();
   // H2 — Done button gate. Disabled until every claimed seat has a
   // dinner_choice; copy reflects how many are missing so the sponsor
   // knows what's blocking them.
@@ -1863,7 +1857,7 @@ const Step4Review = ({
           Your night at{' '}
           <i
             style={{
-              background: BRAND.gradient,
+              background: TOKENS.brand.red,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -1872,7 +1866,7 @@ const Step4Review = ({
             the gala.
           </i>
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--mute)', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
           Wednesday, June 10 · Megaplex at Legacy Crossing
         </p>
 
@@ -1884,7 +1878,7 @@ const Step4Review = ({
                 borderRadius: 14,
                 border: `1px dashed var(--rule)`,
                 fontSize: 13,
-                color: 'var(--mute)',
+                color: 'var(--text-secondary)',
                 fontStyle: 'italic',
                 textAlign: 'center',
               }}
@@ -1899,7 +1893,7 @@ const Step4Review = ({
                 padding: 14,
                 borderRadius: 14,
                 border: `1px solid var(--rule)`,
-                background: 'var(--surface)',
+                background: 'var(--card)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
@@ -1910,7 +1904,7 @@ const Step4Review = ({
                       fontSize: 10,
                       fontWeight: 700,
                       letterSpacing: 1.4,
-                      color: isLight ? BRAND.red : '#ff8da4',
+                      color: TOKENS.brand.red,
                     }}
                   >
                     {r.showLabel.toUpperCase()} ·{' '}
@@ -1922,7 +1916,7 @@ const Step4Review = ({
                   <div
                     style={{
                       fontSize: 11,
-                      color: 'var(--mute)',
+                      color: 'var(--text-secondary)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
@@ -1940,7 +1934,7 @@ const Step4Review = ({
                       padding: '4px 9px',
                       borderRadius: 4,
                       background: 'rgba(168,177,255,0.2)',
-                      color: 'var(--accent-italic)',
+                      color: 'var(--text-secondary)',
                       fontSize: 11,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',
@@ -1970,7 +1964,7 @@ const Step4Review = ({
                       fontSize: 10,
                       fontWeight: 800,
                       letterSpacing: 1.4,
-                      color: 'var(--accent-text)',
+                      color: 'var(--brand-red)',
                     }}
                   >
                     DINNER
@@ -1993,7 +1987,7 @@ const Step4Review = ({
                             padding: '4px 6px',
                             borderRadius: 4,
                             background: 'rgba(168,177,255,0.18)',
-                            color: 'var(--accent-italic)',
+                            color: 'var(--text-secondary)',
                             fontSize: 10,
                             fontWeight: 700,
                             fontVariantNumeric: 'tabular-nums',
@@ -2025,8 +2019,8 @@ const Step4Review = ({
               padding: 14,
               borderRadius: 12,
               border: `1.5px solid var(--rule)`,
-              background: isLight ? 'var(--surface)' : 'rgba(255,255,255,0.03)',
-              color: isLight ? 'rgba(13,18,36,0.55)' : 'rgba(255,255,255,0.55)',
+              background: 'var(--card)',
+              color: 'rgba(13,18,36,0.55)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -2045,8 +2039,8 @@ const Step4Review = ({
               padding: 14,
               borderRadius: 12,
               border: `1.5px solid var(--rule)`,
-              background: isLight ? 'var(--surface)' : 'rgba(255,255,255,0.03)',
-              color: isLight ? 'rgba(13,18,36,0.55)' : 'rgba(255,255,255,0.55)',
+              background: 'var(--card)',
+              color: 'rgba(13,18,36,0.55)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -2159,19 +2153,13 @@ export default function MobileWizard({
     }
     setStep((s) => Math.max(1, s - 1));
   };
-
-  const { isDark } = useTheme();
-
   return (
     <div
       style={{
         width: '100%',
-        height: '100dvh',
-        overflow: 'hidden',
-        background: isDark
-          ? `radial-gradient(ellipse 100% 50% at 50% 0%, ${BRAND.navyMid}, ${BRAND.navyDeep} 70%, ${BRAND.ink})`
-          : 'var(--ground)',
-        color: isDark ? '#fff' : BRAND.ink,
+        minHeight: '100vh',
+        background: TOKENS.surface.ground,
+        color: TOKENS.text.primary,
         fontFamily: FONT_UI,
         display: 'flex',
         flexDirection: 'column',

@@ -16,7 +16,7 @@
 //   onPickDinners() — opens DinnerPicker scoped to placed.seatIds
 //   onDone() — dismiss everything, return to overview
 
-import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Icon } from '../../brand/atoms.jsx';
 
 export default function PostPickSheet({
@@ -49,7 +49,7 @@ export default function PostPickSheet({
             height: 36,
             borderRadius: 99,
             background: '#7fcfa0',
-            color: BRAND.ink,
+            color: TOKENS.text.primary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -64,7 +64,7 @@ export default function PostPickSheet({
               fontFamily: FONT_DISPLAY,
               fontSize: 16,
               fontWeight: 700,
-              color: 'var(--ink-on-ground)',
+              color: 'var(--text-primary)',
               lineHeight: 1.25,
             }}
           >
@@ -74,7 +74,7 @@ export default function PostPickSheet({
           <div
             style={{
               fontSize: 12,
-              color: 'var(--mute)',
+              color: 'var(--text-secondary)',
               marginTop: 4,
               fontVariantNumeric: 'tabular-nums',
             }}
@@ -93,7 +93,7 @@ export default function PostPickSheet({
           fontSize: 11,
           fontWeight: 800,
           letterSpacing: 1.6,
-          color: 'var(--accent-text)',
+          color: 'var(--brand-red)',
           textTransform: 'uppercase',
           marginTop: 4,
         }}
@@ -117,7 +117,7 @@ export default function PostPickSheet({
             : `Choose meals for the seats you just placed`
         }
         onClick={onPickDinners}
-        accent={missingDinnerCount > 0 ? BRAND.gold : null}
+        accent={missingDinnerCount > 0 ? TOKENS.brand.gold : null}
       />
       <ActionCard
         icon="check"
@@ -138,7 +138,7 @@ const ActionCard = ({ icon, title, sub, onClick, accent, primary }) => (
       cursor: 'pointer',
       padding: 14,
       borderRadius: 14,
-      background: primary ? BRAND.gradient : 'rgba(255,255,255,0.04)',
+      background: primary ? TOKENS.brand.red : 'rgba(255,255,255,0.04)',
       border: primary
         ? 'none'
         : `1px solid ${accent ? `${accent}55` : 'var(--rule)'}`,
@@ -158,7 +158,7 @@ const ActionCard = ({ icon, title, sub, onClick, accent, primary }) => (
           : accent
             ? `${accent}1f`
             : 'rgba(255,255,255,0.06)',
-        color: primary ? '#fff' : accent || BRAND.indigoLight,
+        color: primary ? '#fff' : accent || TOKENS.semantic.info,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -168,8 +168,8 @@ const ActionCard = ({ icon, title, sub, onClick, accent, primary }) => (
       <Icon name={icon} size={18} />
     </div>
     <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink-on-ground)' }}>{title}</div>
-      <div style={{ fontSize: 11, color: primary ? 'rgba(255,255,255,0.85)' : 'var(--mute)', marginTop: 2 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{title}</div>
+      <div style={{ fontSize: 11, color: primary ? 'rgba(255,255,255,0.85)' : 'var(--text-secondary)', marginTop: 2 }}>
         {sub}
       </div>
     </div>

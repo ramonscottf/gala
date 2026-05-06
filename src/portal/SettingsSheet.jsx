@@ -1,16 +1,10 @@
-// SettingsSheet — opened from the AppBar avatar tap. Three sections:
+// SettingsSheet — opened from the floating avatar tap. Three sections:
 //   - Profile  → POST /api/gala/portal/{token}/profile (new endpoint)
 //   - Help     → tel:/mailto: links to Sherry + the gala inbox
 //   - Sign out → returns to https://daviskids.org/gala
-//
-// Theme picker is intentionally deferred to a follow-up commit — the
-// useTheme hook from PR #35 already drives auto/dark/light at the body
-// level via prefers-color-scheme, and the settings UI for an explicit
-// override needs URL-hash persistence wiring (per Capacitor "no
-// localStorage" rule) which is its own change.
 
 import { useState } from 'react';
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
 
 const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
@@ -20,7 +14,7 @@ const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
         fontSize: 10,
         fontWeight: 800,
         letterSpacing: 1.4,
-        color: 'var(--accent-italic)',
+        color: 'var(--text-secondary)',
         marginBottom: 6,
       }}
     >
@@ -36,7 +30,7 @@ const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
         padding: '14px',
         borderRadius: 12,
         border: `1px solid var(--rule)`,
-        background: 'var(--surface)',
+        background: 'var(--card)',
         color: '#fff',
         fontSize: 15,
         fontFamily: FONT_UI,
@@ -105,7 +99,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           borderBottom: `1px solid var(--rule)`,
         }}
       >
-        <SectionEyebrow color={BRAND.red}>Profile</SectionEyebrow>
+        <SectionEyebrow color={TOKENS.brand.red}>Profile</SectionEyebrow>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
@@ -160,7 +154,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           borderBottom: `1px solid var(--rule)`,
         }}
       >
-        <SectionEyebrow color={BRAND.red}>Help</SectionEyebrow>
+        <SectionEyebrow color={TOKENS.brand.red}>Help</SectionEyebrow>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
         <a
@@ -169,7 +163,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
             padding: '14px',
             borderRadius: 12,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
@@ -185,7 +179,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
             <div
               style={{
                 fontSize: 11,
-                color: 'var(--mute)',
+                color: 'var(--text-secondary)',
                 marginTop: 2,
                 fontVariantNumeric: 'tabular-nums',
               }}
@@ -201,7 +195,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
             padding: '14px',
             borderRadius: 12,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
@@ -214,7 +208,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           <Icon name="mail" size={16} />
           <div style={{ flex: 1 }}>
             <div>Email Sherry directly</div>
-            <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>smiggin@dsdmail.net</div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>smiggin@dsdmail.net</div>
           </div>
           <Icon name="chev" size={14} />
         </a>
@@ -224,7 +218,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
             padding: '14px',
             borderRadius: 12,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
@@ -237,7 +231,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           <Icon name="mail" size={16} />
           <div style={{ flex: 1 }}>
             <div>Email the gala inbox</div>
-            <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
               gala@daviskids.org
             </div>
           </div>
@@ -255,7 +249,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           borderRadius: 99,
           border: `1.5px solid rgba(212,38,74,0.4)`,
           background: 'transparent',
-          color: BRAND.red,
+          color: TOKENS.brand.red,
           fontWeight: 700,
           fontSize: 13,
           cursor: 'pointer',

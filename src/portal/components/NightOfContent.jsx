@@ -11,7 +11,7 @@
 // the same import). Layout adapts: 2-column tile grid below 600px,
 // 4-column above.
 
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI } from '../../brand/tokens.js';
 
 const TIMELINE = [
   {
@@ -120,7 +120,7 @@ export default function NightOfContent({ compact = false }) {
                 fontFamily: FONT_DISPLAY,
                 fontSize: 16,
                 fontWeight: 600,
-                color: 'var(--accent-text)',
+                color: 'var(--brand-red)',
                 fontVariantNumeric: 'tabular-nums',
                 letterSpacing: -0.2,
                 whiteSpace: 'nowrap',
@@ -129,10 +129,10 @@ export default function NightOfContent({ compact = false }) {
               {row.time}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', lineHeight: 1.3 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                 {row.title}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3, lineHeight: 1.5 }}>
                 {row.sub}
               </div>
             </div>
@@ -160,21 +160,21 @@ export default function NightOfContent({ compact = false }) {
                 style={{
                   fontSize: 13,
                   fontWeight: 700,
-                  color: 'var(--ink-on-ground)',
+                  color: 'var(--text-primary)',
                   marginBottom: 4,
                   letterSpacing: 0.1,
                 }}
               >
                 {t.title}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--mute)', lineHeight: 1.45 }}>{t.sub}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.45 }}>{t.sub}</div>
             </>
           );
           const baseStyle = {
             padding: '14px',
             borderRadius: 12,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             display: 'flex',
             flexDirection: 'column',
             textDecoration: 'none',
@@ -210,7 +210,7 @@ export default function NightOfContent({ compact = false }) {
         style={{
           marginTop: 20,
           fontSize: 11,
-          color: 'var(--mute)',
+          color: 'var(--text-secondary)',
           textAlign: 'center',
           fontStyle: 'italic',
         }}

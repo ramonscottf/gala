@@ -88,7 +88,6 @@ a {
 .scroll-container {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 /* Slide-up sheet animation reused by all bottom sheets */

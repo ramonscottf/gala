@@ -16,10 +16,9 @@
 
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { BRAND, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
-import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
+import { TOKENS, FONT_DISPLAY, FONT_UI, FONT_MONO, TIERS } from '../brand/tokens.js';
+import { Btn, Icon, SectionEyebrow, ListRow, Card } from '../brand/atoms.jsx';
 import { config } from '../config.js';
-import { useTheme } from '../hooks/useTheme.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import SettingsSheet from './SettingsSheet.jsx';
 import DinnerPicker from './components/DinnerPicker.jsx';
@@ -46,7 +45,7 @@ const PosterMini = ({ poster, color, label, size = 44, showLabel = true }) => (
       borderRadius: 5,
       background: poster
         ? `url(${poster}) center/cover`
-        : `linear-gradient(160deg, ${color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+        : `linear-gradient(160deg, ${color || TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
       display: 'flex',
       alignItems: 'flex-end',
       padding: 4,
@@ -81,7 +80,7 @@ const Avatar = ({ name, size = 36, color }) => {
         height: size,
         borderRadius: 99,
         flexShrink: 0,
-        background: color || `linear-gradient(135deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+        background: color || `linear-gradient(135deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -106,8 +105,8 @@ const initialsFor = (name) => (name || '?')
 
 const StatusPill = ({ status }) => {
   const map = {
-    claimed: { c: BRAND.indigoLight, bg: 'rgba(168,177,255,0.16)', t: 'CLAIMED' },
-    pending: { c: BRAND.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
+    claimed: { c: TOKENS.semantic.info, bg: 'rgba(168,177,255,0.16)', t: 'CLAIMED' },
+    pending: { c: TOKENS.brand.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
     placed: { c: '#7fcfa0', bg: 'rgba(127,207,160,0.14)', t: 'PLACED' },
     open: { c: 'rgba(255,255,255,0.7)', bg: 'rgba(255,255,255,0.06)', t: 'OPEN' },
   }[status] || { c: 'rgba(255,255,255,0.7)', bg: 'rgba(255,255,255,0.06)', t: '—' };
@@ -156,26 +155,22 @@ const MegaplexLogo = ({ size = 14, dark = true }) => (
   />
 );
 
-const miniBtn = (kind, isLight = false) => ({
-  padding: '8px 14px',
-  borderRadius: 99,
-  border: 0,
+const miniBtn = (kind) => ({
+  padding: '7px 14px',
+  borderRadius: TOKENS.radius.md,
+  border: kind === 'primary' ? 'none' : `1px solid ${TOKENS.ruleStrong}`,
   cursor: 'pointer',
-  fontSize: 12,
-  fontWeight: 700,
-  background: kind === 'primary'
-    ? BRAND.gradient
-    : isLight
-      ? 'rgba(13,18,36,0.08)'
-      : 'rgba(255,255,255,0.08)',
-  color: kind === 'primary' || !isLight ? '#fff' : BRAND.ink,
+  fontSize: 13,
+  fontWeight: 600,
+  background: kind === 'primary' ? TOKENS.brand.red : TOKENS.surface.card,
+  color: kind === 'primary' ? TOKENS.text.onBrand : TOKENS.text.primary,
   fontFamily: FONT_UI,
-  boxShadow: kind === 'primary' ? '0 3px 8px rgba(215,40,70,0.35)' : 'none',
+  boxShadow: kind === 'primary' ? TOKENS.shadow.button : 'none',
 });
 
 // ── ticket card hero ──────────────────────────────────────────────────
 // Navy ticket with perforation + Megaplex co-brand. Phase 1.7 swapped
-// the OLD 3px gold left-edge for 3px BRAND.gradient strips at the top
+// the OLD 3px gold left-edge for 3px TOKENS.brand.red strips at the top
 // AND bottom of the card per Sherry's email-blast reference (IMG_3918
 // has the same crimson→indigo strip energy on the navy hero block).
 // Other visual fidelity points kept: warm light pool radial-gradient,
@@ -187,89 +182,29 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
     <div
-      className="force-dark-vars"
       style={{
-        margin: '0 14px',
-        borderRadius: '0 0 18px 18px',
+        margin: '12px 12px 0',
+        borderRadius: TOKENS.radius.xl,
         overflow: 'hidden',
-        background: `linear-gradient(170deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 60%, ${BRAND.navyDeep} 100%)`,
-        border: `1px solid var(--rule)`,
+        background: TOKENS.brand.navy,
+        border: `1px solid ${TOKENS.brand.navyMid}`,
         position: 'relative',
-        boxShadow:
-          '0 24px 48px -16px rgba(0,0,0,0.55), 0 8px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset',
       }}
     >
-      {/* warm light pool — marquee glow */}
-      <div
-        style={{
-          position: 'absolute',
-          top: -80,
-          right: -60,
-          width: 240,
-          height: 240,
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(244,185,66,0.18) 0%, transparent 65%)',
-          pointerEvents: 'none',
-        }}
-      />
-      {/* perforation circles cut into navy-deep ground */}
-      <div
-        style={{
-          position: 'absolute',
-          left: -7,
-          right: -7,
-          top: 'calc(100% - 78px)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          pointerEvents: 'none',
-          zIndex: 2,
-        }}
-      >
-        <span style={{ width: 14, height: 14, borderRadius: 99, background: BRAND.ink }} />
-        <span style={{ width: 14, height: 14, borderRadius: 99, background: BRAND.ink }} />
-      </div>
-      {/* Top gold perforation strip — boarding-pass trim. Sits ABOVE the
-          red→indigo gradient, taking 1.5px of the 3px header band so
-          both reads visible. May 5 2026 add per Scott — original boarding
-          pass had this and it got lost in the migration. */}
+      {/* Single accent strip — gold above red, kept as a slim brand cue */}
       <div
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: 3,
-          background: BRAND.gradient,
+          height: 2,
+          background: TOKENS.brand.red,
           zIndex: 3,
         }}
       />
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 1.5,
-          background: BRAND.gold,
-          zIndex: 4,
-        }}
-      />
-      {/* Bottom gold perforation strip — mirrors the top, sitting just
-          below the dashed perforation line at the bottom of the stub. */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 1.5,
-          background: BRAND.gold,
-          zIndex: 4,
-        }}
-      />
 
-      <div style={{ padding: 'calc(env(safe-area-inset-top) + 18px) 20px 22px', position: 'relative', zIndex: 1 }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top) + 16px) 20px 18px', position: 'relative', zIndex: 1 }}>
         {/* Sponsor portal header row (added May 5 2026 with the AppBar
             removal). Replaces the standalone top app bar — the DEF logo
             + GALA · 2026 / Sponsor portal label live INSIDE the hero
@@ -288,32 +223,22 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
             marginBottom: 14,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
             <img
               src="/assets/brand/def-logo-light.png"
               alt="Davis Education Foundation"
-              height={22}
-              style={{ height: 22, width: 'auto', display: 'block', flexShrink: 0 }}
+              height={20}
+              style={{ height: 20, width: 'auto', display: 'block', flexShrink: 0 }}
             />
-            <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.16)', flexShrink: 0 }} />
+            <div style={{ width: 1, height: 16, background: TOKENS.ruleOnBrand, flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: 1.6,
-                  color: 'rgba(255,255,255,0.55)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                GALA · 2026
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 600,
-                  color: '#fff',
-                  marginTop: 1,
+                  letterSpacing: 0.6,
+                  color: TOKENS.text.onBrandSecondary,
+                  textTransform: 'uppercase',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -324,24 +249,21 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           {daysOut != null && (
             <div
               style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: 0.4,
-                color: 'rgba(255,255,255,0.7)',
+                fontFamily: FONT_MONO,
+                fontSize: 11,
+                fontWeight: 500,
+                color: TOKENS.text.onBrandSecondary,
                 fontVariantNumeric: 'tabular-nums',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
               }}
             >
-              {daysOut} days out
+              {daysOut}d
             </div>
           )}
         </div>
 
-        {/* Phase 1.14 — sponsor logo inline with the eyebrow caps row.
-            Logo sits left of "LIGHTS · CAMERA · TAKE ACTION · 2026",
-            tier badge stays right. Falls back gracefully when logoUrl
-            is null (eyebrow caps fill the left slot alone). */}
+        {/* Sponsor logo + eyebrow row */}
         <div
           style={{
             display: 'flex',
@@ -355,7 +277,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 12,
               minWidth: 0,
               flex: 1,
             }}
@@ -366,11 +288,11 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 alt=""
                 loading="lazy"
                 style={{
-                  height: 22,
+                  height: 20,
                   maxWidth: 80,
                   objectFit: 'contain',
                   objectPosition: 'left center',
-                  opacity: 0.95,
+                  opacity: 0.92,
                   flexShrink: 0,
                 }}
                 onError={(e) => {
@@ -380,17 +302,17 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
             )}
             <div
               style={{
-                fontSize: 9,
-                fontWeight: 800,
-                letterSpacing: 2,
-                color: BRAND.gold,
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: 0.5,
+                color: TOKENS.brand.gold,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                textShadow: '0 0 12px rgba(244,185,66,0.3)',
+                textTransform: 'uppercase',
               }}
             >
-              LIGHTS · CAMERA · TAKE ACTION · 2026
+              DEF Gala · 2026
             </div>
           </div>
           {tier && (
@@ -398,21 +320,16 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 5,
-                padding: '4px 10px 4px 9px',
-                borderRadius: 99,
-                // Light pill on dark navy ticket. Was 'var(--surface)' which
-                // resolved to near-black in dark mode and near-white on light
-                // mode — neither read well as a "tier badge" against the
-                // always-dark ticket. Hardcoded to a soft white.
-                background: 'rgba(255,255,255,0.92)',
-                border: `1px solid rgba(255,255,255,0.6)`,
+                gap: 6,
+                padding: '3px 8px 3px 7px',
+                borderRadius: TOKENS.radius.sm,
+                background: 'transparent',
+                border: `1px solid ${TOKENS.ruleOnBrand}`,
                 fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: 1.4,
-                // Dark text on light pill — was '#fff' which was invisible
-                // against the new white-ish bg.
-                color: BRAND.ink,
+                fontWeight: 600,
+                letterSpacing: 0.6,
+                color: TOKENS.text.onBrand,
+                textTransform: 'uppercase',
                 flexShrink: 0,
               }}
             >
@@ -421,10 +338,10 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                   width: 5,
                   height: 5,
                   borderRadius: 99,
-                  background: TIERS[tier]?.color || BRAND.indigoLight,
+                  background: TIERS[tier]?.color || TOKENS.brand.gold,
                 }}
               />
-              {tier.toUpperCase()}
+              {tier}
             </span>
           )}
         </div>
@@ -432,105 +349,96 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
         <h1
           style={{
             fontFamily: FONT_DISPLAY,
-            fontSize: 38,
-            lineHeight: 0.98,
-            letterSpacing: -1,
-            margin: '14px 0 0',
-            fontWeight: 700,
-            color: '#fff',
+            fontSize: 32,
+            lineHeight: 1.1,
+            letterSpacing: '-0.025em',
+            margin: '16px 0 0',
+            fontWeight: 600,
+            color: TOKENS.text.onBrand,
           }}
         >
-          {firstName}{' '}
+          {firstName}
           {restName && (
-            <i
-              style={{
-                color: BRAND.gold,
-                fontWeight: 500,
-                // Slight text-shadow gives the gold italic a bit of pop on
-                // the navy gradient, especially on small phone screens
-                // where the iOS sample-bottom-bar dims everything above.
-                textShadow: '0 0 18px rgba(244,185,66,0.25)',
-              }}
-            >
-              {restName}.
-            </i>
+            <span style={{ color: TOKENS.text.onBrandSecondary, fontWeight: 500 }}>
+              {' '}
+              {restName}
+            </span>
           )}
         </h1>
         {subline && (
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.95)', marginTop: 4, fontWeight: 600, letterSpacing: 0.1 }}>
+          <div
+            style={{
+              fontSize: 13,
+              color: TOKENS.text.onBrandSecondary,
+              marginTop: 4,
+              fontWeight: 400,
+            }}
+          >
             {subline}
           </div>
         )}
 
         <div
           style={{
-            marginTop: 18,
+            marginTop: 20,
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
-            borderTop: `1px solid var(--rule)`,
+            borderTop: `1px solid ${TOKENS.ruleOnBrand}`,
             paddingTop: 14,
           }}
         >
           {[
-            { label: 'TOTAL', value: blockSize, sub: 'Your block', color: '#fff' },
-            { label: 'PLACED', value: placed, sub: 'In seats', color: '#fff' },
-            { label: 'ASSIGNED', value: assigned, sub: 'To guests', color: '#fff' },
+            { label: 'TOTAL', value: blockSize, color: TOKENS.text.onBrand },
+            { label: 'PLACED', value: placed, color: TOKENS.text.onBrand },
+            { label: 'ASSIGNED', value: assigned, color: TOKENS.text.onBrand },
             {
               label: 'OPEN',
               value: openCount,
-              sub: 'To place',
-              color: openCount > 0 ? BRAND.indigoLight : 'rgba(255,255,255,0.6)',
+              color: openCount > 0 ? TOKENS.brand.red : TOKENS.text.onBrandSecondary,
             },
           ].map((s, i) => (
             <div
               key={i}
               style={{
-                paddingLeft: i === 0 ? 0 : 10,
-                borderLeft: i === 0 ? 'none' : `1px solid var(--rule)`,
+                paddingLeft: i === 0 ? 0 : 12,
+                borderLeft: i === 0 ? 'none' : `1px solid ${TOKENS.ruleOnBrand}`,
               }}
             >
               <div
                 style={{
                   fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: 1.6,
-                  color: 'rgba(255,255,255,0.55)',
+                  fontWeight: 600,
+                  letterSpacing: 0.6,
+                  color: TOKENS.text.onBrandSecondary,
+                  textTransform: 'uppercase',
                 }}
               >
                 {s.label}
               </div>
               <div
                 style={{
-                  fontFamily: FONT_DISPLAY,
-                  fontSize: 30,
-                  fontWeight: 700,
+                  fontFamily: FONT_MONO,
+                  fontSize: 24,
+                  fontWeight: 600,
                   color: s.color,
-                  marginTop: 4,
+                  marginTop: 6,
                   lineHeight: 1,
                   fontVariantNumeric: 'tabular-nums',
+                  letterSpacing: '-0.02em',
                 }}
               >
                 {s.value}
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: 'rgba(255,255,255,0.45)',
-                  marginTop: 3,
-                }}
-              >
-                {s.sub}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* stub */}
+      {/* stub — slim footer with showtime + venue */}
       <div
         style={{
-          borderTop: `1.5px dashed rgba(255,255,255,0.18)`,
-          padding: '14px 20px',
+          borderTop: `1px solid ${TOKENS.ruleOnBrand}`,
+          padding: '12px 20px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -539,14 +447,23 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
         }}
       >
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
-            Wednesday · June 10, 2026
+          <div
+            style={{
+              fontFamily: FONT_MONO,
+              fontSize: 13,
+              fontWeight: 500,
+              color: TOKENS.text.onBrand,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Jun 10 · Wed
           </div>
           <div
             style={{
               fontSize: 11,
-              color: 'rgba(255,255,255,0.75)',
+              color: TOKENS.text.onBrandSecondary,
               marginTop: 2,
+              fontFamily: FONT_MONO,
               fontVariantNumeric: 'tabular-nums',
             }}
           >
@@ -554,29 +471,18 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <MegaplexLogo size={14} />
+          <MegaplexLogo size={12} />
           <div
             style={{
               fontSize: 10,
-              color: 'rgba(255,255,255,0.7)',
-              marginTop: 5,
-              letterSpacing: 0.4,
+              color: TOKENS.text.onBrandSecondary,
+              marginTop: 4,
+              letterSpacing: 0.2,
             }}
           >
             Legacy Crossing · Centerville
           </div>
         </div>
-        {/* Bottom gradient strip — mirrors the top edge per F7b. */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            background: BRAND.gradient,
-          }}
-        />
       </div>
     </div>
   );
@@ -633,7 +539,7 @@ const TextMySeatsButton = ({ token, apiBase }) => {
           width: '100%',
           padding: '12px 16px',
           borderRadius: 12,
-          background: state === 'sent' ? 'rgba(99,201,118,0.14)' : 'var(--surface)',
+          background: state === 'sent' ? 'rgba(99,201,118,0.14)' : 'var(--card)',
           border: `1px solid ${state === 'sent' ? 'rgba(99,201,118,0.4)' : 'var(--rule)'}`,
           display: 'flex',
           alignItems: 'center',
@@ -641,7 +547,7 @@ const TextMySeatsButton = ({ token, apiBase }) => {
           gap: 8,
           fontSize: 13,
           fontWeight: 600,
-          color: state === 'sent' ? '#63c976' : 'var(--ink-on-ground)',
+          color: state === 'sent' ? '#63c976' : 'var(--text-primary)',
           transition: 'background .2s, border-color .2s',
         }}
       >
@@ -661,7 +567,6 @@ const TextMySeatsButton = ({ token, apiBase }) => {
 
 const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, onManageTickets, token, apiBase }) => {
   const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl } = data;
-  const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
   const assignedCount = tickets
     .filter((t) => t.guestName || t.localGuestId)
@@ -688,7 +593,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
           margin: '14px 18px 0',
           padding: '12px 14px',
           borderRadius: 14,
-          background: 'var(--surface)',
+          background: 'var(--card)',
           border: `1px solid var(--rule)`,
           boxShadow:
             '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
@@ -702,7 +607,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
             width: 38,
             height: 38,
             borderRadius: 10,
-            background: openCount > 0 ? BRAND.gradient : 'rgba(127,207,160,0.18)',
+            background: openCount > 0 ? TOKENS.brand.red : 'rgba(127,207,160,0.18)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -714,10 +619,10 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
           <Icon name={openCount > 0 ? 'seat' : 'check'} size={18} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
             {openCount > 0 ? `${openCount} seats still to place` : `All ${blockSize} seats placed`}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
             {placed} placed · {assignedCount} with guests
           </div>
         </div>
@@ -730,7 +635,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                 // list (read-only API guests + local additions).
                 onAssign(firstUnassigned);
               }}
-              style={miniBtn('ghost', isLight)}
+              style={miniBtn('ghost')}
             >
               Assign
             </button>
@@ -740,7 +645,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               // HAPTIC: light — Phase 2 wires Capacitor Haptics here.
               onPlaceSeats();
             }}
-            style={miniBtn('primary', isLight)}
+            style={miniBtn('primary')}
           >
             {openCount > 0 ? 'Place' : 'Edit'}
           </button>
@@ -772,7 +677,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               width: '100%',
               padding: '12px 14px',
               borderRadius: 14,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               border: `1px solid var(--rule)`,
               display: 'flex',
               alignItems: 'center',
@@ -790,17 +695,17 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: BRAND.indigoLight,
+                color: TOKENS.semantic.info,
                 flexShrink: 0,
               }}
             >
               <Icon name="ticket" size={18} />
             </div>
             <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
                 Manage tickets
               </div>
-              <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
                 View seats, assign guests, choose dinners
               </div>
             </div>
@@ -831,7 +736,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
         <div
           style={{
             fontSize: 11,
-            color: 'var(--mute)',
+            color: 'var(--text-secondary)',
             fontVariantNumeric: 'tabular-nums',
           }}
         >
@@ -852,7 +757,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               cursor: 'pointer',
               padding: '12px 14px',
               borderRadius: 14,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               border: `1px solid ${
                 t.guestName ? 'var(--rule)' : 'rgba(244,185,66,0.22)'
               }`,
@@ -882,7 +787,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                   style={{
                     fontSize: 14,
                     fontWeight: 600,
-                    color: 'var(--ink-on-ground)',
+                    color: 'var(--text-primary)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -894,7 +799,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               <div
                 style={{
                   fontSize: 11,
-                  color: 'var(--mute)',
+                  color: 'var(--text-secondary)',
                   marginTop: 2,
                   fontVariantNumeric: 'tabular-nums',
                 }}
@@ -911,7 +816,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                       fontSize: 10,
                       fontWeight: 700,
                       background: 'rgba(168,177,255,0.16)',
-                      color: 'var(--accent-italic)',
+                      color: 'var(--text-secondary)',
                       fontVariantNumeric: 'tabular-nums',
                       letterSpacing: 0.3,
                     }}
@@ -920,7 +825,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                   </span>
                 ))}
                 {t.seats.length > 7 && (
-                  <span style={{ fontSize: 10, color: 'var(--mute)', alignSelf: 'center' }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-secondary)', alignSelf: 'center' }}>
                     +{t.seats.length - 7}
                   </span>
                 )}
@@ -930,7 +835,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               style={{
                 fontSize: 11,
                 fontWeight: 700,
-                color: 'var(--mute)',
+                color: 'var(--text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 2,
@@ -959,7 +864,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               justifyContent: 'center',
               gap: 8,
               background: 'rgba(244,185,66,0.06)',
-              color: 'var(--accent-text)',
+              color: 'var(--brand-red)',
               fontSize: 13,
               fontWeight: 700,
             }}
@@ -982,7 +887,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
         >
           The lineup
         </h2>
-        <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
           {lineup.length} film{lineup.length === 1 ? '' : 's'} · two showtimes · select one or split
           your block
         </div>
@@ -1020,7 +925,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                 borderRadius: 10,
                 background: m.posterUrl
                   ? `url(${m.posterUrl}) center/cover`
-                  : `linear-gradient(160deg, ${m.color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+                  : `linear-gradient(160deg, ${m.color || TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
@@ -1077,7 +982,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               style={{
                 fontSize: 13,
                 fontWeight: 600,
-                color: 'var(--ink-on-ground)',
+                color: 'var(--text-primary)',
                 marginTop: 8,
                 lineHeight: 1.25,
               }}
@@ -1087,7 +992,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
             <div
               style={{
                 fontSize: 11,
-                color: 'var(--mute)',
+                color: 'var(--text-secondary)',
                 marginTop: 2,
                 fontVariantNumeric: 'tabular-nums',
               }}
@@ -1105,7 +1010,6 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
 
 const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh }) => {
   const { tickets, blockSize } = data;
-  const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
 
   return (
@@ -1122,9 +1026,9 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
             lineHeight: 1,
           }}
         >
-          All <i style={{ color: 'var(--accent-text)', fontWeight: 500 }}>{blockSize} seats.</i>
+          All <i style={{ color: 'var(--brand-red)', fontWeight: 500 }}>{blockSize} seats.</i>
         </h1>
-        <div style={{ fontSize: 13, color: 'var(--mute)' }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
           {placed} placed · {Math.max(0, blockSize - placed)} still open · tap any seat to reassign
         </div>
       </div>
@@ -1135,7 +1039,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
             key={t.id}
             style={{
               borderRadius: 14,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               border: `1px solid var(--rule)`,
               overflow: 'hidden',
             }}
@@ -1156,20 +1060,20 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                     fontSize: 10,
                     fontWeight: 800,
                     letterSpacing: 1.6,
-                    color: 'var(--accent-text)',
+                    color: 'var(--brand-red)',
                   }}
                 >
                   {(t.showLabel || '').toUpperCase()} ·{' '}
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{t.showTime}</span>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', marginTop: 2 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
                   {t.movieTitle}
                 </div>
               </div>
               <span
                 style={{
                   fontSize: 11,
-                  color: 'var(--mute)',
+                  color: 'var(--text-secondary)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
@@ -1211,8 +1115,8 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                       fontWeight: 600,
                       color:
                         t.guestName || t.delegationName
-                          ? 'var(--ink-on-ground)'
-                          : 'var(--mute)',
+                          ? 'var(--text-primary)'
+                          : 'var(--text-secondary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -1223,7 +1127,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                         ? `Held by ${t.delegationName}`
                         : 'No guest assigned')}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
                     {t.guestName
                       ? ''
                       : t.delegationName
@@ -1232,7 +1136,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                   </div>
                 </div>
               </div>
-              <button onClick={() => onOpenTicket(t)} style={miniBtn('ghost', isLight)}>
+              <button onClick={() => onOpenTicket(t)} style={miniBtn('ghost')}>
                 Manage
               </button>
             </div>
@@ -1247,7 +1151,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                     fontSize: 11,
                     fontWeight: 700,
                     background: 'rgba(168,177,255,0.18)',
-                    color: 'var(--accent-italic)',
+                    color: 'var(--text-secondary)',
                     fontVariantNumeric: 'tabular-nums',
                     letterSpacing: 0.3,
                     border: 'none',
@@ -1277,7 +1181,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                   fontSize: 10,
                   fontWeight: 800,
                   letterSpacing: 1.4,
-                  color: 'var(--accent-text)',
+                  color: 'var(--brand-red)',
                   marginBottom: 2,
                 }}
               >
@@ -1299,7 +1203,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                       padding: '4px 6px',
                       borderRadius: 5,
                       background: 'rgba(168,177,255,0.18)',
-                      color: 'var(--accent-italic)',
+                      color: 'var(--text-secondary)',
                       fontSize: 10,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',
@@ -1318,7 +1222,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                       onChange={() => onRefresh && onRefresh()}
                     />
                   ) : (
-                    <span style={{ fontSize: 11, color: 'var(--mute)', fontStyle: 'italic' }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                       Hold pending — finalize to set dinner
                     </span>
                   )}
@@ -1357,9 +1261,9 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
 // design's pill vocabulary. 'active' is the API name for what the spec
 // doc calls "accessed" (delegate has opened the link but not finalized).
 const DELEGATION_STATUS = {
-  pending: { c: BRAND.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
-  active: { c: BRAND.gold, bg: 'rgba(244,185,66,0.16)', t: 'ACCESSED' },
-  finalized: { c: BRAND.indigoLight, bg: 'rgba(168,177,255,0.16)', t: 'FINALIZED' },
+  pending: { c: TOKENS.brand.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
+  active: { c: TOKENS.brand.gold, bg: 'rgba(244,185,66,0.16)', t: 'ACCESSED' },
+  finalized: { c: TOKENS.semantic.info, bg: 'rgba(168,177,255,0.16)', t: 'FINALIZED' },
 };
 
 export const DelegationStatusPill = ({ status }) => {
@@ -1401,12 +1305,12 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
             lineHeight: 1,
           }}
         >
-          Your <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>assignments.</i>
+          Your <i style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>assignments.</i>
         </h1>
-        <div style={{ fontSize: 13, color: 'var(--mute)' }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
           {delegations.length} invited · {totalPlaced} of {totalAllocated} assigned seats placed
           {available > 0 && (
-            <span style={{ color: 'var(--accent-italic)' }}> · {available} still yours to assign</span>
+            <span style={{ color: 'var(--text-secondary)' }}> · {available} still yours to assign</span>
           )}
         </div>
       </div>
@@ -1419,9 +1323,9 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
             width: '100%',
             padding: '14px',
             borderRadius: 14,
-            border: `1.5px dashed ${available > 0 ? 'rgba(168,177,255,0.4)' : BRAND.rule}`,
+            border: `1.5px dashed ${available > 0 ? 'rgba(168,177,255,0.4)' : TOKENS.rule}`,
             background: available > 0 ? 'rgba(168,177,255,0.06)' : 'transparent',
-            color: available > 0 ? BRAND.indigoLight : 'var(--mute)',
+            color: available > 0 ? TOKENS.semantic.info : 'var(--text-secondary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1453,7 +1357,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
               cursor: 'pointer',
               padding: '14px',
               borderRadius: 14,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               border: `1px solid var(--rule)`,
               display: 'grid',
               gridTemplateColumns: 'auto 1fr auto',
@@ -1467,7 +1371,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
                 style={{
                   fontSize: 14,
                   fontWeight: 600,
-                  color: 'var(--ink-on-ground)',
+                  color: 'var(--text-primary)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -1479,7 +1383,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
                 <div
                   style={{
                     fontSize: 11,
-                    color: 'var(--mute)',
+                    color: 'var(--text-secondary)',
                     marginTop: 2,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -1492,7 +1396,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
               <div
                 style={{
                   fontSize: 11,
-                  color: 'var(--accent-italic)',
+                  color: 'var(--text-secondary)',
                   marginTop: 4,
                   fontVariantNumeric: 'tabular-nums',
                 }}
@@ -1510,7 +1414,7 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
               borderRadius: 14,
               border: `1px dashed var(--rule)`,
               fontSize: 13,
-              color: 'var(--mute)',
+              color: 'var(--text-secondary)',
               fontStyle: 'italic',
               textAlign: 'center',
               lineHeight: 1.55,
@@ -1614,20 +1518,20 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
           marginBottom: 18,
           padding: 14,
           borderRadius: 14,
-          background: 'var(--surface)',
+          background: 'var(--card)',
           border: `1px solid var(--rule)`,
         }}
       >
         <Avatar name={delegation.delegateName} size={48} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink-on-ground)' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
             {delegation.delegateName}
           </div>
           {(delegation.phone || delegation.email) && (
             <div
               style={{
                 fontSize: 12,
-                color: 'var(--mute)',
+                color: 'var(--text-secondary)',
                 marginTop: 2,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -1640,7 +1544,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
           <div
             style={{
               fontSize: 11,
-              color: 'var(--accent-italic)',
+              color: 'var(--text-secondary)',
               marginTop: 4,
               fontVariantNumeric: 'tabular-nums',
             }}
@@ -1676,7 +1580,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             padding: '14px',
             borderRadius: 12,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
@@ -1699,8 +1603,8 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             padding: '14px',
             borderRadius: 12,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
-            color: copied ? BRAND.indigoLight : '#fff',
+            background: 'var(--card)',
+            color: copied ? TOKENS.semantic.info : '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1723,7 +1627,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             borderRadius: 12,
             border: `1.5px solid rgba(212,38,74,0.4)`,
             background: 'transparent',
-            color: BRAND.red,
+            color: TOKENS.brand.red,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1751,7 +1655,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             Reclaim {delegation.seatsAllocated} seat
             {delegation.seatsAllocated === 1 ? '' : 's'}?
           </div>
-          <div style={{ fontSize: 12, color: 'var(--mute)', lineHeight: 1.55, marginBottom: 12 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.55, marginBottom: 12 }}>
             {delegation.delegateName}'s link will stop working. Any seats they've already placed
             get unplaced and return to your block.
           </div>
@@ -1781,7 +1685,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
                 padding: '12px',
                 borderRadius: 99,
                 border: 0,
-                background: BRAND.red,
+                background: TOKENS.brand.red,
                 color: '#fff',
                 fontWeight: 700,
                 fontSize: 13,
@@ -1817,9 +1721,9 @@ const NightTab = () => (
           lineHeight: 1,
         }}
       >
-        What to <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>expect.</i>
+        What to <i style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>expect.</i>
       </h1>
-      <div style={{ fontSize: 13, color: 'var(--mute)' }}>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
         Wednesday, June 10 · doors 3:15 PM
       </div>
     </div>
@@ -1837,111 +1741,74 @@ const ALL_TABS = [
 ];
 
 const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
-  const { isDark } = useTheme();
   return (
-  <div
-    className="tab-bar tab-bar-glass"
-    style={{
-      // Pill anchored flush to viewport bottom. No safe-area gap, no
-      // wrapper padding below the pill — those gaps left a strip of
-      // page background visible between the pill and the iOS Safari
-      // URL bar, reading as a docked band. iOS URL bar floats over
-      // the bottom of the pill; the pill IS the bottom of the page.
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 20,
-      padding: '10px 18px 0',
-      display: 'flex',
-      justifyContent: 'center',
-    }}
-  >
     <div
       style={{
-        position: 'relative',
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 20,
+        padding: `12px 16px calc(env(safe-area-inset-bottom) + 12px)`,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 2,
-        padding: 8,
-        width: '100%',
-        maxWidth: 340,
-        borderRadius: 32,
-        // Phase 1.15 — glass background flips for light mode so the bar
-        // doesn't disappear into the cream paper. Dark mode keeps the
-        // existing translucent white glass; light mode uses translucent
-        // ink for the same frosted-pill effect.
-        background: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(13,15,36,0.06)',
-        backdropFilter: 'blur(28px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-        border: isDark ? '0.5px solid rgba(255,255,255,0.22)' : '0.5px solid rgba(13,15,36,0.10)',
-        boxShadow: [
-          '0 1px 0 0 rgba(255,255,255,0.30) inset',
-          '0 -0.5px 0 0 rgba(255,255,255,0.08) inset',
-          '0 8px 32px rgba(0,0,0,0.35)',
-          '0 2px 8px rgba(0,0,0,0.25)',
-        ].join(', '),
+        justifyContent: 'center',
+        pointerEvents: 'none',
       }}
     >
       <div
         style={{
-          position: 'absolute',
-          inset: 1,
-          borderRadius: 31,
-          pointerEvents: 'none',
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 80%, rgba(255,255,255,0.06) 100%)',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2,
+          padding: 4,
+          width: '100%',
+          maxWidth: 360,
+          borderRadius: TOKENS.radius.pill,
+          background: TOKENS.surface.card,
+          border: `1px solid ${TOKENS.rule}`,
+          boxShadow: TOKENS.shadow.pill,
+          pointerEvents: 'auto',
         }}
-      />
-      {tabs.map((t) => {
-        const isActive = active === t.id;
-        return (
-          <button
-            key={t.id}
-            onClick={() => {
-              // HAPTIC: light — tab tap.
-              onChange(t.id);
-            }}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              position: 'relative',
-              flex: 1,
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
-              padding: '8px 0',
-              borderRadius: 24,
-              background: isActive
-                ? isDark
-                  ? 'radial-gradient(ellipse at 50% 0%, rgba(244,185,66,0.32) 0%, rgba(244,185,66,0.14) 60%, rgba(244,185,66,0) 100%)'
-                  : 'radial-gradient(ellipse at 50% 0%, rgba(168,177,255,0.34) 0%, rgba(168,177,255,0.16) 55%, rgba(168,177,255,0) 100%)'
-                : 'transparent',
-              // Phase 1.15 — inactive label uses var(--mute) so it
-              // flips to a readable dark on paper in light mode.
-              color: isActive ? BRAND.indigoLight : 'var(--mute)',
-              transition: 'background .25s ease, color .2s',
-            }}
-          >
-            <Icon name={t.icon} size={20} stroke={isActive ? 2.4 : 1.9} />
-            <span
+      >
+        {tabs.map((t) => {
+          const isActive = active === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => onChange(t.id)}
               style={{
-                fontSize: 9,
-                fontWeight: isActive ? 800 : 600,
-                letterSpacing: 0.4,
-                textTransform: 'uppercase',
+                all: 'unset',
+                cursor: 'pointer',
+                flex: 1,
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+                padding: '8px 0',
+                borderRadius: TOKENS.radius.pill,
+                background: isActive ? TOKENS.fill.secondary : 'transparent',
+                color: isActive ? TOKENS.text.primary : TOKENS.text.tertiary,
+                transition: 'background .15s ease, color .15s',
               }}
             >
-              {t.label}
-            </span>
-          </button>
-        );
-      })}
+              <Icon name={t.icon} size={18} stroke={isActive ? 2 : 1.6} />
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: isActive ? 600 : 500,
+                  letterSpacing: 0.2,
+                }}
+              >
+                {t.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
-  </div>
   );
 };
 
@@ -1980,8 +1847,8 @@ const DevBanner = () => (
     style={{
       flexShrink: 0,
       padding: '4px 14px',
-      background: BRAND.gold,
-      color: BRAND.ink,
+      background: TOKENS.brand.gold,
+      color: TOKENS.text.primary,
       fontSize: 9,
       fontWeight: 800,
       letterSpacing: 1.6,
@@ -2185,7 +2052,7 @@ const GuestField = ({ label, value, onChange, placeholder, type = 'text' }) => (
         fontSize: 10,
         fontWeight: 800,
         letterSpacing: 1.4,
-        color: 'var(--accent-text)',
+        color: 'var(--brand-red)',
         marginBottom: 6,
       }}
     >
@@ -2201,7 +2068,7 @@ const GuestField = ({ label, value, onChange, placeholder, type = 'text' }) => (
         padding: '14px 14px',
         borderRadius: 12,
         border: `1px solid var(--rule)`,
-        background: 'var(--surface)',
+        background: 'var(--card)',
         color: '#fff',
         fontSize: 15,
         fontFamily: FONT_UI,
@@ -2260,7 +2127,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
 
   return (
     <>
-      <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 16, lineHeight: 1.55 }}>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.55 }}>
         We'll text + email a link so they select their own seats. They get a personal portal you
         can keep tabs on right here.
       </div>
@@ -2287,7 +2154,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
             fontSize: 10,
             fontWeight: 800,
             letterSpacing: 1.4,
-            color: 'var(--accent-italic)',
+            color: 'var(--text-secondary)',
             marginBottom: 6,
           }}
         >
@@ -2326,14 +2193,14 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
               fontFamily: FONT_DISPLAY,
               fontSize: 36,
               fontWeight: 700,
-              color: 'var(--accent-italic)',
+              color: 'var(--text-secondary)',
               fontVariantNumeric: 'tabular-nums',
               lineHeight: 1,
             }}
           >
             {seats}
             <span
-              style={{ color: 'var(--mute)', fontSize: 14, fontStyle: 'italic', fontWeight: 400 }}
+              style={{ color: 'var(--text-secondary)', fontSize: 14, fontStyle: 'italic', fontWeight: 400 }}
             >
               {' '}of {available}
             </span>
@@ -2382,7 +2249,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
           padding: '14px 16px',
           borderRadius: 99,
           border: 0,
-          background: !valid || pending ? 'rgba(255,255,255,0.1)' : BRAND.gradient,
+          background: !valid || pending ? 'rgba(255,255,255,0.1)' : TOKENS.brand.red,
           color: '#fff',
           fontWeight: 700,
           fontSize: 14,
@@ -2399,7 +2266,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
       <div
         style={{
           fontSize: 11,
-          color: 'var(--mute)',
+          color: 'var(--text-secondary)',
           marginTop: 8,
           textAlign: 'center',
           lineHeight: 1.55,
@@ -2412,14 +2279,10 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
 };
 
 // ── Sheet (bottom modal) ──────────────────────────────────────────────
+// Linear style: white surface, 12px top corners, 1px top border, X button
+// top-right, no drag handle.
 
-const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
-  const { isDark: systemDark } = useTheme();
-  // Phase 1.15 — forceDark lets the SeatPickSheet host the cinema/seat-pick
-  // experience in dark navy regardless of system theme, matching its
-  // dark-cinema intent. PostPickSheet and AssignTheseSheet leave forceDark
-  // off so they flip with the OS like other forms/dialogs.
-  const isDark = systemDark || forceDark;
+const Sheet = ({ open, onClose, title, children }) => {
   if (!open) return null;
   return (
     <div
@@ -2427,7 +2290,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.55)',
+        background: 'rgba(10,10,10,0.45)',
         zIndex: 50,
         display: 'flex',
         alignItems: 'flex-end',
@@ -2435,55 +2298,51 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={isDark ? 'force-dark-vars' : undefined}
         style={{
           width: '100%',
           maxHeight: '88%',
-          background: isDark ? BRAND.navyDeep : '#ffffff',
-          color: isDark ? '#fff' : BRAND.ink,
-          borderTopLeftRadius: 22,
-          borderTopRightRadius: 22,
-          padding: '8px 0 24px',
+          background: TOKENS.surface.sheet,
+          color: TOKENS.text.primary,
+          borderTopLeftRadius: TOKENS.radius.xl,
+          borderTopRightRadius: TOKENS.radius.xl,
+          paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
           display: 'flex',
           flexDirection: 'column',
-          borderTop: `1px solid ${isDark ? BRAND.rule : BRAND.ruleDark}`,
+          borderTop: `1px solid ${TOKENS.rule}`,
+          boxShadow: TOKENS.shadow.sheet,
           animation: 'slideUp 0.25s ease-out',
-          paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
         }}
       >
-        <div
-          style={{
-            width: 36,
-            height: 4,
-            background: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(13,18,36,0.25)',
-            borderRadius: 2,
-            alignSelf: 'center',
-            marginBottom: 14,
-          }}
-        />
-        {title && (
+        {title !== undefined && (
           <div
             style={{
-              padding: '0 22px 14px',
+              padding: '16px 24px 14px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderBottom: `1px solid ${isDark ? BRAND.rule : BRAND.ruleDark}`,
+              borderBottom: `1px solid ${TOKENS.rule}`,
             }}
           >
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>
+            <div
+              style={{
+                fontFamily: FONT_DISPLAY,
+                fontSize: 18,
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+              }}
+            >
               {title}
             </div>
             <button
               aria-label="Close dialog"
               onClick={onClose}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 99,
-                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(13,18,36,0.08)',
+                width: 24,
+                height: 24,
+                borderRadius: TOKENS.radius.sm,
+                background: 'transparent',
                 border: 0,
-                color: isDark ? '#fff' : BRAND.ink,
+                color: TOKENS.text.secondary,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -2494,7 +2353,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
             </button>
           </div>
         )}
-        <div className="scroll-container" style={{ flex: 1, padding: '18px 22px' }}>
+        <div className="scroll-container" style={{ flex: 1, padding: '20px 24px' }}>
           {children}
         </div>
       </div>
@@ -2520,8 +2379,8 @@ const SmallAvatar = ({ name, size = 16 }) => {
         width: size,
         height: size,
         borderRadius: 99,
-        background: BRAND.indigoLight,
-        color: BRAND.ink,
+        background: TOKENS.semantic.info,
+        color: TOKENS.text.primary,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -2550,7 +2409,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
           marginBottom: 18,
           padding: 14,
           borderRadius: 14,
-          background: 'var(--surface)',
+          background: 'var(--card)',
           border: `1px solid var(--rule)`,
         }}
       >
@@ -2563,15 +2422,15 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
-            style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.6, color: 'var(--accent-text)' }}
+            style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.6, color: 'var(--brand-red)' }}
           >
             {(ticket.showLabel || '').toUpperCase()} ·{' '}
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ticket.showTime}</span>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', marginTop: 2 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
             {ticket.movieTitle}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
             {ticket.theaterName} · {ticket.seats.length} seat
             {ticket.seats.length === 1 ? '' : 's'}
           </div>
@@ -2583,7 +2442,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
           fontSize: 10,
           fontWeight: 800,
           letterSpacing: 1.4,
-          color: 'var(--accent-italic)',
+          color: 'var(--text-secondary)',
           marginBottom: 8,
         }}
       >
@@ -2603,14 +2462,14 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
                 padding: '6px 10px',
                 borderRadius: 6,
                 background: 'rgba(168,177,255,0.18)',
-                color: 'var(--accent-italic)',
+                color: 'var(--text-secondary)',
                 fontSize: 12,
                 fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                border: deleg ? `1px solid ${BRAND.indigoLight}` : '1px solid transparent',
+                border: deleg ? `1px solid ${TOKENS.semantic.info}` : '1px solid transparent',
               }}
             >
               {deleg && <SmallAvatar name={deleg.delegateName} size={16} />}
@@ -2620,7 +2479,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
         })}
       </div>
 
-      <div style={{ fontSize: 11, color: 'var(--mute)', marginBottom: 18, lineHeight: 1.55 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 18, lineHeight: 1.55 }}>
         Tap a seat number to choose who's sitting there — pull from your invited group, or invite
         someone new just for that seat.
       </div>
@@ -2634,7 +2493,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
             borderRadius: 99,
             border: `1.5px solid rgba(212,38,74,0.4)`,
             background: 'transparent',
-            color: BRAND.red,
+            color: TOKENS.brand.red,
             fontWeight: 700,
             fontSize: 13,
             cursor: pending ? 'not-allowed' : 'pointer',
@@ -2653,7 +2512,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
             padding: '14px 16px',
             borderRadius: 99,
             border: 0,
-            background: BRAND.red,
+            background: TOKENS.brand.red,
             color: '#fff',
             fontWeight: 700,
             fontSize: 14,
@@ -2719,8 +2578,8 @@ const SeatAssignSheet = ({
 
   return (
     <>
-      <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 18, lineHeight: 1.55 }}>
-        Who's in <b style={{ color: 'var(--accent-italic)' }}>seat {seat.replace('-', '')}</b> at{' '}
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 18, lineHeight: 1.55 }}>
+        Who's in <b style={{ color: 'var(--text-secondary)' }}>seat {seat.replace('-', '')}</b> at{' '}
         {ticket.theaterName} for the {ticket.showLabel.toLowerCase()} showing of{' '}
         <b style={{ color: '#fff' }}>{ticket.movieTitle}</b>?
       </div>
@@ -2757,7 +2616,7 @@ const SeatAssignSheet = ({
                 background: isCurrent
                   ? 'rgba(168,177,255,0.14)'
                   : 'rgba(255,255,255,0.03)',
-                border: `1.5px solid ${isCurrent ? BRAND.indigoLight : BRAND.rule}`,
+                border: `1.5px solid ${isCurrent ? TOKENS.semantic.info : TOKENS.rule}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
@@ -2776,7 +2635,7 @@ const SeatAssignSheet = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'var(--mute)',
+                    color: 'var(--text-secondary)',
                   }}
                 >
                   <Icon name="user" size={14} />
@@ -2787,7 +2646,7 @@ const SeatAssignSheet = ({
                   {d ? d.delegateName : 'No one yet (clear assignment)'}
                 </div>
                 {d && (d.phone || d.email) && (
-                  <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
                     {d.phone || d.email}
                   </div>
                 )}
@@ -2829,7 +2688,6 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { isDark } = useTheme();
   // Wizard's "Take me to my tickets" CTA navigates here with ?tab=tickets
   // so we land on the right tab without needing a global tab store.
   const initialTab = searchParams.get('tab') || 'home';
@@ -2969,11 +2827,10 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
     <div
       style={{
         width: '100%',
-        height: '100dvh',
-        overflow: 'hidden',
+        minHeight: '100vh',
         position: 'relative',
-        background: isDark ? BRAND.navyDeep : 'var(--ground)',
-        color: isDark ? '#fff' : BRAND.ink,
+        background: TOKENS.surface.ground,
+        color: TOKENS.text.primary,
         fontFamily: FONT_UI,
         display: 'flex',
         flexDirection: 'column',
@@ -3118,7 +2975,6 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
         open={seatPickOpen}
         onClose={() => setSeatPickOpen(false)}
         title="Place seats"
-        forceDark
       >
         {seatPickOpen && (
           <SeatPickSheet
@@ -3197,7 +3053,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
       >
         {dinnerOpen && postPick && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 12, color: 'var(--mute)', marginBottom: 4 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
               Choose a meal for each seat you just placed.
             </div>
             {(portal?.myAssignments || [])
@@ -3212,7 +3068,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
                     padding: 10,
                     borderRadius: 10,
                     border: `1px solid var(--rule)`,
-                    background: 'var(--surface)',
+                    background: 'var(--card)',
                   }}
                 >
                   <span
@@ -3220,7 +3076,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
                       padding: '4px 10px',
                       borderRadius: 4,
                       background: 'rgba(168,177,255,0.18)',
-                      color: BRAND.indigoLight,
+                      color: TOKENS.semantic.info,
                       fontSize: 11,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',

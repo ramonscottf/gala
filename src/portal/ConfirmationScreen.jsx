@@ -15,9 +15,8 @@
 // before TabBar/AppBar mount, so the user sees a full confirmation
 // experience, not a sheet-on-top-of-portal.
 
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI, FONT_MONO } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
-import { useTheme } from '../hooks/useTheme.js';
 
 function deliveryCopy(emailSent, smsSent) {
   if (emailSent && smsSent) return 'emailed and texted';
@@ -31,18 +30,15 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
   const qrImgUrl = data?.qrImgUrl;
   const delivery = deliveryCopy(data?.email?.sent, data?.sms?.sent);
   const firstName = (name || 'sponsor').split(' ')[0];
-  const { isDark } = useTheme();
 
   return (
     <div
       className="scroll-container"
       style={{
-        height: '100dvh',
+        minHeight: '100vh',
         overflow: 'auto',
-        background: isDark
-          ? BRAND.groundDeep
-          : `radial-gradient(ellipse 120% 60% at 50% -10%, #fff 0%, #f7f8fb 60%)`,
-        color: isDark ? '#fff' : BRAND.ink,
+        background: TOKENS.surface.ground,
+        color: TOKENS.text.primary,
         fontFamily: FONT_UI,
         position: 'relative',
       }}
@@ -51,8 +47,8 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
         <div
           style={{
             padding: '4px 14px',
-            background: BRAND.gold,
-            color: BRAND.ink,
+            background: TOKENS.brand.gold,
+            color: TOKENS.text.primary,
             fontSize: 9,
             fontWeight: 800,
             letterSpacing: 1.6,
@@ -83,10 +79,10 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             left: 0,
             right: 0,
             height: 3,
-            background: BRAND.gradient,
+            background: TOKENS.brand.red,
           }}
         />
-        <SectionEyebrow color={BRAND.red}>Davis Education Foundation</SectionEyebrow>
+        <SectionEyebrow color={TOKENS.brand.red}>Davis Education Foundation</SectionEyebrow>
         {logoUrl && (
           <div style={{ margin: '12px 0 4px' }}>
             <img
@@ -120,7 +116,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
           You're{' '}
           <i
             style={{
-              background: BRAND.gradient,
+              background: TOKENS.brand.red,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -136,7 +132,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             flexWrap: 'wrap',
             gap: 14,
             fontSize: 13,
-            color: 'var(--mute)',
+            color: 'var(--text-secondary)',
             marginTop: 8,
           }}
         >
@@ -165,12 +161,12 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             letterSpacing: -0.4,
           }}
         >
-          Thank you, <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>{firstName}!</i>
+          Thank you, <i style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{firstName}!</i>
         </h2>
         <p
           style={{
             fontSize: 15,
-            color: 'var(--mute)',
+            color: 'var(--text-secondary)',
             lineHeight: 1.55,
             maxWidth: 480,
             margin: '0 auto',
@@ -188,7 +184,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
           margin: '24px 22px 0',
           padding: 24,
           borderRadius: 18,
-          background: BRAND.navyDeep,
+          background: TOKENS.brand.navyDeep,
           border: `1px solid var(--rule)`,
           textAlign: 'center',
           position: 'relative',
@@ -203,7 +199,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             left: 0,
             right: 0,
             height: 2,
-            background: BRAND.gradient,
+            background: TOKENS.brand.red,
           }}
         />
         <div
@@ -211,7 +207,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             fontSize: 11,
             fontWeight: 800,
             letterSpacing: 1.6,
-            color: 'var(--accent-text)',
+            color: 'var(--brand-red)',
             marginBottom: 14,
             textTransform: 'uppercase',
           }}
@@ -241,11 +237,11 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
               height: 260,
               margin: '0 auto',
               borderRadius: 10,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--mute)',
+              color: 'var(--text-secondary)',
               fontSize: 12,
             }}
           >
@@ -312,7 +308,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
         style={{
           padding: '20px 22px max(28px, env(safe-area-inset-bottom))',
           fontSize: 12,
-          color: 'var(--mute)',
+          color: 'var(--text-secondary)',
           lineHeight: 1.55,
           textAlign: 'center',
         }}

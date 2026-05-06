@@ -2,7 +2,7 @@
 // right guest rail. Lifted from uploads/seating-chart/project/components/
 // portal-flow-merged.jsx + portal-flows.jsx with these adaptations:
 //
-//  - Window globals → ES imports (BRAND, Btn, Icon, SectionEyebrow, Display
+//  - Window globals → ES imports (TOKENS, Btn, Icon, SectionEyebrow, Display
 //    from src/brand; SeatMap/autoPickBlock/seatById/SeatLegend from
 //    SeatEngine).
 //  - SHOWTIMES + MOVIES constants → derived from portal.showtimes.
@@ -19,7 +19,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import {
   Btn,
   Icon,
@@ -45,7 +45,6 @@ import NightOfContent from './components/NightOfContent.jsx';
 import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
-import { useTheme } from '../hooks/useTheme.js';
 import {
   formatShowTime,
   DelegateForm,
@@ -66,12 +65,12 @@ const Avatar = ({ name, size = 28 }) => {
   const initials = initialsFor(name);
   return (
     <span
-      className="force-dark"
+      
       style={{
         width: size,
         height: size,
         borderRadius: 99,
-        background: `linear-gradient(135deg, ${colorFor(name)}, ${BRAND.navyDeep})`,
+        background: `linear-gradient(135deg, ${colorFor(name)}, ${TOKENS.brand.navyDeep})`,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -96,14 +95,14 @@ const initialsFor = (name) => (name || '?')
 
 const PosterMini = ({ poster, color, label, size = 46 }) => (
   <div
-    className="force-dark"
+    
     style={{
       width: size,
       height: size * 1.4,
       borderRadius: 6,
       background: poster
         ? `url(${poster}) center/cover`
-        : `linear-gradient(160deg, ${color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+        : `linear-gradient(160deg, ${color || TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
       display: 'flex',
       alignItems: 'flex-end',
       padding: 4,
@@ -131,9 +130,9 @@ const PosterMini = ({ poster, color, label, size = 46 }) => (
 
 const FormatBadge = ({ format, size = 'sm' }) => {
   const map = {
-    IMAX: { bg: 'rgba(244,185,66,0.18)', c: BRAND.gold, border: 'rgba(244,185,66,0.4)' },
+    IMAX: { bg: 'rgba(244,185,66,0.18)', c: TOKENS.brand.gold, border: 'rgba(244,185,66,0.4)' },
     Premier: { bg: 'rgba(212,38,74,0.16)', c: '#ff6b8a', border: 'rgba(212,38,74,0.4)' },
-    Standard: { bg: 'rgba(255,255,255,0.06)', c: 'var(--mute)', border: BRAND.rule },
+    Standard: { bg: 'rgba(255,255,255,0.06)', c: 'var(--text-secondary)', border: TOKENS.rule },
   };
   const s = map[format] || map.Standard;
   const pad = size === 'lg' ? '5px 12px' : '3px 8px';
@@ -160,7 +159,7 @@ const FormatBadge = ({ format, size = 'sm' }) => {
 
 const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNightTap }) => (
   <div
-    className="page-header force-dark-vars"
+    className="page-header"
     style={{
       height: 72,
       padding: '0 36px',
@@ -176,11 +175,11 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
       <Logo size={26} dark />
-      <span style={{ width: 1, height: 24, background: BRAND.rule }} />
+      <span style={{ width: 1, height: 24, background: TOKENS.rule }} />
       <GalaWordmark size={11} />
       {logoUrl && (
         <>
-          <span style={{ width: 1, height: 24, background: BRAND.rule }} />
+          <span style={{ width: 1, height: 24, background: TOKENS.rule }} />
           <img
             src={logoUrl}
             alt=""
@@ -200,7 +199,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
       {daysOut != null && (
-        <span style={{ fontSize: 11, color: 'var(--accent-text)', fontWeight: 700, letterSpacing: 1.4 }}>
+        <span style={{ fontSize: 11, color: 'var(--brand-red)', fontWeight: 700, letterSpacing: 1.4 }}>
           {daysOut} DAYS OUT
         </span>
       )}
@@ -219,13 +218,13 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
             padding: '5px 10px',
             borderRadius: 99,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            background: 'var(--card)',
           }}
         >
           Night of
         </button>
       )}
-      <span style={{ width: 1, height: 20, background: BRAND.rule }} />
+      <span style={{ width: 1, height: 20, background: TOKENS.rule }} />
       {tier && <TierBadge tier={tier} />}
       <button
         onClick={onSettingsTap}
@@ -238,7 +237,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
           gap: 10,
           padding: '5px 14px 5px 5px',
           borderRadius: 999,
-          background: 'var(--surface)',
+          background: 'var(--card)',
           transition: 'background 0.15s',
           maxWidth: 360,
         }}
@@ -270,7 +269,7 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
               style={{
                 fontSize: 11,
                 fontWeight: 500,
-                color: 'var(--mute)',
+                color: 'var(--text-secondary)',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -309,12 +308,12 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="scroll-container force-dark-vars"
+        className="scroll-container"
         style={{
           width: '100%',
           maxWidth,
           maxHeight: '90vh',
-          background: BRAND.navyDeep,
+          background: TOKENS.brand.navyDeep,
           borderRadius: 22,
           overflow: 'auto',
           color: '#fff',
@@ -333,7 +332,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
               borderBottom: `1px solid var(--rule)`,
               position: 'sticky',
               top: 0,
-              background: BRAND.navyDeep,
+              background: TOKENS.brand.navyDeep,
               zIndex: 1,
             }}
           >
@@ -369,15 +368,13 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
 };
 
 const PortalShell = ({ children }) => {
-  const { isDark } = useTheme();
   return (
     <div
       style={{
         width: '100%',
-        height: '100dvh',
-        overflow: 'hidden',
-        background: isDark ? BRAND.groundDeep : 'var(--ground)',
-        color: isDark ? '#fff' : BRAND.ink,
+        minHeight: '100vh',
+        background: TOKENS.surface.ground,
+        color: TOKENS.text.primary,
         fontFamily: FONT_UI,
         display: 'flex',
         flexDirection: 'column',
@@ -422,7 +419,7 @@ const Stepper = ({ step, setStep, step1Label }) => (
               width: 24,
               height: 24,
               borderRadius: 99,
-              background: s.n <= step ? 'var(--accent-text-strong)' : 'transparent',
+              background: s.n <= step ? 'var(--brand-red)' : 'transparent',
               border: s.n > step ? `1.5px solid rgba(255,255,255,0.3)` : 'none',
               display: 'flex',
               alignItems: 'center',
@@ -439,7 +436,7 @@ const Stepper = ({ step, setStep, step1Label }) => (
           </span>
         </button>
         {i < STEPS.length - 1 && (
-          <span style={{ flex: '0 0 18px', height: 1, background: BRAND.rule }} />
+          <span style={{ flex: '0 0 18px', height: 1, background: TOKENS.rule }} />
         )}
       </div>
       );
@@ -492,15 +489,15 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
             lineHeight: 1.05,
           }}
         >
-          Your <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>assignments.</i>
+          Your <i style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>assignments.</i>
         </h2>
-        <div style={{ fontSize: 12, color: 'var(--mute)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
           {delegations.length} invited · {totalPlaced} of {totalAllocated} assigned seats
           placed
           {available > 0 && (
             <>
               <br />
-              <span style={{ color: 'var(--accent-italic)' }}>
+              <span style={{ color: 'var(--text-secondary)' }}>
                 {available} still yours to assign
               </span>
             </>
@@ -515,9 +512,9 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
           width: '100%',
           padding: '12px',
           borderRadius: 10,
-          border: `1.5px dashed ${available > 0 ? 'rgba(168,177,255,0.4)' : BRAND.rule}`,
+          border: `1.5px dashed ${available > 0 ? 'rgba(168,177,255,0.4)' : TOKENS.rule}`,
           background: available > 0 ? 'rgba(168,177,255,0.06)' : 'transparent',
-          color: available > 0 ? BRAND.indigoLight : 'var(--mute)',
+          color: available > 0 ? TOKENS.semantic.info : 'var(--text-secondary)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -551,7 +548,7 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
               background: 'rgba(255,255,255,0.03)',
               border: `1px dashed var(--rule)`,
               fontSize: 12,
-              color: 'var(--mute)',
+              color: 'var(--text-secondary)',
               fontStyle: 'italic',
               textAlign: 'center',
               lineHeight: 1.5,
@@ -570,7 +567,7 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
               cursor: 'pointer',
               padding: '10px 12px',
               borderRadius: 10,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               border: `1px solid var(--rule)`,
               display: 'grid',
               gridTemplateColumns: 'auto 1fr auto',
@@ -595,7 +592,7 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
                 <div
                   style={{
                     fontSize: 11,
-                    color: 'var(--mute)',
+                    color: 'var(--text-secondary)',
                     marginTop: 1,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -608,7 +605,7 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
               <div
                 style={{
                   fontSize: 11,
-                  color: 'var(--accent-italic)',
+                  color: 'var(--text-secondary)',
                   marginTop: 2,
                   fontVariantNumeric: 'tabular-nums',
                 }}
@@ -664,11 +661,11 @@ const StepWelcome = ({
       >
         <SectionEyebrow>Step 1 of 4 · Welcome</SectionEyebrow>
         <Display size={56}>
-          Place your <i style={{ color: 'var(--accent-italic)' }}>{blockSize} seats</i>
+          Place your <i style={{ color: 'var(--text-secondary)' }}>{blockSize} seats</i>
           <br />
           across the night.
         </Display>
-        <p style={{ fontSize: 15, color: 'var(--mute)', lineHeight: 1.6, maxWidth: 520 }}>
+        <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: 520 }}>
           {name && `Hey ${name.split(' ')[0]} — `}your {tier || 'sponsor'} block can split across two
           showtimes and any of the films. Place them in batches; we'll keep your selections for you.
         </p>
@@ -695,7 +692,7 @@ const StepWelcome = ({
                 background: 'rgba(255,255,255,0.03)',
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--accent-text)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, color: 'var(--brand-red)' }}>
                 {s.label.toUpperCase()}
               </div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 6, lineHeight: 1.45 }}>
@@ -729,7 +726,7 @@ const StepWelcome = ({
           <div
             style={{
               fontSize: 11,
-              color: 'var(--mute)',
+              color: 'var(--text-secondary)',
               fontVariantNumeric: 'tabular-nums',
               letterSpacing: 0.4,
             }}
@@ -739,9 +736,9 @@ const StepWelcome = ({
         )}
       </div>
       <Display size={48}>
-        Your night <i style={{ color: 'var(--accent-italic)' }}>at the gala.</i>
+        Your night <i style={{ color: 'var(--text-secondary)' }}>at the gala.</i>
       </Display>
-      <div style={{ fontSize: 14, color: 'var(--mute)', marginTop: -8 }}>
+      <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: -8 }}>
         Wednesday, June 10 · {placedCount} of {blockSize} seat{blockSize === 1 ? '' : 's'} placed
         {remaining > 0 ? ` · ${remaining} still to place` : ''}
       </div>
@@ -760,7 +757,7 @@ const StepWelcome = ({
             borderRadius: 999,
             border: `1px solid rgba(244,185,66,0.35)`,
             background: 'rgba(244,185,66,0.08)',
-            color: 'var(--accent-text)',
+            color: 'var(--brand-red)',
             fontSize: 12,
             fontWeight: 700,
             letterSpacing: 0.3,
@@ -790,7 +787,7 @@ const StepWelcome = ({
             style={{
               padding: 14,
               borderRadius: 14,
-              background: 'var(--surface)',
+              background: 'var(--card)',
               border: `1px solid var(--rule)`,
               display: 'grid',
               gridTemplateColumns: 'auto 1fr',
@@ -800,7 +797,7 @@ const StepWelcome = ({
           >
             <PosterMini
               poster={t.posterUrl}
-              color={BRAND.navyMid}
+              color={TOKENS.brand.navyMid}
               label={t.movieShort}
               size={56}
             />
@@ -817,7 +814,7 @@ const StepWelcome = ({
                       fontWeight: 800,
                       letterSpacing: 0.6,
                       background: 'rgba(168,177,255,0.16)',
-                      color: 'var(--accent-italic)',
+                      color: 'var(--text-secondary)',
                       textTransform: 'uppercase',
                     }}
                   >
@@ -845,7 +842,7 @@ const StepWelcome = ({
                       fontWeight: 800,
                       letterSpacing: 0.6,
                       background: 'rgba(244,185,66,0.18)',
-                      color: 'var(--accent-text)',
+                      color: 'var(--brand-red)',
                       textTransform: 'uppercase',
                     }}
                   >
@@ -866,7 +863,7 @@ const StepWelcome = ({
               >
                 {t.movieTitle}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                 {t.theaterName} · {t.seats.length} seat{t.seats.length === 1 ? '' : 's'}
               </div>
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
@@ -887,7 +884,7 @@ const StepWelcome = ({
                         fontSize: 10,
                         fontWeight: 700,
                         background: 'rgba(168,177,255,0.16)',
-                        color: 'var(--accent-italic)',
+                        color: 'var(--text-secondary)',
                         fontVariantNumeric: 'tabular-nums',
                         letterSpacing: 0.3,
                         display: 'inline-flex',
@@ -912,7 +909,7 @@ const StepWelcome = ({
                   );
                 })}
                 {t.seats.length > 10 && (
-                  <span style={{ fontSize: 10, color: 'var(--mute)', alignSelf: 'center' }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-secondary)', alignSelf: 'center' }}>
                     +{t.seats.length - 10}
                   </span>
                 )}
@@ -960,14 +957,14 @@ const StepShowing = ({
     <div>
       <SectionEyebrow>Step 2 of 4 · Showing</SectionEyebrow>
       <Display size={42}>
-        Where to <i style={{ color: 'var(--accent-italic)' }}>seat them?</i>
+        Where to <i style={{ color: 'var(--text-secondary)' }}>seat them?</i>
       </Display>
-      <p style={{ fontSize: 14, color: 'var(--mute)', lineHeight: 1.55, marginTop: 6, maxWidth: 560 }}>
+      <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.55, marginTop: 6, maxWidth: 560 }}>
         Select the showtime and auditorium for this batch — each auditorium is showing one film.
       </p>
     </div>
 
-    {/* D2 — showtime segmented pill. One container, two slots, BRAND.gradient
+    {/* D2 — showtime segmented pill. One container, two slots, TOKENS.brand.red
         on active. Pattern from gala-seats-app.html .picker__showtimes
         358-397 (same CSS Phase 1.7 F2 shipped on mobile). */}
     <div>
@@ -976,7 +973,7 @@ const StepShowing = ({
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: 1.4,
-          color: 'var(--accent-text)',
+          color: 'var(--brand-red)',
           marginBottom: 10,
         }}
       >
@@ -989,7 +986,7 @@ const StepShowing = ({
           border: `1.5px solid var(--rule)`,
           borderRadius: 12,
           padding: 3,
-          background: 'var(--surface)',
+          background: 'var(--card)',
         }}
       >
         {showingsRich.map((s) => {
@@ -1002,7 +999,7 @@ const StepShowing = ({
                 all: 'unset',
                 cursor: 'pointer',
                 padding: '12px 24px',
-                background: active ? BRAND.gradient : 'transparent',
+                background: active ? TOKENS.brand.red : 'transparent',
                 color: active ? '#fff' : 'rgba(255,255,255,0.65)',
                 borderRadius: 9,
                 display: 'flex',
@@ -1043,7 +1040,7 @@ const StepShowing = ({
 
     {/* D3 — rich movie cards. 96px poster panel left side, title+year,
         rating + runtime badges, "{N} aud · {N} seats" availability
-        meta, "More about this movie →" affordance in BRAND.red opens
+        meta, "More about this movie →" affordance in TOKENS.brand.red opens
         MovieDetailSheet (D4). Pattern from gala-seats-app.html
         .picker__movie 400-470 + Phase 1.7 F3 mobile card. */}
     <div>
@@ -1052,7 +1049,7 @@ const StepShowing = ({
           fontSize: 11,
           fontWeight: 700,
           letterSpacing: 1.4,
-          color: 'var(--accent-text)',
+          color: 'var(--brand-red)',
           marginBottom: 10,
         }}
       >
@@ -1075,7 +1072,7 @@ const StepShowing = ({
                 cursor: 'pointer',
                 padding: 0,
                 borderRadius: 14,
-                border: `2px solid ${active ? BRAND.red : BRAND.rule}`,
+                border: `2px solid ${active ? TOKENS.brand.red : TOKENS.rule}`,
                 background: active
                   ? 'linear-gradient(135deg, rgba(215,40,70,0.10), rgba(215,40,70,0.02))'
                   : 'rgba(255,255,255,0.03)',
@@ -1094,7 +1091,7 @@ const StepShowing = ({
                   minHeight: 142,
                   background: m.posterUrl
                     ? `url(${m.posterUrl}) center/cover no-repeat`
-                    : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+                    : `linear-gradient(160deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
                 }}
               />
               <div
@@ -1117,17 +1114,17 @@ const StepShowing = ({
                 >
                   {m.title}
                   {m.year ? (
-                    <span style={{ color: 'var(--mute)', fontWeight: 500 }}> ({m.year})</span>
+                    <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}> ({m.year})</span>
                   ) : null}
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {m.rating && (
                     <span
-                      className="force-dark"
+                      
                       style={{
                         padding: '2px 8px',
                         borderRadius: 4,
-                        background: BRAND.ink,
+                        background: TOKENS.text.primary,
                         color: '#fff',
                         fontSize: 10,
                         fontWeight: 800,
@@ -1156,7 +1153,7 @@ const StepShowing = ({
                 <div
                   style={{
                     fontSize: 11,
-                    color: 'var(--mute)',
+                    color: 'var(--text-secondary)',
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -1172,7 +1169,7 @@ const StepShowing = ({
                     cursor: 'pointer',
                     fontSize: 12,
                     fontWeight: 700,
-                    color: BRAND.red,
+                    color: TOKENS.brand.red,
                     marginTop: 'auto',
                     padding: '4px 0',
                   }}
@@ -1193,7 +1190,7 @@ const StepShowing = ({
             fontSize: 11,
             fontWeight: 700,
             letterSpacing: 1.4,
-            color: 'var(--accent-text)',
+            color: 'var(--brand-red)',
             marginBottom: 10,
           }}
         >
@@ -1211,8 +1208,8 @@ const StepShowing = ({
                   cursor: 'pointer',
                   padding: '10px 14px',
                   borderRadius: 10,
-                  border: `1.5px solid ${active ? 'var(--accent-text-strong)' : 'var(--rule)'}`,
-                  background: active ? 'rgba(203,38,44,0.08)' : 'var(--surface)',
+                  border: `1.5px solid ${active ? 'var(--brand-red)' : 'var(--rule)'}`,
+                  background: active ? 'rgba(203,38,44,0.08)' : 'var(--card)',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 10,
@@ -1297,7 +1294,7 @@ const StepSeats = ({
         </div>
 
         {/* D9 — compact showtime segmented pill in the rail. Same
-            BRAND.gradient active state as the Step 2 pill, narrower. */}
+            TOKENS.brand.red active state as the Step 2 pill, narrower. */}
         {showingsRich && showingsRich.length > 1 && (
           <div>
             <div
@@ -1305,7 +1302,7 @@ const StepSeats = ({
                 fontSize: 10,
                 fontWeight: 800,
                 letterSpacing: 1.4,
-                color: 'var(--accent-italic)',
+                color: 'var(--text-secondary)',
                 marginBottom: 6,
               }}
             >
@@ -1318,7 +1315,7 @@ const StepSeats = ({
                 border: `1.5px solid var(--rule)`,
                 borderRadius: 10,
                 padding: 3,
-                background: 'var(--surface)',
+                background: 'var(--card)',
               }}
             >
               {showingsRich.map((s) => {
@@ -1333,7 +1330,7 @@ const StepSeats = ({
                       flex: 1,
                       padding: '8px 10px',
                       borderRadius: 7,
-                      background: active ? BRAND.gradient : 'transparent',
+                      background: active ? TOKENS.brand.red : 'transparent',
                       color: active ? '#fff' : 'rgba(255,255,255,0.65)',
                       fontSize: 12,
                       fontWeight: 700,
@@ -1361,7 +1358,7 @@ const StepSeats = ({
                 fontSize: 10,
                 fontWeight: 800,
                 letterSpacing: 1.4,
-                color: 'var(--accent-italic)',
+                color: 'var(--text-secondary)',
                 marginBottom: 6,
               }}
             >
@@ -1379,7 +1376,7 @@ const StepSeats = ({
                       cursor: 'pointer',
                       padding: '8px 10px',
                       borderRadius: 8,
-                      border: `1px solid ${active ? BRAND.red : BRAND.rule}`,
+                      border: `1px solid ${active ? TOKENS.brand.red : TOKENS.rule}`,
                       background: active
                         ? 'linear-gradient(135deg, rgba(215,40,70,0.12), rgba(215,40,70,0.04))'
                         : 'rgba(255,255,255,0.03)',
@@ -1400,7 +1397,7 @@ const StepSeats = ({
                         // thumbnail.
                         background: m.thumbnailUrl || m.posterUrl
                           ? `url(${m.thumbnailUrl || m.posterUrl}) center/cover`
-                          : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+                          : `linear-gradient(160deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
                       }}
                     />
                     <div style={{ minWidth: 0 }}>
@@ -1420,7 +1417,7 @@ const StepSeats = ({
                       <div
                         style={{
                           fontSize: 10,
-                          color: 'var(--mute)',
+                          color: 'var(--text-secondary)',
                           marginTop: 2,
                           fontVariantNumeric: 'tabular-nums',
                         }}
@@ -1446,7 +1443,7 @@ const StepSeats = ({
                 fontSize: 10,
                 fontWeight: 800,
                 letterSpacing: 1.4,
-                color: 'var(--accent-italic)',
+                color: 'var(--text-secondary)',
                 marginBottom: 6,
               }}
             >
@@ -1464,7 +1461,7 @@ const StepSeats = ({
                       cursor: 'pointer',
                       padding: '6px 10px',
                       borderRadius: 8,
-                      border: `1.5px solid ${active ? BRAND.indigoLight : BRAND.rule}`,
+                      border: `1.5px solid ${active ? TOKENS.semantic.info : TOKENS.rule}`,
                       background: active
                         ? 'rgba(168,177,255,0.10)'
                         : 'rgba(255,255,255,0.02)',
@@ -1496,7 +1493,7 @@ const StepSeats = ({
               cursor: 'pointer',
               fontSize: 12,
               fontWeight: 700,
-              color: BRAND.red,
+              color: TOKENS.brand.red,
               padding: '4px 0',
             }}
           >
@@ -1507,11 +1504,11 @@ const StepSeats = ({
         <div style={{ flex: 1 }} />
 
         <div
-          style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--mute)' }}
+          style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Selected here</span>
-            <span style={{ color: 'var(--accent-text)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ color: 'var(--brand-red)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
               {sel.size}
             </span>
           </div>
@@ -1572,7 +1569,7 @@ const StepSeats = ({
       >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
           <Display size={28}>Select seats — drag, click, or shift-range.</Display>
-          <div style={{ fontSize: 11, color: 'var(--mute)', display: 'flex', gap: 14 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', gap: 14 }}>
             {[
               ['CLICK', 'one'],
               ['SHIFT+CLICK', 'range'],
@@ -1627,7 +1624,7 @@ const StepSeats = ({
                 allowLasso
               />
             ) : (
-              <div style={{ color: 'var(--mute)', textAlign: 'center', padding: 32 }}>
+              <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: 32 }}>
                 Select a showing and theater first.
               </div>
             )}
@@ -1775,15 +1772,15 @@ const StepConfirm = ({
       <Display size={48}>
         {hasPendingBatch ? (
           <>
-            Lock in <i style={{ color: 'var(--accent-italic)' }}>{sel.size} seat{sel.size === 1 ? '' : 's'}?</i>
+            Lock in <i style={{ color: 'var(--text-secondary)' }}>{sel.size} seat{sel.size === 1 ? '' : 's'}?</i>
           </>
         ) : (
           <>
-            Send your <i style={{ color: 'var(--accent-italic)' }}>QR.</i>
+            Send your <i style={{ color: 'var(--text-secondary)' }}>QR.</i>
           </>
         )}
       </Display>
-      <p style={{ fontSize: 14, color: 'var(--mute)', lineHeight: 1.55, maxWidth: 560 }}>
+      <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.55, maxWidth: 560 }}>
         {hasPendingBatch ? (
           <>
             {sel.size} seats in {theatersById[theaterMeta?.theaterId]?.name} for the{' '}
@@ -1805,7 +1802,7 @@ const StepConfirm = ({
             padding: 18,
             borderRadius: 14,
             border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
+            background: 'var(--card)',
             maxWidth: 720,
           }}
         >
@@ -1819,7 +1816,7 @@ const StepConfirm = ({
                     padding: '5px 10px',
                     borderRadius: 5,
                     background: 'rgba(168,177,255,0.18)',
-                    color: 'var(--accent-italic)',
+                    color: 'var(--text-secondary)',
                     fontSize: 12,
                     fontWeight: 700,
                     fontVariantNumeric: 'tabular-nums',
@@ -1835,7 +1832,7 @@ const StepConfirm = ({
                         width: 6,
                         height: 6,
                         borderRadius: 1.5,
-                        background: BRAND.ink,
+                        background: TOKENS.text.primary,
                         opacity: 0.4,
                       }}
                       title={s.t}
@@ -1861,7 +1858,7 @@ const StepConfirm = ({
                 padding: 18,
                 borderRadius: 14,
                 border: `1px solid var(--rule)`,
-                background: 'var(--surface)',
+                background: 'var(--card)',
               }}
             >
               <div
@@ -1877,7 +1874,7 @@ const StepConfirm = ({
                     fontSize: 11,
                     fontWeight: 800,
                     letterSpacing: 1.4,
-                    color: 'var(--accent-text)',
+                    color: 'var(--brand-red)',
                   }}
                 >
                   {g.showLabel.toUpperCase()} ·{' '}
@@ -1889,7 +1886,7 @@ const StepConfirm = ({
                 <div
                   style={{
                     fontSize: 12,
-                    color: 'var(--mute)',
+                    color: 'var(--text-secondary)',
                     marginLeft: 'auto',
                   }}
                 >
@@ -1920,7 +1917,7 @@ const StepConfirm = ({
                         padding: '4px 8px',
                         borderRadius: 4,
                         background: 'rgba(168,177,255,0.18)',
-                        color: 'var(--accent-italic)',
+                        color: 'var(--text-secondary)',
                         fontSize: 11,
                         fontWeight: 700,
                         fontVariantNumeric: 'tabular-nums',
@@ -2090,8 +2087,8 @@ const DevBanner = () => (
     style={{
       flexShrink: 0,
       padding: '4px 14px',
-      background: BRAND.gold,
-      color: BRAND.ink,
+      background: TOKENS.brand.gold,
+      color: TOKENS.text.primary,
       fontSize: 9,
       fontWeight: 800,
       letterSpacing: 1.6,
@@ -2283,7 +2280,7 @@ export default function Desktop({
             alignItems: 'center',
             gap: 14,
             fontSize: 12,
-            color: 'var(--mute)',
+            color: 'var(--text-secondary)',
           }}
         >
           <span>
@@ -2291,7 +2288,7 @@ export default function Desktop({
           </span>
           <span>·</span>
           <span>
-            <b style={{ color: remaining > 0 ? 'var(--accent-text-strong)' : '#7fcfa0' }}>{remaining}</b> remaining
+            <b style={{ color: remaining > 0 ? 'var(--brand-red)' : '#7fcfa0' }}>{remaining}</b> remaining
           </span>
         </div>
       </div>
@@ -2578,7 +2575,7 @@ export default function Desktop({
       >
         {dinnerOpen && postPick && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 12, color: 'var(--mute)', marginBottom: 4 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
               Choose a meal for each seat you just placed.
             </div>
             {(portal?.myAssignments || [])
@@ -2593,7 +2590,7 @@ export default function Desktop({
                     padding: 10,
                     borderRadius: 10,
                     border: `1px solid var(--rule)`,
-                    background: 'var(--surface)',
+                    background: 'var(--card)',
                   }}
                 >
                   <span
@@ -2601,7 +2598,7 @@ export default function Desktop({
                       padding: '4px 10px',
                       borderRadius: 4,
                       background: 'rgba(168,177,255,0.18)',
-                      color: BRAND.indigoLight,
+                      color: TOKENS.semantic.info,
                       fontSize: 11,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',
