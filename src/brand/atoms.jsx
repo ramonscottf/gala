@@ -1,26 +1,18 @@
 // Brand atoms — Logo, GalaWordmark, Btn, CountCard, TierBadge, SectionEyebrow,
-// Display, Icon. Lifted from uploads/seating-chart/project/components/brand.jsx
-// and converted from window globals to proper ES exports.
+// Display, Icon, EditorialDivider.
 //
-// Inline-style approach matches the design's source so visual fidelity is
-// guaranteed by code review against the .jsx originals. CSS Modules would
-// have meant rewriting every style which is a translation step + a bug surface.
+// Editorial theme (Theme C, contest 2026-05-05): single light surface,
+// navy ink, Cardo serif italic for emphasis, Source Sans 3 for body/UI.
+// The legacy theme-branching scaffolding is gone — every
+// atom now reads from TOKENS.
 
-import { BRAND, TIERS, FONT_DISPLAY, FONT_UI } from './tokens.js';
+import { TOKENS, TIERS } from './tokens.js';
 
-// Real DEF logo (replaces the previous SVG placeholder of a circle + "D").
-// Two variants:
-//   - light = white wordmark on transparent (for dark navy backgrounds)
-//   - dark  = navy wordmark on transparent (for paper/light backgrounds)
-// Both have the gold "D" mark.
-//
-// Files at public/assets/brand/def-logo-{light,dark}.png — fetched once
-// from media.daviskids.org during the May 5 migration. Aspect ratio 3:1
-// for light, 4:3 for dark (preserve via height-only sizing).
-//
-// Use `dark={true}` to indicate "this is on a dark background" → use the
-// LIGHT variant. The naming flip is intentional: the prop describes the
-// surface, not the variant.
+// Real DEF logo. Two file variants:
+//   - light = white wordmark (for navy/dark surfaces — hero card, seat map)
+//   - dark  = navy wordmark (for cream/white surfaces — page chrome)
+// The `dark` prop describes the SURFACE (true = surface is dark, use the
+// light/white-text variant). Naming flip is intentional.
 export const Logo = ({ size = 32, dark }) => {
   const width = dark ? size * 3 : Math.round(size * 4 / 3);
   return (
@@ -39,7 +31,7 @@ export const Logo = ({ size = 32, dark }) => {
   );
 };
 
-export const GalaWordmark = ({ size = 14, color = BRAND.gold }) => (
+export const GalaWordmark = ({ size = 14, color = TOKENS.brand.red }) => (
   <div
     style={{
       display: 'inline-flex',
@@ -47,10 +39,10 @@ export const GalaWordmark = ({ size = 14, color = BRAND.gold }) => (
       gap: 8,
       color,
       fontSize: size,
-      letterSpacing: 2,
+      letterSpacing: 1.5,
       fontWeight: 700,
       textTransform: 'uppercase',
-      fontFamily: FONT_UI,
+      fontFamily: TOKENS.font.ui,
     }}
   >
     <span style={{ width: 24, height: 1.5, background: 'currentColor' }} />
@@ -75,40 +67,46 @@ export const Btn = ({
   style = {},
 }) => {
   const sizes = {
-    sm: { h: 34, px: 14, fs: 13 },
-    md: { h: 44, px: 22, fs: 14 },
-    lg: { h: 52, px: 28, fs: 15 },
+    sm: { h: 36, px: 18, fs: 13 },
+    md: { h: 46, px: 28, fs: 14 },
+    lg: { h: 54, px: 36, fs: 15 },
   };
   const s = sizes[size];
   const styles = {
-    primary: { background: BRAND.red, color: '#fff', border: 'none' },
-    // secondary is the bordered/transparent button. Uses --ink-on-ground
-    // and --rule so it works in both dark (white text + faint white
-    // border) and light (navy text + visible navy border) modes.
+    primary: {
+      background: TOKENS.brand.red,
+      color: TOKENS.text.onBrand,
+      border: 'none',
+      boxShadow: TOKENS.shadow.button,
+    },
     secondary: {
-      background: 'transparent',
-      color: 'var(--ink-on-ground)',
-      border: `1.5px solid var(--rule)`,
+      background: TOKENS.surface.card,
+      color: TOKENS.text.primary,
+      border: `1px solid ${TOKENS.ruleStrong}`,
+      boxShadow: TOKENS.shadow.card,
     },
     secondaryDark: {
       background: 'transparent',
-      color: BRAND.ink,
-      border: `1.5px solid ${BRAND.ruleDark}`,
+      color: TOKENS.text.onBrand,
+      border: `1px solid ${TOKENS.ruleOnBrand}`,
     },
-    gold: { background: BRAND.gold, color: BRAND.ink, border: 'none' },
+    gold: {
+      background: TOKENS.brand.gold,
+      color: TOKENS.text.primary,
+      border: 'none',
+    },
     ghost: { background: 'transparent', color: 'inherit', border: 'none' },
   }[kind];
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={kind === 'primary' ? 'force-dark' : undefined}
       style={{
         height: s.h,
         padding: `0 ${s.px}px`,
-        borderRadius: 999,
+        borderRadius: TOKENS.radius.md,
         fontSize: s.fs,
-        fontWeight: 600,
+        fontWeight: 700,
         cursor: disabled ? 'not-allowed' : 'pointer',
         display: 'inline-flex',
         alignItems: 'center',
@@ -116,7 +114,8 @@ export const Btn = ({
         gap: 8,
         width: full ? '100%' : 'auto',
         opacity: disabled ? 0.4 : 1,
-        fontFamily: FONT_UI,
+        fontFamily: TOKENS.font.ui,
+        letterSpacing: 0.2,
         ...styles,
         ...style,
       }}
@@ -127,23 +126,24 @@ export const Btn = ({
   );
 };
 
+// Stat readout card. Editorial spec: numbers in Cardo regular at 40px on
+// dark hero surfaces, label in Source Sans 3 11px uppercase letter-spacing
+// 1.5px at 60% white. The hero card paints the dark backdrop; this atom
+// just paints the typography.
 export const CountCard = ({ value, label, accent }) => (
   <div
     style={{
-      border: '1px solid rgba(255,255,255,0.18)',
-      borderRadius: 8,
-      padding: '14px 12px',
       textAlign: 'center',
-      background: 'rgba(255,255,255,0.03)',
-      minWidth: 74,
+      minWidth: 78,
+      padding: '4px 6px',
     }}
   >
     <div
       style={{
-        fontFamily: FONT_DISPLAY,
-        fontSize: 30,
-        fontWeight: 700,
-        color: accent || '#fff',
+        fontFamily: TOKENS.font.displaySerif,
+        fontSize: 40,
+        fontWeight: 400,
+        color: accent || TOKENS.text.onBrand,
         lineHeight: 1,
         fontVariantNumeric: 'tabular-nums',
       }}
@@ -152,11 +152,12 @@ export const CountCard = ({ value, label, accent }) => (
     </div>
     <div
       style={{
-        fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: 1.6,
-        color: BRAND.gold,
-        marginTop: 6,
+        fontFamily: TOKENS.font.ui,
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: 1.5,
+        color: TOKENS.text.onBrandSecondary,
+        marginTop: 8,
         textTransform: 'uppercase',
       }}
     >
@@ -166,7 +167,7 @@ export const CountCard = ({ value, label, accent }) => (
 );
 
 export const TierBadge = ({ tier = 'Platinum', dark }) => {
-  const c = TIERS[tier]?.color || '#fff';
+  const c = TIERS[tier]?.color || TOKENS.text.onBrand;
   return (
     <span
       style={{
@@ -174,14 +175,14 @@ export const TierBadge = ({ tier = 'Platinum', dark }) => {
         alignItems: 'center',
         gap: 6,
         padding: '4px 10px 4px 8px',
-        borderRadius: 999,
-        border: `1px solid ${dark ? 'rgba(13,15,36,0.15)' : 'rgba(255,255,255,0.25)'}`,
+        borderRadius: TOKENS.radius.pill,
+        border: `1px solid ${dark ? TOKENS.ruleStrong : TOKENS.ruleOnBrand}`,
         fontSize: 10,
         fontWeight: 700,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
-        color: dark ? BRAND.ink : '#fff',
-        fontFamily: FONT_UI,
+        color: dark ? TOKENS.text.primary : TOKENS.text.onBrand,
+        fontFamily: TOKENS.font.ui,
       }}
     >
       <span style={{ width: 6, height: 6, borderRadius: 99, background: c }} />
@@ -190,48 +191,69 @@ export const TierBadge = ({ tier = 'Platinum', dark }) => {
   );
 };
 
-export const SectionEyebrow = ({ children, color = BRAND.red }) => (
+// Editorial section eyebrow — small uppercase, red by default, generous
+// letter-spacing. Pairs with a sans+serif h2 below it; see the section
+// header recipe in PLAN-theme-C-editorial.md.
+export const SectionEyebrow = ({ children, color = TOKENS.brand.red, style = {} }) => (
   <div
     style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: 10,
       fontSize: 11,
       fontWeight: 700,
-      letterSpacing: 2,
+      letterSpacing: 1.5,
       color,
       textTransform: 'uppercase',
-      fontFamily: FONT_UI,
+      fontFamily: TOKENS.font.ui,
+      ...style,
     }}
   >
-    <span style={{ width: 24, height: 1.5, background: 'currentColor', opacity: 0.7 }} />
     {children}
   </div>
 );
 
+// Display heading. Defaults to navy on light surface; pass `dark` for the
+// inverse on hero card / sheets that paint their own dark backdrop.
+// `italic` swaps to Cardo serif italic — used for the editorial accent
+// word in the sans+serif h1 mix.
 export const Display = ({
   children,
-  size = 64,
-  dark = true,
+  size = 40,
+  dark = false,
   italic = false,
   gold = false,
   style = {},
 }) => (
   <h1
     style={{
-      fontFamily: FONT_DISPLAY,
+      fontFamily: italic ? TOKENS.font.displaySerif : TOKENS.font.ui,
       fontSize: size,
-      lineHeight: 1.05,
-      letterSpacing: -1,
+      lineHeight: 1.1,
+      letterSpacing: italic ? 0 : -0.5,
       margin: 0,
-      fontWeight: italic ? 500 : 700,
+      fontWeight: italic ? 700 : 600,
       fontStyle: italic ? 'italic' : 'normal',
-      color: gold ? BRAND.gold : dark ? '#fff' : BRAND.ink,
+      color: gold ? TOKENS.brand.gold : dark ? TOKENS.text.onBrand : TOKENS.text.primary,
       ...style,
     }}
   >
     {children}
   </h1>
+);
+
+// Editorial signature divider — a 60×2 red horizontal rule, centered with
+// generous vertical margin. Used between major sections (e.g. hero ↔
+// tickets, tickets ↔ lineup) — 2-3 placements per page max.
+export const EditorialDivider = ({ style = {} }) => (
+  <hr
+    aria-hidden="true"
+    style={{
+      width: 60,
+      height: 2,
+      background: TOKENS.brand.red,
+      border: 0,
+      margin: '48px auto',
+      ...style,
+    }}
+  />
 );
 
 const ICON_PATHS = {

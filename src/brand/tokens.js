@@ -1,102 +1,81 @@
-// DEF Gala brand tokens — locked to daviskids.org/gala visual system.
-// Deep navy ground with cool purple/indigo accents. Brand gradient runs
-// CRIMSON → INDIGO (left→right), used on tier cards, headings, CTAs.
+// DEF Gala — Editorial theme tokens (Theme C, contest 2026-05-05).
 //
-// ─────────────────────────────────────────────────────────────────────────
-// USE OF GOLD — DOCTRINE (May 5 2026)
-// ─────────────────────────────────────────────────────────────────────────
-// Gold is the smallest brand color, NOT a primary text or UI surface.
-// It is reserved for ornamental accents that read as "trim" — not as
-// content the user has to read.
+// One source of truth for colors, spacing, radii, shadows, and font stacks.
+// Editorial direction: warm cream ground, navy ink, restrained red CTA, gold
+// reserved for italic serif accents in headlines. Cardo serif italic carries
+// the editorial voice; Source Sans 3 is the body/UI workhorse.
 //
-// ALLOWED (small accents only):
-//   - The DEF "D" mark inside the logo image
-//   - The 1.5px gradient strip on banner tops
-//   - Tiny badge dots (gold-tier sponsor tier dot only)
-//   - Single-character punctuation flourishes
-//
-// FORBIDDEN (must be navy or red instead):
-//   - Body text, eyebrow text, labels
-//   - Headlines or italic-emphasis words inside headlines
-//   - Numbers, counts, "remaining" displays, status text
-//   - Buttons, button outlines, icon strokes
-//   - Step indicators, stage badges, progress dots
-//
-// Components needing "highlight text" should use BRAND.red (or
-// BRAND.navy on dark grounds) instead of gold. For theme-adaptive
-// highlights, use the CSS variable --accent-text (defined in
-// brand/styles.css) which flips gold→navy in light mode.
-//
-// This rule is enforced visually but not statically — grep for
-// BRAND.gold periodically to catch new violations.
-// ─────────────────────────────────────────────────────────────────────────
+// All call sites import TOKENS (not BRAND — that doctrine is gone). The CSS
+// mirror lives in styles.css under :root.
 
-export const BRAND = {
-  navy: '#1a2350', // deep navy ground (matches site hero)
-  navyDeep: '#0f1639',
-  navyMid: '#1f2a5e',
-  navySoft: '#2c3878',
-  indigo: '#3b3f9f', // brand-gradient right end (purple/indigo)
-  indigoDeep: '#2a2f7a',
-  red: '#d72846', // crimson primary CTA
-  redDeep: '#a91d3a',
-  redWarm: '#e93055',
-  gold: '#f4b942', // warm accent (use sparingly — wordmark, perforation, gold-tier badge dot)
-  goldDeep: '#d99a1f',
-  indigoLight: '#a8b1ff', // "yours" treatment — your seats, your placed/claimed chips, your progress
-  paper: '#fbf8f3',
-  paperWarm: '#f5ede0',
-  paperCool: '#eef0f9', // cool paper for light surfaces (matches Funding What Matters bg)
-  ink: '#0b1233', // near-black with blue tint
-  rule: 'rgba(255,255,255,0.10)',
-  ruleStrong: 'rgba(255,255,255,0.16)',
-  ruleDark: 'rgba(13,15,36,0.12)',
-  mute: 'rgba(255,255,255,0.65)',
-  muteDark: 'rgba(13,15,36,0.6)',
-
-  gradient:
-    'linear-gradient(95deg, #d72846 0%, #b1306d 45%, #6a3a9a 75%, #3b3f9f 100%)',
-  gradientSoft:
-    'linear-gradient(95deg, rgba(215,40,70,0.85) 0%, rgba(106,58,154,0.85) 60%, rgba(59,63,159,0.85) 100%)',
-  groundDeep:
-    'radial-gradient(ellipse 120% 60% at 50% -10%, #2c3878 0%, #1a2350 35%, #0f1639 75%, #070b25 100%)',
+export const TOKENS = {
+  brand: {
+    navy: '#0d1b3d',
+    navyMid: '#1a2c5a',
+    navyDeep: '#091228',
+    red: '#c8102e',
+    redDark: '#a01f24',
+    gold: '#ffb400',
+    cream: '#f5f0e6',
+  },
+  surface: {
+    ground: '#fbfaf7',
+    card: '#ffffff',
+    cardWarm: '#f5f0e6',
+    cardElevated: '#ffffff',
+    sheet: '#ffffff',
+    seatMapDark: '#091228',
+  },
+  text: {
+    primary: '#0d1b3d',
+    secondary: '#3a4666',
+    tertiary: '#697089',
+    onBrand: '#ffffff',
+    onBrandSecondary: 'rgba(255,255,255,0.65)',
+    onBrandTertiary: 'rgba(255,255,255,0.42)',
+    accent: '#c8102e',
+    italic: '#ffb400',
+  },
+  fill: {
+    primary: 'rgba(13,27,61,0.04)',
+    secondary: 'rgba(13,27,61,0.08)',
+    tertiary: 'rgba(13,27,61,0.12)',
+    cream: '#f5f0e6',
+    onBrandPrimary: 'rgba(255,255,255,0.08)',
+    onBrandSecondary: 'rgba(255,255,255,0.14)',
+  },
+  rule: 'rgba(13,27,61,0.08)',
+  ruleStrong: 'rgba(13,27,61,0.16)',
+  ruleOnBrand: 'rgba(255,255,255,0.18)',
+  semantic: {
+    success: '#1a8a5b',
+    warning: '#cc7a00',
+    danger: '#c8102e',
+    info: '#0d1b3d',
+  },
+  space: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48, xxxxl: 64 },
+  radius: { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 },
+  shadow: {
+    none: 'none',
+    card: '0 1px 0 rgba(13,27,61,0.04), 0 8px 24px rgba(13,27,61,0.06)',
+    cardElevated: '0 2px 0 rgba(13,27,61,0.06), 0 16px 48px rgba(13,27,61,0.08)',
+    sheet: '0 -2px 0 rgba(13,27,61,0.04), 0 -16px 56px rgba(13,27,61,0.10)',
+    pill: '0 8px 32px rgba(13,27,61,0.12), 0 1px 0 rgba(13,27,61,0.08)',
+    button: '0 4px 12px rgba(200,16,46,0.20)',
+    buttonElevated: '0 8px 20px rgba(200,16,46,0.28)',
+  },
+  font: {
+    displaySerif: 'Cardo, "Times New Roman", serif',
+    display: '"Source Sans 3", -apple-system, BlinkMacSystemFont, sans-serif',
+    ui: '"Source Sans 3", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif',
+  },
 };
 
 // Tier mapping per DEF: Platinum 20 / Gold 16 / Silver 14 / Bronze 12 / F&F 10
 export const TIERS = {
   Platinum: { seats: 20, color: '#e8e8ee' },
-  Gold: { seats: 16, color: '#f4b942' },
+  Gold: { seats: 16, color: '#ffb400' },
   Silver: { seats: 14, color: '#c0c4cc' },
   Bronze: { seats: 12, color: '#c08560' },
   Family: { seats: 10, color: '#9bb5d4' },
 };
-
-export const FONT_DISPLAY = '"Source Serif 4", "Source Serif Pro", Georgia, serif';
-export const FONT_UI = '"Inter", system-ui, -apple-system, sans-serif';
-
-// ─────────────────────────────────────────────────────────────────────────
-// Theme-aware color helpers (May 5 2026)
-// ─────────────────────────────────────────────────────────────────────────
-// Components that previously hard-coded BRAND.gold for "highlight text"
-// — eyebrows, italic emphasis in headlines, status numbers, badge text —
-// should call these helpers with the current `isLight` from useTheme().
-// The gold-on-paper combo was illegible; navy-on-paper / red-on-paper
-// is the corrected mapping.
-//
-// Usage:
-//   const { isLight } = useTheme();
-//   <div style={{ color: accentText(isLight) }}>...
-//
-// Pick `accentText` for non-action accents (eyebrow text, italic flair).
-// Pick `accentAction` for active-state callouts (a pulsing "remaining"
-// counter, a "needs attention" badge) where you want red emphasis on
-// paper. On dark grounds both helpers return gold for now since gold
-// reads fine on navy — split if a future light-on-dark callout appears.
-//
-// See src/brand/tokens.js "USE OF GOLD" doctrine for the full rationale.
-export function accentText(isLight) {
-  return isLight ? BRAND.ink : BRAND.gold;
-}
-export function accentAction(isLight) {
-  return isLight ? BRAND.red : BRAND.gold;
-}

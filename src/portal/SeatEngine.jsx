@@ -13,7 +13,7 @@
 // design's wizards expect (e.g. 'F-7' in mobile-wizard.jsx).
 
 import { useEffect, useRef, useState } from 'react';
-import { BRAND } from '../brand/tokens.js';
+import { TOKENS } from '../brand/tokens.js';
 
 // Brand-coherent palette over the navy ground. Real types from theater-
 // layouts.json mapped to colors that read well against #0f1639. Yours (gold)
@@ -171,35 +171,10 @@ export const SeatMap = ({
   const [lasso, setLasso] = useState(null);
   const dragging = useRef(null);
   const containerRef = useRef(null);
-  // theme='auto' (new default): follow the OS color scheme via the
-  // `prefers-color-scheme` media query. This is the same signal the
-  // CSS @media block uses to flip --ground / --ink-on-ground, so the
-  // SVG row letters and the "taken" tint stay in sync with the page.
-  // Earlier versions tried to read document.documentElement[data-theme]
-  // but nothing in this app sets that attribute — the theme is purely
-  // media-query driven, so matchMedia is the right hook.
-  const isDarkExplicit = theme === 'dark';
-  const isLightExplicit = theme === 'light';
-  const [autoDark, setAutoDark] = useState(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return true;
-    return !window.matchMedia('(prefers-color-scheme: light)').matches;
-  });
-  useEffect(() => {
-    if (theme !== 'auto') return;
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mq = window.matchMedia('(prefers-color-scheme: light)');
-    const read = () => setAutoDark(!mq.matches);
-    read();
-    // addEventListener is the modern API; some older WebKit needs addListener.
-    if (mq.addEventListener) {
-      mq.addEventListener('change', read);
-      return () => mq.removeEventListener('change', read);
-    } else if (mq.addListener) {
-      mq.addListener(read);
-      return () => mq.removeListener(read);
-    }
-  }, [theme]);
-  const dark = isDarkExplicit ? true : isLightExplicit ? false : autoDark;
+  // The seat map always renders against a hard-coded cinema-dark surface
+  // — `dark` is now a constant, not a theme branch. The host sheet
+  // (SeatPickSheet) paints the navy background; the engine inherits.
+  const dark = true;
 
   const gap = 3;
   const cell = scale;
@@ -222,7 +197,7 @@ export const SeatMap = ({
   };
   const colorFor = (id, seatType) => {
     const st = status(id);
-    if (st === 'self') return BRAND.indigoLight;
+    if (st === 'self') return TOKENS.brand.gold;
     if (st === 'other') return dark ? 'rgba(255,255,255,0.16)' : 'rgba(13,15,36,0.16)';
     return SEAT_TYPES[seatType]?.color || '#999';
   };
@@ -367,7 +342,7 @@ export const SeatMap = ({
           width={totalW * 0.64}
           height={3}
           rx={1.5}
-          fill={BRAND.red}
+          fill={TOKENS.brand.red}
           opacity="0.95"
         />
         <text
@@ -419,7 +394,7 @@ export const SeatMap = ({
                 const st = status(s.id);
                 const isSel = selected.has(s.id);
                 const fill = colorFor(s.id, s.t);
-                const strokeColor = isSel ? (dark ? '#fff' : BRAND.ink) : 'none';
+                const strokeColor = isSel ? (dark ? '#fff' : TOKENS.text.primary) : 'none';
                 const sw = isSel ? 2.5 : 0;
 
                 // Phase 1.13 — fix paired-loveseat overlap and height.
@@ -595,7 +570,7 @@ export const SeatMap = ({
             top: lasso.y,
             width: lasso.w,
             height: lasso.h,
-            border: `1.5px dashed ${BRAND.gold}`,
+            border: `1.5px dashed ${TOKENS.brand.gold}`,
             background: 'rgba(244,185,66,0.12)',
             pointerEvents: 'none',
             borderRadius: 4,
@@ -624,7 +599,7 @@ export const SeatMap = ({
               height: 30,
               border: 0,
               background: 'transparent',
-              color: dark ? '#fff' : BRAND.ink,
+              color: dark ? '#fff' : TOKENS.text.primary,
               borderRadius: 6,
               cursor: 'pointer',
             }}
@@ -644,7 +619,7 @@ export const SeatMap = ({
               height: 30,
               border: 0,
               background: 'transparent',
-              color: dark ? '#fff' : BRAND.ink,
+              color: dark ? '#fff' : TOKENS.text.primary,
               borderRadius: 6,
               cursor: 'pointer',
             }}
@@ -664,7 +639,7 @@ export const SeatMap = ({
               height: 30,
               border: 0,
               background: 'transparent',
-              color: dark ? '#fff' : BRAND.ink,
+              color: dark ? '#fff' : TOKENS.text.primary,
               borderRadius: 6,
               cursor: 'pointer',
               fontSize: 9,
@@ -685,14 +660,13 @@ export const SeatLegend = ({
   types = ['luxury', 'standard', 'wheelchair', 'companion', 'loveseat', 'dbox'],
   showSelf = true,
 }) => {
-  // When `dark` is explicitly set, honor it (some surfaces are force-dark
-  // regardless of the page theme — e.g., a sheet rendered over a light
-  // page). When omitted, fall through to var(--ink-on-ground) so light
-  // mode renders dark text and dark mode renders light text.
+  // When `dark` is explicitly set, honor it (the seat map sheet renders
+  // over a hard-coded dark interior; the legend mirrors it). When
+  // omitted, fall through to var(--text-primary).
   const textColor =
     dark === true ? 'rgba(255,255,255,0.7)'
     : dark === false ? 'rgba(13,15,36,0.6)'
-    : 'var(--ink-on-ground)';
+    : 'var(--text-primary)';
   const takenColor =
     dark === true ? 'rgba(255,255,255,0.16)'
     : dark === false ? 'rgba(13,15,36,0.16)'
@@ -720,7 +694,7 @@ export const SeatLegend = ({
       ))}
       {showSelf && (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 11, height: 11, borderRadius: 3, background: BRAND.indigoLight }} />
+          <span style={{ width: 11, height: 11, borderRadius: 3, background: TOKENS.brand.gold }} />
           Yours
         </span>
       )}

@@ -1,23 +1,18 @@
 // ConfirmationScreen — full-page replacement after the wizard's Done tap.
 //
-// Pattern lifted from the OLD gala-seats-app.html renderDoneScreen (lines
-// 2593-2626): hero kicker + serif H1 with gradient accent on "confirmed",
-// celebratory icon, "Thank you, {name}" + dynamic delivery copy ("emailed
-// and texted" / "emailed" / "texted" / "saved" depending on which channels
-// /finalize confirmed), 260×260 QR card, return-to-portal CTA, footer
-// reminder that seats remain editable until June 9.
+// Editorial direction (Theme C, 2026-05-05):
+//   - Warm cream-white ground, navy ink, generous spacing
+//   - Sans + serif italic h1 ("You're all set.")
+//   - 60×2 red EditorialDivider between hero and QR card
+//   - QR card lives on a navy surface — it's a TICKET, not chrome, so a
+//     dark backdrop reads as "here's your pass" the way a stub does
 //
-// Server already returns everything we need from POST /finalize:
+// Server returns from POST /finalize:
 //   { ok, finalized, seatCount, checkInUrl, qrImgUrl,
 //     email: {sent: boolean}, sms: {sent: boolean} }
-//
-// This component is route-agnostic — it short-circuits Mobile's render
-// before TabBar/AppBar mount, so the user sees a full confirmation
-// experience, not a sheet-on-top-of-portal.
 
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
-import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
-import { useTheme } from '../hooks/useTheme.js';
+import { TOKENS } from '../brand/tokens.js';
+import { Btn, Icon, SectionEyebrow, EditorialDivider } from '../brand/atoms.jsx';
 
 function deliveryCopy(emailSent, smsSent) {
   if (emailSent && smsSent) return 'emailed and texted';
@@ -31,64 +26,48 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
   const qrImgUrl = data?.qrImgUrl;
   const delivery = deliveryCopy(data?.email?.sent, data?.sms?.sent);
   const firstName = (name || 'sponsor').split(' ')[0];
-  const { isDark } = useTheme();
 
   return (
     <div
-      className="scroll-container"
       style={{
-        height: '100dvh',
-        overflow: 'auto',
-        background: isDark
-          ? BRAND.groundDeep
-          : `radial-gradient(ellipse 120% 60% at 50% -10%, #fff 0%, #f7f8fb 60%)`,
-        color: isDark ? '#fff' : BRAND.ink,
-        fontFamily: FONT_UI,
-        position: 'relative',
+        minHeight: '100vh',
+        background: TOKENS.surface.ground,
+        color: TOKENS.text.primary,
+        fontFamily: TOKENS.font.ui,
       }}
     >
       {isDev && (
         <div
           style={{
-            padding: '4px 14px',
-            background: BRAND.gold,
-            color: BRAND.ink,
-            fontSize: 9,
-            fontWeight: 800,
-            letterSpacing: 1.6,
+            padding: '6px 14px',
+            background: TOKENS.brand.gold,
+            color: TOKENS.text.primary,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: 1.4,
             textAlign: 'center',
             position: 'sticky',
             top: 0,
             zIndex: 5,
+            textTransform: 'uppercase',
           }}
         >
-          DEV PORTAL · NOT FOR SPONSORS · /GALA-DEV/(TOKEN)
+          Dev portal · not for sponsors · /gala-dev/(token)
         </div>
       )}
 
       {/* Hero */}
       <section
-        className="page-header"
         style={{
-          padding: '32px 22px 24px',
-          position: 'relative',
+          maxWidth: 640,
+          margin: '0 auto',
+          padding: '64px 24px 24px',
+          textAlign: 'center',
         }}
       >
-        {/* 3px gradient strip across the top of the hero — the "Sherry blast"
-            energy from her email reference. */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            background: BRAND.gradient,
-          }}
-        />
-        <SectionEyebrow color={BRAND.red}>Davis Education Foundation</SectionEyebrow>
+        <SectionEyebrow style={{ marginBottom: 12 }}>Davis Education Foundation</SectionEyebrow>
         {logoUrl && (
-          <div style={{ margin: '12px 0 4px' }}>
+          <div style={{ margin: '12px 0 8px', display: 'flex', justifyContent: 'center' }}>
             <img
               src={logoUrl}
               alt=""
@@ -97,7 +76,6 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
                 maxHeight: 36,
                 maxWidth: 200,
                 objectFit: 'contain',
-                objectPosition: 'left center',
                 opacity: 0.95,
               }}
               onError={(e) => {
@@ -108,181 +86,170 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
         )}
         <h1
           style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: 44,
-            lineHeight: 1.02,
+            fontSize: 56,
+            lineHeight: 1.05,
+            margin: '20px 0 12px',
+            color: TOKENS.text.primary,
             letterSpacing: -1,
-            margin: '12px 0 6px',
-            fontWeight: 700,
-            color: '#fff',
           }}
         >
-          You're{' '}
-          <i
+          <span style={{ fontFamily: TOKENS.font.ui, fontWeight: 600 }}>You're</span>{' '}
+          <span
             style={{
-              background: BRAND.gradient,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              fontWeight: 500,
+              fontFamily: TOKENS.font.displaySerif,
+              fontStyle: 'italic',
+              fontWeight: 700,
+              color: TOKENS.brand.gold,
             }}
           >
-            confirmed.
-          </i>
+            all set.
+          </span>
         </h1>
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 14,
-            fontSize: 13,
-            color: 'var(--mute)',
-            marginTop: 8,
-          }}
-        >
-          <span>📅 June 10, 2026 · 6:00 PM</span>
-          <span>📍 Megaplex Theatres · Legacy Crossing</span>
-        </div>
-      </section>
-
-      {/* Big celebratory icon + thank you */}
-      <div
-        style={{
-          textAlign: 'center',
-          padding: '12px 22px 0',
-        }}
-      >
-        <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 8 }} aria-hidden>
-          🎉
-        </div>
-        <h2
-          style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: 28,
-            fontWeight: 700,
-            margin: '0 0 8px',
-            color: '#fff',
-            letterSpacing: -0.4,
-          }}
-        >
-          Thank you, <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>{firstName}!</i>
-        </h2>
         <p
           style={{
-            fontSize: 15,
-            color: 'var(--mute)',
-            lineHeight: 1.55,
+            fontSize: 16,
+            color: TOKENS.text.secondary,
+            lineHeight: 1.6,
             maxWidth: 480,
             margin: '0 auto',
           }}
         >
-          Your <b style={{ color: '#fff' }}>{seatCount} seat{seatCount === 1 ? '' : 's'}</b>{' '}
+          Thank you,{' '}
+          <span
+            style={{
+              fontFamily: TOKENS.font.displaySerif,
+              fontStyle: 'italic',
+              fontWeight: 700,
+              color: TOKENS.brand.gold,
+            }}
+          >
+            {firstName}.
+          </span>{' '}
+          Your <b style={{ color: TOKENS.text.primary }}>
+            {seatCount} seat{seatCount === 1 ? '' : 's'}
+          </b>{' '}
           {seatCount === 1 ? 'is' : 'are'} locked in. We {delivery} your QR below — bring it on
           June 10.
         </p>
-      </div>
-
-      {/* QR card */}
-      <div
-        style={{
-          margin: '24px 22px 0',
-          padding: 24,
-          borderRadius: 18,
-          background: BRAND.navyDeep,
-          border: `1px solid var(--rule)`,
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        {/* same gradient strip flourish along the top of the QR card */}
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 2,
-            background: BRAND.gradient,
-          }}
-        />
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: 1.6,
-            color: 'var(--accent-text)',
-            marginBottom: 14,
-            textTransform: 'uppercase',
+            display: 'flex',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: 18,
+            fontSize: 13,
+            color: TOKENS.text.tertiary,
+            marginTop: 24,
           }}
         >
-          Your check-in QR
+          <span>June 10, 2026 · 6:00 PM</span>
+          <span>Megaplex Theatres · Legacy Crossing</span>
         </div>
-        {qrImgUrl ? (
-          <img
-            src={qrImgUrl}
-            alt="Check-in QR code"
-            width={260}
-            height={260}
-            style={{
-              display: 'block',
-              margin: '0 auto',
-              borderRadius: 10,
-              background: '#fff',
-              padding: 12,
-              maxWidth: '100%',
-              height: 'auto',
-            }}
-          />
-        ) : (
+      </section>
+
+      <EditorialDivider />
+
+      {/* QR card — navy "ticket" surface in the middle of the cream page. */}
+      <section
+        style={{
+          maxWidth: 480,
+          margin: '0 auto',
+          padding: '0 24px',
+        }}
+      >
+        <div
+          style={{
+            padding: 32,
+            borderRadius: TOKENS.radius.lg,
+            background: TOKENS.brand.navy,
+            color: TOKENS.text.onBrand,
+            textAlign: 'center',
+            boxShadow: TOKENS.shadow.cardElevated,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
           <div
             style={{
-              width: 260,
-              height: 260,
-              margin: '0 auto',
-              borderRadius: 10,
-              background: 'var(--surface)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--mute)',
-              fontSize: 12,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              background: TOKENS.brand.red,
+            }}
+          />
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 1.5,
+              color: TOKENS.brand.gold,
+              textTransform: 'uppercase',
+              marginBottom: 16,
             }}
           >
-            QR generating…
+            Your check-in QR
           </div>
-        )}
-        <div
-          style={{
-            fontSize: 12,
-            color: 'rgba(255,255,255,0.55)',
-            marginTop: 12,
-            lineHeight: 1.5,
-          }}
-        >
-          Show this at the check-in table on June 10.
+          {qrImgUrl ? (
+            <img
+              src={qrImgUrl}
+              alt="Check-in QR code"
+              width={260}
+              height={260}
+              style={{
+                display: 'block',
+                margin: '0 auto',
+                borderRadius: 10,
+                background: TOKENS.text.onBrand,
+                padding: 12,
+                maxWidth: '100%',
+                height: 'auto',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 260,
+                height: 260,
+                margin: '0 auto',
+                borderRadius: 10,
+                background: TOKENS.fill.onBrandPrimary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: TOKENS.text.onBrandSecondary,
+                fontSize: 12,
+              }}
+            >
+              QR generating…
+            </div>
+          )}
+          <div
+            style={{
+              fontSize: 13,
+              color: TOKENS.text.onBrandSecondary,
+              marginTop: 16,
+              lineHeight: 1.5,
+            }}
+          >
+            Show this at the check-in table on June 10.
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Action buttons */}
-      <div
+      <section
         style={{
-          padding: '24px 22px 0',
+          maxWidth: 480,
+          margin: '0 auto',
+          padding: '32px 24px 0',
           display: 'flex',
           flexDirection: 'column',
-          gap: 8,
+          gap: 12,
         }}
       >
-        <Btn
-          kind="primary"
-          size="lg"
-          full
-          onClick={() => {
-            // HAPTIC: light — return to portal home.
-            onEdit();
-          }}
-          icon={<Icon name="arrowR" size={16} />}
-        >
+        <Btn kind="primary" size="lg" full onClick={onEdit} icon={<Icon name="arrowR" size={16} />}>
           Edit my seats
         </Btn>
         <button
@@ -290,30 +257,32 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
           title="Coming in Phase 2.5"
           style={{
             padding: '14px',
-            borderRadius: 12,
-            border: `1.5px solid var(--rule)`,
-            background: 'rgba(255,255,255,0.03)',
-            color: 'rgba(255,255,255,0.55)',
+            borderRadius: TOKENS.radius.md,
+            border: `1px solid ${TOKENS.ruleStrong}`,
+            background: TOKENS.surface.card,
+            color: TOKENS.text.tertiary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 8,
+            gap: 10,
             fontSize: 14,
             fontWeight: 600,
             cursor: 'not-allowed',
-            fontFamily: FONT_UI,
+            fontFamily: TOKENS.font.ui,
           }}
         >
           <Icon name="qr" size={16} /> Add to Apple Wallet (coming soon)
         </button>
-      </div>
+      </section>
 
       <div
         style={{
-          padding: '20px 22px max(28px, env(safe-area-inset-bottom))',
-          fontSize: 12,
-          color: 'var(--mute)',
-          lineHeight: 1.55,
+          maxWidth: 480,
+          margin: '0 auto',
+          padding: '24px 24px 48px',
+          fontSize: 13,
+          color: TOKENS.text.tertiary,
+          lineHeight: 1.6,
           textAlign: 'center',
         }}
       >

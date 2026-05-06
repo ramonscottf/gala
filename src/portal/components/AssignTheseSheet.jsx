@@ -13,7 +13,7 @@
 // Skip dismisses without changes.
 
 import { useState } from 'react';
-import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
+import { TOKENS } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
 
 export default function AssignTheseSheet({
@@ -93,7 +93,7 @@ export default function AssignTheseSheet({
             fontSize: 11,
             fontWeight: 800,
             letterSpacing: 1.6,
-            color: 'var(--accent-text)',
+            color: 'var(--text-accent)',
             textTransform: 'uppercase',
           }}
         >
@@ -102,10 +102,10 @@ export default function AssignTheseSheet({
         </div>
         <div
           style={{
-            fontFamily: FONT_DISPLAY,
+            fontFamily: TOKENS.font.displaySerif,
             fontSize: 18,
             fontWeight: 700,
-            color: 'var(--ink-on-ground)',
+            color: 'var(--text-primary)',
             marginTop: 4,
           }}
         >
@@ -123,7 +123,7 @@ export default function AssignTheseSheet({
               gap: 12,
               padding: 12,
               borderRadius: 12,
-              background: 'var(--surface)',
+              background: 'var(--fill-cream)',
               border: `1px solid var(--rule)`,
             }}
           >
@@ -132,7 +132,7 @@ export default function AssignTheseSheet({
                 padding: '6px 10px',
                 borderRadius: 6,
                 background: 'rgba(168,177,255,0.18)',
-                color: 'var(--accent-italic)',
+                color: 'var(--text-italic)',
                 fontSize: 13,
                 fontWeight: 800,
                 fontVariantNumeric: 'tabular-nums',
@@ -150,9 +150,9 @@ export default function AssignTheseSheet({
                 flex: 1,
                 padding: '10px 12px',
                 borderRadius: 10,
-                background: 'var(--surface)',
+                background: 'var(--fill-cream)',
                 border: `1px solid var(--rule)`,
-                color: 'var(--ink-on-ground)',
+                color: 'var(--text-primary)',
                 fontSize: 12,
                 fontWeight: 600,
                 outline: 'none',
@@ -160,11 +160,11 @@ export default function AssignTheseSheet({
                 WebkitAppearance: 'none',
               }}
             >
-              <option value="" style={{ color: BRAND.ink }}>
+              <option value="" style={{ color: TOKENS.text.primary }}>
                 Pick guest…
               </option>
               {delegations.map((d) => (
-                <option key={d.id} value={d.id} style={{ color: BRAND.ink }}>
+                <option key={d.id} value={d.id} style={{ color: TOKENS.text.primary }}>
                   {d.delegateName || `Delegation ${d.id}`}
                 </option>
               ))}
@@ -184,7 +184,7 @@ export default function AssignTheseSheet({
             borderRadius: 99,
             border: `1.5px dashed rgba(244,185,66,0.4)`,
             background: 'rgba(244,185,66,0.06)',
-            color: 'var(--accent-text)',
+            color: 'var(--text-accent)',
             fontSize: 12,
             fontWeight: 700,
             display: 'inline-flex',
