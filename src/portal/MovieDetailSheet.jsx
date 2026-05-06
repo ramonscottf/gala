@@ -19,7 +19,7 @@
 // and youtube-nocookie.com so neither embed is blocked.
 
 import React from 'react';
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import { Icon } from '../brand/atoms.jsx';
 
 const STREAM_CUSTOMER = 'customer-iy642ze20tq7w2hz';
@@ -91,7 +91,7 @@ export default function MovieDetailSheet({
       <div
         onClick={(e) => e.stopPropagation()}
         ref={innerRef}
-        className="scroll-container force-dark-vars"
+        className="scroll-container"
         style={{
           width: '100%',
           // Cap at 640px on desktop so the sheet doesn't stretch the
@@ -101,7 +101,7 @@ export default function MovieDetailSheet({
           // 90vh on modal so there's always padding around the edge;
           // 94% on sheet so the modal hugs the bottom safe-area inset.
           maxHeight: isModal ? '90vh' : '94%',
-          background: BRAND.navyDeep,
+          background: TOKENS.brand.navyDeep,
           // Sheet rounds the top only (the bottom is flush with the
           // viewport edge); modal rounds all four corners.
           borderTopLeftRadius: 22,
@@ -124,7 +124,7 @@ export default function MovieDetailSheet({
             height: isModal ? 240 : 180,
             background: backdrop
               ? `linear-gradient(to bottom, rgba(13,27,61,0.4), rgba(13,27,61,0.95)), url(${backdrop}) center/cover no-repeat`
-              : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+              : `linear-gradient(160deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
             display: 'flex',
             alignItems: 'flex-end',
             padding: '14px',
@@ -196,7 +196,7 @@ export default function MovieDetailSheet({
                   padding: '3px 8px',
                   borderRadius: 4,
                   background: '#fff',
-                  color: BRAND.ink,
+                  color: TOKENS.text.primary,
                   fontSize: 10,
                   fontWeight: 800,
                   letterSpacing: 0.6,

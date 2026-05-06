@@ -1,26 +1,13 @@
 // Brand atoms — Logo, GalaWordmark, Btn, CountCard, TierBadge, SectionEyebrow,
-// Display, Icon. Lifted from uploads/seating-chart/project/components/brand.jsx
-// and converted from window globals to proper ES exports.
-//
-// Inline-style approach matches the design's source so visual fidelity is
-// guaranteed by code review against the .jsx originals. CSS Modules would
-// have meant rewriting every style which is a translation step + a bug surface.
+// Display, Icon. iOS-native styling — single light theme, no useTheme.
 
-import { BRAND, TIERS, FONT_DISPLAY, FONT_UI } from './tokens.js';
+import { TOKENS, TIERS, FONT_DISPLAY, FONT_UI } from './tokens.js';
 
-// Real DEF logo (replaces the previous SVG placeholder of a circle + "D").
-// Two variants:
-//   - light = white wordmark on transparent (for dark navy backgrounds)
-//   - dark  = navy wordmark on transparent (for paper/light backgrounds)
-// Both have the gold "D" mark.
-//
-// Files at public/assets/brand/def-logo-{light,dark}.png — fetched once
-// from media.daviskids.org during the May 5 migration. Aspect ratio 3:1
-// for light, 4:3 for dark (preserve via height-only sizing).
-//
-// Use `dark={true}` to indicate "this is on a dark background" → use the
-// LIGHT variant. The naming flip is intentional: the prop describes the
-// surface, not the variant.
+// Real DEF logo. Two variants:
+//   - light = white wordmark on transparent (for dark navy hero card)
+//   - dark  = navy wordmark on transparent (for white surfaces)
+// Both have the gold "D" mark. Use `dark={true}` to indicate "this is on
+// a dark background" → use the LIGHT variant.
 export const Logo = ({ size = 32, dark }) => {
   const width = dark ? size * 3 : Math.round(size * 4 / 3);
   return (
@@ -39,7 +26,7 @@ export const Logo = ({ size = 32, dark }) => {
   );
 };
 
-export const GalaWordmark = ({ size = 14, color = BRAND.gold }) => (
+export const GalaWordmark = ({ size = 14, color = TOKENS.brand.gold }) => (
   <div
     style={{
       display: 'inline-flex',
@@ -76,37 +63,42 @@ export const Btn = ({
 }) => {
   const sizes = {
     sm: { h: 34, px: 14, fs: 13 },
-    md: { h: 44, px: 22, fs: 14 },
-    lg: { h: 52, px: 28, fs: 15 },
+    md: { h: 44, px: 22, fs: 15 },
+    lg: { h: 52, px: 28, fs: 17 },
   };
   const s = sizes[size];
   const styles = {
-    primary: { background: BRAND.red, color: '#fff', border: 'none' },
-    // secondary is the bordered/transparent button. Uses --ink-on-ground
-    // and --rule so it works in both dark (white text + faint white
-    // border) and light (navy text + visible navy border) modes.
+    primary: {
+      background: TOKENS.brand.red,
+      color: TOKENS.text.onBrand,
+      border: 'none',
+      boxShadow: TOKENS.shadow.button,
+    },
     secondary: {
-      background: 'transparent',
-      color: 'var(--ink-on-ground)',
-      border: `1.5px solid var(--rule)`,
+      background: TOKENS.fill.tertiary,
+      color: TOKENS.text.primary,
+      border: 'none',
     },
     secondaryDark: {
       background: 'transparent',
-      color: BRAND.ink,
-      border: `1.5px solid ${BRAND.ruleDark}`,
+      color: TOKENS.text.primary,
+      border: `1px solid ${TOKENS.rule}`,
     },
-    gold: { background: BRAND.gold, color: BRAND.ink, border: 'none' },
+    gold: {
+      background: TOKENS.brand.gold,
+      color: TOKENS.brand.navy,
+      border: 'none',
+    },
     ghost: { background: 'transparent', color: 'inherit', border: 'none' },
   }[kind];
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={kind === 'primary' ? 'force-dark' : undefined}
       style={{
         height: s.h,
         padding: `0 ${s.px}px`,
-        borderRadius: 999,
+        borderRadius: kind === 'primary' ? TOKENS.radius.pill : TOKENS.radius.md,
         fontSize: s.fs,
         fontWeight: 600,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -130,11 +122,11 @@ export const Btn = ({
 export const CountCard = ({ value, label, accent }) => (
   <div
     style={{
-      border: '1px solid rgba(255,255,255,0.18)',
-      borderRadius: 8,
+      borderRadius: TOKENS.radius.md,
       padding: '14px 12px',
       textAlign: 'center',
-      background: 'rgba(255,255,255,0.03)',
+      background: 'rgba(255,255,255,0.08)',
+      border: '1px solid rgba(255,255,255,0.18)',
       minWidth: 74,
     }}
   >
@@ -143,7 +135,7 @@ export const CountCard = ({ value, label, accent }) => (
         fontFamily: FONT_DISPLAY,
         fontSize: 30,
         fontWeight: 700,
-        color: accent || '#fff',
+        color: accent || TOKENS.text.onBrand,
         lineHeight: 1,
         fontVariantNumeric: 'tabular-nums',
       }}
@@ -155,7 +147,7 @@ export const CountCard = ({ value, label, accent }) => (
         fontSize: 10,
         fontWeight: 700,
         letterSpacing: 1.6,
-        color: BRAND.gold,
+        color: TOKENS.brand.gold,
         marginTop: 6,
         textTransform: 'uppercase',
       }}
@@ -174,13 +166,13 @@ export const TierBadge = ({ tier = 'Platinum', dark }) => {
         alignItems: 'center',
         gap: 6,
         padding: '4px 10px 4px 8px',
-        borderRadius: 999,
-        border: `1px solid ${dark ? 'rgba(13,15,36,0.15)' : 'rgba(255,255,255,0.25)'}`,
+        borderRadius: TOKENS.radius.pill,
+        border: `1px solid ${dark ? 'rgba(255,255,255,0.25)' : TOKENS.rule}`,
         fontSize: 10,
         fontWeight: 700,
         letterSpacing: 1.4,
         textTransform: 'uppercase',
-        color: dark ? BRAND.ink : '#fff',
+        color: dark ? TOKENS.text.onBrand : TOKENS.text.primary,
         fontFamily: FONT_UI,
       }}
     >
@@ -190,21 +182,20 @@ export const TierBadge = ({ tier = 'Platinum', dark }) => {
   );
 };
 
-export const SectionEyebrow = ({ children, color = BRAND.red }) => (
+export const SectionEyebrow = ({ children, color = TOKENS.text.secondary }) => (
   <div
     style={{
       display: 'inline-flex',
       alignItems: 'center',
-      gap: 10,
-      fontSize: 11,
-      fontWeight: 700,
-      letterSpacing: 2,
+      gap: 0,
+      fontSize: 13,
+      fontWeight: 600,
+      letterSpacing: 0.5,
       color,
       textTransform: 'uppercase',
       fontFamily: FONT_UI,
     }}
   >
-    <span style={{ width: 24, height: 1.5, background: 'currentColor', opacity: 0.7 }} />
     {children}
   </div>
 );
@@ -226,7 +217,7 @@ export const Display = ({
       margin: 0,
       fontWeight: italic ? 500 : 700,
       fontStyle: italic ? 'italic' : 'normal',
-      color: gold ? BRAND.gold : dark ? '#fff' : BRAND.ink,
+      color: gold ? TOKENS.brand.gold : dark ? TOKENS.text.onBrand : TOKENS.text.primary,
       ...style,
     }}
   >

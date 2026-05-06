@@ -22,7 +22,7 @@
 // with the prior value to revert (we surface the error inline + bail).
 
 import { useState } from 'react';
-import { BRAND, FONT_UI } from '../../brand/tokens.js';
+import { TOKENS, FONT_UI } from '../../brand/tokens.js';
 
 export const DINNER_OPTIONS = [
   { value: 'brisket', label: 'Hot brisket french dip' },
@@ -97,7 +97,7 @@ export default function DinnerPicker({
           // Theme-aware. CSS class .dinner-select handles the chevron
           // SVG color (light vs dark) since inline backgroundImage can't
           // see CSS custom properties cleanly.
-          border: `1px solid ${current ? BRAND.indigoLight : 'var(--rule)'}`,
+          border: `1px solid ${current ? TOKENS.semantic.info : 'var(--rule)'}`,
           background: current
             ? 'rgba(168,177,255,0.18)'
             : 'transparent',
@@ -115,11 +115,11 @@ export default function DinnerPicker({
           maxWidth: '100%',
         }}
       >
-        <option value="" style={{ color: BRAND.ink }}>
+        <option value="" style={{ color: TOKENS.text.primary }}>
           — select dinner —
         </option>
         {DINNER_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value} style={{ color: BRAND.ink }}>
+          <option key={o.value} value={o.value} style={{ color: TOKENS.text.primary }}>
             {o.label}
           </option>
         ))}

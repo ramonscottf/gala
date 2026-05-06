@@ -26,7 +26,7 @@
 // movieMeta) so the host can hand off to PostPickSheet.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
 import { SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock } from '../SeatEngine.jsx';
 import { otherTakenForTheater, checkBatchOrphans } from '../../hooks/useSeats.js';
@@ -346,13 +346,13 @@ export default function SeatPickSheet({
         <div
           style={{
             fontSize: 12,
-            color: BRAND.mute,
+            color: TOKENS.text.secondary,
             fontVariantNumeric: 'tabular-nums',
           }}
         >
           {remaining > 0 ? (
             <>
-              <b style={{ color: BRAND.indigoLight }}>{remaining}</b> to place
+              <b style={{ color: TOKENS.semantic.info }}>{remaining}</b> to place
             </>
           ) : (
             <span style={{ color: '#7fcfa0' }}>All placed</span>
@@ -386,8 +386,8 @@ export default function SeatPickSheet({
                 cursor: 'pointer',
                 background: active ? 'rgba(244,185,66,0.14)' : 'rgba(255,255,255,0.05)',
                 boxShadow: active
-                  ? `inset 0 0 0 1.5px ${BRAND.gold}`
-                  : `inset 0 0 0 1px ${BRAND.rule}`,
+                  ? `inset 0 0 0 1.5px ${TOKENS.brand.gold}`
+                  : `inset 0 0 0 1px ${TOKENS.rule}`,
                 color: '#fff',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -404,7 +404,7 @@ export default function SeatPickSheet({
                   borderRadius: 99,
                   background: m.thumbnailUrl || m.posterUrl
                     ? `url(${m.thumbnailUrl || m.posterUrl}) center/cover`
-                    : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+                    : `linear-gradient(160deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
                   flexShrink: 0,
                 }}
               />
@@ -424,7 +424,7 @@ export default function SeatPickSheet({
             display: 'flex',
             gap: 0,
             background: 'rgba(255,255,255,0.04)',
-            border: `1px solid ${BRAND.rule}`,
+            border: `1px solid ${TOKENS.rule}`,
             borderRadius: 12,
             overflow: 'hidden',
           }}
@@ -436,7 +436,7 @@ export default function SeatPickSheet({
               minHeight: 84,
               background: movie.posterUrl
                 ? `url(${movie.posterUrl}) center/cover no-repeat`
-                : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+                : `linear-gradient(160deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
             }}
           />
           <div
@@ -462,7 +462,7 @@ export default function SeatPickSheet({
             >
               {movie.title}
               {movie.year ? (
-                <span style={{ color: BRAND.mute, fontWeight: 500 }}> ({movie.year})</span>
+                <span style={{ color: TOKENS.text.secondary, fontWeight: 500 }}> ({movie.year})</span>
               ) : null}
             </div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -471,7 +471,7 @@ export default function SeatPickSheet({
                   style={{
                     padding: '1px 6px',
                     borderRadius: 3,
-                    background: BRAND.ink,
+                    background: TOKENS.text.primary,
                     color: '#fff',
                     fontSize: 9,
                     fontWeight: 800,
@@ -482,7 +482,7 @@ export default function SeatPickSheet({
                 </span>
               )}
               {movie.runtime && (
-                <span style={{ fontSize: 10, color: BRAND.mute, fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ fontSize: 10, color: TOKENS.text.secondary, fontVariantNumeric: 'tabular-nums' }}>
                   {movie.runtime} min · {movie.audCount} aud
                   {movie.audCount === 1 ? '' : 's'} · {movie.totalCapacity} seats
                 </span>
@@ -501,7 +501,7 @@ export default function SeatPickSheet({
           style={{
             flex: 2,
             display: 'inline-flex',
-            border: `1px solid ${BRAND.rule}`,
+            border: `1px solid ${TOKENS.rule}`,
             borderRadius: 10,
             padding: 3,
             background: 'rgba(255,255,255,0.06)',
@@ -516,7 +516,7 @@ export default function SeatPickSheet({
                 style={{
                   flex: 1,
                   padding: '8px 10px',
-                  background: active ? BRAND.gradient : 'transparent',
+                  background: active ? TOKENS.brand.navy : 'transparent',
                   border: 0,
                   borderRadius: 7,
                   cursor: 'pointer',
@@ -553,7 +553,7 @@ export default function SeatPickSheet({
             padding: '8px 10px',
             borderRadius: 10,
             background: 'rgba(255,255,255,0.06)',
-            border: `1px solid ${BRAND.rule}`,
+            border: `1px solid ${TOKENS.rule}`,
             color: '#fff',
             cursor: 'pointer',
             fontSize: 12,
@@ -565,7 +565,7 @@ export default function SeatPickSheet({
           }}
         >
           {theaterChoices.map((c) => (
-            <option key={c.theaterId} value={c.theaterId} style={{ color: BRAND.ink }}>
+            <option key={c.theaterId} value={c.theaterId} style={{ color: TOKENS.text.primary }}>
               {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`} · {c.format}
             </option>
           ))}
@@ -585,7 +585,7 @@ export default function SeatPickSheet({
           overflow: 'auto',
           borderRadius: 10,
           background: 'rgba(0,0,0,0.2)',
-          border: `1px solid ${BRAND.rule}`,
+          border: `1px solid ${TOKENS.rule}`,
           padding: 10,
           display: 'flex',
           alignItems: 'center',
@@ -613,7 +613,7 @@ export default function SeatPickSheet({
               onSelect={onSelect}
             />
           ) : (
-            <div style={{ padding: 24, color: BRAND.mute, textAlign: 'center' }}>
+            <div style={{ padding: 24, color: TOKENS.text.secondary, textAlign: 'center' }}>
               No theater selected
             </div>
           )}
@@ -627,7 +627,7 @@ export default function SeatPickSheet({
           flexWrap: 'wrap',
           gap: 10,
           fontSize: 10,
-          color: BRAND.mute,
+          color: TOKENS.text.secondary,
           justifyContent: 'center',
         }}
       >
@@ -645,7 +645,7 @@ export default function SeatPickSheet({
           </span>
         ))}
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 2, background: BRAND.indigoLight }} />
+          <span style={{ width: 9, height: 9, borderRadius: 2, background: TOKENS.semantic.info }} />
           Yours
         </span>
       </div>
@@ -658,9 +658,9 @@ export default function SeatPickSheet({
             style={{
               padding: '8px 14px',
               borderRadius: 99,
-              border: `1px solid ${BRAND.rule}`,
+              border: `1px solid ${TOKENS.rule}`,
               background: 'rgba(168,177,255,0.10)',
-              color: BRAND.indigoLight,
+              color: TOKENS.semantic.info,
               fontSize: 11,
               fontWeight: 700,
               display: 'inline-flex',
@@ -683,7 +683,7 @@ export default function SeatPickSheet({
             maxHeight: 56,
             overflow: 'auto',
             padding: '6px 0',
-            borderTop: `1px solid ${BRAND.rule}`,
+            borderTop: `1px solid ${TOKENS.rule}`,
           }}
         >
           {[...sel].sort().map((id) => (
@@ -693,7 +693,7 @@ export default function SeatPickSheet({
                 padding: '3px 8px',
                 borderRadius: 4,
                 background: 'rgba(168,177,255,0.18)',
-                color: BRAND.indigoLight,
+                color: TOKENS.semantic.info,
                 fontSize: 11,
                 fontWeight: 700,
                 fontVariantNumeric: 'tabular-nums',
@@ -716,7 +716,7 @@ export default function SeatPickSheet({
               padding: 3,
               borderRadius: 99,
               background: 'rgba(255,255,255,0.06)',
-              border: `1px solid ${BRAND.rule}`,
+              border: `1px solid ${TOKENS.rule}`,
             }}
           >
             {[
@@ -733,8 +733,8 @@ export default function SeatPickSheet({
                     borderRadius: 99,
                     border: 0,
                     cursor: 'pointer',
-                    background: active ? BRAND.indigoLight : 'transparent',
-                    color: active ? BRAND.ink : '#fff',
+                    background: active ? TOKENS.semantic.info : 'transparent',
+                    color: active ? TOKENS.text.primary : '#fff',
                     fontSize: 11,
                     fontWeight: 700,
                     letterSpacing: 0.2,
@@ -761,7 +761,7 @@ export default function SeatPickSheet({
               padding: '10px 12px',
               borderRadius: 10,
               background: 'rgba(255,255,255,0.06)',
-              border: `1px solid ${BRAND.rule}`,
+              border: `1px solid ${TOKENS.rule}`,
               color: '#fff',
               fontSize: 12,
               fontWeight: 600,
@@ -770,14 +770,14 @@ export default function SeatPickSheet({
               WebkitAppearance: 'none',
             }}
           >
-            <option value="" style={{ color: BRAND.ink }}>
+            <option value="" style={{ color: TOKENS.text.primary }}>
               Reassign to…
             </option>
-            <option value="me" style={{ color: BRAND.ink }}>
+            <option value="me" style={{ color: TOKENS.text.primary }}>
               Me (clear delegation)
             </option>
             {delegations.map((d) => (
-              <option key={d.id} value={d.id} style={{ color: BRAND.ink }}>
+              <option key={d.id} value={d.id} style={{ color: TOKENS.text.primary }}>
                 {d.delegateName || `Delegation ${d.id}`}
               </option>
             ))}
@@ -800,8 +800,8 @@ export default function SeatPickSheet({
           bottom: 0,
           marginTop: 4,
           paddingTop: 10,
-          background: BRAND.navyDeep,
-          borderTop: `1px solid ${BRAND.rule}`,
+          background: TOKENS.brand.navyDeep,
+          borderTop: `1px solid ${TOKENS.rule}`,
           display: 'flex',
           gap: 8,
         }}

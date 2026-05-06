@@ -13,7 +13,7 @@
 // Skip dismisses without changes.
 
 import { useState } from 'react';
-import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
 
 export default function AssignTheseSheet({
@@ -160,11 +160,11 @@ export default function AssignTheseSheet({
                 WebkitAppearance: 'none',
               }}
             >
-              <option value="" style={{ color: BRAND.ink }}>
+              <option value="" style={{ color: TOKENS.text.primary }}>
                 Pick guest…
               </option>
               {delegations.map((d) => (
-                <option key={d.id} value={d.id} style={{ color: BRAND.ink }}>
+                <option key={d.id} value={d.id} style={{ color: TOKENS.text.primary }}>
                   {d.delegateName || `Delegation ${d.id}`}
                 </option>
               ))}

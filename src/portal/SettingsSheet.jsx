@@ -3,14 +3,10 @@
 //   - Help     → tel:/mailto: links to Sherry + the gala inbox
 //   - Sign out → returns to https://daviskids.org/gala
 //
-// Theme picker is intentionally deferred to a follow-up commit — the
-// useTheme hook from PR #35 already drives auto/dark/light at the body
-// level via prefers-color-scheme, and the settings UI for an explicit
-// override needs URL-hash persistence wiring (per Capacitor "no
-// localStorage" rule) which is its own change.
+// Single light theme — iOS-native styling.
 
 import { useState } from 'react';
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
 
 const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
@@ -105,7 +101,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           borderBottom: `1px solid var(--rule)`,
         }}
       >
-        <SectionEyebrow color={BRAND.red}>Profile</SectionEyebrow>
+        <SectionEyebrow color={TOKENS.brand.red}>Profile</SectionEyebrow>
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
@@ -160,7 +156,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           borderBottom: `1px solid var(--rule)`,
         }}
       >
-        <SectionEyebrow color={BRAND.red}>Help</SectionEyebrow>
+        <SectionEyebrow color={TOKENS.brand.red}>Help</SectionEyebrow>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
         <a
@@ -255,7 +251,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           borderRadius: 99,
           border: `1.5px solid rgba(212,38,74,0.4)`,
           background: 'transparent',
-          color: BRAND.red,
+          color: TOKENS.brand.red,
           fontWeight: 700,
           fontSize: 13,
           cursor: 'pointer',

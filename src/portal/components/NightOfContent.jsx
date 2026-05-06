@@ -11,7 +11,7 @@
 // the same import). Layout adapts: 2-column tile grid below 600px,
 // 4-column above.
 
-import { BRAND, FONT_DISPLAY, FONT_UI } from '../../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI } from '../../brand/tokens.js';
 
 const TIMELINE = [
   {

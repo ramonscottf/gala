@@ -16,10 +16,9 @@
 
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { BRAND, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
+import { TOKENS, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
 import { config } from '../config.js';
-import { useTheme } from '../hooks/useTheme.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import SettingsSheet from './SettingsSheet.jsx';
 import DinnerPicker from './components/DinnerPicker.jsx';
@@ -46,7 +45,7 @@ const PosterMini = ({ poster, color, label, size = 44, showLabel = true }) => (
       borderRadius: 5,
       background: poster
         ? `url(${poster}) center/cover`
-        : `linear-gradient(160deg, ${color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+        : `linear-gradient(160deg, ${color || TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
       display: 'flex',
       alignItems: 'flex-end',
       padding: 4,
@@ -81,7 +80,7 @@ const Avatar = ({ name, size = 36, color }) => {
         height: size,
         borderRadius: 99,
         flexShrink: 0,
-        background: color || `linear-gradient(135deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+        background: color || `linear-gradient(135deg, ${TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -106,8 +105,8 @@ const initialsFor = (name) => (name || '?')
 
 const StatusPill = ({ status }) => {
   const map = {
-    claimed: { c: BRAND.indigoLight, bg: 'rgba(168,177,255,0.16)', t: 'CLAIMED' },
-    pending: { c: BRAND.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
+    claimed: { c: TOKENS.semantic.info, bg: 'rgba(168,177,255,0.16)', t: 'CLAIMED' },
+    pending: { c: TOKENS.brand.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
     placed: { c: '#7fcfa0', bg: 'rgba(127,207,160,0.14)', t: 'PLACED' },
     open: { c: 'rgba(255,255,255,0.7)', bg: 'rgba(255,255,255,0.06)', t: 'OPEN' },
   }[status] || { c: 'rgba(255,255,255,0.7)', bg: 'rgba(255,255,255,0.06)', t: '—' };
@@ -156,26 +155,22 @@ const MegaplexLogo = ({ size = 14, dark = true }) => (
   />
 );
 
-const miniBtn = (kind, isLight = false) => ({
+const miniBtn = (kind) => ({
   padding: '8px 14px',
-  borderRadius: 99,
+  borderRadius: TOKENS.radius.md,
   border: 0,
   cursor: 'pointer',
-  fontSize: 12,
-  fontWeight: 700,
-  background: kind === 'primary'
-    ? BRAND.gradient
-    : isLight
-      ? 'rgba(13,18,36,0.08)'
-      : 'rgba(255,255,255,0.08)',
-  color: kind === 'primary' || !isLight ? '#fff' : BRAND.ink,
+  fontSize: 13,
+  fontWeight: 600,
+  background: kind === 'primary' ? TOKENS.brand.red : TOKENS.fill.tertiary,
+  color: kind === 'primary' ? TOKENS.text.onBrand : TOKENS.text.primary,
   fontFamily: FONT_UI,
-  boxShadow: kind === 'primary' ? '0 3px 8px rgba(215,40,70,0.35)' : 'none',
+  boxShadow: kind === 'primary' ? TOKENS.shadow.button : 'none',
 });
 
 // ── ticket card hero ──────────────────────────────────────────────────
 // Navy ticket with perforation + Megaplex co-brand. Phase 1.7 swapped
-// the OLD 3px gold left-edge for 3px BRAND.gradient strips at the top
+// the OLD 3px gold left-edge for 3px TOKENS.brand.navy strips at the top
 // AND bottom of the card per Sherry's email-blast reference (IMG_3918
 // has the same crimson→indigo strip energy on the navy hero block).
 // Other visual fidelity points kept: warm light pool radial-gradient,
@@ -187,16 +182,14 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
     <div
-      className="force-dark-vars"
       style={{
-        margin: '0 14px',
-        borderRadius: '0 0 18px 18px',
+        margin: `calc(env(safe-area-inset-top) + 8px) 14px 0`,
+        borderRadius: 14,
         overflow: 'hidden',
-        background: `linear-gradient(170deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 60%, ${BRAND.navyDeep} 100%)`,
-        border: `1px solid var(--rule)`,
+        background: `linear-gradient(170deg, ${TOKENS.brand.navyMid} 0%, ${TOKENS.brand.navy} 60%, ${TOKENS.brand.navyDeep} 100%)`,
         position: 'relative',
         boxShadow:
-          '0 24px 48px -16px rgba(0,0,0,0.55), 0 8px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset',
+          '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -10px rgba(0,0,0,0.20)',
       }}
     >
       {/* warm light pool — marquee glow */}
@@ -226,8 +219,8 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           zIndex: 2,
         }}
       >
-        <span style={{ width: 14, height: 14, borderRadius: 99, background: BRAND.ink }} />
-        <span style={{ width: 14, height: 14, borderRadius: 99, background: BRAND.ink }} />
+        <span style={{ width: 14, height: 14, borderRadius: 99, background: TOKENS.text.primary }} />
+        <span style={{ width: 14, height: 14, borderRadius: 99, background: TOKENS.text.primary }} />
       </div>
       {/* Top gold perforation strip — boarding-pass trim. Sits ABOVE the
           red→indigo gradient, taking 1.5px of the 3px header band so
@@ -240,7 +233,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           left: 0,
           right: 0,
           height: 3,
-          background: BRAND.gradient,
+          background: TOKENS.brand.navy,
           zIndex: 3,
         }}
       />
@@ -251,7 +244,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           left: 0,
           right: 0,
           height: 1.5,
-          background: BRAND.gold,
+          background: TOKENS.brand.gold,
           zIndex: 4,
         }}
       />
@@ -264,7 +257,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           left: 0,
           right: 0,
           height: 1.5,
-          background: BRAND.gold,
+          background: TOKENS.brand.gold,
           zIndex: 4,
         }}
       />
@@ -383,7 +376,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 fontSize: 9,
                 fontWeight: 800,
                 letterSpacing: 2,
-                color: BRAND.gold,
+                color: TOKENS.brand.gold,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -412,7 +405,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 letterSpacing: 1.4,
                 // Dark text on light pill — was '#fff' which was invisible
                 // against the new white-ish bg.
-                color: BRAND.ink,
+                color: TOKENS.text.primary,
                 flexShrink: 0,
               }}
             >
@@ -421,7 +414,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                   width: 5,
                   height: 5,
                   borderRadius: 99,
-                  background: TIERS[tier]?.color || BRAND.indigoLight,
+                  background: TIERS[tier]?.color || TOKENS.semantic.info,
                 }}
               />
               {tier.toUpperCase()}
@@ -444,7 +437,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           {restName && (
             <i
               style={{
-                color: BRAND.gold,
+                color: TOKENS.brand.gold,
                 fontWeight: 500,
                 // Slight text-shadow gives the gold italic a bit of pop on
                 // the navy gradient, especially on small phone screens
@@ -479,7 +472,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
               label: 'OPEN',
               value: openCount,
               sub: 'To place',
-              color: openCount > 0 ? BRAND.indigoLight : 'rgba(255,255,255,0.6)',
+              color: openCount > 0 ? TOKENS.semantic.info : 'rgba(255,255,255,0.6)',
             },
           ].map((s, i) => (
             <div
@@ -574,7 +567,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
             left: 0,
             right: 0,
             height: 3,
-            background: BRAND.gradient,
+            background: TOKENS.brand.navy,
           }}
         />
       </div>
@@ -661,7 +654,6 @@ const TextMySeatsButton = ({ token, apiBase }) => {
 
 const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, onManageTickets, token, apiBase }) => {
   const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl } = data;
-  const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
   const assignedCount = tickets
     .filter((t) => t.guestName || t.localGuestId)
@@ -702,7 +694,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
             width: 38,
             height: 38,
             borderRadius: 10,
-            background: openCount > 0 ? BRAND.gradient : 'rgba(127,207,160,0.18)',
+            background: openCount > 0 ? TOKENS.brand.navy : 'rgba(127,207,160,0.18)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -730,7 +722,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                 // list (read-only API guests + local additions).
                 onAssign(firstUnassigned);
               }}
-              style={miniBtn('ghost', isLight)}
+              style={miniBtn('ghost')}
             >
               Assign
             </button>
@@ -740,7 +732,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               // HAPTIC: light — Phase 2 wires Capacitor Haptics here.
               onPlaceSeats();
             }}
-            style={miniBtn('primary', isLight)}
+            style={miniBtn('primary')}
           >
             {openCount > 0 ? 'Place' : 'Edit'}
           </button>
@@ -790,7 +782,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: BRAND.indigoLight,
+                color: TOKENS.semantic.info,
                 flexShrink: 0,
               }}
             >
@@ -1020,7 +1012,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                 borderRadius: 10,
                 background: m.posterUrl
                   ? `url(${m.posterUrl}) center/cover`
-                  : `linear-gradient(160deg, ${m.color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+                  : `linear-gradient(160deg, ${m.color || TOKENS.brand.navyMid}, ${TOKENS.brand.navyDeep})`,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
@@ -1105,7 +1097,6 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
 
 const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh }) => {
   const { tickets, blockSize } = data;
-  const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
 
   return (
@@ -1232,7 +1223,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
                   </div>
                 </div>
               </div>
-              <button onClick={() => onOpenTicket(t)} style={miniBtn('ghost', isLight)}>
+              <button onClick={() => onOpenTicket(t)} style={miniBtn('ghost')}>
                 Manage
               </button>
             </div>
@@ -1357,9 +1348,9 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
 // design's pill vocabulary. 'active' is the API name for what the spec
 // doc calls "accessed" (delegate has opened the link but not finalized).
 const DELEGATION_STATUS = {
-  pending: { c: BRAND.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
-  active: { c: BRAND.gold, bg: 'rgba(244,185,66,0.16)', t: 'ACCESSED' },
-  finalized: { c: BRAND.indigoLight, bg: 'rgba(168,177,255,0.16)', t: 'FINALIZED' },
+  pending: { c: TOKENS.brand.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
+  active: { c: TOKENS.brand.gold, bg: 'rgba(244,185,66,0.16)', t: 'ACCESSED' },
+  finalized: { c: TOKENS.semantic.info, bg: 'rgba(168,177,255,0.16)', t: 'FINALIZED' },
 };
 
 export const DelegationStatusPill = ({ status }) => {
@@ -1419,9 +1410,9 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
             width: '100%',
             padding: '14px',
             borderRadius: 14,
-            border: `1.5px dashed ${available > 0 ? 'rgba(168,177,255,0.4)' : BRAND.rule}`,
+            border: `1.5px dashed ${available > 0 ? 'rgba(168,177,255,0.4)' : TOKENS.rule}`,
             background: available > 0 ? 'rgba(168,177,255,0.06)' : 'transparent',
-            color: available > 0 ? BRAND.indigoLight : 'var(--mute)',
+            color: available > 0 ? TOKENS.semantic.info : 'var(--mute)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1700,7 +1691,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             borderRadius: 12,
             border: `1px solid var(--rule)`,
             background: 'var(--surface)',
-            color: copied ? BRAND.indigoLight : '#fff',
+            color: copied ? TOKENS.semantic.info : '#fff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1723,7 +1714,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             borderRadius: 12,
             border: `1.5px solid rgba(212,38,74,0.4)`,
             background: 'transparent',
-            color: BRAND.red,
+            color: TOKENS.brand.red,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1781,7 +1772,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
                 padding: '12px',
                 borderRadius: 99,
                 border: 0,
-                background: BRAND.red,
+                background: TOKENS.brand.red,
                 color: '#fff',
                 fontWeight: 700,
                 fontSize: 13,
@@ -1837,7 +1828,6 @@ const ALL_TABS = [
 ];
 
 const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
-  const { isDark } = useTheme();
   return (
   <div
     className="tab-bar tab-bar-glass"
@@ -1872,10 +1862,10 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
         // doesn't disappear into the cream paper. Dark mode keeps the
         // existing translucent white glass; light mode uses translucent
         // ink for the same frosted-pill effect.
-        background: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(13,15,36,0.06)',
+        background: 'rgba(13,15,36,0.06)',
         backdropFilter: 'blur(28px) saturate(200%)',
         WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-        border: isDark ? '0.5px solid rgba(255,255,255,0.22)' : '0.5px solid rgba(13,15,36,0.10)',
+        border: '0.5px solid rgba(13,15,36,0.10)',
         boxShadow: [
           '0 1px 0 0 rgba(255,255,255,0.30) inset',
           '0 -0.5px 0 0 rgba(255,255,255,0.08) inset',
@@ -1916,13 +1906,11 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
               padding: '8px 0',
               borderRadius: 24,
               background: isActive
-                ? isDark
-                  ? 'radial-gradient(ellipse at 50% 0%, rgba(244,185,66,0.32) 0%, rgba(244,185,66,0.14) 60%, rgba(244,185,66,0) 100%)'
-                  : 'radial-gradient(ellipse at 50% 0%, rgba(168,177,255,0.34) 0%, rgba(168,177,255,0.16) 55%, rgba(168,177,255,0) 100%)'
+                ? 'radial-gradient(ellipse at 50% 0%, rgba(168,177,255,0.34) 0%, rgba(168,177,255,0.16) 55%, rgba(168,177,255,0) 100%)'
                 : 'transparent',
               // Phase 1.15 — inactive label uses var(--mute) so it
               // flips to a readable dark on paper in light mode.
-              color: isActive ? BRAND.indigoLight : 'var(--mute)',
+              color: isActive ? TOKENS.semantic.info : 'var(--mute)',
               transition: 'background .25s ease, color .2s',
             }}
           >
@@ -1980,8 +1968,8 @@ const DevBanner = () => (
     style={{
       flexShrink: 0,
       padding: '4px 14px',
-      background: BRAND.gold,
-      color: BRAND.ink,
+      background: TOKENS.brand.gold,
+      color: TOKENS.text.primary,
       fontSize: 9,
       fontWeight: 800,
       letterSpacing: 1.6,
@@ -2382,7 +2370,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
           padding: '14px 16px',
           borderRadius: 99,
           border: 0,
-          background: !valid || pending ? 'rgba(255,255,255,0.1)' : BRAND.gradient,
+          background: !valid || pending ? 'rgba(255,255,255,0.1)' : TOKENS.brand.navy,
           color: '#fff',
           fontWeight: 700,
           fontSize: 14,
@@ -2413,13 +2401,10 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
 
 // ── Sheet (bottom modal) ──────────────────────────────────────────────
 
-const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
-  const { isDark: systemDark } = useTheme();
-  // Phase 1.15 — forceDark lets the SeatPickSheet host the cinema/seat-pick
-  // experience in dark navy regardless of system theme, matching its
-  // dark-cinema intent. PostPickSheet and AssignTheseSheet leave forceDark
-  // off so they flip with the OS like other forms/dialogs.
-  const isDark = systemDark || forceDark;
+const Sheet = ({ open, onClose, title, children }) => {
+  // iOS-native: white sheet, 14px top corners, drag handle, content padding.
+  // Single light theme — no dark-mode branching. The seat map's cinema-dark
+  // interior lives inside SeatPickSheet, hardcoded as a local dark surface.
   if (!open) return null;
   return (
     <div
@@ -2435,18 +2420,17 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={isDark ? 'force-dark-vars' : undefined}
         style={{
           width: '100%',
           maxHeight: '88%',
-          background: isDark ? BRAND.navyDeep : '#ffffff',
-          color: isDark ? '#fff' : BRAND.ink,
+          background: '#ffffff',
+          color: TOKENS.text.primary,
           borderTopLeftRadius: 22,
           borderTopRightRadius: 22,
           padding: '8px 0 24px',
           display: 'flex',
           flexDirection: 'column',
-          borderTop: `1px solid ${isDark ? BRAND.rule : BRAND.ruleDark}`,
+          borderTop: `1px solid ${TOKENS.rule}`,
           animation: 'slideUp 0.25s ease-out',
           paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
         }}
@@ -2455,7 +2439,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
           style={{
             width: 36,
             height: 4,
-            background: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(13,18,36,0.25)',
+            background: 'rgba(13,18,36,0.25)',
             borderRadius: 2,
             alignSelf: 'center',
             marginBottom: 14,
@@ -2468,7 +2452,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderBottom: `1px solid ${isDark ? BRAND.rule : BRAND.ruleDark}`,
+              borderBottom: `1px solid ${TOKENS.rule}`,
             }}
           >
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>
@@ -2481,9 +2465,9 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
                 width: 32,
                 height: 32,
                 borderRadius: 99,
-                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(13,18,36,0.08)',
+                background: 'rgba(13,18,36,0.08)',
                 border: 0,
-                color: isDark ? '#fff' : BRAND.ink,
+                color: TOKENS.text.primary,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -2520,8 +2504,8 @@ const SmallAvatar = ({ name, size = 16 }) => {
         width: size,
         height: size,
         borderRadius: 99,
-        background: BRAND.indigoLight,
-        color: BRAND.ink,
+        background: TOKENS.semantic.info,
+        color: TOKENS.text.primary,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -2610,7 +2594,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
-                border: deleg ? `1px solid ${BRAND.indigoLight}` : '1px solid transparent',
+                border: deleg ? `1px solid ${TOKENS.semantic.info}` : '1px solid transparent',
               }}
             >
               {deleg && <SmallAvatar name={deleg.delegateName} size={16} />}
@@ -2634,7 +2618,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
             borderRadius: 99,
             border: `1.5px solid rgba(212,38,74,0.4)`,
             background: 'transparent',
-            color: BRAND.red,
+            color: TOKENS.brand.red,
             fontWeight: 700,
             fontSize: 13,
             cursor: pending ? 'not-allowed' : 'pointer',
@@ -2653,7 +2637,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
             padding: '14px 16px',
             borderRadius: 99,
             border: 0,
-            background: BRAND.red,
+            background: TOKENS.brand.red,
             color: '#fff',
             fontWeight: 700,
             fontSize: 14,
@@ -2757,7 +2741,7 @@ const SeatAssignSheet = ({
                 background: isCurrent
                   ? 'rgba(168,177,255,0.14)'
                   : 'rgba(255,255,255,0.03)',
-                border: `1.5px solid ${isCurrent ? BRAND.indigoLight : BRAND.rule}`,
+                border: `1.5px solid ${isCurrent ? TOKENS.semantic.info : TOKENS.rule}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
@@ -2829,7 +2813,6 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { isDark } = useTheme();
   // Wizard's "Take me to my tickets" CTA navigates here with ?tab=tickets
   // so we land on the right tab without needing a global tab store.
   const initialTab = searchParams.get('tab') || 'home';
@@ -2969,11 +2952,10 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
     <div
       style={{
         width: '100%',
-        height: '100dvh',
-        overflow: 'hidden',
+        minHeight: '100vh',
         position: 'relative',
-        background: isDark ? BRAND.navyDeep : 'var(--ground)',
-        color: isDark ? '#fff' : BRAND.ink,
+        background: 'var(--ground)',
+        color: TOKENS.text.primary,
         fontFamily: FONT_UI,
         display: 'flex',
         flexDirection: 'column',
@@ -3118,7 +3100,6 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
         open={seatPickOpen}
         onClose={() => setSeatPickOpen(false)}
         title="Place seats"
-        forceDark
       >
         {seatPickOpen && (
           <SeatPickSheet
@@ -3220,7 +3201,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
                       padding: '4px 10px',
                       borderRadius: 4,
                       background: 'rgba(168,177,255,0.18)',
-                      color: BRAND.indigoLight,
+                      color: TOKENS.semantic.info,
                       fontSize: 11,
                       fontWeight: 700,
                       fontVariantNumeric: 'tabular-nums',
