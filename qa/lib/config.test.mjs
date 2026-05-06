@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+let importCounter = 0;
 async function importFresh() {
-  const url = new URL(`./config.js?t=${Date.now()}`, import.meta.url);
+  importCounter += 1;
+  const url = new URL(`./config.js?t=${Date.now()}-${importCounter}`, import.meta.url);
   return import(url);
 }
 
