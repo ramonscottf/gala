@@ -156,17 +156,17 @@ img,
   overscroll-behavior: contain;
 }
 
-/* Page header sits below the iOS status bar. Use max() so phones without
- * notches get a sensible minimum and notched phones get the inset. */
+/* Page header / tab bar safe-area is owned by the inline styles in
+ * Mobile.jsx now — having it here too produced a double dose of
+ * env(safe-area-inset-*) that left visible cream bands above the hero
+ * card and below the floating pill. Keep these classes purely for
+ * non-select / pointer behavior. */
 .page-header {
-  padding-top: max(16px, env(safe-area-inset-top));
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* Tab bar sits above the iOS home indicator. Same max() pattern. */
 .tab-bar {
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
   user-select: none;
   -webkit-user-select: none;
 }

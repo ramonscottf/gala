@@ -189,8 +189,8 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
     <div
       className="force-dark-vars"
       style={{
-        margin: 'calc(env(safe-area-inset-top) + 8px) 14px 0',
-        borderRadius: 18,
+        margin: '0 14px',
+        borderRadius: '0 0 18px 18px',
         overflow: 'hidden',
         background: `linear-gradient(170deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 60%, ${BRAND.navyDeep} 100%)`,
         border: `1px solid var(--rule)`,
@@ -269,7 +269,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
         }}
       />
 
-      <div style={{ padding: '18px 20px 22px', position: 'relative', zIndex: 1 }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top) + 18px) 20px 22px', position: 'relative', zIndex: 1 }}>
         {/* Sponsor portal header row (added May 5 2026 with the AppBar
             removal). Replaces the standalone top app bar — the DEF logo
             + GALA · 2026 / Sponsor portal label live INSIDE the hero
@@ -1864,7 +1864,7 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 2,
-        padding: '8px 8px max(8px, env(safe-area-inset-bottom)) 8px',
+        padding: 8,
         width: '100%',
         maxWidth: 340,
         borderRadius: 32,
