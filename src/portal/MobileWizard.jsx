@@ -94,7 +94,7 @@ const Sheet = ({ open, onClose, title, children }) => {
       style={{
         position: 'absolute',
         inset: 0,
-        background: 'rgba(0,0,0,0.55)',
+        background: 'rgba(10,10,10,0.45)',
         zIndex: 50,
         display: 'flex',
         alignItems: 'flex-end',
@@ -102,52 +102,51 @@ const Sheet = ({ open, onClose, title, children }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        
         style={{
           width: '100%',
           maxHeight: '85%',
-          background: TOKENS.brand.navyDeep,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: '8px 0 24px',
+          background: TOKENS.surface.sheet,
+          color: TOKENS.text.primary,
+          borderTopLeftRadius: TOKENS.radius.xl,
+          borderTopRightRadius: TOKENS.radius.xl,
           display: 'flex',
           flexDirection: 'column',
-          borderTop: `1px solid var(--rule)`,
+          borderTop: `1px solid ${TOKENS.rule}`,
+          boxShadow: TOKENS.shadow.sheet,
           animation: 'slideUp 0.25s ease-out',
           paddingBottom: 'max(24px, env(safe-area-inset-bottom))',
         }}
       >
-        <div
-          style={{
-            width: 36,
-            height: 4,
-            background: 'rgba(255,255,255,0.25)',
-            borderRadius: 2,
-            alignSelf: 'center',
-            marginBottom: 14,
-          }}
-        />
-        {title && (
+        {title !== undefined && (
           <div
             style={{
-              padding: '0 22px 14px',
+              padding: '16px 24px 14px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderBottom: `1px solid var(--rule)`,
+              borderBottom: `1px solid ${TOKENS.rule}`,
             }}
           >
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>{title}</div>
+            <div
+              style={{
+                fontFamily: FONT_DISPLAY,
+                fontSize: 18,
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {title}
+            </div>
             <button
               aria-label="Close dialog"
               onClick={onClose}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 99,
-                background: 'rgba(255,255,255,0.08)',
+                width: 24,
+                height: 24,
+                borderRadius: TOKENS.radius.sm,
+                background: 'transparent',
                 border: 0,
-                color: TOKENS.text.onBrand,
+                color: TOKENS.text.secondary,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -158,7 +157,7 @@ const Sheet = ({ open, onClose, title, children }) => {
             </button>
           </div>
         )}
-        <div className="scroll-container" style={{ flex: 1, padding: '16px 22px' }}>
+        <div className="scroll-container" style={{ flex: 1, padding: '20px 24px' }}>
           {children}
         </div>
       </div>
@@ -172,10 +171,10 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
   const pct = blockSize > 0 ? (totalAssigned / blockSize) * 100 : 0;
   return (
     <div
-      className="page-header"
       style={{
-        padding: '8px 18px 14px',
-        borderBottom: `1px solid var(--rule)`,
+        padding: 'calc(env(safe-area-inset-top) + 12px) 16px 14px',
+        borderBottom: `1px solid ${TOKENS.rule}`,
+        background: TOKENS.surface.card,
         flexShrink: 0,
       }}
     >
@@ -184,42 +183,62 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 10,
+          marginBottom: 12,
         }}
       >
         <button
           aria-label={step > 1 ? 'Go back to previous step' : 'Return to portal'}
           onClick={onBack}
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 99,
-            background: 'var(--card)',
+            width: 28,
+            height: 28,
+            borderRadius: TOKENS.radius.md,
+            background: 'transparent',
             border: 0,
-            color: TOKENS.text.primary,
+            color: TOKENS.text.secondary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
           }}
         >
-          <Icon name="chevL" size={18} />
+          <Icon name="chevL" size={16} />
         </button>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.6, color: TOKENS.brand.red }}>
-            STEP {step} OF {total}
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: 0.5,
+              color: TOKENS.text.tertiary,
+              textTransform: 'uppercase',
+              fontFamily: FONT_MONO,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            Step {step}/{total}
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, marginTop: 2 }}>Sponsor Seats</div>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: TOKENS.text.primary,
+              marginTop: 2,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Sponsor seats
+          </div>
         </div>
-        <div style={{ width: 36 }} />
+        <div style={{ width: 28 }} />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div
           style={{
             flex: 1,
-            height: 6,
-            borderRadius: 3,
-            background: 'rgba(13,18,36,0.10)',
+            height: 4,
+            borderRadius: 99,
+            background: TOKENS.fill.tertiary,
             overflow: 'hidden',
           }}
         >
@@ -227,23 +246,23 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
             style={{
               width: `${Math.min(100, pct)}%`,
               height: '100%',
-              background: '#a8b1ff',
-              borderRadius: 3,
+              background: TOKENS.text.primary,
+              borderRadius: 99,
               transition: 'width 0.3s',
             }}
           />
         </div>
         <div
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: 'var(--text-secondary)',
+            fontFamily: FONT_MONO,
+            fontSize: 12,
+            fontWeight: 500,
+            color: TOKENS.text.secondary,
             fontVariantNumeric: 'tabular-nums',
-            letterSpacing: 0.5,
           }}
         >
           {totalAssigned}
-          <span style={{ color: 'var(--text-secondary)' }}>/{blockSize}</span>
+          <span style={{ color: TOKENS.text.tertiary }}> / {blockSize}</span>
         </div>
       </div>
     </div>
@@ -252,18 +271,22 @@ const MHeader = ({ step, total, totalAssigned, blockSize, onBack }) => {
 
 const MStickyCTA = ({ children, helper }) => (
   <div
-    className="tab-bar"
     style={{
-      padding: '14px 18px 10px',
-      borderTop: `1px solid var(--rule)`,
-      background: 'rgba(11,14,38,0.95)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
+      padding: '14px 16px calc(env(safe-area-inset-bottom) + 12px)',
+      borderTop: `1px solid ${TOKENS.rule}`,
+      background: TOKENS.surface.card,
       flexShrink: 0,
     }}
   >
     {helper && (
-      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8, textAlign: 'center' }}>
+      <div
+        style={{
+          fontSize: 12,
+          color: TOKENS.text.secondary,
+          marginBottom: 8,
+          textAlign: 'center',
+        }}
+      >
         {helper}
       </div>
     )}
@@ -275,118 +298,129 @@ const MStickyCTA = ({ children, helper }) => (
 
 const Step1Welcome = ({ onNext, blockSize, tier }) => {
   return (
-  <div
-    className="scroll-container"
-    style={{
-      flex: 1,
-      padding: '30px 22px 18px',
-      display: 'flex',
-      flexDirection: 'column',
-    }}
-  >
-    <SectionEyebrow color="#ff6b8a">Welcome, sponsor</SectionEyebrow>
-    <h1
+    <div
+      className="scroll-container"
       style={{
-        fontFamily: FONT_DISPLAY,
-        fontSize: 46,
-        lineHeight: 1.02,
-        letterSpacing: -1,
-        margin: '14px 0 0',
-        fontWeight: 700,
+        flex: 1,
+        padding: '32px 16px 18px',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      Lights, camera,{' '}
-      <i
+      <SectionEyebrow>Welcome, sponsor</SectionEyebrow>
+      <h1
         style={{
-          background: TOKENS.brand.red,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          fontWeight: 500,
+          fontFamily: FONT_DISPLAY,
+          fontSize: 32,
+          lineHeight: 1.1,
+          letterSpacing: '-0.025em',
+          margin: '14px 0 0',
+          fontWeight: 600,
+          color: TOKENS.text.primary,
         }}
       >
-        your seats.
-      </i>
-    </h1>
-    <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.55, marginTop: 14 }}>
-      You've earned <b style={{ color: 'var(--text-primary)' }}>{blockSize} seats</b> at the {tier || 'sponsor'}{' '}
-      tier. Place them across two showtimes and the lineup of films — split or stay together,
-      your call.
-    </p>
+        Place your seats
+      </h1>
+      <p
+        style={{
+          fontSize: 14,
+          color: TOKENS.text.secondary,
+          lineHeight: 1.55,
+          marginTop: 12,
+        }}
+      >
+        You've earned{' '}
+        <span
+          style={{
+            fontFamily: FONT_MONO,
+            color: TOKENS.text.primary,
+            fontWeight: 500,
+          }}
+        >
+          {blockSize}
+        </span>{' '}
+        seats at the {tier || 'sponsor'} tier. Place them across two showtimes and the lineup
+        of films — split or stay together.
+      </p>
 
-    <div
-      style={{
-        marginTop: 24,
-        padding: 18,
-        border: `1px solid var(--rule)`,
-        borderRadius: 14,
-        background: 'var(--card)',
-      }}
-    >
       <div
         style={{
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: 1.6,
-          color: '#ff6b8a',
-          marginBottom: 8,
+          marginTop: 24,
+          padding: 16,
+          border: `1px solid ${TOKENS.rule}`,
+          borderRadius: TOKENS.radius.lg,
+          background: TOKENS.surface.card,
         }}
       >
-        YOUR EVENING
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {[
-          ['5:30 PM', 'Social hour & silent auction'],
-          ['6:00 PM', 'Dinner (your showtime)'],
-          ['Showtime', 'Select your movie & seats'],
-        ].map(([t, d]) => (
-          <div key={t} style={{ display: 'flex', gap: 14 }}>
-            <div
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontSize: 16,
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                minWidth: 80,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {t}
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            color: TOKENS.text.tertiary,
+            marginBottom: 12,
+            textTransform: 'uppercase',
+          }}
+        >
+          Your evening
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            ['5:30 PM', 'Social hour & silent auction'],
+            ['6:00 PM', 'Dinner (your showtime)'],
+            ['Showtime', 'Select your movie & seats'],
+          ].map(([t, d]) => (
+            <div key={t} style={{ display: 'flex', gap: 14 }}>
+              <div
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: TOKENS.text.secondary,
+                  minWidth: 80,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {t}
+              </div>
+              <div style={{ fontSize: 14, color: TOKENS.text.primary }}>{d}</div>
             </div>
-            <div style={{ fontSize: 14, color: 'var(--text-primary)' }}>{d}</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
 
-    <div
-      style={{
-        marginTop: 18,
-        padding: 14,
-        borderRadius: 12,
-        background: 'rgba(244,185,66,0.08)',
-        border: `1px solid rgba(244,185,66,0.2)`,
-        display: 'flex',
-        gap: 10,
-      }}
-    >
-      <Icon name="info" size={16} />
-      <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-        You can come back anytime to change seats or invite guests until <b>June 5</b>.
+      <div
+        style={{
+          marginTop: 16,
+          padding: 14,
+          borderRadius: TOKENS.radius.lg,
+          background: TOKENS.surface.card,
+          border: `1px solid ${TOKENS.rule}`,
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+        }}
+      >
+        <span style={{ color: TOKENS.text.secondary, marginTop: 1 }}>
+          <Icon name="info" size={14} />
+        </span>
+        <div style={{ fontSize: 13, color: TOKENS.text.secondary, lineHeight: 1.5 }}>
+          You can come back anytime to change seats or invite guests until{' '}
+          <span style={{ color: TOKENS.text.primary, fontWeight: 500 }}>June 5</span>.
+        </div>
       </div>
-    </div>
 
-    <div style={{ flex: 1, minHeight: 24 }} />
-    <Btn
-      kind="primary"
-      size="lg"
-      full
-      onClick={onNext}
-      icon={<Icon name="arrowR" size={16} />}
-    >
-      Let's place your seats
-    </Btn>
-  </div>
+      <div style={{ flex: 1, minHeight: 24 }} />
+      <Btn
+        kind="primary"
+        size="lg"
+        full
+        onClick={onNext}
+        icon={<Icon name="arrowR" size={16} />}
+      >
+        Place your seats
+      </Btn>
+    </div>
   );
 };
 

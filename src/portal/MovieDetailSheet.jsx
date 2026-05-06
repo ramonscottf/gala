@@ -94,25 +94,19 @@ export default function MovieDetailSheet({
         className="scroll-container"
         style={{
           width: '100%',
-          // Cap at 640px on desktop so the sheet doesn't stretch the
-          // hero backdrop beyond reasonable viewing width on a 1440px+
-          // monitor; mobile keeps full width.
           maxWidth: isModal ? 640 : '100%',
-          // 90vh on modal so there's always padding around the edge;
-          // 94% on sheet so the modal hugs the bottom safe-area inset.
           maxHeight: isModal ? '90vh' : '94%',
-          background: TOKENS.brand.navyDeep,
-          // Sheet rounds the top only (the bottom is flush with the
-          // viewport edge); modal rounds all four corners.
-          borderTopLeftRadius: 22,
-          borderTopRightRadius: 22,
-          borderBottomLeftRadius: isModal ? 22 : 0,
-          borderBottomRightRadius: isModal ? 22 : 0,
+          background: TOKENS.surface.sheet,
+          borderTopLeftRadius: TOKENS.radius.xl,
+          borderTopRightRadius: TOKENS.radius.xl,
+          borderBottomLeftRadius: isModal ? TOKENS.radius.xl : 0,
+          borderBottomRightRadius: isModal ? TOKENS.radius.xl : 0,
           overflow: 'auto',
           paddingBottom: isModal ? 28 : 'max(28px, env(safe-area-inset-bottom))',
-          color: '#fff',
+          color: TOKENS.text.primary,
           fontFamily: FONT_UI,
-          boxShadow: isModal ? '0 24px 64px rgba(0,0,0,0.55)' : 'none',
+          boxShadow: isModal ? TOKENS.shadow.cardElevated : TOKENS.shadow.sheet,
+          border: `1px solid ${TOKENS.rule}`,
         }}
       >
         {/* Hero backdrop with darkening gradient overlay + close X.
@@ -172,34 +166,38 @@ export default function MovieDetailSheet({
           )}
         </div>
 
-        <div style={{ padding: '18px 22px 22px' }}>
+        <div style={{ padding: '20px 24px 24px' }}>
           <h2
             style={{
               fontFamily: FONT_DISPLAY,
-              fontSize: 26,
-              fontWeight: 700,
+              fontSize: 22,
+              fontWeight: 600,
               margin: '0 0 8px',
-              lineHeight: 1.15,
-              letterSpacing: -0.4,
-              color: '#fff',
+              lineHeight: 1.2,
+              letterSpacing: '-0.02em',
+              color: TOKENS.text.primary,
             }}
           >
             {movie.title}
             {movie.year ? (
-              <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}> ({movie.year})</span>
+              <span style={{ color: TOKENS.text.tertiary, fontWeight: 500 }}>
+                {' '}
+                ({movie.year})
+              </span>
             ) : null}
           </h2>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
             {movie.rating && (
               <span
                 style={{
                   padding: '3px 8px',
-                  borderRadius: 4,
-                  background: '#fff',
+                  borderRadius: TOKENS.radius.sm,
+                  background: TOKENS.fill.secondary,
                   color: TOKENS.text.primary,
                   fontSize: 10,
-                  fontWeight: 800,
-                  letterSpacing: 0.6,
+                  fontWeight: 600,
+                  letterSpacing: 0.4,
+                  textTransform: 'uppercase',
                 }}
               >
                 {movie.rating}
@@ -209,49 +207,50 @@ export default function MovieDetailSheet({
               <span
                 style={{
                   padding: '3px 8px',
-                  borderRadius: 4,
-                  background: 'rgba(255,255,255,0.10)',
-                  color: '#fff',
-                  fontSize: 10,
-                  fontWeight: 700,
+                  borderRadius: TOKENS.radius.sm,
+                  background: TOKENS.fill.secondary,
+                  color: TOKENS.text.primary,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  fontFamily: 'var(--font-mono), monospace',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                {movie.runtime} min
+                {movie.runtime}m
               </span>
             )}
             {movie.tmdbScore != null && movie.tmdbScore >= 1 && (
               <span
                 style={{
                   padding: '3px 8px',
-                  borderRadius: 4,
-                  background: 'rgba(244,185,66,0.18)',
-                  color: TOKENS.brand.gold,
-                  fontSize: 10,
-                  fontWeight: 700,
+                  borderRadius: TOKENS.radius.sm,
+                  background: TOKENS.fill.secondary,
+                  color: TOKENS.text.primary,
+                  fontSize: 11,
+                  fontWeight: 500,
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 3,
+                  gap: 4,
                   fontVariantNumeric: 'tabular-nums',
                 }}
                 title={`${movie.tmdbVoteCount?.toLocaleString() || 0} votes on TMDB`}
               >
-                ★ {movie.tmdbScore.toFixed(1)}
+                <span style={{ color: TOKENS.brand.gold }}>★</span>
+                {movie.tmdbScore.toFixed(1)}
               </span>
             )}
             {(showLabel || showTime) && (
               <span
                 style={{
                   padding: '3px 8px',
-                  borderRadius: 4,
-                  background: 'rgba(168,177,255,0.18)',
-                  color: 'var(--text-secondary)',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: 0.4,
+                  borderRadius: TOKENS.radius.sm,
+                  background: TOKENS.fill.secondary,
+                  color: TOKENS.text.secondary,
+                  fontSize: 11,
+                  fontWeight: 500,
                 }}
               >
-                <Icon name="play" size={9} stroke={2.4} /> {showLabel}
+                {showLabel}
                 {showTime ? ` · ${showTime}` : ''}
               </span>
             )}
@@ -262,9 +261,9 @@ export default function MovieDetailSheet({
               style={{
                 aspectRatio: '16 / 9',
                 width: '100%',
-                borderRadius: 12,
+                borderRadius: TOKENS.radius.md,
                 overflow: 'hidden',
-                background: '#000',
+                background: TOKENS.brand.navyDeep,
                 marginBottom: 16,
               }}
             >
@@ -288,9 +287,9 @@ export default function MovieDetailSheet({
               <div
                 style={{
                   fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: 1.4,
-                  color: 'var(--brand-red)',
+                  fontWeight: 600,
+                  letterSpacing: 0.5,
+                  color: TOKENS.text.tertiary,
                   marginBottom: 8,
                   textTransform: 'uppercase',
                 }}
@@ -300,7 +299,7 @@ export default function MovieDetailSheet({
               <p
                 style={{
                   fontSize: 14,
-                  color: 'rgba(255,255,255,0.85)',
+                  color: TOKENS.text.primary,
                   lineHeight: 1.6,
                   margin: 0,
                 }}

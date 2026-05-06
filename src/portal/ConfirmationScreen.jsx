@@ -64,37 +64,23 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
 
       {/* Hero */}
       <section
-        className="page-header"
         style={{
-          padding: '32px 22px 24px',
+          padding: 'calc(env(safe-area-inset-top) + 32px) 16px 24px',
           position: 'relative',
         }}
       >
-        {/* 3px gradient strip across the top of the hero — the "Sherry blast"
-            energy from her email reference. */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            background: TOKENS.brand.red,
-          }}
-        />
-        <SectionEyebrow color={TOKENS.brand.red}>Davis Education Foundation</SectionEyebrow>
+        <SectionEyebrow>Davis Education Foundation</SectionEyebrow>
         {logoUrl && (
-          <div style={{ margin: '12px 0 4px' }}>
+          <div style={{ margin: '14px 0 0' }}>
             <img
               src={logoUrl}
               alt=""
               loading="lazy"
               style={{
-                maxHeight: 36,
+                maxHeight: 32,
                 maxWidth: 200,
                 objectFit: 'contain',
                 objectPosition: 'left center',
-                opacity: 0.95,
               }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -105,114 +91,89 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
         <h1
           style={{
             fontFamily: FONT_DISPLAY,
-            fontSize: 44,
-            lineHeight: 1.02,
-            letterSpacing: -1,
+            fontSize: 32,
+            lineHeight: 1.1,
+            letterSpacing: '-0.025em',
             margin: '12px 0 6px',
-            fontWeight: 700,
-            color: '#fff',
+            fontWeight: 600,
+            color: TOKENS.text.primary,
           }}
         >
-          You're{' '}
-          <i
-            style={{
-              background: TOKENS.brand.red,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              fontWeight: 500,
-            }}
-          >
-            confirmed.
-          </i>
+          You're confirmed
         </h1>
         <div
           style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 14,
             fontSize: 13,
-            color: 'var(--text-secondary)',
-            marginTop: 8,
+            color: TOKENS.text.secondary,
+            marginTop: 6,
+            fontFamily: FONT_MONO,
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
-          <span>📅 June 10, 2026 · 6:00 PM</span>
-          <span>📍 Megaplex Theatres · Legacy Crossing</span>
+          Jun 10 · 6:00 PM · Megaplex Legacy Crossing
         </div>
       </section>
 
-      {/* Big celebratory icon + thank you */}
-      <div
-        style={{
-          textAlign: 'center',
-          padding: '12px 22px 0',
-        }}
-      >
-        <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 8 }} aria-hidden>
-          🎉
-        </div>
+      {/* Thank you */}
+      <div style={{ padding: '4px 16px 0' }}>
         <h2
           style={{
             fontFamily: FONT_DISPLAY,
-            fontSize: 28,
-            fontWeight: 700,
+            fontSize: 22,
+            fontWeight: 600,
             margin: '0 0 8px',
-            color: '#fff',
-            letterSpacing: -0.4,
+            color: TOKENS.text.primary,
+            letterSpacing: '-0.02em',
           }}
         >
-          Thank you, <i style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{firstName}!</i>
+          Thank you, {firstName}.
         </h2>
         <p
           style={{
-            fontSize: 15,
-            color: 'var(--text-secondary)',
+            fontSize: 14,
+            color: TOKENS.text.secondary,
             lineHeight: 1.55,
             maxWidth: 480,
-            margin: '0 auto',
+            margin: 0,
           }}
         >
-          Your <b style={{ color: '#fff' }}>{seatCount} seat{seatCount === 1 ? '' : 's'}</b>{' '}
-          {seatCount === 1 ? 'is' : 'are'} locked in. We {delivery} your QR below — bring it on
-          June 10.
+          Your{' '}
+          <span
+            style={{
+              fontFamily: FONT_MONO,
+              color: TOKENS.text.primary,
+              fontWeight: 500,
+            }}
+          >
+            {seatCount}
+          </span>{' '}
+          seat{seatCount === 1 ? '' : 's'} {seatCount === 1 ? 'is' : 'are'} locked in. We{' '}
+          {delivery} your QR below — bring it on June 10.
         </p>
       </div>
 
       {/* QR card */}
       <div
         style={{
-          margin: '24px 22px 0',
+          margin: '24px 16px 0',
           padding: 24,
-          borderRadius: 18,
-          background: TOKENS.brand.navyDeep,
-          border: `1px solid var(--rule)`,
+          borderRadius: TOKENS.radius.lg,
+          background: TOKENS.surface.card,
+          border: `1px solid ${TOKENS.rule}`,
           textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
         }}
       >
-        {/* same gradient strip flourish along the top of the QR card */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 2,
-            background: TOKENS.brand.red,
-          }}
-        />
         <div
           style={{
             fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: 1.6,
-            color: 'var(--brand-red)',
+            fontWeight: 600,
+            letterSpacing: 0.5,
+            color: TOKENS.text.tertiary,
             marginBottom: 14,
             textTransform: 'uppercase',
           }}
         >
-          Your check-in QR
+          Check-in QR
         </div>
         {qrImgUrl ? (
           <img
@@ -223,8 +184,8 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             style={{
               display: 'block',
               margin: '0 auto',
-              borderRadius: 10,
-              background: '#fff',
+              borderRadius: TOKENS.radius.md,
+              background: TOKENS.text.onBrand,
               padding: 12,
               maxWidth: '100%',
               height: 'auto',
@@ -236,12 +197,12 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
               width: 260,
               height: 260,
               margin: '0 auto',
-              borderRadius: 10,
-              background: 'var(--card)',
+              borderRadius: TOKENS.radius.md,
+              background: TOKENS.fill.primary,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--text-secondary)',
+              color: TOKENS.text.tertiary,
               fontSize: 12,
             }}
           >
@@ -251,7 +212,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
         <div
           style={{
             fontSize: 12,
-            color: 'rgba(255,255,255,0.55)',
+            color: TOKENS.text.secondary,
             marginTop: 12,
             lineHeight: 1.5,
           }}
@@ -263,7 +224,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
       {/* Action buttons */}
       <div
         style={{
-          padding: '24px 22px 0',
+          padding: '24px 16px 0',
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
@@ -273,10 +234,7 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
           kind="primary"
           size="lg"
           full
-          onClick={() => {
-            // HAPTIC: light — return to portal home.
-            onEdit();
-          }}
+          onClick={onEdit}
           icon={<Icon name="arrowR" size={16} />}
         >
           Edit my seats
@@ -285,36 +243,35 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
           disabled
           title="Coming in Phase 2.5"
           style={{
-            padding: '14px',
-            borderRadius: 12,
-            border: `1.5px solid var(--rule)`,
-            background: 'rgba(255,255,255,0.03)',
-            color: 'rgba(255,255,255,0.55)',
+            padding: '10px 14px',
+            borderRadius: TOKENS.radius.md,
+            border: `1px solid ${TOKENS.rule}`,
+            background: TOKENS.surface.card,
+            color: TOKENS.text.tertiary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 8,
-            fontSize: 14,
-            fontWeight: 600,
+            fontSize: 13,
+            fontWeight: 500,
             cursor: 'not-allowed',
             fontFamily: FONT_UI,
           }}
         >
-          <Icon name="qr" size={16} /> Add to Apple Wallet (coming soon)
+          <Icon name="qr" size={14} /> Add to Apple Wallet (coming soon)
         </button>
       </div>
 
       <div
         style={{
-          padding: '20px 22px max(28px, env(safe-area-inset-bottom))',
+          padding: '24px 16px max(28px, env(safe-area-inset-bottom))',
           fontSize: 12,
-          color: 'var(--text-secondary)',
+          color: TOKENS.text.secondary,
           lineHeight: 1.55,
           textAlign: 'center',
         }}
       >
-        Your seats remain editable until June 9. You can change them anytime from your personal
-        link.
+        Your seats remain editable until June 9.
       </div>
     </div>
   );

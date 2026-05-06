@@ -158,36 +158,43 @@ const FormatBadge = ({ format, size = 'sm' }) => {
 
 const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNightTap }) => (
   <div
-    className="page-header"
     style={{
-      height: 72,
-      padding: '0 36px',
+      height: 56,
+      padding: '0 24px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      borderBottom: `1px solid var(--rule)`,
-      background: 'rgba(11,14,38,0.75)',
-      backdropFilter: 'blur(14px)',
-      WebkitBackdropFilter: 'blur(14px)',
+      borderBottom: `1px solid ${TOKENS.rule}`,
+      background: TOKENS.surface.card,
       flexShrink: 0,
     }}
   >
-    <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-      <Logo size={26} dark />
-      <span style={{ width: 1, height: 24, background: TOKENS.rule }} />
-      <GalaWordmark size={11} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+      <Logo size={22} />
+      <span style={{ width: 1, height: 16, background: TOKENS.rule }} />
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: 0.5,
+          color: TOKENS.text.tertiary,
+          textTransform: 'uppercase',
+        }}
+      >
+        Sponsor portal
+      </span>
       {logoUrl && (
         <>
-          <span style={{ width: 1, height: 24, background: TOKENS.rule }} />
+          <span style={{ width: 1, height: 16, background: TOKENS.rule }} />
           <img
             src={logoUrl}
             alt=""
             loading="lazy"
             style={{
-              maxHeight: 28,
-              maxWidth: 140,
+              maxHeight: 22,
+              maxWidth: 120,
               objectFit: 'contain',
-              opacity: 0.9,
+              opacity: 0.95,
             }}
             onError={(e) => {
               e.currentTarget.style.display = 'none';
@@ -196,34 +203,37 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
         </>
       )}
     </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       {daysOut != null && (
-        <span style={{ fontSize: 11, color: 'var(--brand-red)', fontWeight: 700, letterSpacing: 1.4 }}>
-          {daysOut} DAYS OUT
+        <span
+          style={{
+            fontFamily: 'var(--font-mono), monospace',
+            fontSize: 12,
+            color: TOKENS.text.secondary,
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {daysOut}d
         </span>
       )}
-      {/* M1 — Night of trigger. Mobile gets the dedicated NIGHT tab in
-          its bottom tab bar; desktop wizard has no equivalent surface,
-          so we expose the same content via a top-nav link → modal. */}
       {onNightTap && (
         <button
           onClick={onNightTap}
           style={{
             all: 'unset',
             cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: 600,
-            color: 'rgba(255,255,255,0.78)',
-            padding: '5px 10px',
-            borderRadius: 99,
-            border: `1px solid var(--rule)`,
-            background: 'var(--card)',
+            fontSize: 13,
+            fontWeight: 500,
+            color: TOKENS.text.primary,
+            padding: '6px 12px',
+            borderRadius: TOKENS.radius.md,
+            border: `1px solid ${TOKENS.ruleStrong}`,
+            background: TOKENS.surface.card,
           }}
         >
           Night of
         </button>
       )}
-      <span style={{ width: 1, height: 20, background: TOKENS.rule }} />
       {tier && <TierBadge tier={tier} />}
       <button
         onClick={onSettingsTap}
@@ -234,10 +244,10 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
           display: 'inline-flex',
           alignItems: 'center',
           gap: 10,
-          padding: '5px 14px 5px 5px',
-          borderRadius: 999,
-          background: 'var(--card)',
-          transition: 'background 0.15s',
+          padding: '4px 12px 4px 4px',
+          borderRadius: TOKENS.radius.pill,
+          background: TOKENS.surface.card,
+          border: `1px solid ${TOKENS.rule}`,
           maxWidth: 360,
         }}
       >
@@ -254,8 +264,8 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
           <span
             style={{
               fontSize: 13,
-              fontWeight: 600,
-              color: TOKENS.text.onBrand,
+              fontWeight: 500,
+              color: TOKENS.text.primary,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -267,8 +277,8 @@ const PortalNav = ({ name, subline, tier, daysOut, logoUrl, onSettingsTap, onNig
             <span
               style={{
                 fontSize: 11,
-                fontWeight: 500,
-                color: 'var(--text-secondary)',
+                fontWeight: 400,
+                color: TOKENS.text.secondary,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -295,9 +305,9 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
     <div
       onClick={onClose}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.65)',
+        background: 'rgba(10,10,10,0.45)',
         zIndex: 60,
         display: 'flex',
         alignItems: 'center',
@@ -312,51 +322,56 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
           width: '100%',
           maxWidth,
           maxHeight: '90vh',
-          background: TOKENS.brand.navyDeep,
-          borderRadius: 22,
+          background: TOKENS.surface.sheet,
+          borderRadius: TOKENS.radius.xl,
           overflow: 'auto',
-          color: TOKENS.text.onBrand,
+          color: TOKENS.text.primary,
           fontFamily: FONT_UI,
-          boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
-          border: `1px solid var(--rule)`,
+          boxShadow: TOKENS.shadow.cardElevated,
+          border: `1px solid ${TOKENS.rule}`,
         }}
       >
         {title && (
           <div
             style={{
-              padding: '20px 24px 14px',
+              padding: '16px 24px 14px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderBottom: `1px solid var(--rule)`,
+              borderBottom: `1px solid ${TOKENS.rule}`,
               position: 'sticky',
               top: 0,
-              background: TOKENS.brand.navyDeep,
+              background: TOKENS.surface.sheet,
               zIndex: 1,
             }}
           >
-            <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>
+            <div
+              style={{
+                fontFamily: FONT_DISPLAY,
+                fontSize: 18,
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+              }}
+            >
               {title}
             </div>
             <button
               aria-label="Close dialog"
               onClick={onClose}
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 99,
-                background: 'rgba(255,255,255,0.08)',
+                width: 24,
+                height: 24,
+                borderRadius: TOKENS.radius.sm,
+                background: 'transparent',
                 border: 0,
-                color: TOKENS.text.onBrand,
+                color: TOKENS.text.secondary,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                fontSize: 18,
-                lineHeight: 1,
               }}
             >
-              ×
+              <Icon name="close" size={16} />
             </button>
           </div>
         )}
@@ -397,47 +412,59 @@ const STEPS = [
 // the sponsor has placed any seats, so the wizard reads as a return-to-overview
 // affordance instead of a marketing intro after the first batch is placed.
 const Stepper = ({ step, setStep, step1Label }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
     {STEPS.map((sBase, i) => {
       const s = sBase.n === 1 && step1Label ? { ...sBase, label: step1Label } : sBase;
+      const isActive = s.n === step;
+      const isDone = s.n < step;
       return (
-      <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button
-          onClick={() => setStep(s.n)}
-          style={{
-            all: 'unset',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            opacity: s.n === step ? 1 : s.n < step ? 0.85 : 0.45,
-          }}
-        >
-          <div
+        <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => setStep(s.n)}
             style={{
-              width: 24,
-              height: 24,
-              borderRadius: 99,
-              background: s.n <= step ? 'var(--brand-red)' : 'transparent',
-              border: s.n > step ? `1.5px solid rgba(255,255,255,0.3)` : 'none',
+              all: 'unset',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 11,
-              fontWeight: 700,
-              color: s.n <= step ? TOKENS.text.onBrand : TOKENS.text.onBrand,
+              gap: 8,
             }}
           >
-            {s.n < step ? <Icon name="check" size={12} /> : s.n}
-          </div>
-          <span style={{ fontSize: 12, fontWeight: s.n === step ? 700 : 500, letterSpacing: 0.4 }}>
-            {s.label}
-          </span>
-        </button>
-        {i < STEPS.length - 1 && (
-          <span style={{ flex: '0 0 18px', height: 1, background: TOKENS.rule }} />
-        )}
-      </div>
+            <div
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: TOKENS.radius.sm,
+                background: isActive
+                  ? TOKENS.brand.red
+                  : isDone
+                    ? TOKENS.text.primary
+                    : 'transparent',
+                border: !isActive && !isDone ? `1px solid ${TOKENS.ruleStrong}` : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: 'var(--font-mono), monospace',
+                color: isActive || isDone ? TOKENS.text.onBrand : TOKENS.text.tertiary,
+              }}
+            >
+              {isDone ? <Icon name="check" size={12} /> : s.n}
+            </div>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: isActive ? 600 : 500,
+                color: isActive ? TOKENS.text.primary : TOKENS.text.secondary,
+              }}
+            >
+              {s.label}
+            </span>
+          </button>
+          {i < STEPS.length - 1 && (
+            <span style={{ flex: '0 0 16px', height: 1, background: TOKENS.rule }} />
+          )}
+        </div>
       );
     })}
   </div>
@@ -2258,10 +2285,10 @@ export default function Desktop({
       />
 
       <div
-        className="wizard-body"
         style={{
-          padding: '16px 36px',
-          borderBottom: `1px solid var(--rule)`,
+          padding: '14px 24px',
+          borderBottom: `1px solid ${TOKENS.rule}`,
+          background: TOKENS.surface.card,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -2278,16 +2305,29 @@ export default function Desktop({
             display: 'flex',
             alignItems: 'center',
             gap: 14,
-            fontSize: 12,
-            color: 'var(--text-secondary)',
+            fontSize: 13,
+            color: TOKENS.text.secondary,
+            fontFamily: 'var(--font-mono), monospace',
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
           <span>
-            <b style={{ color: TOKENS.text.onBrand }}>{seats.totalAssigned}</b> / {blockSize} placed
+            <span style={{ color: TOKENS.text.primary, fontWeight: 500 }}>
+              {seats.totalAssigned}
+            </span>
+            <span style={{ color: TOKENS.text.tertiary }}> / {blockSize}</span>
           </span>
-          <span>·</span>
+          <span style={{ color: TOKENS.text.tertiary }}>·</span>
           <span>
-            <b style={{ color: remaining > 0 ? 'var(--brand-red)' : TOKENS.semantic.success }}>{remaining}</b> remaining
+            <span
+              style={{
+                color: remaining > 0 ? TOKENS.brand.red : TOKENS.semantic.success,
+                fontWeight: 500,
+              }}
+            >
+              {remaining}
+            </span>{' '}
+            remaining
           </span>
         </div>
       </div>
