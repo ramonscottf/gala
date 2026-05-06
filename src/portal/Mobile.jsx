@@ -2972,7 +2972,7 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
         height: '100dvh',
         overflow: 'hidden',
         position: 'relative',
-        background: isDark ? BRAND.groundDeep : 'var(--ground)',
+        background: isDark ? BRAND.navyDeep : 'var(--ground)',
         color: isDark ? '#fff' : BRAND.ink,
         fontFamily: FONT_UI,
         display: 'flex',
