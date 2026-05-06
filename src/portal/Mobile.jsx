@@ -670,7 +670,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
   const firstUnassigned = tickets.find((t) => !t.guestName && !t.localGuestId);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
+    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
       <TicketHero
         tier={tier}
         name={name}
@@ -1109,8 +1109,8 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
-      <div style={{ padding: '18px 56px 0 22px' }}>
+    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 0 22px' }}>
         <SectionEyebrow>Tickets</SectionEyebrow>
         <h1
           style={{
@@ -1388,8 +1388,8 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
   const available = seatMath?.available ?? Math.max(0, blockSize - totalAllocated);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
-      <div style={{ padding: '18px 56px 0 22px' }}>
+    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 0 22px' }}>
         <SectionEyebrow>Group</SectionEyebrow>
         <h1
           style={{
@@ -1804,8 +1804,8 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 // served IN auditoriums, Sherry not Sasha, Apple Maps deep link on
 // parking).
 const NightTab = () => (
-  <div className="scroll-container" style={{ flex: 1, paddingTop: 'env(safe-area-inset-top)', paddingBottom: 130 }}>
-    <div style={{ padding: '18px 56px 14px 22px' }}>
+  <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+    <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 14px 22px' }}>
       <SectionEyebrow>The night</SectionEyebrow>
       <h1
         style={{
