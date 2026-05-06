@@ -74,7 +74,7 @@ const Avatar = ({ name, size = 28 }) => {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#fff',
+        color: TOKENS.text.onBrand,
         fontWeight: 700,
         fontSize: size * 0.38,
         letterSpacing: 0.2,
@@ -307,7 +307,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
           background: TOKENS.brand.navyDeep,
           borderRadius: 22,
           overflow: 'auto',
-          color: '#fff',
+          color: TOKENS.text.onBrand,
           fontFamily: FONT_UI,
           boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
           border: `1px solid var(--rule)`,
@@ -339,7 +339,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
                 borderRadius: 99,
                 background: 'rgba(255,255,255,0.08)',
                 border: 0,
-                color: '#fff',
+                color: TOKENS.text.onBrand,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -817,7 +817,7 @@ const StepWelcome = ({
                     style={{
                       fontSize: 12,
                       fontWeight: 600,
-                      color: '#fff',
+                      color: TOKENS.text.onBrand,
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
@@ -845,7 +845,7 @@ const StepWelcome = ({
                 style={{
                   fontSize: 15,
                   fontWeight: 700,
-                  color: '#fff',
+                  color: TOKENS.text.onBrand,
                   marginTop: 4,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -1099,7 +1099,7 @@ const StepShowing = ({
                   style={{
                     fontSize: 16,
                     fontWeight: 700,
-                    color: '#fff',
+                    color: TOKENS.text.onBrand,
                     lineHeight: 1.2,
                   }}
                 >
@@ -1116,7 +1116,7 @@ const StepShowing = ({
                         padding: '2px 8px',
                         borderRadius: 4,
                         background: TOKENS.text.primary,
-                        color: '#fff',
+                        color: TOKENS.text.onBrand,
                         fontSize: 10,
                         fontWeight: 800,
                         letterSpacing: 0.6,
@@ -1131,7 +1131,7 @@ const StepShowing = ({
                         padding: '2px 8px',
                         borderRadius: 4,
                         background: 'rgba(255,255,255,0.08)',
-                        color: '#fff',
+                        color: TOKENS.text.onBrand,
                         fontSize: 10,
                         fontWeight: 700,
                         fontVariantNumeric: 'tabular-nums',
@@ -1396,7 +1396,7 @@ const StepSeats = ({
                         style={{
                           fontSize: 12,
                           fontWeight: 600,
-                          color: '#fff',
+                          color: TOKENS.text.onBrand,
                           lineHeight: 1.25,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
@@ -1461,7 +1461,7 @@ const StepSeats = ({
                       gap: 6,
                       fontSize: 11,
                       fontWeight: 600,
-                      color: '#fff',
+                      color: TOKENS.text.onBrand,
                     }}
                   >
                     <FormatBadge format={c.format} />
@@ -1505,7 +1505,7 @@ const StepSeats = ({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Placed total</span>
-            <span style={{ color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ color: TOKENS.text.onBrand, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
               {seats.totalAssigned}/{blockSize}
             </span>
           </div>
@@ -1581,7 +1581,7 @@ const StepSeats = ({
                     padding: '2px 6px',
                     border: `1px solid var(--rule)`,
                     borderRadius: 3,
-                    color: '#fff',
+                    color: TOKENS.text.onBrand,
                     fontSize: 9,
                   }}
                 >
@@ -1776,12 +1776,12 @@ const StepConfirm = ({
           <>
             {sel.size} seats in {theatersById[theaterMeta?.theaterId]?.name} for the{' '}
             {showingNumber === 1 ? 'early' : 'late'} showing of <b>{movie?.title}</b>. You'll have{' '}
-            <b style={{ color: '#fff' }}>{remaining - sel.size}</b> seats left to place after this.
+            <b style={{ color: TOKENS.text.onBrand }}>{remaining - sel.size}</b> seats left to place after this.
           </>
         ) : (
           <>
             {seats.totalAssigned} of {blockSize} seats placed. Tap{' '}
-            <b style={{ color: '#fff' }}>Done — send me my QR</b> to finalize and we'll text +
+            <b style={{ color: TOKENS.text.onBrand }}>Done — send me my QR</b> to finalize and we'll text +
             email your check-in code. Seats stay editable until June 9.
           </>
         )}
@@ -1871,7 +1871,7 @@ const StepConfirm = ({
                   {g.showLabel.toUpperCase()} ·{' '}
                   <span style={{ fontVariantNumeric: 'tabular-nums' }}>{g.showTime}</span>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: TOKENS.text.onBrand }}>
                   {g.movieTitle}
                 </div>
                 <div
@@ -2275,7 +2275,7 @@ export default function Desktop({
           }}
         >
           <span>
-            <b style={{ color: '#fff' }}>{seats.totalAssigned}</b> / {blockSize} placed
+            <b style={{ color: TOKENS.text.onBrand }}>{seats.totalAssigned}</b> / {blockSize} placed
           </span>
           <span>·</span>
           <span>

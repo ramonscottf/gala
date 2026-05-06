@@ -13,10 +13,9 @@ const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
   <label style={{ display: 'block', marginBottom: 14 }}>
     <div
       style={{
-        fontSize: 10,
-        fontWeight: 800,
-        letterSpacing: 1.4,
-        color: 'var(--accent-italic)',
+        fontSize: 13,
+        fontWeight: 600,
+        color: TOKENS.text.secondary,
         marginBottom: 6,
       }}
     >
@@ -29,12 +28,12 @@ const Field = ({ label, value, onChange, placeholder, type = 'text' }) => (
       placeholder={placeholder}
       style={{
         width: '100%',
-        padding: '14px',
-        borderRadius: 12,
-        border: `1px solid var(--rule)`,
-        background: 'var(--surface)',
-        color: '#fff',
-        fontSize: 15,
+        padding: '12px 14px',
+        borderRadius: TOKENS.radius.md,
+        border: 'none',
+        background: TOKENS.fill.tertiary,
+        color: TOKENS.text.primary,
+        fontSize: 17,
         fontFamily: FONT_UI,
         outline: 'none',
         boxSizing: 'border-box',
@@ -94,42 +93,33 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
 
   return (
     <>
-      <div
-        style={{
-          marginBottom: 18,
-          paddingBottom: 12,
-          borderBottom: `1px solid var(--rule)`,
-        }}
-      >
-        <SectionEyebrow color={TOKENS.brand.red}>Profile</SectionEyebrow>
-      </div>
+      <SectionHeader>Profile</SectionHeader>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
         <div style={{ flex: 1 }}>
-          <Field label="FIRST NAME" value={first} onChange={setFirst} placeholder="First" />
+          <Field label="First name" value={first} onChange={setFirst} placeholder="First" />
         </div>
         <div style={{ flex: 1 }}>
-          <Field label="LAST NAME" value={last} onChange={setLast} placeholder="Last" />
+          <Field label="Last name" value={last} onChange={setLast} placeholder="Last" />
         </div>
       </div>
       <Field
-        label="EMAIL"
+        label="Email"
         value={email}
         onChange={setEmail}
         placeholder="you@example.com"
         type="email"
       />
-      <Field label="PHONE" value={phone} onChange={setPhone} placeholder="(801) 555-0100" type="tel" />
+      <Field label="Phone" value={phone} onChange={setPhone} placeholder="(801) 555-0100" type="tel" />
 
       {error && (
         <div
           style={{
             padding: 12,
-            borderRadius: 10,
-            background: 'rgba(212,38,74,0.12)',
-            border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
-            fontSize: 12,
+            borderRadius: TOKENS.radius.md,
+            background: 'rgba(255,59,48,0.10)',
+            color: TOKENS.semantic.danger,
+            fontSize: 13,
             marginBottom: 14,
           }}
         >
@@ -148,97 +138,28 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
         {pending ? 'Saving…' : saved ? 'Saved' : 'Save profile'}
       </Btn>
 
-      <div
-        style={{
-          marginTop: 28,
-          marginBottom: 12,
-          paddingBottom: 12,
-          borderBottom: `1px solid var(--rule)`,
-        }}
-      >
-        <SectionEyebrow color={TOKENS.brand.red}>Help</SectionEyebrow>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-        <a
+      <SectionHeader>Help</SectionHeader>
+      <div style={groupedListStyle}>
+        <SettingsRow
           href="tel:8015129370"
-          style={{
-            padding: '14px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          <Icon name="msg" size={16} />
-          <div style={{ flex: 1 }}>
-            <div>Call Sherry Miggin</div>
-            <div
-              style={{
-                fontSize: 11,
-                color: 'var(--mute)',
-                marginTop: 2,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              (801) 512-9370 · DEF Foundation
-            </div>
-          </div>
-          <Icon name="chev" size={14} />
-        </a>
-        <a
+          icon="msg"
+          title="Call Sherry Miggin"
+          subtitle="(801) 512-9370 · DEF Foundation"
+        />
+        <Divider />
+        <SettingsRow
           href="mailto:smiggin@dsdmail.net"
-          style={{
-            padding: '14px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          <Icon name="mail" size={16} />
-          <div style={{ flex: 1 }}>
-            <div>Email Sherry directly</div>
-            <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>smiggin@dsdmail.net</div>
-          </div>
-          <Icon name="chev" size={14} />
-        </a>
-        <a
+          icon="mail"
+          title="Email Sherry directly"
+          subtitle="smiggin@dsdmail.net"
+        />
+        <Divider />
+        <SettingsRow
           href="mailto:gala@daviskids.org"
-          style={{
-            padding: '14px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            textDecoration: 'none',
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
-          <Icon name="mail" size={16} />
-          <div style={{ flex: 1 }}>
-            <div>Email the gala inbox</div>
-            <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>
-              gala@daviskids.org
-            </div>
-          </div>
-          <Icon name="chev" size={14} />
-        </a>
+          icon="mail"
+          title="Email the gala inbox"
+          subtitle="gala@daviskids.org"
+        />
       </div>
 
       <button
@@ -246,16 +167,18 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
           window.location.href = 'https://daviskids.org/gala';
         }}
         style={{
+          marginTop: 24,
           width: '100%',
           padding: '14px',
-          borderRadius: 99,
-          border: `1.5px solid rgba(212,38,74,0.4)`,
-          background: 'transparent',
-          color: TOKENS.brand.red,
-          fontWeight: 700,
-          fontSize: 13,
+          borderRadius: TOKENS.radius.md,
+          border: 'none',
+          background: TOKENS.surface.card,
+          color: TOKENS.semantic.danger,
+          fontWeight: 600,
+          fontSize: 17,
           cursor: 'pointer',
           fontFamily: FONT_UI,
+          boxShadow: TOKENS.shadow.card,
         }}
       >
         Sign out
@@ -263,3 +186,70 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
     </>
   );
 }
+
+const SectionHeader = ({ children }) => (
+  <div
+    style={{
+      fontSize: 13,
+      fontWeight: 400,
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
+      color: TOKENS.text.secondary,
+      marginTop: 20,
+      marginBottom: 8,
+      padding: '0 4px',
+    }}
+  >
+    {children}
+  </div>
+);
+
+const groupedListStyle = {
+  background: TOKENS.surface.card,
+  borderRadius: TOKENS.radius.lg,
+  overflow: 'hidden',
+  boxShadow: TOKENS.shadow.card,
+};
+
+const Divider = () => (
+  <div style={{ height: 1, background: TOKENS.rule, marginLeft: 50 }} />
+);
+
+const SettingsRow = ({ href, icon, title, subtitle }) => (
+  <a
+    href={href}
+    style={{
+      padding: '12px 16px',
+      background: TOKENS.surface.card,
+      color: TOKENS.text.primary,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 14,
+      textDecoration: 'none',
+      fontSize: 17,
+      fontWeight: 400,
+    }}
+  >
+    <span style={{ color: TOKENS.semantic.info, display: 'flex' }}>
+      <Icon name={icon} size={20} />
+    </span>
+    <div style={{ flex: 1 }}>
+      <div>{title}</div>
+      {subtitle && (
+        <div
+          style={{
+            fontSize: 13,
+            color: TOKENS.text.secondary,
+            marginTop: 2,
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {subtitle}
+        </div>
+      )}
+    </div>
+    <span style={{ color: TOKENS.text.tertiary, display: 'flex' }}>
+      <Icon name="chev" size={14} />
+    </span>
+  </a>
+);

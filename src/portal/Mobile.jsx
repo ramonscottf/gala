@@ -84,7 +84,7 @@ const Avatar = ({ name, size = 36, color }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#fff',
+        color: TOKENS.text.onBrand,
         fontSize: size * 0.36,
         fontWeight: 700,
         letterSpacing: 0.4,
@@ -305,7 +305,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  color: '#fff',
+                  color: TOKENS.text.onBrand,
                   marginTop: 1,
                   whiteSpace: 'nowrap',
                 }}
@@ -430,7 +430,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
             letterSpacing: -1,
             margin: '14px 0 0',
             fontWeight: 700,
-            color: '#fff',
+            color: TOKENS.text.onBrand,
           }}
         >
           {firstName}{' '}
@@ -465,9 +465,9 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           }}
         >
           {[
-            { label: 'TOTAL', value: blockSize, sub: 'Your block', color: '#fff' },
-            { label: 'PLACED', value: placed, sub: 'In seats', color: '#fff' },
-            { label: 'ASSIGNED', value: assigned, sub: 'To guests', color: '#fff' },
+            { label: 'TOTAL', value: blockSize, sub: 'Your block', color: TOKENS.text.onBrand },
+            { label: 'PLACED', value: placed, sub: 'In seats', color: TOKENS.text.onBrand },
+            { label: 'ASSIGNED', value: assigned, sub: 'To guests', color: TOKENS.text.onBrand },
             {
               label: 'OPEN',
               value: openCount,
@@ -532,7 +532,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
         }}
       >
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: TOKENS.text.onBrand }}>
             Wednesday · June 10, 2026
           </div>
           <div
@@ -1023,7 +1023,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                     fontStyle: 'italic',
                     fontSize: 18,
                     fontWeight: 600,
-                    color: '#fff',
+                    color: TOKENS.text.onBrand,
                     lineHeight: 1.05,
                   }}
                 >
@@ -1042,7 +1042,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                     background: 'rgba(13,15,36,0.85)',
                     backdropFilter: 'blur(6px)',
                     WebkitBackdropFilter: 'blur(6px)',
-                    color: '#fff',
+                    color: TOKENS.text.onBrand,
                     fontSize: 11,
                     fontWeight: 700,
                     padding: '3px 8px',
@@ -1663,7 +1663,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             borderRadius: 12,
             border: `1px solid var(--rule)`,
             background: 'var(--surface)',
-            color: '#fff',
+            color: TOKENS.text.onBrand,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1751,7 +1751,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
                 borderRadius: 99,
                 border: `1.5px solid var(--rule)`,
                 background: 'transparent',
-                color: '#fff',
+                color: TOKENS.text.onBrand,
                 fontWeight: 600,
                 fontSize: 13,
                 cursor: pending ? 'not-allowed' : 'pointer',
@@ -1768,7 +1768,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
                 borderRadius: 99,
                 border: 0,
                 background: TOKENS.brand.red,
-                color: '#fff',
+                color: TOKENS.text.onBrand,
                 fontWeight: 700,
                 fontSize: 13,
                 cursor: pending ? 'not-allowed' : 'pointer',
@@ -2155,7 +2155,7 @@ const GuestField = ({ label, value, onChange, placeholder, type = 'text' }) => (
         borderRadius: 12,
         border: `1px solid var(--rule)`,
         background: 'var(--surface)',
-        color: '#fff',
+        color: TOKENS.text.onBrand,
         fontSize: 15,
         fontFamily: FONT_UI,
         outline: 'none',
@@ -2266,7 +2266,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
               borderRadius: 99,
               border: `1.5px solid var(--rule)`,
               background: 'transparent',
-              color: '#fff',
+              color: TOKENS.text.onBrand,
               cursor: seats <= 1 || lockSeats !== null ? 'not-allowed' : 'pointer',
               fontSize: 20,
               opacity: seats <= 1 || lockSeats !== null ? 0.4 : 1,
@@ -2300,7 +2300,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
               borderRadius: 99,
               border: `1.5px solid var(--rule)`,
               background: 'transparent',
-              color: '#fff',
+              color: TOKENS.text.onBrand,
               cursor: seats >= available || lockSeats !== null ? 'not-allowed' : 'pointer',
               fontSize: 20,
               opacity: seats >= available || lockSeats !== null ? 0.4 : 1,
@@ -2336,7 +2336,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
           borderRadius: 99,
           border: 0,
           background: !valid || pending ? 'rgba(255,255,255,0.1)' : TOKENS.brand.navy,
-          color: '#fff',
+          color: TOKENS.text.onBrand,
           fontWeight: 700,
           fontSize: 14,
           cursor: !valid || pending ? 'not-allowed' : 'pointer',
@@ -2603,7 +2603,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
             borderRadius: 99,
             border: 0,
             background: TOKENS.brand.red,
-            color: '#fff',
+            color: TOKENS.text.onBrand,
             fontWeight: 700,
             fontSize: 14,
             cursor: 'pointer',
@@ -2671,7 +2671,7 @@ const SeatAssignSheet = ({
       <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 18, lineHeight: 1.55 }}>
         Who's in <b style={{ color: 'var(--accent-italic)' }}>seat {seat.replace('-', '')}</b> at{' '}
         {ticket.theaterName} for the {ticket.showLabel.toLowerCase()} showing of{' '}
-        <b style={{ color: '#fff' }}>{ticket.movieTitle}</b>?
+        <b style={{ color: TOKENS.text.onBrand }}>{ticket.movieTitle}</b>?
       </div>
 
       {error && (
@@ -2732,7 +2732,7 @@ const SeatAssignSheet = ({
                 </div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: TOKENS.text.onBrand }}>
                   {d ? d.delegateName : 'No one yet (clear assignment)'}
                 </div>
                 {d && (d.phone || d.email) && (
@@ -2756,7 +2756,7 @@ const SeatAssignSheet = ({
           borderRadius: 12,
           border: `1.5px dashed var(--rule)`,
           background: 'transparent',
-          color: '#fff',
+          color: TOKENS.text.onBrand,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
