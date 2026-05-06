@@ -1,8 +1,8 @@
 ---
 title: Gala Portal · Phase 2 · Theme Reset (iOS-native, single light theme, Capacitor stripped)
-status: spec
+status: superseded
 project: gala
-phase: 2.0 — spec only. Plan written by Skippy in chat 2026-05-05; awaiting Scott + Code execution.
+phase: 2.0 — SUPERSEDED on 2026-05-05 by the three-branch theme contest. See `PLAN-theme-contest-core.md` and the three direction-specific plans (`PLAN-theme-A-ios-native.md`, `PLAN-theme-B-linear.md`, `PLAN-theme-C-editorial.md`). This file kept as historical reference; do not execute.
 source_chat: 2026-05-05 gala-edge-to-edge thread (after the AppBar removal series)
 created: 2026-05-05
 last_updated: 2026-05-05
