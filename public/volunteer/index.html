@@ -55,9 +55,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/def.css?v=20260423e">
-<link rel="stylesheet" href="/css/ts-header.css?v=20260423d">
-<link rel="stylesheet" href="/css/ts-footer.css?v=20260428d">
+<link rel="stylesheet" href="https://daviskids.org/assets/css/def.css?v=20260423e">
+<link rel="stylesheet" href="https://daviskids.org/css/ts-header.css?v=20260423d">
+<link rel="stylesheet" href="https://daviskids.org/css/ts-footer.css?v=20260428d">
 <style>
 :root {
   --gala-red: #CB262C;
@@ -973,8 +973,8 @@ body {
 }
 
 </style>
-  <link rel="stylesheet" href="/assets/wicko-pill-nav/wicko-pill-nav.css?v=1">
-  <link rel="stylesheet" href="/assets/wicko-pill-nav/def-theme.css?v=2">
+  <link rel="stylesheet" href="https://daviskids.org/assets/wicko-pill-nav/wicko-pill-nav.css?v=1">
+  <link rel="stylesheet" href="https://daviskids.org/assets/wicko-pill-nav/def-theme.css?v=2">
 </head>
 <body>
 
@@ -983,7 +983,7 @@ body {
   <!-- ===== FLOATING PILL BAR ===== -->
   <div class="glass-header__bar">
     <a href="/" class="glass-header__logo" aria-label="Home">
-      <img src="/assets/images/logo-header-light.png" class="glass-header__logo-light"
+      <img src="https://daviskids.org/assets/images/logo-header-light.png" class="glass-header__logo-light"
            alt="Davis Education Foundation" height="36">
     </a>
 
@@ -1334,7 +1334,7 @@ body {
 </main>
 
 <div data-include="/includes/footer"></div>
-<script src="/js/includes.js" defer></script>
+<script src="https://daviskids.org/js/includes.js" defer></script>
 
 
 <script>
@@ -1683,13 +1683,15 @@ async function renderSignup() {
 
   wrap.appendChild(field('Relevant experience (optional)', 'text', v => form.experience = v, 'Event management, AV, hospitality, etc.', 'textarea'));
 
-  // SMS opt-in
+  // SMS opt-in (REQUIRED — we need to be able to text shift updates and
+  // day-of changes. Default-on; submit blocks if unchecked.)
   const smsWrap = el('label', { class: 'checkbox-row' });
-  const cb = el('input', { type: 'checkbox', checked: false });
+  const cb = el('input', { type: 'checkbox', checked: true });
+  form.smsOptIn = true;
   cb.addEventListener('change', e => form.smsOptIn = e.target.checked);
   smsWrap.appendChild(cb);
   const smsText = el('span', {});
-  smsText.innerHTML = 'I agree to receive text messages from <strong>Davis Education Foundation</strong> about gala volunteer shifts, reminders, and event updates. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> and <a href="/terms" target="_blank" rel="noopener">Terms</a>.';
+  smsText.innerHTML = 'I agree to receive text messages from <strong>Davis Education Foundation</strong> about gala volunteer shifts, reminders, and event updates. Msg frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="https://daviskids.org/privacy" target="_blank" rel="noopener">Privacy Policy</a> and <a href="https://daviskids.org/terms" target="_blank" rel="noopener">Terms</a>.';
   // Prevent link clicks from toggling the checkbox
   smsText.addEventListener('click', e => { if (e.target.tagName === 'A') e.stopPropagation(); });
   smsWrap.appendChild(smsText);
@@ -1715,6 +1717,10 @@ async function renderSignup() {
       }
       if (!form.position) {
         alertBox.appendChild(el('div', { class: 'alert alert--error' }, 'Please pick a position — scroll up and tap the one you want.'));
+        return;
+      }
+      if (!form.smsOptIn) {
+        alertBox.appendChild(el('div', { class: 'alert alert--error' }, 'We need your OK to text you — that\'s how we send shift reminders and day-of updates. Please check the SMS consent box.'));
         return;
       }
 
@@ -1991,11 +1997,11 @@ mo.observe(document.getElementById('root'), { childList: true, subtree: true });
 observeReveals();
 
 </script>
-<script src="/js/ts-header.js"></script>
-  <script src="/js/site-search.js"></script>
-<script src="/js/ts-footer.js"></script>
-<script src="/js/a11y-widget.js" defer></script>
-  <script src="/assets/wicko-pill-nav/wicko-pill-nav.js?v=1" defer></script>
-  <script src="/assets/wicko-pill-nav/def-adapter.js?v=1" defer></script>
+<script src="https://daviskids.org/js/ts-header.js"></script>
+  <script src="https://daviskids.org/js/site-search.js"></script>
+<script src="https://daviskids.org/js/ts-footer.js"></script>
+<script src="https://daviskids.org/js/a11y-widget.js" defer></script>
+  <script src="https://daviskids.org/assets/wicko-pill-nav/wicko-pill-nav.js?v=1" defer></script>
+  <script src="https://daviskids.org/assets/wicko-pill-nav/def-adapter.js?v=1" defer></script>
 </body>
 </html>
