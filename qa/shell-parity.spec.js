@@ -135,7 +135,8 @@ async function setDinnersForPlacedSeats(token) {
 async function prePlaceSeats(token, target) {
   if (target <= 0) return 0;
   let placedCount = 0;
-  let safety = target * 2 + 10;
+  const safetyLimit = target * 2 + 10;
+  let safety = safetyLimit;
   while (placedCount < target && safety > 0) {
     safety -= 1;
     const portal = await getPortal(token);
@@ -144,16 +145,41 @@ async function prePlaceSeats(token, target) {
     const want = Math.min(target - placedCount, 4);
     let block;
     try {
-      block = await findSeatBlock({ token, count: want });
+      // allowOrphan: true — the SERVER's per-seat orphan check at
+      // pick.js:230 is the source of truth. The SPA-side orphan check
+      // in findSeatBlock can over-reject blocks at row boundaries that
+      // the server would actually accept. Pre-place needs maximum
+      // throughput; orphan correctness is enforced server-side.
+      block = await findSeatBlock({ token, count: want, allowOrphan: true });
     } catch (e) {
       if (want === 1) throw e;
-      // Smaller chunk
-      block = await findSeatBlock({ token, count: 1 });
+      try {
+        block = await findSeatBlock({ token, count: 1, allowOrphan: true });
+      } catch {
+        // Genuinely no open seats — bail loudly so the test fails with
+        // a diagnostic instead of mysteriously timing out at the UI's
+        // post-pick-done waitFor.
+        throw new Error(
+          `prePlaceSeats: cannot find any single seat after ${placedCount}/${target} placed; token may be over-allocated or theater is full`
+        );
+      }
     }
     for (const seatId of block.seatIds) {
       const res = await pickSeat(token, block.theaterId, seatId, 'finalize');
       if (!res.ok) break; // orphan/race — refetch on next iter
     }
+  }
+  // Hard guard: silent shortfall here (returning <target) makes the
+  // UI run land on PostPickSheet with canFinalize=false, post-pick-done
+  // dismisses instead of POSTing /finalize, and leg (a) fails with the
+  // SAME signal a Task-2-regression would produce. Throw instead so the
+  // root cause is unambiguous.
+  if (placedCount < target) {
+    throw new Error(
+      `prePlaceSeats: only placed ${placedCount}/${target} after ${safetyLimit} attempts. ` +
+      `Token may be over-allocated, theater is full, or the orphan check is rejecting all candidates. ` +
+      `This is NOT a Task 2-3 regression; investigate the test sponsor's seat availability.`
+    );
   }
   return placedCount;
 }
@@ -320,29 +346,40 @@ test.describe('shell parity', () => {
       }
 
       const ctx = await browser.newContext({ ...run.context, baseURL: QA_BASE_URL });
-      const page = await ctx.newPage();
-      await preparePage(page);
-      const cap = await captureFinalize(page);
-      await page.goto(sponsorUrl(QA_TOKEN, run.path), { waitUntil: 'networkidle' });
-      await run.drive(page, QA_TOKEN, block);
-      // Brief settle so any in-flight /finalize lands before we read cap.
-      await page.waitForTimeout(800);
-      // Diagnostic: log count BEFORE the QR waitFor. If the canonical
-      // wiring is broken (e.g. on main, before Tasks 2-3) /finalize was
-      // never POSTed → cap.count===0 here. The QR waitFor below then
-      // times out (leg b), but this log makes the count===0 evidence
-      // visible even when leg (b) is the symptom that fails first.
-      // eslint-disable-next-line no-console
-      console.log(`[shell-parity] ${run.label}: count=${cap.count} body=${JSON.stringify(cap.body)}`);
-      // Leg (b): ConfirmationScreen renders with a QR image after
-      // /finalize resolves. This is the visible-success guard — if the
-      // mock response shape ever stops matching what
-      // ConfirmationScreen.jsx reads (data.qrImgUrl), this .waitFor()
-      // is what fails first.
-      await page.locator('img[alt*="QR" i]').first().waitFor({ timeout: 15_000 });
-      captures[run.label] = cap;
-      await ctx.close();
-      await cleanupToken(QA_TOKEN);
+      // Wrap the per-run drive + capture in try/finally so a Playwright
+      // timeout, network blip, or assertion mid-iteration still hits
+      // cleanupToken. Otherwise pre-placed + UI-placed seats stay claimed
+      // on the test sponsor and the next iteration's beforeEach has to
+      // wrestle with leftover state.
+      try {
+        const page = await ctx.newPage();
+        await preparePage(page);
+        const cap = await captureFinalize(page);
+        await page.goto(sponsorUrl(QA_TOKEN, run.path), { waitUntil: 'networkidle' });
+        await run.drive(page, QA_TOKEN, block);
+        // Brief settle so any in-flight /finalize lands before we read cap.
+        await page.waitForTimeout(800);
+        // Diagnostic: log count BEFORE the QR waitFor. If the canonical
+        // wiring is broken (e.g. on main, before Tasks 2-3) /finalize was
+        // never POSTed → cap.count===0 here. The QR waitFor below then
+        // times out (leg b), but this log makes the count===0 evidence
+        // visible even when leg (b) is the symptom that fails first.
+        // eslint-disable-next-line no-console
+        console.log(`[shell-parity] ${run.label}: count=${cap.count} body=${JSON.stringify(cap.body)}`);
+        // Leg (b): ConfirmationScreen renders with a QR image after
+        // /finalize resolves. This is the visible-success guard — if the
+        // mock response shape ever stops matching what
+        // ConfirmationScreen.jsx reads (data.qrImgUrl), this .waitFor()
+        // is what fails first.
+        await page.locator('img[alt*="QR" i]').first().waitFor({ timeout: 15_000 });
+        captures[run.label] = cap;
+      } finally {
+        await ctx.close().catch(() => {});
+        // Clean up regardless of what threw above. Best-effort: if the
+        // cleanup itself fails (network blip, D1 hiccup), swallow so the
+        // original error reaches the test runner instead of being masked.
+        await cleanupToken(QA_TOKEN).catch(() => {});
+      }
     }
 
     // Leg (a): /finalize POSTs exactly once per shell.

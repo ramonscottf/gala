@@ -34,3 +34,11 @@ QA_BASE_URL=http://localhost:8788 npm run qa:smoke
 `qa:stress` mutates the configured sponsor token with `/pick` finalize/unfinalize calls and cleans up after every scenario. It never calls `/finalize`, so it should not send final QR email/SMS.
 
 For a true cross-sponsor race, set `QA_RIVAL_TOKEN` to another safe test token. Without it, the race scenario verifies duplicate safety for two same-token clients hitting the same seat at once.
+
+## Single-tenant `QA_TOKEN` requirement
+
+`qa:parity` and `qa:stress` both pre-place real seats on `QA_TOKEN` and rely on `cleanupToken` between iterations. Two concurrent CI runs against the same `QA_TOKEN` will collide: one run's cleanup will race the other's pre-place, leaving orphan seats in D1 and producing flaky `count !== 1` failures.
+
+**Rule:** ensure each CI runner has its own `QA_TOKEN`. The repo's intended pattern is one token per dedicated test sponsor (Wicko for the primary CI lane, Kara for manual/dev). Don't share a token across parallel CI lanes.
+
+`qa:parity` also requires the sponsor to have `seatsPurchased >= 2` and enough open seats in the home theater to pre-place `(blockSize - 2)` and place 2 more via UI. With a 20-seat sponsor (Wicko), expect ~70-90s per run.
