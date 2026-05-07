@@ -14,11 +14,12 @@
 //
 // Visual fidelity is held to debug-glass.png and the design source.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { BRAND, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
 import { config } from '../config.js';
+import { useFinalize } from '../hooks/useFinalize.js';
 import { useTheme } from '../hooks/useTheme.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import SettingsSheet from './SettingsSheet.jsx';
@@ -660,13 +661,20 @@ const TextMySeatsButton = ({ token, apiBase }) => {
 // ── Home tab ──────────────────────────────────────────────────────────
 
 const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, onManageTickets, token, apiBase }) => {
-  const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl } = data;
+  const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl, seatMath } = data;
   const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
   const assignedCount = tickets
     .filter((t) => t.guestName || t.localGuestId)
     .reduce((n, t) => n + t.seats.length, 0);
-  const openCount = Math.max(0, blockSize - placed);
+  // personalQuota — sponsor's directly-placeable cap (blockSize minus seats
+  // delegated to a sub-delegation). Server pick.js:240 enforces this; if the
+  // home shows "9 still to place" using blockSize while the sponsor has 5
+  // seats delegated away, they hit the seat picker's "you've already placed
+  // your full N" cap before reaching that promised number.
+  const delegatedAway = seatMath?.delegated ?? 0;
+  const personalQuota = Math.max(0, blockSize - delegatedAway);
+  const openCount = Math.max(0, personalQuota - placed);
   const firstUnassigned = tickets.find((t) => !t.guestName && !t.localGuestId);
 
   return (
@@ -715,7 +723,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
-            {openCount > 0 ? `${openCount} seats still to place` : `All ${blockSize} seats placed`}
+            {openCount > 0 ? `${openCount} seats still to place` : `All ${personalQuota} seats placed`}
           </div>
           <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
             {placed} placed · {assignedCount} with guests
@@ -740,6 +748,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               // HAPTIC: light — Phase 2 wires Capacitor Haptics here.
               onPlaceSeats();
             }}
+            data-testid="cta-place-seats"
             style={miniBtn('primary', isLight)}
           >
             {openCount > 0 ? 'Place' : 'Edit'}
@@ -1104,9 +1113,12 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
 // ── Tickets tab ───────────────────────────────────────────────────────
 
 const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh }) => {
-  const { tickets, blockSize } = data;
+  const { tickets, blockSize, seatMath } = data;
   const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
+  // personalQuota — see HomeTab/Welcome notes. Sponsors with sub-delegations
+  // can only place (blockSize - delegated) themselves.
+  const personalQuota = Math.max(0, blockSize - (seatMath?.delegated ?? 0));
 
   return (
     <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
@@ -1125,7 +1137,7 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
           All <i style={{ color: 'var(--accent-text)', fontWeight: 500 }}>{blockSize} seats.</i>
         </h1>
         <div style={{ fontSize: 13, color: 'var(--mute)' }}>
-          {placed} placed · {Math.max(0, blockSize - placed)} still open · tap any seat to reassign
+          {placed} placed · {Math.max(0, personalQuota - placed)} still open · tap any seat to reassign
         </div>
       </div>
 
@@ -2825,7 +2837,15 @@ const SeatAssignSheet = ({
 
 // ── Mobile root ───────────────────────────────────────────────────────
 
-export default function Mobile({ portal, token, theaterLayouts, seats, isDev, onRefresh }) {
+export default function Mobile({
+  portal,
+  token,
+  theaterLayouts,
+  seats,
+  isDev,
+  onRefresh,
+  openSheetOnMount = false,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -2834,14 +2854,26 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   // so we land on the right tab without needing a global tab store.
   const initialTab = searchParams.get('tab') || 'home';
   const [tab, setTab] = useState(initialTab);
-  // After /finalize succeeds, MobileWizard navigates back here with route
-  // state carrying the QR + delivery channels. We promote that into local
-  // state on mount so subsequent re-renders + tab switches don't re-show
-  // confirmation if the user clears it; "Edit my seats" both clears local
-  // state AND replaces route state to drop the back-stack entry.
-  const [confirmationData, setConfirmationData] = useState(
-    () => location.state?.confirmation || null
-  );
+  // After /finalize succeeds via the canonical PostPickSheet "Done" CTA,
+  // useFinalize captures the response in confirmationData and Mobile
+  // short-circuits to ConfirmationScreen. The legacy MobileWizard path
+  // also feeds in via route state (navigate('', {state:{confirmation}}))
+  // — initialConfirmationData seeds from route state on first render so
+  // both entry points reach the same ConfirmationScreen short-circuit
+  // without flicker.
+  const {
+    finalize,
+    finalizing,
+    error: finalizeError,
+    clearError: clearFinalizeError,
+    confirmationData,
+    setConfirmationData,
+  } = useFinalize({
+    apiBase: config.apiBase,
+    token,
+    onRefresh,
+    initialConfirmationData: location.state?.confirmation || null,
+  });
   const [ticketSheet, setTicketSheet] = useState(null);
   const [delegationSheet, setDelegationSheet] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -2859,6 +2891,15 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   // three cards. AssignTheseSheet does multi-seat batch delegation.
   // DinnerPicker scopes to just-placed seats.
   const [seatPickOpen, setSeatPickOpen] = useState(false);
+  // Task 11: `/seats` deep-link now flows through `openSheetOnMount`
+  // (App.jsx no longer routes /seats to MobileWizard). Deps
+  // `[openSheetOnMount]` (NOT `[]`) so route changes from `/:token` →
+  // `/:token/seats` re-fire when React Router keeps the same component
+  // instance mounted across path changes — per spec, "the URL opens the
+  // sheet, every time."
+  useEffect(() => {
+    if (openSheetOnMount) setSeatPickOpen(true);
+  }, [openSheetOnMount]);
   const [postPick, setPostPick] = useState(null);
   const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);
@@ -2878,6 +2919,21 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   );
 
   if (!data) return null;
+
+  // canFinalize gate — the host computes whether PostPickSheet's "Done"
+  // CTA should fire /finalize (canonical canFinalize=true) or just
+  // dismiss (false). Server contract is permissive (only requires >= 1
+  // placed seat), so the UX gate is "all entitled seats placed". Dinners
+  // are NOT part of the gate; sponsors pick them later.
+  const placedCount = (portal?.myAssignments || []).length;
+  // personalQuota — sponsor's directly-placeable cap. Server pick.js:240
+  // caps at (total - delegated): seats given to a sub-delegation are the
+  // delegate's responsibility. Sponsors with active sub-delegations would
+  // never reach placedCount >= blockSize themselves, so canFinalize would
+  // never trip. Use the personal quota instead.
+  const delegatedAway = data.seatMath?.delegated ?? 0;
+  const personalQuota = Math.max(0, (data.blockSize || 0) - delegatedAway);
+  const canFinalize = placedCount >= personalQuota && personalQuota > 0;
 
   // Tickets are passed through without the v1 localGuestId shim — per-seat
   // assignment now lives in ticket.seatDelegations from the API.
@@ -3161,6 +3217,21 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
               setAssignThese(null);
               setDinnerOpen(false);
             }}
+            canFinalize={canFinalize}
+            onFinalize={async () => {
+              try {
+                await finalize();
+                setPostPick(null);
+                setAssignThese(null);
+                setDinnerOpen(false);
+              } catch {
+                // useFinalize sets error state; sheet stays open and
+                // PostPickSheet renders the error banner.
+              }
+            }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
           />
         )}
       </Sheet>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>PlacedTicketsPreview preview</title>
+  <style>
+    /* Theme-aware body — uses CSS vars from the global brand styles
+       imported by the JSX entry point. prefers-color-scheme drives the
+       palette so Playwright's per-project colorScheme captures both
+       light and dark renderings. */
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--ground, #0a0820);
+      font-family: -apple-system, sans-serif;
+      color: var(--ink-on-ground, #fff);
+    }
+    #root { max-width: 480px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/qa/preview/placed-tickets.jsx"></script>
+</body>
+</html>

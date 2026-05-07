@@ -73,6 +73,11 @@ export const Btn = ({
   full,
   disabled,
   style = {},
+  testId,
+  // T3 v2 — title (tooltip) forwarder. Used by Welcome's disabled
+  // "Set dinners to finalize" state to explain why the button is
+  // dimmed without bouncing the sponsor back to the seat picker.
+  title,
 }) => {
   const sizes = {
     sm: { h: 34, px: 14, fs: 13 },
@@ -102,6 +107,8 @@ export const Btn = ({
     <button
       onClick={onClick}
       disabled={disabled}
+      data-testid={testId}
+      title={title || undefined}
       className={kind === 'primary' ? 'force-dark' : undefined}
       style={{
         height: s.h,
