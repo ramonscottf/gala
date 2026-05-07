@@ -593,7 +593,8 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
 // BRANCH B (placedCount > 0): "Your tickets" overview. Once any seat
 // is placed, Step 1 becomes the desktop equivalent of mobile's HOME
 // tab — a grouped list of tickets per showtime/auditorium with two
-// CTAs (Edit my placements → Step 2; Review & finalize → Step 4).
+// CTAs (Place/Edit → opens SeatPickSheet via onNext/onEdit; Review &
+// finalize → fires canonical /finalize via useFinalize when canFinalize).
 //
 // Why: on mobile the bottom tab bar gives one-tap access to a
 // "your tickets" overview. Desktop has no such affordance — once a
@@ -640,7 +641,7 @@ const StepWelcome = ({
         className="scroll-container"
         style={{ padding: '48px 56px', display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 720 }}
       >
-        <SectionEyebrow>Step 1 of 4 · Welcome</SectionEyebrow>
+        <SectionEyebrow>Welcome</SectionEyebrow>
         <Display size={56}>
           Place your <i style={{ color: 'var(--accent-italic)' }}>{blockSize} seats</i>
           <br />
@@ -660,9 +661,9 @@ const StepWelcome = ({
           }}
         >
           {[
-            { label: '1. Showing', copy: 'Select which auditorium and showtime to seat people in.' },
-            { label: '2. Seats', copy: 'Drag-lasso a row, click individual seats, or auto-select a block.' },
-            { label: '3. Confirm', copy: 'Review and place — you can come back to edit anytime.' },
+            { label: '1. Pick a showing', copy: 'Choose the auditorium and showtime for each batch of seats.' },
+            { label: '2. Place seats', copy: 'Click individual seats or auto-select a contiguous block.' },
+            { label: '3. Send your QR', copy: 'When all seats are placed and dinners chosen, send your check-in QR.' },
           ].map((s) => (
             <div
               key={s.label}
@@ -726,13 +727,14 @@ const StepWelcome = ({
 
       {/* Optional dinner-warning chip — only renders when there are
           finalized seats missing dinner picks. Tap opens the canonical
-          DinnerPicker Modal scoped to the missing seats (Task 7
-          rewire — replaces the legacy StepConfirm route via onReview).
-          Falls back to onReview when onSetDinners isn't supplied so the
-          component stays usable in any host that hasn't migrated. */}
+          DinnerPicker Modal scoped to the missing seats (Task 7 rewire —
+          replaces the legacy StepConfirm route). Host MUST supply
+          onSetDinners; the chip becomes a no-op if it doesn't, since
+          falling back to onReview would land sponsors on SeatPickSheet
+          (the wrong sheet for a dinner CTA). */}
       {dinnerMissing > 0 && (
         <button
-          onClick={onSetDinners || onReview}
+          onClick={onSetDinners || (() => {})}
           style={{
             all: 'unset',
             cursor: 'pointer',
@@ -1094,6 +1096,12 @@ export default function Desktop({
   const [postPick, setPostPick] = useState(null);
   const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);
+  // Chip-driven dinner-only flow uses a separate seatId list so it does
+  // NOT trigger the PostPickSheet Modal (which is gated on !!postPick and
+  // reads movieTitle/showLabel/theaterName fields the chip can't synthesize).
+  // The dinner Modal below reads from either source: postPick.seatIds for
+  // the just-placed flow, or dinnerOnlySeatIds for the chip-from-Welcome flow.
+  const [dinnerOnlySeatIds, setDinnerOnlySeatIds] = useState(null);
 
   // D6 — delegations come straight from the API (Phase 1.6 B1 shape).
   // Synthesized guest_name list from v1.5 is gone; the rail now reads
@@ -1122,15 +1130,21 @@ export default function Desktop({
   // Synthesize a "post-pick" payload of the placed seats currently
   // missing dinner choices, so the dinner-picker Modal — which scopes
   // to postPick.seatIds — can be opened from the Welcome chip even
-  // though no fresh placement just happened. Mirrors what
-  // SeatPickSheet's onCommitted produces minus the placement-only
-  // metadata the Modal doesn't read.
+  // though no fresh placement just happened. Uses the dedicated
+  // dinnerOnlySeatIds state — NOT postPick — so PostPickSheet's Modal
+  // (which is gated on !!postPick and reads movieTitle/showLabel/theaterName
+  // fields the chip can't synthesize from missingSeats) doesn't open
+  // on top with broken text.
   const openDinnerPickerForMissing = () => {
     const missing = dinnerCompleteness?.missingSeats || [];
     if (!missing.length) return;
-    setPostPick({
-      seatIds: missing.map((s) => `${s.row_label}-${s.seat_num}`),
-    });
+    // NOTE: seatIds key is `row_label-seat_num` without theater_id, matching
+    // the dinner Modal's existing filter format. Sponsors with seats in
+    // multiple theaters where the same row+num exists in both (rare but
+    // possible — auditoriums can share row labels) would see dinner pickers
+    // for BOTH theaters' seats. Acceptable for now since the picker rows
+    // include the theater context visually; flag for follow-up if it surfaces.
+    setDinnerOnlySeatIds(missing.map((s) => `${s.row_label}-${s.seat_num}`));
     setDinnerOpen(true);
   };
 
@@ -1458,17 +1472,29 @@ export default function Desktop({
 
       <Modal
         open={dinnerOpen}
-        onClose={() => setDinnerOpen(false)}
+        onClose={() => {
+          setDinnerOpen(false);
+          // Clear the chip-driven seatId list so a subsequent dinner-Modal
+          // open starts from a clean slate. postPick is owned by the
+          // SeatPickSheet → PostPickSheet flow and stays as-is.
+          setDinnerOnlySeatIds(null);
+        }}
         title="Pick dinners"
         maxWidth={520}
       >
-        {dinnerOpen && postPick && (
+        {dinnerOpen && (postPick || dinnerOnlySeatIds) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ fontSize: 12, color: 'var(--mute)', marginBottom: 4 }}>
-              Choose a meal for each seat you just placed.
+              {postPick
+                ? 'Choose a meal for each seat you just placed.'
+                : 'Choose a meal for each seat that still needs one.'}
             </div>
             {(portal?.myAssignments || [])
-              .filter((r) => postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`))
+              .filter((r) => {
+                const key = `${r.row_label}-${r.seat_num}`;
+                const ids = postPick?.seatIds || dinnerOnlySeatIds || [];
+                return ids.includes(key);
+              })
               .map((r) => (
                 <div
                   key={`${r.theater_id}-${r.row_label}-${r.seat_num}`}
