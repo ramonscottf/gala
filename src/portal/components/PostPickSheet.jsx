@@ -34,6 +34,7 @@
 
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Icon } from '../../brand/atoms.jsx';
+import PlacedTicketsPreview from './PlacedTicketsPreview.jsx';
 
 export default function PostPickSheet({
   placed,
@@ -52,6 +53,10 @@ export default function PostPickSheet({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {/* Reward beat — boarding-pass mini-card showing the just-placed
+          seats. Renders above the success header on both shells. */}
+      <PlacedTicketsPreview placed={placed} />
+
       {/* Success header */}
       <div
         style={{
