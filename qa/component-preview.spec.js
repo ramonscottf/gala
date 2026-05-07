@@ -15,10 +15,14 @@ import { preparePage } from './lib/config.js';
 // advisory / local-only.
 
 test.describe('component previews', () => {
-  test('PlacedTicketsPreview renders correctly @desktop-light', async ({ page }) => {
+  // Spec runs once per Playwright project (4 baselines: desktop-light/dark
+  // + mobile-light/dark) the same way qa/visual.spec.js does. The component
+  // uses CSS variables that flip with color scheme, so dark/light baselines
+  // genuinely differ.
+  test('PlacedTicketsPreview renders correctly', async ({ page }) => {
     await preparePage(page);
     await page.goto('http://localhost:5173/sponsor/qa/preview/placed-tickets.html');
-    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#root').locator('> *').first()).toBeVisible();
     await expect(page.locator('#root')).toHaveScreenshot('placed-tickets.png', {
       maxDiffPixelRatio: 0.04, // looser than visual.spec.js — advisory
     });
