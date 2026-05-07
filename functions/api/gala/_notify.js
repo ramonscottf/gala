@@ -187,9 +187,21 @@ export function galaEmailHtml({ firstName, body, footerLine }) {
           </td></tr>
           <tr><td class="card-pad" style="padding:0 40px 28px 40px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#3d3d3d;font-size:16px;line-height:25px;">${body}</td></tr>
           <tr><td class="card-pad" style="padding:0 40px;"><div style="border-top:1px solid #c5cdd9;height:1px;line-height:1px;font-size:0;">&nbsp;</div></td></tr>
-          <tr><td class="card-pad" align="center" style="padding:24px 40px 28px 40px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-            <p style="margin:0 0 6px 0;font-size:12px;line-height:18px;color:#666;"><strong style="color:#0d1b3d;">${foot}</strong></p>
-            <p style="margin:0;font-size:12px;line-height:18px;color:#666;"><a href="https://daviskids.org" style="color:#666;text-decoration:underline;">daviskids.org</a> &nbsp;·&nbsp; Questions? <a href="mailto:smiggin@dsdmail.net" style="color:#666;text-decoration:underline;">Reply to this email</a></p>
+          <tr><td class="card-pad" align="center" style="padding:24px 40px 8px 40px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 14px 0;font-size:12px;line-height:18px;color:#666;"><strong style="color:#0d1b3d;">${foot}</strong></p>
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+              <tr><td style="padding:6px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#666;text-align:center;">
+                <span style="color:#0d1b3d;font-weight:600;">Sponsorship &amp; gala questions</span><br/>
+                Sherry Miggin &nbsp;·&nbsp; <a href="tel:+18015129370" style="color:#666;text-decoration:none;">801-512-9370</a> &nbsp;·&nbsp; <a href="mailto:smiggin@dsdmail.net" style="color:#666;text-decoration:underline;">smiggin@dsdmail.net</a>
+              </td></tr>
+              <tr><td style="padding:6px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#666;text-align:center;">
+                <span style="color:#0d1b3d;font-weight:600;">Technical help</span><br/>
+                Scott Foster &nbsp;·&nbsp; <a href="tel:+18018106642" style="color:#666;text-decoration:none;">801-810-6642</a> &nbsp;·&nbsp; <a href="mailto:sfoster@dsdmail.net" style="color:#666;text-decoration:underline;">sfoster@dsdmail.net</a>
+              </td></tr>
+            </table>
+          </td></tr>
+          <tr><td class="card-pad" align="center" style="padding:8px 40px 24px 40px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+            <p style="margin:0;font-size:12px;line-height:18px;color:#888;"><a href="https://daviskids.org" style="color:#888;text-decoration:underline;">daviskids.org</a></p>
           </td></tr>
         </table>
       </td></tr>
