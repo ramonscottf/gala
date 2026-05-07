@@ -646,6 +646,11 @@ export default function Desktop({
               token={token}
               apiBase={config.apiBase}
               onRefresh={onRefresh}
+              onOpenDelegation={(delegation) => {
+                if (!delegation) return;
+                setDesktopTab(null);
+                setDelegationSheet(delegation);
+              }}
             />
           )}
           {desktopTab === 'guests' && (
@@ -677,6 +682,7 @@ export default function Desktop({
                 : '')
           }
           showTime={movieDetail.__showTime}
+          variant="modal"
           onClose={() => setMovieDetail(null)}
         />
       )}

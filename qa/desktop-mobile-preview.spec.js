@@ -38,17 +38,48 @@ test.describe('sponsor shell preview', () => {
     await expect(page.getByRole('dialog', { name: 'Guests invited' })).toBeVisible();
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Your assignments/i);
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/pending/i);
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Megan Foster/i);
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/G4/i);
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Preview Guest/i);
 
     await page.getByLabel('Close dialog').click();
     await page.getByTestId('desktop-open-tickets').click();
     await expect(page.getByRole('dialog', { name: 'All tickets' })).toBeVisible();
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/All 10 seats/i);
+    await expect(page.getByTestId('ticket-qr-card')).toBeVisible();
+    await expect(page.getByTestId('ticket-card')).toHaveCount(2);
+    await expect(page.getByTestId('ticket-card-details').first()).toHaveCount(0);
+    await page.getByTestId('ticket-card-toggle').first().click();
+    await expect(page.getByTestId('ticket-card-details').first()).toBeVisible();
+    await expect(page.getByTestId('ticket-card-details').first()).toContainText(/Seat holder: Scott Foster/i);
+    await expect(page.getByTestId('ticket-card-details').first()).toContainText(/Guest: Megan Foster/i);
+    await expect(page.getByTestId('guest-ticket-card')).toHaveCount(1);
+    await expect(page.getByTestId('guest-ticket-card').first()).toContainText(/Megan Foster guest seats/i);
+    await expect(page.getByTestId('guest-ticket-card').first().getByRole('button', { name: 'View' })).toBeVisible();
+    await page.getByTestId('guest-ticket-card').first().getByTestId('ticket-card-toggle').click();
+    await expect(page.getByTestId('guest-ticket-card').first()).toContainText(/Guest: Megan Foster/i);
+    await expect(page.getByTestId('guest-ticket-card').first()).toContainText(/G4/i);
+    await expect(page.getByTestId('guest-ticket-card').first()).toContainText(/Cold turkey sandwich|not selected yet/i);
 
     await page.getByLabel('Close dialog').click();
     await page.getByTestId('desktop-open-night').click();
     await expect(page.getByRole('dialog', { name: 'Tonight details' })).toBeVisible();
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/What to expect/i);
+  });
+
+  test('desktop movie detail is a popup and keeps the title clear of the poster', async ({ page }) => {
+    await preparePage(page);
+    await page.setViewportSize({ width: 1365, height: 900 });
+    await page.goto(`${PREVIEW_URL}?surface=desktop`);
+
+    await page.getByTestId('desktop-lineup-card').first().click();
+    await expect(page.getByTestId('movie-detail-sheet')).toBeVisible();
+    const sheetBox = await page.getByTestId('movie-detail-sheet').boundingBox();
+    expect(sheetBox?.width).toBeLessThan(760);
+
+    const posterBox = await page.getByTestId('movie-detail-poster').boundingBox();
+    const titleBox = await page.getByTestId('movie-detail-title').boundingBox();
+    expect(titleBox?.x).toBeGreaterThan((posterBox?.x || 0) + (posterBox?.width || 0));
   });
 
   test('mobile preview renders the mobile shell without desktop companion chrome', async ({ page }) => {

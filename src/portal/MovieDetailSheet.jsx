@@ -91,13 +91,14 @@ export default function MovieDetailSheet({
       <div
         onClick={(e) => e.stopPropagation()}
         ref={innerRef}
+        data-testid="movie-detail-sheet"
         className="scroll-container force-dark-vars"
         style={{
           width: '100%',
           // Cap at 640px on desktop so the sheet doesn't stretch the
           // hero backdrop beyond reasonable viewing width on a 1440px+
           // monitor; mobile keeps full width.
-          maxWidth: isModal ? 640 : '100%',
+          maxWidth: isModal ? 680 : '100%',
           // 90vh on modal so there's always padding around the edge;
           // 94% on sheet so the modal hugs the bottom safe-area inset.
           maxHeight: isModal ? '90vh' : '94%',
@@ -155,106 +156,118 @@ export default function MovieDetailSheet({
           >
             ×
           </button>
-          {movie.posterUrl && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 'max(110px, env(safe-area-inset-top))',
-                left: 18,
-                width: 88,
-                height: 120,
-                borderRadius: 8,
-                background: `url(${movie.posterUrl}) center/cover no-repeat`,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-                border: `1px solid var(--rule)`,
-              }}
-            />
-          )}
         </div>
 
         <div style={{ padding: '18px 22px 22px' }}>
-          <h2
+          <div
             style={{
-              fontFamily: FONT_DISPLAY,
-              fontSize: 26,
-              fontWeight: 700,
-              margin: '0 0 8px',
-              lineHeight: 1.15,
-              letterSpacing: -0.4,
-              color: '#fff',
+              display: 'grid',
+              gridTemplateColumns: movie.posterUrl ? '92px minmax(0, 1fr)' : '1fr',
+              gap: 14,
+              alignItems: 'start',
+              marginTop: isModal ? -56 : -42,
+              marginBottom: 14,
             }}
           >
-            {movie.title}
-            {movie.year ? (
-              <span style={{ color: 'var(--mute)', fontWeight: 500 }}> ({movie.year})</span>
-            ) : null}
-          </h2>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-            {movie.rating && (
-              <span
+            {movie.posterUrl && (
+              <div
+                data-testid="movie-detail-poster"
                 style={{
-                  padding: '3px 8px',
-                  borderRadius: 4,
-                  background: '#fff',
-                  color: BRAND.ink,
-                  fontSize: 10,
-                  fontWeight: 800,
-                  letterSpacing: 0.6,
+                  width: 92,
+                  aspectRatio: '2 / 3',
+                  borderRadius: 8,
+                  background: `url(${movie.posterUrl}) center/cover no-repeat`,
+                  boxShadow: '0 12px 28px rgba(0,0,0,0.55)',
+                  border: `1px solid var(--rule)`,
                 }}
-              >
-                {movie.rating}
-              </span>
+              />
             )}
-            {movie.runtime && (
-              <span
+            <div style={{ minWidth: 0, paddingTop: isModal ? 66 : 52 }}>
+              <h2
+                data-testid="movie-detail-title"
                 style={{
-                  padding: '3px 8px',
-                  borderRadius: 4,
-                  background: 'rgba(255,255,255,0.10)',
+                  fontFamily: FONT_DISPLAY,
+                  fontSize: 26,
+                  fontWeight: 700,
+                  margin: '0 0 8px',
+                  lineHeight: 1.15,
+                  letterSpacing: -0.4,
                   color: '#fff',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  fontVariantNumeric: 'tabular-nums',
                 }}
               >
-                {movie.runtime} min
-              </span>
-            )}
-            {movie.tmdbScore != null && movie.tmdbScore >= 1 && (
-              <span
-                style={{
-                  padding: '3px 8px',
-                  borderRadius: 4,
-                  background: 'rgba(244,185,66,0.18)',
-                  color: '#f4b942',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 3,
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-                title={`${movie.tmdbVoteCount?.toLocaleString() || 0} votes on TMDB`}
-              >
-                ★ {movie.tmdbScore.toFixed(1)}
-              </span>
-            )}
-            {(showLabel || showTime) && (
-              <span
-                style={{
-                  padding: '3px 8px',
-                  borderRadius: 4,
-                  background: 'rgba(168,177,255,0.18)',
-                  color: 'var(--accent-italic)',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: 0.4,
-                }}
-              >
-                <Icon name="play" size={9} stroke={2.4} /> {showLabel}
-                {showTime ? ` · ${showTime}` : ''}
-              </span>
-            )}
+                {movie.title}
+                {movie.year ? (
+                  <span style={{ color: 'var(--mute)', fontWeight: 500 }}> ({movie.year})</span>
+                ) : null}
+              </h2>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {movie.rating && (
+                  <span
+                    style={{
+                      padding: '3px 8px',
+                      borderRadius: 4,
+                      background: '#fff',
+                      color: BRAND.ink,
+                      fontSize: 10,
+                      fontWeight: 800,
+                      letterSpacing: 0.6,
+                    }}
+                  >
+                    {movie.rating}
+                  </span>
+                )}
+                {movie.runtime && (
+                  <span
+                    style={{
+                      padding: '3px 8px',
+                      borderRadius: 4,
+                      background: 'rgba(255,255,255,0.10)',
+                      color: '#fff',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {movie.runtime} min
+                  </span>
+                )}
+                {movie.tmdbScore != null && movie.tmdbScore >= 1 && (
+                  <span
+                    style={{
+                      padding: '3px 8px',
+                      borderRadius: 4,
+                      background: 'rgba(244,185,66,0.18)',
+                      color: '#f4b942',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 3,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                    title={`${movie.tmdbVoteCount?.toLocaleString() || 0} votes on TMDB`}
+                  >
+                    ★ {movie.tmdbScore.toFixed(1)}
+                  </span>
+                )}
+                {(showLabel || showTime) && (
+                  <span
+                    style={{
+                      padding: '3px 8px',
+                      borderRadius: 4,
+                      background: 'rgba(168,177,255,0.18)',
+                      color: 'var(--accent-italic)',
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: 0.4,
+                    }}
+                  >
+                    <Icon name="play" size={9} stroke={2.4} /> {showLabel}
+                    {showTime ? ` · ${showTime}` : ''}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {trailerSrc && (

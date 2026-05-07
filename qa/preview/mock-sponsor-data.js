@@ -290,6 +290,26 @@ export const createPreviewPortal = () => ({
       status: 'pending',
     },
   ],
+  childDelegationAssignments: [
+    {
+      theater_id: 2,
+      row_label: 'G',
+      seat_num: 4,
+      guest_name: 'Davis Education Foundation / Megan Foster',
+      delegation_id: 301,
+      delegate_name: 'Megan Foster',
+      dinner_choice: 'turkey',
+    },
+    {
+      theater_id: 2,
+      row_label: 'G',
+      seat_num: 5,
+      guest_name: 'Davis Education Foundation / Megan Foster',
+      delegation_id: 301,
+      delegate_name: 'Megan Foster',
+      dinner_choice: null,
+    },
+  ],
 });
 
 export function createPreviewSeats(portal, setPortal) {
