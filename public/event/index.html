@@ -587,14 +587,14 @@ h1 {
 .trailer-shell iframe {
   display: block;
   position: absolute;
-  top: 50%;
+  bottom: 0;
   left: 0;
   width: 100%;
   /* iframe stays 16:9 internally; we scale its height so its rendered height
-     equals container_width / 1.778, then translateY centers it so the
-     letterbox bars (top + bottom of the source video) overflow off-canvas. */
+     equals container_width / 1.778. Anchoring to bottom keeps the Stream
+     player controls flush with the visible frame; the upper letterbox bar
+     overflows above (no UI lives there). */
   height: calc(100% * (2.40 / (16 / 9)));
-  transform: translateY(-50%);
   border: 0;
 }
 
