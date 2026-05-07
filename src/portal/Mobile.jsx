@@ -37,6 +37,7 @@ import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
+import { enrichMovieScores, formatRottenBadge } from './movieScores.js';
 
 const SheetFrameContext = createContext(false);
 
@@ -1000,114 +1001,111 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
         </div>
       </div>
       <div
-        className="no-scrollbar"
+        data-testid="mobile-lineup-grid"
         style={{
-          marginTop: 14,
-          paddingLeft: 18,
-          display: 'flex',
-          gap: 10,
-          overflowX: 'auto',
-          paddingBottom: 6,
-          paddingRight: 18,
-          scrollSnapType: 'x mandatory',
+          marginTop: 16,
+          padding: '0 22px 8px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: '18px 14px',
         }}
       >
-        {lineup.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => onMovieDetail && onMovieDetail(m)}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              flexShrink: 0,
-              width: 160,
-              scrollSnapAlign: 'start',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <div
+        {lineup.map((m) => {
+          const rtBadge = formatRottenBadge(m);
+          return (
+            <button
+              key={m.id}
+              data-testid="mobile-lineup-card"
+              onClick={() => onMovieDetail && onMovieDetail(m)}
               style={{
-                width: '100%',
-                aspectRatio: '2/3',
-                borderRadius: 10,
-                background: m.posterUrl
-                  ? `url(${m.posterUrl}) center/cover`
-                  : `linear-gradient(160deg, ${m.color || BRAND.navyMid}, ${BRAND.navyDeep})`,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                padding: 10,
-                position: 'relative',
-                overflow: 'hidden',
+                all: 'unset',
+                boxSizing: 'border-box',
+                cursor: 'pointer',
+                minWidth: 0,
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {!m.posterUrl && (
-                <div
-                  style={{
-                    fontFamily: FONT_DISPLAY,
-                    fontStyle: 'italic',
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: '#fff',
-                    lineHeight: 1.05,
-                  }}
-                >
-                  {m.short || m.title}
-                </div>
-              )}
-              {/* TMDB score badge — top-left corner of poster.
-                  Only shows if score >= 1 (filters out unreleased/zero-vote
-                  films like the 2026 releases that haven't been rated yet). */}
-              {m.tmdbScore != null && m.tmdbScore >= 1 && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    left: 8,
-                    background: 'rgba(13,15,36,0.85)',
-                    backdropFilter: 'blur(6px)',
-                    WebkitBackdropFilter: 'blur(6px)',
-                    color: '#fff',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: 99,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    fontVariantNumeric: 'tabular-nums',
-                    letterSpacing: 0.2,
-                    border: '1px solid rgba(255,255,255,0.14)',
-                  }}
-                >
-                  <span style={{ color: '#f4b942' }}>★</span>
-                  {m.tmdbScore.toFixed(1)}
-                </div>
-              )}
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--ink-on-ground)',
-                marginTop: 8,
-                lineHeight: 1.25,
-              }}
-            >
-              {m.title}
-            </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: 'var(--mute)',
-                marginTop: 2,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {m.rating} · {m.runtime}m
-            </div>
-          </button>
-        ))}
+              <div
+                data-testid="mobile-lineup-poster"
+                style={{
+                  width: '100%',
+                  aspectRatio: '2 / 3',
+                  borderRadius: 10,
+                  background: m.posterUrl
+                    ? `url(${m.posterUrl}) center/cover`
+                    : `linear-gradient(160deg, ${m.color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  padding: 10,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: '0 12px 28px rgba(0,0,0,0.24)',
+                }}
+              >
+                {!m.posterUrl && (
+                  <div
+                    style={{
+                      fontFamily: FONT_DISPLAY,
+                      fontStyle: 'italic',
+                      fontSize: 18,
+                      fontWeight: 600,
+                      color: '#fff',
+                      lineHeight: 1.05,
+                    }}
+                  >
+                    {m.short || m.title}
+                  </div>
+                )}
+                {rtBadge && (
+                  <div
+                    data-testid="mobile-lineup-score"
+                    style={{
+                      position: 'absolute',
+                      top: 8,
+                      left: 8,
+                      background: 'rgba(13,15,36,0.85)',
+                      backdropFilter: 'blur(6px)',
+                      WebkitBackdropFilter: 'blur(6px)',
+                      color: '#f4b942',
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: '3px 8px',
+                      borderRadius: 99,
+                      fontVariantNumeric: 'tabular-nums',
+                      letterSpacing: 0.2,
+                      border: '1px solid rgba(255,255,255,0.14)',
+                    }}
+                  >
+                    {rtBadge}
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'var(--ink-on-ground)',
+                  marginTop: 8,
+                  lineHeight: 1.2,
+                  minHeight: '2.4em',
+                }}
+              >
+                {m.title}
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'var(--mute)',
+                  marginTop: 2,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {m.rating} · {m.runtime}m
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -2106,10 +2104,19 @@ const TIME_FMT = new Intl.DateTimeFormat('en-US', {
 export function formatShowTime(raw) {
   if (!raw) return '';
   if (typeof raw !== 'string') return '';
+  const trimmed = raw.trim();
+  const twelveHour = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*([AP])\.?M\.?$/i);
+  if (twelveHour) {
+    const hour = Number(twelveHour[1]);
+    const minute = (twelveHour[2] || '00').padStart(2, '0');
+    const meridiem = twelveHour[3].toUpperCase();
+    if (!hour || hour > 12 || Number(minute) > 59) return '';
+    return `${hour}:${minute} ${meridiem}M`;
+  }
   let iso;
-  if (raw.includes('T')) iso = raw;
-  else if (raw.includes(' ')) iso = raw.replace(' ', 'T');
-  else if (/^\d{1,2}:\d{2}/.test(raw)) iso = `2026-06-10T${raw.length === 5 ? `${raw}:00` : raw}`;
+  if (trimmed.includes('T')) iso = trimmed;
+  else if (trimmed.includes(' ')) iso = trimmed.replace(' ', 'T');
+  else if (/^\d{1,2}:\d{2}/.test(trimmed)) iso = `2026-06-10T${trimmed.length === 5 ? `${trimmed}:00` : trimmed}`;
   else return '';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
@@ -2300,7 +2307,7 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
   const movieMap = new Map();
   showtimes.forEach((s) => {
     if (movieMap.has(s.movie_id)) return;
-    movieMap.set(s.movie_id, {
+    movieMap.set(s.movie_id, enrichMovieScores({
       id: s.movie_id,
       title: s.movie_title,
       short: s.movie_title?.split(' ')[0] || '',
@@ -2314,12 +2321,16 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       thumbnailUrl: s.thumbnail_url,
       backdropUrl: s.backdrop_url,
       trailerUrl: s.trailer_url,
+      trailerVideoUrl: s.trailer_video_url,
       streamUid: s.stream_uid,
       synopsis: s.synopsis,
       year: s.year,
       tmdbScore: s.tmdb_score,
       tmdbVoteCount: s.tmdb_vote_count,
-    });
+      rtCriticsScore: s.rt_critics_score,
+      rtAudienceScore: s.rt_audience_score,
+      rtUrl: s.rt_url,
+    }));
   });
   const lineup = [...movieMap.values()];
 

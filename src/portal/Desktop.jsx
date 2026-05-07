@@ -21,6 +21,7 @@ import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
+import { formatRottenBadge } from './movieScores.js';
 
 const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
@@ -68,30 +69,33 @@ const DesktopModal = ({ open, onClose, title, children, wide = false, forceDark 
   );
 };
 
-const LineupCard = ({ movie, onOpen }) => (
-  <button
-    className="desktop-lineup-card"
-    data-testid="desktop-lineup-card"
-    onClick={() => onOpen?.(movie)}
-  >
-    <div
-      className="desktop-lineup-poster force-dark"
-      style={{
-        background: movie.posterUrl
-          ? `url(${movie.posterUrl}) center/cover`
-          : `linear-gradient(160deg, ${BRAND.indigo}, ${BRAND.navyDeep})`,
-      }}
+const LineupCard = ({ movie, onOpen }) => {
+  const rtBadge = formatRottenBadge(movie);
+  return (
+    <button
+      className="desktop-lineup-card"
+      data-testid="desktop-lineup-card"
+      onClick={() => onOpen?.(movie)}
     >
-      {!movie.posterUrl && <span>{movie.short || movie.title}</span>}
-    </div>
-    <div className="desktop-lineup-copy">
-      <strong>{movie.title}</strong>
-      <span>
-        {[movie.rating, movie.runtime ? `${movie.runtime} min` : null].filter(Boolean).join(' · ')}
-      </span>
-    </div>
-  </button>
-);
+      <div
+        className="desktop-lineup-poster force-dark"
+        data-testid="desktop-lineup-poster"
+        style={{
+          background: movie.posterUrl
+            ? `url(${movie.posterUrl}) center/cover`
+            : `linear-gradient(160deg, ${BRAND.indigo}, ${BRAND.navyDeep})`,
+        }}
+      >
+        {rtBadge && <span className="desktop-lineup-score">{rtBadge}</span>}
+        {!movie.posterUrl && <span>{movie.short || movie.title}</span>}
+      </div>
+      <div className="desktop-lineup-copy">
+        <strong>{movie.title}</strong>
+        <span>{[movie.rating, movie.runtime ? `${movie.runtime} min` : null].filter(Boolean).join(' · ')}</span>
+      </div>
+    </button>
+  );
+};
 
 const TicketLine = ({ ticket, onOpen }) => {
   const seats = ticket.seats.map((seat) => seat.replace('-', '')).join(', ');
@@ -117,7 +121,7 @@ const TicketLine = ({ ticket, onOpen }) => {
 };
 
 const CenterTicketCard = ({ ticket, onOpen }) => (
-  <button className="desktop-center-ticket" onClick={() => onOpen(ticket)}>
+  <button className="desktop-center-ticket" data-testid="desktop-center-ticket" onClick={() => onOpen(ticket)}>
     <div
       className="desktop-center-ticket-poster force-dark"
       style={{
@@ -386,7 +390,7 @@ export default function Desktop({
             {data.tickets.length > 0 ? (
               <div className="desktop-center-ticket-list">
                 {data.tickets.map((ticket) => (
-                  <CenterTicketCard key={ticket.id} ticket={ticket} onOpen={setTicketSheet} />
+                  <CenterTicketCard key={ticket.id} ticket={ticket} onOpen={() => setDesktopTab('tickets')} />
                 ))}
               </div>
             ) : (
@@ -420,7 +424,7 @@ export default function Desktop({
             <div className="desktop-parity-ticket-list">
               {data.tickets.length > 0 ? (
                 data.tickets.map((ticket) => (
-                  <TicketLine key={ticket.id} ticket={ticket} onOpen={setTicketSheet} />
+                  <TicketLine key={ticket.id} ticket={ticket} onOpen={() => setDesktopTab('tickets')} />
                 ))
               ) : (
                 <div className="desktop-parity-empty" data-testid="desktop-placed-seat-placeholder">
