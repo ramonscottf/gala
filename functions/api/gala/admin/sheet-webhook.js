@@ -170,10 +170,21 @@ export async function onRequestPost(context) {
     byCompany.set((s.company || '').toLowerCase(), s);
   }
 
+  // Split donations/silent-auction rows out of the sponsor flow — these go
+  // into the `donors` table instead. They don't get gala emails, don't take
+  // seats, and shouldn't be in audience presets.
+  const DONOR_TIERS = new Set(['Donation', 'Silent Auction', 'Event Donor']);
+  const sponsorRows = [];
+  const donorRows = [];
+  for (const row of sheetRows) {
+    if (DONOR_TIERS.has(row.sponsorship_tier)) donorRows.push(row);
+    else sponsorRows.push(row);
+  }
+
   const seenIds = new Set();
   let inserted = 0, updated = 0;
 
-  for (const row of sheetRows) {
+  for (const row of sponsorRows) {
     const match =
       (row.email && byEmail.get(row.email)) ||
       byCompany.get(row.company.toLowerCase());
@@ -229,6 +240,75 @@ export async function onRequestPost(context) {
         row.email, row.phone, rsvpToken
       ).run();
       inserted++;
+    }
+  }
+
+  // --- Donor table upsert (Donation, Silent Auction, Event Donor) ---
+  let donorInserted = 0, donorUpdated = 0;
+
+  // Load existing donors for matching
+  let existingDonors = { results: [] };
+  try {
+    existingDonors = await env.GALA_DB.prepare(
+      `SELECT id, company, email FROM donors WHERE archived_at IS NULL`
+    ).all();
+  } catch (e) {
+    // donors table may not exist on older DB — skip silently
+  }
+
+  const donorByEmail = new Map();
+  const donorByCompany = new Map();
+  for (const d of existingDonors.results || []) {
+    if (d.email) donorByEmail.set(d.email.toLowerCase(), d);
+    donorByCompany.set((d.company || '').toLowerCase(), d);
+  }
+
+  for (const row of donorRows) {
+    const match =
+      (row.email && donorByEmail.get(row.email)) ||
+      donorByCompany.get(row.company.toLowerCase());
+
+    try {
+      if (match) {
+        await env.GALA_DB.prepare(
+          `UPDATE donors SET
+             company = ?, first_name = COALESCE(?, first_name),
+             last_name = COALESCE(?, last_name),
+             email = COALESCE(NULLIF(?, ''), email),
+             phone = COALESCE(?, phone),
+             donation_type = COALESCE(?, donation_type),
+             amount = COALESCE(?, amount),
+             payment_status = COALESCE(?, payment_status),
+             street_address = COALESCE(?, street_address),
+             city = COALESCE(?, city), state = COALESCE(?, state),
+             zip = COALESCE(?, zip),
+             updated_at = datetime('now')
+           WHERE id = ?`
+        ).bind(
+          row.company, row.first_name, row.last_name,
+          row.email, row.phone, row.sponsorship_tier,
+          row.amount_paid, row.payment_status,
+          row.street_address, row.city, row.state, row.zip,
+          match.id
+        ).run();
+        donorUpdated++;
+      } else {
+        await env.GALA_DB.prepare(
+          `INSERT INTO donors
+             (company, first_name, last_name, email, phone,
+              donation_type, amount, payment_status,
+              street_address, city, state, zip)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+        ).bind(
+          row.company, row.first_name, row.last_name,
+          row.email, row.phone, row.sponsorship_tier,
+          row.amount_paid, row.payment_status,
+          row.street_address, row.city, row.state, row.zip
+        ).run();
+        donorInserted++;
+      }
+    } catch (e) {
+      // Surface in sync_log debug entry but don't kill the whole run
     }
   }
 
@@ -288,7 +368,10 @@ export async function onRequestPost(context) {
       archiveAborted ? 'warning' : 'success',
       JSON.stringify({
         rows_received: sheetRows.length,
+        sponsor_rows: sponsorRows.length,
+        donor_rows: donorRows.length,
         inserted, updated, archived,
+        donor_inserted: donorInserted, donor_updated: donorUpdated,
         archive_aborted: archiveAborted,
         archive_candidates: archiveCandidates.length,
         duration_ms: durationMs,
@@ -309,7 +392,10 @@ export async function onRequestPost(context) {
     JSON.stringify({
       ok: true,
       rows_received: sheetRows.length,
+      sponsor_rows: sponsorRows.length,
+      donor_rows: donorRows.length,
       inserted, updated, archived,
+      donor_inserted: donorInserted, donor_updated: donorUpdated,
       archive_aborted: archiveAborted,
       archive_candidates: archiveCandidates.length,
       duration_ms: durationMs,
