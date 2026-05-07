@@ -216,11 +216,20 @@ function buildInviteHtml({ contactName, company, tier, seats, portalUrl, overrid
         <a href="${portalUrl}" style="color:#CB262C;word-break:break-all;">${portalUrl}</a>
       </p>
       ${extraSection}
-      <hr style="border:none;border-top:1px solid #e2e8f0;margin:28px 0 16px;"/>
-      <p style="color:#94a3b8;font-size:11px;margin:0;text-align:center;line-height:1.6;">
-        ${escapeHtml(footerLine)}<br/>
-        Questions? Reply to this email or contact <a href="mailto:gala@daviskids.org" style="color:#CB262C;">gala@daviskids.org</a>
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:28px 0 18px;"/>
+      <p style="color:#64748b;font-size:11px;margin:0 0 14px;text-align:center;line-height:1.6;font-weight:600;">
+        ${escapeHtml(footerLine)}
       </p>
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+        <tr><td style="padding:5px 0;font-size:11px;line-height:17px;color:#64748b;text-align:center;">
+          <span style="color:#0d1b3d;font-weight:700;">Sponsorship &amp; gala questions</span><br/>
+          Sherry Miggin &nbsp;·&nbsp; <a href="tel:+18015129370" style="color:#64748b;text-decoration:none;">801-512-9370</a> &nbsp;·&nbsp; <a href="mailto:smiggin@dsdmail.net" style="color:#64748b;text-decoration:underline;">smiggin@dsdmail.net</a>
+        </td></tr>
+        <tr><td style="padding:5px 0;font-size:11px;line-height:17px;color:#64748b;text-align:center;">
+          <span style="color:#0d1b3d;font-weight:700;">Technical help</span><br/>
+          Scott Foster &nbsp;·&nbsp; <a href="tel:+18018106642" style="color:#64748b;text-decoration:none;">801-810-6642</a> &nbsp;·&nbsp; <a href="mailto:sfoster@dsdmail.net" style="color:#64748b;text-decoration:underline;">sfoster@dsdmail.net</a>
+        </td></tr>
+      </table>
     </div>
   </div>
 </div>
