@@ -522,15 +522,6 @@ button.desktop-parity-stat:focus-visible {
   gap: 10px;
 }
 
-.desktop-ticket-picker-modal {
-  display: grid;
-  gap: 14px;
-}
-
-.desktop-ticket-picker-modal .desktop-center-heading {
-  margin-bottom: 0;
-}
-
 .desktop-center-ticket,
 .desktop-center-empty {
   all: unset;

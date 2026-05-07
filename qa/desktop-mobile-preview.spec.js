@@ -34,6 +34,8 @@ test.describe('sponsor shell preview', () => {
     await expect(picker).toBeVisible();
     const box = await picker.boundingBox();
     expect(box?.width).toBeGreaterThan(680);
+    await expect(picker.getByRole('button', { name: /4:30 PM/i })).toBeVisible();
+    await expect(picker.getByRole('button', { name: /7:15 PM/i })).toBeVisible();
     await expect(page.getByTestId('seat-type-guide')).toContainText(/Luxury Recliner/i);
     await expect(page.getByTestId('seat-type-guide')).toContainText(/Standard/i);
     await expect(page.getByTestId('seat-type-guide')).toContainText(/D-BOX/i);
@@ -62,16 +64,15 @@ test.describe('sponsor shell preview', () => {
 
     await page.getByLabel('Close dialog').click();
     await page.getByTestId('desktop-open-tickets').click();
-    await expect(page.getByRole('dialog', { name: 'Your tickets' })).toBeVisible();
-    const ticketPicker = page.getByTestId('desktop-ticket-picker-modal');
-    await expect(ticketPicker).toBeVisible();
-    await expect(ticketPicker).toContainText(/5 seats placed/i);
-    await expect(ticketPicker.getByTestId('desktop-center-ticket')).toHaveCount(2);
-    await expect(page.getByTestId('ticket-qr-card')).toHaveCount(0);
-
-    await ticketPicker.getByTestId('desktop-center-ticket').first().click();
-    await expect(page.getByRole('dialog', { name: 'Manage ticket' })).toBeVisible();
-    await expect(page.getByRole('dialog', { name: 'Manage ticket' })).toContainText(/Tap a seat to assign/i);
+    await expect(page.getByRole('dialog', { name: 'All tickets' })).toBeVisible();
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/All 10 seats/i);
+    await expect(page.getByTestId('ticket-qr-card')).toBeVisible();
+    await expect(page.getByTestId('ticket-card')).toHaveCount(2);
+    await expect(page.getByTestId('ticket-card-details').first()).toHaveCount(0);
+    await page.getByTestId('ticket-card-toggle').first().click();
+    await expect(page.getByTestId('ticket-card-details').first()).toBeVisible();
+    await expect(page.getByLabel(/Dinner for seat C-5/i)).toBeVisible();
+    await expect(page.getByLabel(/Dinner for seat C-6/i)).toBeVisible();
 
     await page.getByLabel('Close dialog').click();
     await page.getByTestId('desktop-open-night').click();
@@ -93,6 +94,8 @@ test.describe('sponsor shell preview', () => {
     expect(sheetBox?.height).toBeLessThan(680);
 
     const posterBox = await page.getByTestId('movie-detail-poster').boundingBox();
+    await expect(page.getByTestId('movie-detail-poster-img')).toBeVisible();
+    await expect(page.getByTestId('movie-detail-poster-img')).toHaveCSS('object-fit', 'contain');
     const titleBox = await page.getByTestId('movie-detail-title').boundingBox();
     expect(titleBox?.x).toBeGreaterThan((posterBox?.x || 0) + (posterBox?.width || 0));
 

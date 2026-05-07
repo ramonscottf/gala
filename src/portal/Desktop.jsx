@@ -14,6 +14,7 @@ import {
   NightTab,
   SeatAssignSheet,
   TicketManage,
+  TicketsTab,
   adaptPortalToMobileData,
 } from './Mobile.jsx';
 import SeatPickSheet from './components/SeatPickSheet.jsx';
@@ -143,38 +144,6 @@ const CenterTicketCard = ({ ticket, onOpen }) => (
   </button>
 );
 
-const DesktopTicketPicker = ({ data, onOpenTicket, onPlaceSeats }) => {
-  const placed = data.tickets.reduce((sum, ticket) => sum + ticket.seats.length, 0);
-  return (
-    <div className="desktop-ticket-picker-modal" data-testid="desktop-ticket-picker-modal">
-      <div className="desktop-center-heading">
-        <div>
-          <span>Your tickets</span>
-          <strong>{placed > 0 ? `${plural(placed, 'seat')} placed` : 'No seats placed yet'}</strong>
-        </div>
-        <button onClick={onPlaceSeats}>
-          <Icon name="plus" size={14} />
-          Add showing
-        </button>
-      </div>
-
-      {data.tickets.length > 0 ? (
-        <div className="desktop-center-ticket-list">
-          {data.tickets.map((ticket) => (
-            <CenterTicketCard key={ticket.id} ticket={ticket} onOpen={onOpenTicket} />
-          ))}
-        </div>
-      ) : (
-        <button className="desktop-center-empty" onClick={onPlaceSeats}>
-          <Icon name="seat" size={22} />
-          <strong>Start by placing seats</strong>
-          <span>The wide desktop picker will open with the full seat map.</span>
-        </button>
-      )}
-    </div>
-  );
-};
-
 export default function Desktop({
   portal,
   token,
@@ -214,7 +183,6 @@ export default function Desktop({
   const [delegationSheet, setDelegationSheet] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [movieDetail, setMovieDetail] = useState(null);
-  const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
   const [desktopTab, setDesktopTab] = useState(null);
 
   useEffect(() => {
@@ -360,7 +328,7 @@ export default function Desktop({
               <button
                 className="desktop-secondary-action"
                 data-testid="desktop-open-tickets"
-                onClick={() => setTicketPickerOpen(true)}
+                onClick={() => setDesktopTab('tickets')}
               >
                 <Icon name="ticket" size={16} />
                 Tickets
@@ -594,20 +562,6 @@ export default function Desktop({
         )}
       </DesktopModal>
 
-      <DesktopModal open={ticketPickerOpen} onClose={() => setTicketPickerOpen(false)} title="Your tickets" wide>
-        <DesktopTicketPicker
-          data={data}
-          onOpenTicket={(ticket) => {
-            setTicketPickerOpen(false);
-            setTicketSheet(ticket);
-          }}
-          onPlaceSeats={() => {
-            setTicketPickerOpen(false);
-            goSeats();
-          }}
-        />
-      </DesktopModal>
-
       <DesktopModal
         open={!!seatPicker}
         onClose={() => setSeatPicker(null)}
@@ -672,10 +626,37 @@ export default function Desktop({
       <DesktopModal
         open={!!desktopTab}
         onClose={() => setDesktopTab(null)}
-        title={desktopTab === 'guests' ? 'Guests invited' : 'Tonight details'}
+        title={
+          desktopTab === 'tickets'
+            ? 'All tickets'
+            : desktopTab === 'guests'
+              ? 'Guests invited'
+              : 'Tonight details'
+        }
         wide
       >
         <div className="desktop-tab-modal" data-testid="desktop-tab-modal">
+          {desktopTab === 'tickets' && (
+            <TicketsTab
+              data={data}
+              onOpenTicket={(ticket) => {
+                setDesktopTab(null);
+                setTicketSheet(ticket);
+              }}
+              onPlaceSeats={() => {
+                setDesktopTab(null);
+                goSeats();
+              }}
+              token={token}
+              apiBase={config.apiBase}
+              onRefresh={onRefresh}
+              onOpenDelegation={(delegation) => {
+                if (!delegation) return;
+                setDesktopTab(null);
+                setDelegationSheet(delegation);
+              }}
+            />
+          )}
           {desktopTab === 'guests' && (
             <GroupTab
               data={data}

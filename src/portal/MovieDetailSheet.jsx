@@ -234,11 +234,24 @@ export default function MovieDetailSheet({
                   width: 92,
                   aspectRatio: '2 / 3',
                   borderRadius: 8,
-                  background: `url(${displayMovie.posterUrl}) center/cover no-repeat`,
+                  background: 'rgba(0,0,0,0.26)',
                   boxShadow: '0 12px 28px rgba(0,0,0,0.55)',
                   border: `1px solid var(--rule)`,
+                  overflow: 'hidden',
                 }}
-              />
+              >
+                <img
+                  data-testid="movie-detail-poster-img"
+                  src={displayMovie.posterUrl}
+                  alt={`${displayMovie.title} poster`}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                  }}
+                />
+              </div>
             )}
             <div style={{ minWidth: 0, paddingTop: isModal ? 66 : 52 }}>
               <h2

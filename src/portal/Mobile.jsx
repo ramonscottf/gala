@@ -2104,10 +2104,19 @@ const TIME_FMT = new Intl.DateTimeFormat('en-US', {
 export function formatShowTime(raw) {
   if (!raw) return '';
   if (typeof raw !== 'string') return '';
+  const trimmed = raw.trim();
+  const twelveHour = trimmed.match(/^(\d{1,2})(?::(\d{2}))?\s*([AP])\.?M\.?$/i);
+  if (twelveHour) {
+    const hour = Number(twelveHour[1]);
+    const minute = (twelveHour[2] || '00').padStart(2, '0');
+    const meridiem = twelveHour[3].toUpperCase();
+    if (!hour || hour > 12 || Number(minute) > 59) return '';
+    return `${hour}:${minute} ${meridiem}M`;
+  }
   let iso;
-  if (raw.includes('T')) iso = raw;
-  else if (raw.includes(' ')) iso = raw.replace(' ', 'T');
-  else if (/^\d{1,2}:\d{2}/.test(raw)) iso = `2026-06-10T${raw.length === 5 ? `${raw}:00` : raw}`;
+  if (trimmed.includes('T')) iso = trimmed;
+  else if (trimmed.includes(' ')) iso = trimmed.replace(' ', 'T');
+  else if (/^\d{1,2}:\d{2}/.test(trimmed)) iso = `2026-06-10T${trimmed.length === 5 ? `${trimmed}:00` : trimmed}`;
   else return '';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
