@@ -93,37 +93,6 @@ async function captureFinalize(page) {
   return captured;
 }
 
-// setDinnersForPlacedSeats — set dinner_choice for every currently-placed
-// seat owned by the token. Verified against pick.js (lines 108-130):
-// /pick accepts action='set_dinner' with the same body shape as other
-// pick actions plus an optional dinner_choice field. There is NO separate
-// /set_dinner endpoint — the action discriminator is the switch.
-//
-// NOT used in Task 4 v2's drive (post-pick-done finalizes via PostPickSheet
-// without requiring dinners). Kept for Task 6 desktop-legacy re-enable: the
-// legacy StepConfirm finalize CTA gates on dinner.allComplete, so the
-// legacy run will need this helper to pass dinners before clicking
-// legacy-finalize.
-//
-// eslint-disable-next-line no-unused-vars
-async function setDinnersForPlacedSeats(token) {
-  const portal = await getPortal(token);
-  const dinners = ['brisket', 'turkey', 'veggie', 'kids', 'glutenfree'];
-  for (let i = 0; i < (portal.myAssignments || []).length; i += 1) {
-    const a = portal.myAssignments[i];
-    await apiJson(`/api/gala/portal/${token}/pick`, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'set_dinner',
-        theater_id: a.theater_id,
-        row_label: a.row_label,
-        seat_num: a.seat_num,
-        dinner_choice: dinners[i % dinners.length],
-      }),
-    });
-  }
-}
-
 // Pre-place enough seats via direct API so the UI run finishes the rest
 // and trips canFinalize=true. canFinalize requires placedCount >=
 // blockSize (Mobile.jsx line 2902, Desktop.jsx line 2322), so for the

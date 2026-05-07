@@ -707,7 +707,7 @@ Summary: run `qa:parity`. Mobile + desktop-canonical should pass (already passin
 
 Updated step list:
 
-- [ ] **Step 1: Verify StepConfirm's dinner-picker dependency.**
+- [x] **Step 1: Verify StepConfirm's dinner-picker dependency.** Outcome (c) — duplicated. `DinnerPicker` was mounted both inline in StepConfirm (Desktop.jsx:2031) and as a Modal at the Desktop component level (Desktop.jsx:2697-2753) reachable via `PostPickSheet`'s `onPickDinners` CTA at Desktop.jsx:2646. Deleting StepConfirm removes the duplicate; canonical access remains.
 
 ```bash
 grep -n "DinnerPicker\|dinner_choice\|dinnerCompleteness\|allComplete" src/portal/Desktop.jsx | head -30
@@ -727,11 +727,11 @@ Read `Desktop.jsx` around lines 1700-2000 (StepConfirm region) to determine whic
 
 **If (c):** safe to delete StepConfirm in Task 7. Bonus: the duplicated picker mount in StepConfirm goes away with the deletion. Note as a "deduplication" win in the commit body.
 
-- [ ] **Step 2: Identify and delete `StepShowing`, `StepSeats`, `StepConfirm` from `Desktop.jsx`.**
-- [ ] **Step 3: Full dead-code sweep** per v1 plan (useState, useMemo, helpers, imports). Document ambiguous candidates.
-- [ ] **Step 4: Capture bundle delta** (raw + gzipped).
-- [ ] **Step 5: Run `qa:smoke`, `qa:a11y`, `qa:parity`. All pass.**
-- [ ] **Step 6: Manual verification on Wicko at desktop width**: place seats → PostPickSheet → click "Pick dinners" → DinnerPicker opens → set dinners → close → click "I'm done — send my QR" → ConfirmationScreen. The dinner picker reachability is the regression test for Step 1's verification.
+- [x] **Step 2: Identify and delete `StepShowing`, `StepSeats`, `StepConfirm` from `Desktop.jsx`.** Plus the now-orphan `FormatBadge`, `buildContext`, `STEPS[3]` (Confirm step), and the wizard switch's `step === 4` case.
+- [x] **Step 3: Full dead-code sweep** — removed `theaterId`/`setTheaterId`, `showingNumber`/`setShowingNumber`, `movieId`/`setMovieId`, `sel`/`setSel`, `theaterChoices`, `moviesHere`, `adaptedTheater`, `otherTaken`, `movie`, `theaterMeta`, `onPlaced`, `useNavigate`/`navigate`, `didInitFromAssignments` ref + effect, the `ctx` useMemo, `buildContext`, the chained showing/movie/theater normalization effects. Imports removed: `useRef`, `useNavigate`, `SeatMap`/`SeatLegend`/`adaptTheater`/`seatById`, `otherTakenForTheater`/`checkBatchOrphans`, `SHOWING_NUMBER_TO_ID`/`formatBadgeFor`, `formatShowTime`. Dinner-warning chip rewired: new `onSetDinners` prop on `StepWelcome` synthesizes a `postPick` from `dinnerCompleteness.missingSeats` and opens the canonical dinner Modal.
+- [x] **Step 4: Bundle delta** — main: 186.33 KB raw / 47.04 KB gzip → Task 7: 168.35 KB raw / 43.31 KB gzip. **−17.98 KB raw, −3.73 KB gzipped.**
+- [x] **Step 5: QA scripts** — `qa:smoke` 8/8 green, `qa:parity` 1/1 (3 skipped per project pin) green, `qa:a11y` failures pre-existing on `feat/flow-unification` baseline (Stepper color-contrast violations on `#9194a3` foreground over `#fff` background — verified by stash + re-run of the same test against the un-edited tree). Receipt: `qa/output/parity-result-task7.txt`.
+- [x] **Step 6: Manual verification (headless Playwright on Wicko)** — place 2 seats → PostPickSheet renders → click "Pick dinners" → DinnerPicker Modal opens with 2 selects → set both to `brisket` → close dialog → `post-pick-done` clickable. Dinner-picker reachability confirmed.
 - [ ] **Step 7: Commit. Message:**
 
 ```

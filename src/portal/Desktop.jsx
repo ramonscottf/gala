@@ -1,24 +1,14 @@
-// Desktop wizard — Welcome → Showing → Seats → Confirm with always-visible
-// right guest rail. Lifted from uploads/seating-chart/project/components/
-// portal-flow-merged.jsx + portal-flows.jsx with these adaptations:
+// Desktop wizard — Welcome with always-visible right guest rail.
 //
-//  - Window globals → ES imports (BRAND, Btn, Icon, SectionEyebrow, Display
-//    from src/brand; SeatMap/autoPickBlock/seatById/SeatLegend from
-//    SeatEngine).
-//  - SHOWTIMES + MOVIES constants → derived from portal.showtimes.
-//  - useSeats hook → real-data wrapper (place() POSTs /pick per-seat).
-//  - GuestRail is read-only for Phase 1: guests come from
-//    myAssignments.guest_name dedup. Drag-drop seat→guest assignment
-//    needs a per-seat guest mutation endpoint we haven't shipped; that's
-//    Phase 2 along with inline guest add.
-//  - PortalNav simplified — no internal nav links since the wizard owns
-//    the route. Sponsor identity, days countdown, and tier badge ride on
-//    the right.
+// Task 7 collapsed the legacy stepper: StepShowing, StepSeats, and
+// StepConfirm were deleted in favor of the canonical SeatPickSheet →
+// PostPickSheet → DinnerPicker flow. Stepper steps 2 and 3 still
+// resolve via SeatPickStepWrapper for /seats deep-link back-compat
+// (Task 11 collapses that wrapper into the modal directly).
 //
 // Visual fidelity: 1fr/340px grid, stepper bar, navy ground, gold accents.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
 import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import {
   Btn,
@@ -29,9 +19,6 @@ import {
   GalaWordmark,
   TierBadge,
 } from '../brand/atoms.jsx';
-import { SeatMap, SeatLegend, adaptTheater, seatById } from './SeatEngine.jsx';
-import { otherTakenForTheater, checkBatchOrphans } from '../hooks/useSeats.js';
-import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../hooks/usePortal.js';
 import { useFinalize } from '../hooks/useFinalize.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
@@ -39,16 +26,14 @@ import SettingsSheet from './SettingsSheet.jsx';
 import DinnerPicker from './components/DinnerPicker.jsx';
 import { useDinnerCompleteness } from './components/useDinnerCompleteness.js';
 import NightOfContent from './components/NightOfContent.jsx';
-// Phase 1.15 — adopted PR #56 architecture for the seat-pick flow.
-// SeatPickSheet replaces the legacy StepShowing+StepSeats stepper path
-// when invoked from BRANCH B's Welcome CTAs. PostPickSheet asks "what
-// next?" and AssignTheseSheet does multi-seat batch delegation.
+// Canonical seat-pick flow: SeatPickSheet → PostPickSheet asks "what
+// next?" → AssignTheseSheet (batch delegation) or DinnerPicker (per-seat
+// dinner). Mounted via Modal at the Desktop component level.
 import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import { useTheme } from '../hooks/useTheme.js';
 import {
-  formatShowTime,
   DelegateForm,
   DelegateManage,
   DelegationStatusPill,
@@ -129,33 +114,6 @@ const PosterMini = ({ poster, color, label, size = 46 }) => (
     )}
   </div>
 );
-
-const FormatBadge = ({ format, size = 'sm' }) => {
-  const map = {
-    IMAX: { bg: 'rgba(244,185,66,0.18)', c: BRAND.gold, border: 'rgba(244,185,66,0.4)' },
-    Premier: { bg: 'rgba(212,38,74,0.16)', c: '#ff6b8a', border: 'rgba(212,38,74,0.4)' },
-    Standard: { bg: 'rgba(255,255,255,0.06)', c: 'var(--mute)', border: BRAND.rule },
-  };
-  const s = map[format] || map.Standard;
-  const pad = size === 'lg' ? '5px 12px' : '3px 8px';
-  const fs = size === 'lg' ? 11 : 9;
-  return (
-    <span
-      style={{
-        padding: pad,
-        borderRadius: 99,
-        background: s.bg,
-        color: s.c,
-        border: `1px solid ${s.border}`,
-        fontSize: fs,
-        fontWeight: 800,
-        letterSpacing: 1.4,
-      }}
-    >
-      {format.toUpperCase()}
-    </span>
-  );
-};
 
 // ── PortalNav + PortalShell ───────────────────────────────────────────
 
@@ -395,7 +353,6 @@ const STEPS = [
   { n: 1, label: 'Welcome' },
   { n: 2, label: 'Showing' },
   { n: 3, label: 'Seats' },
-  { n: 4, label: 'Confirm' },
 ];
 
 // Phase 1.10-patch — Stepper label for Step 1 flips to "Your tickets" once
@@ -654,6 +611,13 @@ const StepWelcome = ({
   onNext,
   onEdit,
   onReview,
+  // Task 7 — dinner-warning chip now opens the canonical dinner picker
+  // (the Modal at the Desktop component level scoped to seatIds via a
+  // synthesized postPick) instead of routing through onReview to the
+  // deleted legacy StepConfirm. Host wires this to
+  // `openDinnerPickerForMissing` which builds the seatId list from
+  // dinnerCompleteness.missingSeats.
+  onSetDinners,
   // T3 v2 — canonical finalize wired through the secondary "Review &
   // finalize" CTA. When canFinalize is true (all entitled seats placed)
   // and dinners are complete, the button label flips to "Review &
@@ -661,12 +625,8 @@ const StepWelcome = ({
   // useFinalize. Otherwise the label reflects what's still required:
   // "Place remaining seats" (re-opens SeatPickSheet) or, when seats are
   // all placed but dinners are missing, "Set dinners to finalize"
-  // (disabled — sponsor sets dinners via the dinner-warning chip
-  // above, which routes through onReview to the legacy stepper's
-  // dinner picker).
-  // Replaces Desktop.jsx:2326's `onReview={() => setSeatPickOpen(true)}`
-  // fallback — the bug-feel that made review-finalize re-open the seat
-  // picker for sponsors who'd already finished placing.
+  // (disabled — sponsor sets dinners via the dinner-warning chip above,
+  // which routes through onSetDinners to the canonical dinner picker).
   canFinalize,
   finalizing,
   finalizeError,
@@ -765,19 +725,14 @@ const StepWelcome = ({
       </div>
 
       {/* Optional dinner-warning chip — only renders when there are
-          finalized seats missing dinner picks. Tap routes to Step 4
-          where the DinnerPicker dropdowns live.
-          TODO Task 7: re-wire to dinner picker. After StepConfirm is
-          deleted, dinner-picker access for previously-placed seats
-          needs a new entry point (likely a Welcome-level DinnerPicker
-          modal opened via a new onSetDinners prop). For now the chip
-          still routes via onReview which opens SeatPickSheet — the
-          tooltip on the disabled "Set dinners to finalize" Btn at
-          line ~990 is the user-facing hint that dinners need attention.
-          Tracked in Task 12's PR body. */}
+          finalized seats missing dinner picks. Tap opens the canonical
+          DinnerPicker Modal scoped to the missing seats (Task 7
+          rewire — replaces the legacy StepConfirm route via onReview).
+          Falls back to onReview when onSetDinners isn't supplied so the
+          component stays usable in any host that hasn't migrated. */}
       {dinnerMissing > 0 && (
         <button
-          onClick={onReview}
+          onClick={onSetDinners || onReview}
           style={{
             all: 'unset',
             cursor: 'pointer',
@@ -1052,1135 +1007,10 @@ const SeatPickStepWrapper = ({ seatPickOpen, setSeatPickOpen }) => {
   );
 };
 
-// ── Step 2: Showing picker ────────────────────────────────────────────
-
-const StepShowing = ({
-  showingsRich,
-  showingNumber,
-  setShowingNumber,
-  moviesHere,
-  movieId,
-  setMovieId,
-  theaterChoices,
-  theaterId,
-  setTheaterId,
-  theatersById,
-  onNext,
-  onMovieDetail,
-}) => (
-  <div
-    className="scroll-container"
-    style={{ padding: '40px 48px', display: 'flex', flexDirection: 'column', gap: 24 }}
-  >
-    <div>
-      <SectionEyebrow>Step 2 of 4 · Showing</SectionEyebrow>
-      <Display size={42}>
-        Where to <i style={{ color: 'var(--accent-italic)' }}>seat them?</i>
-      </Display>
-      <p style={{ fontSize: 14, color: 'var(--mute)', lineHeight: 1.55, marginTop: 6, maxWidth: 560 }}>
-        Select the showtime and auditorium for this batch — each auditorium is showing one film.
-      </p>
-    </div>
-
-    {/* D2 — showtime segmented pill. One container, two slots, BRAND.gradient
-        on active. Pattern from gala-seats-app.html .picker__showtimes
-        358-397 (same CSS Phase 1.7 F2 shipped on mobile). */}
-    <div>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 1.4,
-          color: 'var(--accent-text)',
-          marginBottom: 10,
-        }}
-      >
-        SHOWTIME
-      </div>
-      <div
-        style={{
-          display: 'inline-flex',
-          gap: 0,
-          border: `1.5px solid var(--rule)`,
-          borderRadius: 12,
-          padding: 3,
-          background: 'var(--surface)',
-        }}
-      >
-        {showingsRich.map((s) => {
-          const active = showingNumber === s.number;
-          return (
-            <button
-              key={s.number}
-              onClick={() => setShowingNumber(s.number)}
-              style={{
-                all: 'unset',
-                cursor: 'pointer',
-                padding: '12px 24px',
-                background: active ? BRAND.gradient : 'transparent',
-                color: active ? '#fff' : 'rgba(255,255,255,0.65)',
-                borderRadius: 9,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 2,
-                minWidth: 220,
-                boxShadow: active ? '0 4px 12px rgba(203,38,44,0.25)' : 'none',
-                transition: 'background 0.15s, color 0.15s',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  fontVariantNumeric: 'tabular-nums',
-                  letterSpacing: 0.2,
-                }}
-              >
-                {s.time || (s.number === 1 ? 'Early' : 'Late')}
-              </span>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: active ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.45)',
-                  letterSpacing: 0.1,
-                }}
-              >
-                {s.label}
-                {s.dinnerTime ? ` · dinner ${s.dinnerTime}` : ''}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-
-    {/* D3 — rich movie cards. 96px poster panel left side, title+year,
-        rating + runtime badges, "{N} aud · {N} seats" availability
-        meta, "More about this movie →" affordance in BRAND.red opens
-        MovieDetailSheet (D4). Pattern from gala-seats-app.html
-        .picker__movie 400-470 + Phase 1.7 F3 mobile card. */}
-    <div>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: 1.4,
-          color: 'var(--accent-text)',
-          marginBottom: 10,
-        }}
-      >
-        FILM
-      </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 14,
-          maxWidth: 880,
-        }}
-      >
-        {moviesHere.map((m) => {
-          const active = movieId === m.id;
-          return (
-            <div
-              key={m.id}
-              style={{
-                cursor: 'pointer',
-                padding: 0,
-                borderRadius: 14,
-                border: `2px solid ${active ? BRAND.red : BRAND.rule}`,
-                background: active
-                  ? 'linear-gradient(135deg, rgba(215,40,70,0.10), rgba(215,40,70,0.02))'
-                  : 'rgba(255,255,255,0.03)',
-                boxShadow: active ? '0 6px 18px rgba(215,40,70,0.18)' : 'none',
-                display: 'flex',
-                gap: 0,
-                overflow: 'hidden',
-                transition: 'border-color 0.15s, box-shadow 0.15s',
-              }}
-              onClick={() => setMovieId(m.id)}
-            >
-              <div
-                style={{
-                  flexShrink: 0,
-                  width: 96,
-                  minHeight: 142,
-                  background: m.posterUrl
-                    ? `url(${m.posterUrl}) center/cover no-repeat`
-                    : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
-                }}
-              />
-              <div
-                style={{
-                  flex: 1,
-                  padding: '14px 16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 8,
-                  minWidth: 0,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: '#fff',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {m.title}
-                  {m.year ? (
-                    <span style={{ color: 'var(--mute)', fontWeight: 500 }}> ({m.year})</span>
-                  ) : null}
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {m.rating && (
-                    <span
-                      className="force-dark"
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: 4,
-                        background: BRAND.ink,
-                        color: '#fff',
-                        fontSize: 10,
-                        fontWeight: 800,
-                        letterSpacing: 0.6,
-                      }}
-                    >
-                      {m.rating}
-                    </span>
-                  )}
-                  {m.runtime && (
-                    <span
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: 4,
-                        background: 'rgba(255,255,255,0.08)',
-                        color: '#fff',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {m.runtime} min
-                    </span>
-                  )}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: 'var(--mute)',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {m.audCount} aud{m.audCount === 1 ? '' : 's'} · {m.totalCapacity} seats
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMovieDetail?.(m);
-                  }}
-                  style={{
-                    all: 'unset',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: BRAND.red,
-                    marginTop: 'auto',
-                    padding: '4px 0',
-                  }}
-                >
-                  More about this movie →
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-
-    {theaterChoices.length > 0 && (
-      <div>
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: 1.4,
-            color: 'var(--accent-text)',
-            marginBottom: 10,
-          }}
-        >
-          AUDITORIUM
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {theaterChoices.map((c) => {
-            const active = theaterId === c.theaterId;
-            return (
-              <button
-                key={c.theaterId}
-                onClick={() => setTheaterId(c.theaterId)}
-                style={{
-                  all: 'unset',
-                  cursor: 'pointer',
-                  padding: '10px 14px',
-                  borderRadius: 10,
-                  border: `1.5px solid ${active ? 'var(--accent-text-strong)' : 'var(--rule)'}`,
-                  background: active ? 'rgba(203,38,44,0.08)' : 'var(--surface)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <FormatBadge format={c.format} />
-                <span style={{ fontSize: 13, fontWeight: 600 }}>
-                  {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    )}
-
-    <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
-      <Btn kind="primary" size="lg" onClick={onNext} icon={<Icon name="arrowR" size={16} />}>
-        Select seats here
-      </Btn>
-    </div>
-  </div>
-);
-
-// ── Step 3: Seats ─────────────────────────────────────────────────────
-
-const StepSeats = ({
-  adaptedTheater,
-  movie,
-  theaterMeta,
-  theatersById,
-  showingNumber,
-  seats,
-  sel,
-  setSel,
-  otherTaken,
-  remaining,
-  blockSize,
-  onNext,
-  // D9 — picker context propagated through so the user can change
-  // showing/film/auditorium without backing out to Step 2.
-  showingsRich,
-  setShowingNumber,
-  moviesHere,
-  movieId,
-  setMovieId,
-  theaterChoices,
-  setTheaterId,
-  onMovieDetail,
-}) => {
-  const handleSelect = (ids, op) => {
-    setSel((prev) => {
-      const n = new Set(prev);
-      if (op === 'add') ids.forEach((id) => n.add(id));
-      else ids.forEach((id) => n.delete(id));
-      return n;
-    });
-  };
-
-  return (
-    <div
-      style={{
-        flex: 1,
-        display: 'grid',
-        gridTemplateColumns: '320px 1fr',
-        minHeight: 0,
-      }}
-    >
-      <div
-        className="scroll-container"
-        style={{
-          borderRight: `1px solid var(--rule)`,
-          padding: '24px 22px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-          background: 'rgba(0,0,0,0.15)',
-        }}
-      >
-        <div>
-          <SectionEyebrow>Step 3 of 4 · Seats</SectionEyebrow>
-        </div>
-
-        {/* D9 — compact showtime segmented pill in the rail. Same
-            BRAND.gradient active state as the Step 2 pill, narrower. */}
-        {showingsRich && showingsRich.length > 1 && (
-          <div>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: 1.4,
-                color: 'var(--accent-italic)',
-                marginBottom: 6,
-              }}
-            >
-              SHOWTIME
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                gap: 0,
-                border: `1.5px solid var(--rule)`,
-                borderRadius: 10,
-                padding: 3,
-                background: 'var(--surface)',
-              }}
-            >
-              {showingsRich.map((s) => {
-                const active = showingNumber === s.number;
-                return (
-                  <button
-                    key={s.number}
-                    onClick={() => setShowingNumber?.(s.number)}
-                    style={{
-                      all: 'unset',
-                      cursor: 'pointer',
-                      flex: 1,
-                      padding: '8px 10px',
-                      borderRadius: 7,
-                      background: active ? BRAND.gradient : 'transparent',
-                      color: active ? '#fff' : 'rgba(255,255,255,0.65)',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      fontVariantNumeric: 'tabular-nums',
-                      letterSpacing: 0.2,
-                      textAlign: 'center',
-                      transition: 'background 0.15s, color 0.15s',
-                    }}
-                  >
-                    {s.time || (s.number === 1 ? 'Early' : 'Late')}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* D9 — film list for the current showing. Tap to switch movies
-            without leaving Step 3. Pattern from gala-seats-app.html
-            "SWITCH SHOWING" panel. */}
-        {moviesHere && moviesHere.length > 0 && (
-          <div>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: 1.4,
-                color: 'var(--accent-italic)',
-                marginBottom: 6,
-              }}
-            >
-              FILM
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {moviesHere.map((m) => {
-                const active = movieId === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => setMovieId?.(m.id)}
-                    style={{
-                      all: 'unset',
-                      cursor: 'pointer',
-                      padding: '8px 10px',
-                      borderRadius: 8,
-                      border: `1px solid ${active ? BRAND.red : BRAND.rule}`,
-                      background: active
-                        ? 'linear-gradient(135deg, rgba(215,40,70,0.12), rgba(215,40,70,0.04))'
-                        : 'rgba(255,255,255,0.03)',
-                      display: 'grid',
-                      gridTemplateColumns: '36px 1fr',
-                      gap: 10,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 36,
-                        height: 50,
-                        borderRadius: 4,
-                        // H3 — D9's StepSeats film row is the desktop
-                        // equivalent of the mobile movie pill: small
-                        // filter chip, prefer the custom-cropped
-                        // thumbnail.
-                        background: m.thumbnailUrl || m.posterUrl
-                          ? `url(${m.thumbnailUrl || m.posterUrl}) center/cover`
-                          : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
-                      }}
-                    />
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: '#fff',
-                          lineHeight: 1.25,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {m.title}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color: 'var(--mute)',
-                          marginTop: 2,
-                          fontVariantNumeric: 'tabular-nums',
-                        }}
-                      >
-                        {m.rating} · {m.runtime}m · {m.audCount} aud
-                        {m.audCount === 1 ? '' : 's'}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* D9 — auditorium chips for the current (showing × movie). When
-            only one aud is available the chip is decorative; when 2+ the
-            sponsor can swap chart context inline. */}
-        {theaterChoices && theaterChoices.length > 0 && (
-          <div>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: 1.4,
-                color: 'var(--accent-italic)',
-                marginBottom: 6,
-              }}
-            >
-              AUDITORIUM
-            </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {theaterChoices.map((c) => {
-                const active = theaterMeta?.theaterId === c.theaterId;
-                return (
-                  <button
-                    key={c.theaterId}
-                    onClick={() => setTheaterId?.(c.theaterId)}
-                    style={{
-                      all: 'unset',
-                      cursor: 'pointer',
-                      padding: '6px 10px',
-                      borderRadius: 8,
-                      border: `1.5px solid ${active ? BRAND.indigoLight : BRAND.rule}`,
-                      background: active
-                        ? 'rgba(168,177,255,0.10)'
-                        : 'rgba(255,255,255,0.02)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: '#fff',
-                    }}
-                  >
-                    <FormatBadge format={c.format} />
-                    {theatersById[c.theaterId]?.name?.replace('Auditorium ', 'Aud ') ||
-                      `Aud ${c.theaterId}`}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* "More about this movie" affordance — kept reachable from
-            Step 3 so the user can deep-dive without going back. */}
-        {movie && onMovieDetail && (
-          <button
-            onClick={() => onMovieDetail(movie)}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 700,
-              color: BRAND.red,
-              padding: '4px 0',
-            }}
-          >
-            More about this movie →
-          </button>
-        )}
-
-        <div style={{ flex: 1 }} />
-
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--mute)' }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>Selected here</span>
-            <span style={{ color: 'var(--accent-text)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-              {sel.size}
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>Placed total</span>
-            <span style={{ color: '#fff', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-              {seats.totalAssigned}/{blockSize}
-            </span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>Remaining</span>
-            <span
-              style={{
-                color: remaining > 0 ? '#ff8da4' : '#7fcfa0',
-                fontWeight: 700,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {remaining}
-            </span>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
-          {/* Phase 1.10-patch-2 Bug 2: primary "Done — review" gradient pill on top,
-              secondary outline "Clear" pill below. Mirrors mobile's CTA pattern instead
-              of the previous text-link styling that looked unclickable. */}
-          <Btn
-            kind="primary"
-            size="md"
-            onClick={onNext}
-            disabled={sel.size === 0}
-            full
-            icon={<Icon name="arrowR" size={14} />}
-            testId="legacy-seats-commit"
-          >
-            Done — review
-          </Btn>
-          <Btn
-            kind="secondary"
-            size="sm"
-            onClick={() => setSel(new Set())}
-            disabled={sel.size === 0}
-            full
-          >
-            Clear
-          </Btn>
-        </div>
-      </div>
-
-      <div
-        style={{
-          padding: '24px 32px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 14,
-          minHeight: 0,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <Display size={28}>Select seats — drag, click, or shift-range.</Display>
-          <div style={{ fontSize: 11, color: 'var(--mute)', display: 'flex', gap: 14 }}>
-            {[
-              ['CLICK', 'one'],
-              ['SHIFT+CLICK', 'range'],
-              ['DRAG', 'box'],
-            ].map(([k, v]) => (
-              <span
-                key={k}
-                style={{
-                  display: 'inline-flex',
-                  gap: 5,
-                  alignItems: 'center',
-                  fontWeight: 600,
-                  letterSpacing: 0.6,
-                }}
-              >
-                <span
-                  style={{
-                    padding: '2px 6px',
-                    border: `1px solid var(--rule)`,
-                    borderRadius: 3,
-                    color: '#fff',
-                    fontSize: 9,
-                  }}
-                >
-                  {k}
-                </span>
-                {v}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: 0,
-          }}
-        >
-          <div style={{ width: '100%', maxWidth: 880 }}>
-            {adaptedTheater ? (
-              <SeatMap
-                theater={adaptedTheater}
-                scale={22}
-                assignedSelf={seats.allSelfIds}
-                assignedOther={otherTaken}
-                selected={sel}
-                onSelect={handleSelect}
-                showSeatNumbers={true}
-                allowZoom
-                allowLasso
-              />
-            ) : (
-              <div style={{ color: 'var(--mute)', textAlign: 'center', padding: 32 }}>
-                Select a showing and theater first.
-              </div>
-            )}
-          </div>
-        </div>
-        <SeatLegend />
-      </div>
-    </div>
-  );
-};
-
-// ── Step 4: Confirm ───────────────────────────────────────────────────
-
-const StepConfirm = ({
-  sel,
-  adaptedTheater,
-  movie,
-  theaterMeta,
-  theatersById,
-  showingNumber,
-  showingId,
-  theaterId,
-  seats,
-  remaining,
-  blockSize,
-  onPlaced,
-  onPrev,
-  apiBase,
-  token,
-  // T2 v2 — finalize and finalizing are now provided by the parent
-  // Desktop component via the shared useFinalize hook (src/hooks/
-  // useFinalize.js). The local finalize() / setFinalizing pair was
-  // deleted to keep both shells on a single /finalize call site.
-  // Task 7 deletes StepConfirm entirely — for now the legacy stepper
-  // path uses the same canonical hook the canonical PostPickSheet
-  // does so the parity test treats them as one wire-level flow.
-  finalize,
-  finalizing,
-  // H1 — portal payload + onRefresh so the Mode B placed-seats list
-  // can render DinnerPicker per claimed seat and bounce server state
-  // back into local on a successful set_dinner POST.
-  portal,
-  onRefresh,
-}) => {
-  const [placing, setPlacing] = useState(false);
-  const [err, setErr] = useState(null);
-
-  const place = async () => {
-    // Pre-flight: see SeatPickSheet for the rationale. Same check as the
-    // mobile sheet so Desktop sponsors get the same friendly error.
-    const seatIds = [...sel];
-    const orphanCheck = checkBatchOrphans(portal, theaterId, seatIds);
-    if (!orphanCheck.ok) {
-      setErr(new Error(
-        `That selection would leave seat ${orphanCheck.orphan} alone in row ${orphanCheck.row}. Please choose a different seat so no single seat is left empty.`
-      ));
-      return;
-    }
-
-    setPlacing(true);
-    setErr(null);
-    try {
-      await seats.place(showingId, theaterId, seatIds);
-      onPlaced();
-    } catch (e) {
-      setErr(e);
-    } finally {
-      setPlacing(false);
-    }
-  };
-
-  const hasPlacedSeats = seats.totalAssigned > 0;
-  const hasPendingBatch = sel.size > 0;
-  // H2 — gate Done on dinner completeness (Mode B only; Mode A's
-  // Place button doesn't care about dinner since the seat hasn't
-  // even been finalized yet).
-  const dinner = useDinnerCompleteness(portal?.myAssignments);
-
-  // H1 — group myAssignments by theater for the Mode B placed-seats
-  // list. Mirrors MobileWizard Step4Review's `grouped` shape so both
-  // shells render the same per-seat dinner-picker grid.
-  const placedGroups = useMemo(() => {
-    if (hasPendingBatch || !hasPlacedSeats) return [];
-    const myAssignments = portal?.myAssignments || [];
-    const showtimes = portal?.showtimes || [];
-    const showtimeByTheater = {};
-    showtimes.forEach((s) => {
-      if (!showtimeByTheater[s.theater_id]) showtimeByTheater[s.theater_id] = s;
-    });
-    const m = new Map();
-    myAssignments.forEach((row) => {
-      const key = row.theater_id;
-      if (!m.has(key)) m.set(key, []);
-      m.get(key).push({
-        seat_id: `${row.row_label}-${row.seat_num}`,
-        theater_id: row.theater_id,
-        row_label: row.row_label,
-        seat_num: row.seat_num,
-        dinner_choice: row.dinner_choice || null,
-        status: 'claimed',
-      });
-    });
-    return [...m.entries()].map(([tid, assignments]) => {
-      const st = showtimeByTheater[tid];
-      const theater = theatersById[tid];
-      return {
-        key: tid,
-        showLabel:
-          st?.showing_number === 1 ? 'Early' : st?.showing_number === 2 ? 'Late' : '',
-        showTime: formatShowTime(st?.show_start),
-        movieTitle: st?.movie_title || '',
-        theaterName: theater?.name || `Theater ${tid}`,
-        format: formatBadgeFor(st?.theater_tier, st?.theater_notes),
-        assignments: [...assignments].sort((a, b) =>
-          a.seat_id.localeCompare(b.seat_id)
-        ),
-      };
-    });
-  }, [portal, theatersById, hasPendingBatch, hasPlacedSeats]);
-
-  return (
-    <div
-      className="scroll-container"
-      style={{ padding: '40px 56px', display: 'flex', flexDirection: 'column', gap: 22 }}
-    >
-      <SectionEyebrow>Step 4 of 4 · Confirm</SectionEyebrow>
-      <Display size={48}>
-        {hasPendingBatch ? (
-          <>
-            Lock in <i style={{ color: 'var(--accent-italic)' }}>{sel.size} seat{sel.size === 1 ? '' : 's'}?</i>
-          </>
-        ) : (
-          <>
-            Send your <i style={{ color: 'var(--accent-italic)' }}>QR.</i>
-          </>
-        )}
-      </Display>
-      <p style={{ fontSize: 14, color: 'var(--mute)', lineHeight: 1.55, maxWidth: 560 }}>
-        {hasPendingBatch ? (
-          <>
-            {sel.size} seats in {theatersById[theaterMeta?.theaterId]?.name} for the{' '}
-            {showingNumber === 1 ? 'early' : 'late'} showing of <b>{movie?.title}</b>. You'll have{' '}
-            <b style={{ color: '#fff' }}>{remaining - sel.size}</b> seats left to place after this.
-          </>
-        ) : (
-          <>
-            {seats.totalAssigned} of {blockSize} seats placed. Tap{' '}
-            <b style={{ color: '#fff' }}>Done — send me my QR</b> to finalize and we'll text +
-            email your check-in code. Seats stay editable until June 9.
-          </>
-        )}
-      </p>
-
-      {hasPendingBatch && (
-        <div
-          style={{
-            padding: 18,
-            borderRadius: 14,
-            border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
-            maxWidth: 720,
-          }}
-        >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {[...sel].sort().map((id) => {
-              const s = adaptedTheater ? seatById(adaptedTheater, id) : null;
-              return (
-                <span
-                  key={id}
-                  style={{
-                    padding: '5px 10px',
-                    borderRadius: 5,
-                    background: 'rgba(168,177,255,0.18)',
-                    color: 'var(--accent-italic)',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    fontVariantNumeric: 'tabular-nums',
-                    display: 'inline-flex',
-                    gap: 5,
-                    alignItems: 'center',
-                  }}
-                >
-                  {id.replace('-', '')}
-                  {s && (
-                    <span
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: 1.5,
-                        background: BRAND.ink,
-                        opacity: 0.4,
-                      }}
-                      title={s.t}
-                    />
-                  )}
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* H1 — Mode B (no pending batch + has placed seats) renders
-          the full placed-seats roster with DinnerPicker per claimed
-          seat. Mobile Step4Review has the same layout; the desktop
-          version uses a wider grid so two seats fit per row at 1280px+. */}
-      {!hasPendingBatch && hasPlacedSeats && placedGroups.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 880 }}>
-          {placedGroups.map((g) => (
-            <div
-              key={g.key}
-              style={{
-                padding: 18,
-                borderRadius: 14,
-                border: `1px solid var(--rule)`,
-                background: 'var(--surface)',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: 10,
-                  marginBottom: 14,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: 1.4,
-                    color: 'var(--accent-text)',
-                  }}
-                >
-                  {g.showLabel.toUpperCase()} ·{' '}
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{g.showTime}</span>
-                </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
-                  {g.movieTitle}
-                </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: 'var(--mute)',
-                    marginLeft: 'auto',
-                  }}
-                >
-                  {g.theaterName} · <FormatBadge format={g.format} /> ·{' '}
-                  {g.assignments.length} seat
-                  {g.assignments.length === 1 ? '' : 's'}
-                </div>
-              </div>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                  gap: 8,
-                }}
-              >
-                {g.assignments.map((a) => (
-                  <div
-                    key={a.seat_id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                  >
-                    <span
-                      style={{
-                        flexShrink: 0,
-                        padding: '4px 8px',
-                        borderRadius: 4,
-                        background: 'rgba(168,177,255,0.18)',
-                        color: 'var(--accent-italic)',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        fontVariantNumeric: 'tabular-nums',
-                        minWidth: 38,
-                        textAlign: 'center',
-                      }}
-                    >
-                      {a.seat_id.replace('-', '')}
-                    </span>
-                    <DinnerPicker
-                      assignment={a}
-                      token={token}
-                      apiBase={apiBase}
-                      size="sm"
-                      onChange={onRefresh ? () => onRefresh() : undefined}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {err && (
-        <div
-          style={{
-            padding: 12,
-            borderRadius: 10,
-            background: 'rgba(212,38,74,0.12)',
-            border: `1px solid rgba(212,38,74,0.4)`,
-            color: '#ff8da4',
-            fontSize: 13,
-            maxWidth: 720,
-          }}
-        >
-          {err.message}
-        </div>
-      )}
-
-      <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
-        <Btn kind="secondary" size="lg" onClick={onPrev}>
-          Back to map
-        </Btn>
-        {hasPendingBatch && (
-          <Btn
-            kind="primary"
-            size="lg"
-            onClick={place}
-            disabled={placing || sel.size === 0}
-            icon={<Icon name="check" size={16} />}
-          >
-            {placing ? 'Placing…' : `Place ${sel.size} seat${sel.size === 1 ? '' : 's'}`}
-          </Btn>
-        )}
-        {hasPlacedSeats && !hasPendingBatch && (
-          <Btn
-            kind="primary"
-            size="lg"
-            onClick={finalize}
-            disabled={finalizing || !dinner.allComplete}
-            icon={<Icon name="check" size={16} />}
-            testId="legacy-finalize"
-          >
-            {finalizing
-              ? 'Sending your QR…'
-              : dinner.allComplete
-                ? 'Done — send me my QR'
-                : `Select dinner for ${dinner.missingCount} more seat${dinner.missingCount === 1 ? '' : 's'}`}
-          </Btn>
-        )}
-      </div>
-    </div>
-  );
-};
-
 // ── Adapter: portal API → Desktop data shape ──────────────────────────
 
 const GALA_DATE = new Date(2026, 5, 10);
 const daysOut = () => Math.max(0, Math.ceil((GALA_DATE - new Date()) / 86400000));
-
-function buildContext(portal, theaterLayouts) {
-  const showtimes = portal?.showtimes || [];
-  const showings = [...new Set(showtimes.map((s) => s.showing_number))].sort();
-
-  // D2 — rich showing data for the segmented pill: time + dinner time
-  // pulled from the earliest-start row per showing_number. Mirrors
-  // MobileWizard's showingsRich pattern.
-  const showingsRichMap = new Map();
-  showtimes.forEach((s) => {
-    const existing = showingsRichMap.get(s.showing_number);
-    if (!existing || (s.show_start && s.show_start < existing.show_start)) {
-      showingsRichMap.set(s.showing_number, s);
-    }
-  });
-  const showingsRich = [...showingsRichMap.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([n, s]) => ({
-      number: n,
-      label: n === 1 ? 'Early showing' : n === 2 ? 'Late showing' : `Show ${n}`,
-      time: formatShowTime(s.show_start),
-      dinnerTime: formatShowTime(s.dinner_time),
-    }));
-
-  // D3 + D4 — moviesByShowing carries the rich-card payload (poster +
-  // metadata aggregates + MovieDetailSheet inputs). theaterIds /
-  // totalCapacity drive the "1 aud · 94 seats" meta line; backdropUrl /
-  // trailerUrl / streamUid / synopsis / year are read by MovieDetailSheet.
-  const moviesByShowing = {};
-  showtimes.forEach((s) => {
-    if (!moviesByShowing[s.showing_number]) moviesByShowing[s.showing_number] = new Map();
-    if (!moviesByShowing[s.showing_number].has(s.movie_id)) {
-      moviesByShowing[s.showing_number].set(s.movie_id, {
-        id: s.movie_id,
-        title: s.movie_title,
-        short: s.movie_title?.split(' ')[0] || '',
-        posterUrl: s.poster_url,
-        // H3 — thumbnail_url is the custom-cropped PNG used by small
-        // filter chips (24×24 movie pill, 36×50 desktop film row);
-        // poster_url is the canonical TMDB image used by rich cards
-        // and MovieDetailSheet hero.
-        thumbnailUrl: s.thumbnail_url,
-        backdropUrl: s.backdrop_url,
-        trailerUrl: s.trailer_url,
-        streamUid: s.stream_uid,
-        synopsis: s.synopsis,
-        year: s.year,
-        rating: s.rating,
-        runtime: s.runtime_minutes,
-        theaterIds: new Set([s.theater_id]),
-        totalCapacity: s.capacity || 0,
-      });
-    } else {
-      const entry = moviesByShowing[s.showing_number].get(s.movie_id);
-      entry.theaterIds.add(s.theater_id);
-      entry.totalCapacity += s.capacity || 0;
-    }
-  });
-  Object.keys(moviesByShowing).forEach((k) => {
-    moviesByShowing[k] = [...moviesByShowing[k].values()].map((e) => ({
-      ...e,
-      audCount: e.theaterIds.size,
-    }));
-  });
-
-  const theatersForCombo = {};
-  showtimes.forEach((s) => {
-    const k = `${s.showing_number}|${s.movie_id}`;
-    if (!theatersForCombo[k]) theatersForCombo[k] = [];
-    theatersForCombo[k].push({
-      theaterId: s.theater_id,
-      format: formatBadgeFor(s.theater_tier, s.theater_notes),
-    });
-  });
-
-  const theatersById = {};
-  (theaterLayouts?.theaters || []).forEach((t) => {
-    theatersById[t.id] = t;
-  });
-
-  return { showings, showingsRich, moviesByShowing, theatersForCombo, theatersById };
-}
 
 // ── DEV banner ────────────────────────────────────────────────────────
 
@@ -2213,7 +1043,6 @@ export default function Desktop({
   apiBase = '',
   onRefresh,
 }) {
-  const navigate = useNavigate();
   const id = portal?.identity || {};
   const isDelegation = id.kind === 'delegation';
   const tier = id.tier || id.parentTier;
@@ -2228,67 +1057,14 @@ export default function Desktop({
     ? `${company} invited you to ${blockSize} seat${blockSize === 1 ? '' : 's'}`
     : company;
 
-  const ctx = useMemo(() => buildContext(portal, theaterLayouts), [portal, theaterLayouts]);
   const [step, setStep] = useState(initialStep);
-  const [showingNumber, setShowingNumber] = useState(ctx.showings[0] || 1);
-  const moviesHere = ctx.moviesByShowing[showingNumber] || [];
-  const [movieId, setMovieId] = useState(moviesHere[0]?.id);
-  useEffect(() => {
-    const list = ctx.moviesByShowing[showingNumber] || [];
-    if (!list.find((m) => m.id === movieId)) setMovieId(list[0]?.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showingNumber, ctx.moviesByShowing]);
-
-  const theaterChoices = ctx.theatersForCombo[`${showingNumber}|${movieId}`] || [];
-  const [theaterId, setTheaterId] = useState(theaterChoices[0]?.theaterId);
-  useEffect(() => {
-    const list = ctx.theatersForCombo[`${showingNumber}|${movieId}`] || [];
-    if (!list.find((t) => t.theaterId === theaterId)) setTheaterId(list[0]?.theaterId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showingNumber, movieId, ctx.theatersForCombo]);
-
-  // Phase 1.16 — Bug #5 fix mirror of SeatPickSheet/MobileWizard. When
-  // Desktop mounts and the sponsor already has placed seats, default
-  // showing/movie/theater to where those seats live so the
-  // "Reassign yours" toggle (gated on haveSelfHere inside SeatPickSheet)
-  // is reachable without manual navigation. Without this, returning
-  // sponsors hit the picker on showing[0]/movie[0]/theater[0] regardless
-  // of where their seats actually are.
-  const didInitFromAssignments = useRef(false);
-  const showtimes = portal?.showtimes || [];
-  useEffect(() => {
-    if (didInitFromAssignments.current) return;
-    const placed = portal?.myAssignments || [];
-    if (!placed.length || !showtimes.length) return;
-    const first = placed[0];
-    const match = showtimes.find((s) => s.theater_id === first.theater_id);
-    if (!match) return;
-    didInitFromAssignments.current = true;
-    setShowingNumber(match.showing_number);
-    setMovieId(match.movie_id);
-    setTheaterId(match.theater_id);
-  }, [portal, showtimes]);
-
-  const adaptedTheater = useMemo(
-    () => (theaterId ? adaptTheater(ctx.theatersById[theaterId]) : null),
-    [theaterId, ctx.theatersById]
-  );
-  const otherTaken = useMemo(
-    () => (theaterId ? otherTakenForTheater(portal, theaterId) : new Set()),
-    [portal, theaterId]
-  );
-  const movie = moviesHere.find((m) => m.id === movieId);
-  const theaterMeta = theaterChoices.find((t) => t.theaterId === theaterId);
-
-  const [sel, setSel] = useState(new Set());
   const remaining = blockSize - seats.totalAssigned;
   // T2 v2 — useFinalize provides confirmationData (consumed by the
   // ConfirmationScreen short-circuit below) plus finalize/finalizing
-  // for both the legacy StepConfirm and the canonical PostPickSheet.
-  // Replaces the StepConfirm-local finalize() and the
+  // for the canonical PostPickSheet "Done" CTA. Replaces the prior
   // useState(null)/setConfirmationData pair the desktop root used to
-  // own. Both call sites POST the same body via the same hook so the
-  // parity test sees one wire-level flow.
+  // own. PostPickSheet POSTs /finalize via this hook so the parity test
+  // sees one wire-level flow.
   const {
     finalize,
     finalizing,
@@ -2310,11 +1086,10 @@ export default function Desktop({
   // M1 — Night of modal. Mobile has the dedicated NIGHT tab; desktop
   // surfaces the same NightOfContent via a top-nav button.
   const [nightOpen, setNightOpen] = useState(false);
-  // Phase 1.15 — adopted PR #56 architecture. SeatPickSheet (in Modal
-  // wrapper) is the canonical seat-pick surface; chains to PostPickSheet
-  // → AssignTheseSheet / DinnerPicker. The legacy stepper still resolves
-  // for back-compat (StepWelcome → setStep(2) on the legacy path), but
-  // BRANCH B's primary CTAs now open SeatPickSheet directly.
+  // SeatPickSheet (in Modal wrapper) is the canonical seat-pick surface
+  // and chains to PostPickSheet → AssignTheseSheet / DinnerPicker. Stepper
+  // cases 2/3 still mount SeatPickStepWrapper for /seats deep-link
+  // back-compat (Task 11 collapses that to a direct prop).
   const [seatPickOpen, setSeatPickOpen] = useState(false);
   const [postPick, setPostPick] = useState(null);
   const [assignThese, setAssignThese] = useState(null);
@@ -2344,10 +1119,19 @@ export default function Desktop({
   // QR" when canFinalize is true.
   const canFinalize = placedCount >= (blockSize || 0) && (blockSize || 0) > 0;
 
-  const onPlaced = () => {
-    setSel(new Set());
-    setStep(2);
-    navigate('');
+  // Synthesize a "post-pick" payload of the placed seats currently
+  // missing dinner choices, so the dinner-picker Modal — which scopes
+  // to postPick.seatIds — can be opened from the Welcome chip even
+  // though no fresh placement just happened. Mirrors what
+  // SeatPickSheet's onCommitted produces minus the placement-only
+  // metadata the Modal doesn't read.
+  const openDinnerPickerForMissing = () => {
+    const missing = dinnerCompleteness?.missingSeats || [];
+    if (!missing.length) return;
+    setPostPick({
+      seatIds: missing.map((s) => `${s.row_label}-${s.seat_num}`),
+    });
+    setDinnerOpen(true);
   };
 
   if (confirmationData) {
@@ -2439,6 +1223,7 @@ export default function Desktop({
               onNext={() => setSeatPickOpen(true)}
               onEdit={() => setSeatPickOpen(true)}
               onReview={() => setSeatPickOpen(true)}
+              onSetDinners={openDinnerPickerForMissing}
               // T3 v2 — canonical finalize wired through Welcome's
               // secondary CTA. StepWelcome decides internally when
               // to call onFinalize (canFinalize && dinners complete)
@@ -2472,29 +1257,6 @@ export default function Desktop({
             <SeatPickStepWrapper
               seatPickOpen={seatPickOpen}
               setSeatPickOpen={setSeatPickOpen}
-            />
-          )}
-          {step === 4 && (
-            <StepConfirm
-              sel={sel}
-              adaptedTheater={adaptedTheater}
-              movie={movie}
-              theaterMeta={theaterMeta}
-              theatersById={ctx.theatersById}
-              showingNumber={showingNumber}
-              showingId={SHOWING_NUMBER_TO_ID[showingNumber]}
-              theaterId={theaterId}
-              seats={seats}
-              remaining={remaining}
-              blockSize={blockSize}
-              onPlaced={onPlaced}
-              onPrev={() => setStep(3)}
-              apiBase={apiBase}
-              token={token}
-              finalize={finalize}
-              finalizing={finalizing}
-              portal={portal}
-              onRefresh={onRefresh}
             />
           )}
         </div>
