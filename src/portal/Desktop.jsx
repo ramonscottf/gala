@@ -654,6 +654,23 @@ const StepWelcome = ({
   onNext,
   onEdit,
   onReview,
+  // T3 v2 — canonical finalize wired through the secondary "Review &
+  // finalize" CTA. When canFinalize is true (all entitled seats placed)
+  // and dinners are complete, the button label flips to "Review &
+  // finalize" and clicking fires the canonical /finalize via
+  // useFinalize. Otherwise the label reflects what's still required:
+  // "Place remaining seats" (re-opens SeatPickSheet) or, when seats are
+  // all placed but dinners are missing, "Set dinners to finalize"
+  // (disabled — sponsor sets dinners via the dinner-warning chip
+  // above, which routes through onReview to the legacy stepper's
+  // dinner picker).
+  // Replaces Desktop.jsx:2326's `onReview={() => setSeatPickOpen(true)}`
+  // fallback — the bug-feel that made review-finalize re-open the seat
+  // picker for sponsors who'd already finished placing.
+  canFinalize,
+  finalizing,
+  finalizeError,
+  onFinalize,
 }) => {
   // BRANCH A — fresh sponsor, no seats placed yet. Identical render to
   // pre-Phase-1.10 wizard; preserves the marketing intro for first visit.
@@ -706,7 +723,7 @@ const StepWelcome = ({
           ))}
         </div>
         <div style={{ marginTop: 18 }}>
-          <Btn kind="primary" size="lg" onClick={onNext} icon={<Icon name="arrowR" size={16} />}>
+          <Btn kind="primary" size="lg" onClick={onNext} icon={<Icon name="arrowR" size={16} />} testId="cta-place-seats">
             Begin
           </Btn>
         </div>
@@ -924,16 +941,82 @@ const StepWelcome = ({
       </div>
 
       {/* CTA row — gradient primary routes to picker (Step 2); ghost
-          secondary jumps straight to review (Step 4). Order matches
-          mobile HomeTab's "Place" / "Edit" miniBtn pair. */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
-        <Btn kind="primary" size="lg" onClick={onEdit} icon={<Icon name="arrowR" size={16} />}>
-          {remaining > 0 ? `Place ${remaining} more seat${remaining === 1 ? '' : 's'}` : 'Edit my placements'}
-        </Btn>
-        <Btn kind="secondary" size="lg" onClick={onReview} icon={<Icon name="arrowR" size={16} />}>
-          Review &amp; finalize
-        </Btn>
-      </div>
+          secondary is the state-aware Review/Finalize CTA per T3 v2.
+          Order matches mobile HomeTab's "Place" / "Edit" miniBtn pair. */}
+      {/* T3 v2 — state-aware secondary CTA. Behavior depends on the
+          sponsor's progress:
+            - remaining > 0           → "Place remaining seats" (opens SeatPickSheet via onReview)
+            - remaining === 0, !dinnerAllComplete → disabled "Set dinners to finalize"
+            - remaining === 0, dinners complete   → "Review & finalize" → fires canonical finalize
+          Disabling the all-placed-but-no-dinners state with a tooltip
+          beats sending the sponsor back to seat-picking (the v1
+          bug-feel). The dinner-warning chip above already gives them a
+          first-class path to the dinner picker. */}
+      {(() => {
+        const dinnerAllComplete = !!dinnerCompleteness?.allComplete;
+        const reviewReady = !!canFinalize && dinnerAllComplete;
+        const dinnerGated = !!canFinalize && !dinnerAllComplete;
+        let label = 'Review & finalize';
+        let onClick = onReview;
+        let disabled = false;
+        let title = null;
+        if (finalizing && reviewReady) {
+          label = 'Sending your QR…';
+          onClick = undefined;
+          disabled = true;
+        } else if (reviewReady) {
+          label = 'Review & finalize';
+          onClick = onFinalize || onReview;
+        } else if (dinnerGated) {
+          label = 'Set dinners to finalize';
+          onClick = undefined;
+          disabled = true;
+          title = 'Pick dinner choices for every placed seat to enable finalize';
+        } else {
+          // remaining > 0 — keep the existing "open SeatPickSheet" path
+          // through onReview. Sponsor still has placement work to do.
+          label = 'Review & finalize';
+          onClick = onReview;
+        }
+        return (
+          <div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4, alignItems: 'center' }}>
+              <Btn kind="primary" size="lg" onClick={onEdit} icon={<Icon name="arrowR" size={16} />} testId="cta-place-seats">
+                {remaining > 0 ? `Place ${remaining} more seat${remaining === 1 ? '' : 's'}` : 'Edit my placements'}
+              </Btn>
+              <Btn
+                kind="secondary"
+                size="lg"
+                onClick={onClick}
+                disabled={disabled}
+                title={title || undefined}
+                icon={<Icon name="arrowR" size={16} />}
+                testId="cta-finalize"
+              >
+                {label}
+              </Btn>
+            </div>
+            {finalizeError && reviewReady && (
+              <div
+                role="alert"
+                style={{
+                  marginTop: 10,
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  border: `1px solid rgba(244,99,99,0.45)`,
+                  background: 'rgba(244,99,99,0.10)',
+                  color: '#ffb3b3',
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  maxWidth: 520,
+                }}
+              >
+                {String(finalizeError?.message || finalizeError)}
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 };
@@ -1547,6 +1630,7 @@ const StepSeats = ({
             disabled={sel.size === 0}
             full
             icon={<Icon name="arrowR" size={14} />}
+            testId="legacy-seats-commit"
           >
             Done — review
           </Btn>
@@ -1966,6 +2050,7 @@ const StepConfirm = ({
             onClick={finalize}
             disabled={finalizing || !dinner.allComplete}
             icon={<Icon name="check" size={16} />}
+            testId="legacy-finalize"
           >
             {finalizing
               ? 'Sending your QR…'
@@ -2323,6 +2408,27 @@ export default function Desktop({
               onNext={() => setSeatPickOpen(true)}
               onEdit={() => setSeatPickOpen(true)}
               onReview={() => setSeatPickOpen(true)}
+              // T3 v2 — canonical finalize wired through Welcome's
+              // secondary CTA. StepWelcome decides internally when
+              // to call onFinalize (canFinalize && dinners complete)
+              // vs falling back to onReview (placement work remains)
+              // vs disabling the button (canFinalize but dinners
+              // missing). Replaces the prior all-paths-to-setSeatPickOpen
+              // fallback that recreated the bug-feel.
+              canFinalize={canFinalize}
+              finalizing={finalizing}
+              finalizeError={finalizeError}
+              onFinalize={async () => {
+                try {
+                  if (clearFinalizeError) clearFinalizeError();
+                  await finalize();
+                } catch (e) {
+                  // useFinalize's hook already records the error in
+                  // state; the inline alert below the CTA renders
+                  // it. Swallow here so React doesn't unhandled-
+                  // reject from a click handler.
+                }
+              }}
             />
           )}
           {step === 2 && (

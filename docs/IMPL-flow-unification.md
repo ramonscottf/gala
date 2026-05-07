@@ -342,7 +342,7 @@ EOF
 
 **Steps:**
 
-- [ ] **Step 1: Restore the testid scaffolding from the v1 stash (shell-level files).**
+- [x] **Step 1: Restore the testid scaffolding from the v1 stash (shell-level files).**
 
 ```bash
 git stash show -p stash@{0} -- src/portal/Desktop.jsx src/portal/Mobile.jsx | git apply
@@ -350,7 +350,7 @@ git diff --stat
 ```
 Expected: 2 files modified. If the apply conflicts with Task 2's edits, resolve manually — testids are additive single-line attrs, conflicts should be trivial.
 
-- [ ] **Step 2: Modify `Desktop.jsx` Welcome's onReview handler — DO NOT fall back to opening SeatPickSheet.**
+- [x] **Step 2: Modify `Desktop.jsx` Welcome's onReview handler — DO NOT fall back to opening SeatPickSheet.**
 
 The current `setSeatPickOpen(true)` fallback is **the bug we're fixing**. A sponsor who clicks "Review & finalize" expects something resembling finalize — sending them back to seat-picking is the exact disorienting UX that surfaced this PR. **Do not preserve it.**
 
@@ -383,7 +383,7 @@ And update `StepWelcome` to render the Review button with `disabled={reviewDisab
 
 Pick state-aware if `StepWelcome` is small enough to edit cleanly. Pick disabled+tooltip if not. Document the decision in the Step 5 commit body.
 
-- [ ] **Step 3: Mobile.jsx — investigate analogous CTA.**
+- [x] **Step 3: Mobile.jsx — investigate analogous CTA.**
 
 ```bash
 grep -n "Send my QR\|send my QR\|Send me my QR\|Review.*finalize\|Review &amp; finalize" src/portal/Mobile.jsx
@@ -393,7 +393,7 @@ If grep returns no results: Mobile has no Home-level finalize CTA. Canonical mob
 
 If grep returns a result: that's the analogous CTA. Wire to `finalize` when `canFinalize` is true, similar to Desktop's pattern.
 
-- [ ] **Step 4: Manual browser verification.**
+- [x] **Step 4: Manual browser verification.**
 
 ⚠️ **This step finalizes Wicko if you proceed past dinner picks.** Coordinate with Scott so he can reset both tokens after the verification window.
 
@@ -403,7 +403,7 @@ If grep returns a result: that's the analogous CTA. Wire to `finalize` when `can
 4. Click "Review & finalize" → /finalize fires → ConfirmationScreen.
 5. Stop here. Wicko is now finalized.
 
-- [ ] **Step 5: Commit.**
+- [x] **Step 5: Commit.**
 
 ```bash
 npm run build

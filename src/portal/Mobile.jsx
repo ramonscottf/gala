@@ -741,6 +741,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
               // HAPTIC: light — Phase 2 wires Capacitor Haptics here.
               onPlaceSeats();
             }}
+            data-testid="cta-place-seats"
             style={miniBtn('primary', isLight)}
           >
             {openCount > 0 ? 'Place' : 'Edit'}
