@@ -1115,7 +1115,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
 
 // ── Tickets tab ───────────────────────────────────────────────────────
 
-const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh }) => {
+export const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh }) => {
   const { tickets, blockSize, seatMath } = data;
   const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
@@ -1396,7 +1396,7 @@ export const DelegationStatusPill = ({ status }) => {
   );
 };
 
-const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
+export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
   const { delegations, seatMath, blockSize } = data;
   const totalAllocated = delegations.reduce((n, d) => n + (d.seatsAllocated || 0), 0);
   const totalPlaced = delegations.reduce((n, d) => n + (d.seatsPlaced || 0), 0);
@@ -1818,7 +1818,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 // + good-to-know tiles, with the audit-doc corrections: dinner is
 // served IN auditoriums, Sherry not Sasha, Apple Maps deep link on
 // parking).
-const NightTab = () => (
+export const NightTab = () => (
   <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
     <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 14px 22px' }}>
       <SectionEyebrow>The night</SectionEyebrow>

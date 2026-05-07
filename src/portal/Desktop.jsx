@@ -10,8 +10,11 @@ import SettingsSheet from './SettingsSheet.jsx';
 import {
   DelegateForm,
   DelegateManage,
+  GroupTab,
+  NightTab,
   SeatAssignSheet,
   TicketManage,
+  TicketsTab,
   adaptPortalToMobileData,
 } from './Mobile.jsx';
 import SeatPickSheet from './components/SeatPickSheet.jsx';
@@ -23,8 +26,14 @@ const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one :
 
 const firstNameFor = (name) => (name || 'Sponsor').trim().split(/\s+/)[0] || 'Sponsor';
 
-const Stat = ({ icon, value, label, tone = 'default' }) => (
-  <div className={`desktop-parity-stat desktop-parity-stat--${tone}`}>
+const Stat = ({ icon, value, label, tone = 'default', testId, onClick }) => {
+  const Tag = onClick ? 'button' : 'div';
+  return (
+  <Tag
+    className={`desktop-parity-stat desktop-parity-stat--${tone}`}
+    data-testid={testId}
+    onClick={onClick}
+  >
     <span className="desktop-parity-stat-icon">
       <Icon name={icon} size={16} stroke={2} />
     </span>
@@ -32,8 +41,9 @@ const Stat = ({ icon, value, label, tone = 'default' }) => (
       <strong>{value}</strong>
       <small>{label}</small>
     </span>
-  </div>
-);
+  </Tag>
+  );
+};
 
 const DesktopModal = ({ open, onClose, title, children, wide = false, forceDark = true }) => {
   if (!open) return null;
@@ -169,6 +179,7 @@ export default function Desktop({
   const [delegationSheet, setDelegationSheet] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [movieDetail, setMovieDetail] = useState(null);
+  const [desktopTab, setDesktopTab] = useState(null);
 
   useEffect(() => {
     if (openSheetOnMount) setSeatPickOpen(true);
@@ -185,7 +196,7 @@ export default function Desktop({
   const stillOpen = Math.max(0, personalQuota - placed);
   const dinners = data.tickets.flatMap((ticket) => ticket.assignmentRows || []);
   const dinnersPicked = dinners.filter((row) => row.dinner_choice).length;
-  const delegatedSeats = data.delegations.reduce((sum, d) => sum + (d.seatsAllocated || 0), 0);
+  const guestsInvited = data.delegations.length;
   const headline = stillOpen > 0 ? `${stillOpen} to place` : 'Seats placed';
   const subtitle = data.isDelegation
     ? data.subline
@@ -274,7 +285,13 @@ export default function Desktop({
 
           <div className="desktop-parity-stat-grid">
             <Stat icon="ticket" value={placed} label="Placed" tone={stillOpen > 0 ? 'warn' : 'good'} />
-            <Stat icon="users" value={delegatedSeats} label="Delegated" />
+            <Stat
+              icon="users"
+              value={guestsInvited}
+              label="Guests invited"
+              testId="desktop-guests-stat"
+              onClick={() => setDesktopTab('guests')}
+            />
             <Stat icon="seat" value={stillOpen} label="Open" />
             <Stat icon="qr" value={dinnersPicked} label={`of ${dinners.length} dinners`} />
           </div>
@@ -304,6 +321,30 @@ export default function Desktop({
                   Assign guests
                 </button>
               )}
+              <button
+                className="desktop-secondary-action"
+                data-testid="desktop-open-tickets"
+                onClick={() => setDesktopTab('tickets')}
+              >
+                <Icon name="ticket" size={16} />
+                Tickets
+              </button>
+              <button
+                className="desktop-secondary-action"
+                data-testid="desktop-open-guests"
+                onClick={() => setDesktopTab('guests')}
+              >
+                <Icon name="users" size={16} />
+                Guests invited
+              </button>
+              <button
+                className="desktop-secondary-action"
+                data-testid="desktop-open-night"
+                onClick={() => setDesktopTab('night')}
+              >
+                <Icon name="moon" size={16} />
+                Tonight
+              </button>
               <button className="desktop-secondary-action" onClick={() => setSettingsOpen(true)}>
                 <Icon name="user" size={16} />
                 Settings
@@ -576,6 +617,52 @@ export default function Desktop({
           onClose={() => setSettingsOpen(false)}
           onSaved={onRefresh}
         />
+      </DesktopModal>
+
+      <DesktopModal
+        open={!!desktopTab}
+        onClose={() => setDesktopTab(null)}
+        title={
+          desktopTab === 'tickets'
+            ? 'All tickets'
+            : desktopTab === 'guests'
+              ? 'Guests invited'
+              : 'Tonight details'
+        }
+        wide
+      >
+        <div className="desktop-tab-modal" data-testid="desktop-tab-modal">
+          {desktopTab === 'tickets' && (
+            <TicketsTab
+              data={data}
+              onOpenTicket={(ticket) => {
+                setDesktopTab(null);
+                setTicketSheet(ticket);
+              }}
+              onPlaceSeats={() => {
+                setDesktopTab(null);
+                goSeats();
+              }}
+              token={token}
+              apiBase={config.apiBase}
+              onRefresh={onRefresh}
+            />
+          )}
+          {desktopTab === 'guests' && (
+            <GroupTab
+              data={data}
+              onInvite={() => {
+                setDesktopTab(null);
+                setInviteOpen(true);
+              }}
+              onOpenDelegation={(delegation) => {
+                setDesktopTab(null);
+                setDelegationSheet(delegation);
+              }}
+            />
+          )}
+          {desktopTab === 'night' && <NightTab />}
+        </div>
       </DesktopModal>
 
       {movieDetail && (

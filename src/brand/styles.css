@@ -290,6 +290,18 @@ body {
   gap: 10px;
 }
 
+button.desktop-parity-stat {
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+button.desktop-parity-stat:hover,
+button.desktop-parity-stat:focus-visible {
+  border-color: rgba(168, 177, 255, 0.36);
+  background: rgba(168, 177, 255, 0.09);
+}
+
 .desktop-parity-stat-icon {
   width: 28px;
   height: 28px;
@@ -865,6 +877,26 @@ body {
   flex: 1;
   min-height: 0;
   padding: 20px 22px 24px;
+}
+
+.desktop-tab-modal {
+  height: min(72dvh, 680px);
+  margin: -20px -22px -24px;
+  overflow: hidden;
+  color: var(--ink-on-ground);
+  background: var(--ground);
+  display: flex;
+  flex-direction: column;
+}
+
+.desktop-tab-modal > .scroll-container {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 32px !important;
+}
+
+.desktop-tab-modal > .scroll-container > div:first-child {
+  padding-top: 22px !important;
 }
 
 .desktop-dinner-list {

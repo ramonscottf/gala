@@ -279,6 +279,16 @@ export const createPreviewPortal = () => ({
       seatsPlaced: 2,
       status: 'active',
     },
+    {
+      id: 302,
+      token: 'preview-delegate-302',
+      delegateName: 'Preview Guest',
+      phone: '(801) 555-0142',
+      email: 'preview.guest@example.com',
+      seatsAllocated: 1,
+      seatsPlaced: 0,
+      status: 'pending',
+    },
   ],
 });
 

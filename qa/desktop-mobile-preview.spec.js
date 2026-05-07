@@ -20,12 +20,35 @@ test.describe('sponsor shell preview', () => {
     await expect(page.getByTestId('desktop-lineup-card')).toHaveCount(4);
     await expect(page.getByTestId('desktop-placed-ticket-card')).toHaveCount(2);
     await expect(page.getByTestId('desktop-placed-seat-placeholder')).toHaveCount(0);
+    await expect(page.getByTestId('desktop-guests-stat')).toContainText(/Guests invited/i);
 
     await page.getByTestId('cta-place-seats').first().click();
     const picker = page.getByTestId('seat-pick-sheet');
     await expect(picker).toBeVisible();
     const box = await picker.boundingBox();
     expect(box?.width).toBeGreaterThan(680);
+  });
+
+  test('desktop preview opens mobile tab information in desktop popups', async ({ page }) => {
+    await preparePage(page);
+    await page.setViewportSize({ width: 1365, height: 900 });
+    await page.goto(`${PREVIEW_URL}?surface=desktop`);
+
+    await page.getByTestId('desktop-open-guests').click();
+    await expect(page.getByRole('dialog', { name: 'Guests invited' })).toBeVisible();
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Your assignments/i);
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/pending/i);
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Preview Guest/i);
+
+    await page.getByLabel('Close dialog').click();
+    await page.getByTestId('desktop-open-tickets').click();
+    await expect(page.getByRole('dialog', { name: 'All tickets' })).toBeVisible();
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/All 10 seats/i);
+
+    await page.getByLabel('Close dialog').click();
+    await page.getByTestId('desktop-open-night').click();
+    await expect(page.getByRole('dialog', { name: 'Tonight details' })).toBeVisible();
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/What to expect/i);
   });
 
   test('mobile preview renders the mobile shell without desktop companion chrome', async ({ page }) => {
