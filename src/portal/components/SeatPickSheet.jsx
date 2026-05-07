@@ -981,6 +981,8 @@ export default function SeatPickSheet({
         </div>
       )}
 
+      <div aria-hidden="true" style={{ height: 54, flex: '0 0 auto' }} />
+
       {/* Sticky CTA — bottom of sheet body */}
       <div
         style={{
