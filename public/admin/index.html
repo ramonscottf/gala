@@ -3929,22 +3929,35 @@ function escapeAttr(s) { return escapeHtml(s); }
 
 // ── Marketing pipeline helpers ───────────────────────────────────────────
 
-// Date options: April 1 → June 30 2026 (full campaign window).
-// Format: "MMM D" (e.g. "Apr 29", "May 14"). The DB column is text so we
-// store the same display string verbatim.
-function buildMktDateOptions() {
-  const out = [];
-  const months = [
-    { name: 'Apr', m: 3, days: 30 },
-    { name: 'May', m: 4, days: 31 },
-    { name: 'Jun', m: 5, days: 30 },
-  ];
-  for (const M of months) {
-    for (let d = 1; d <= M.days; d++) out.push(`${M.name} ${d}`);
-  }
-  return out;
+// Convert display strings like "Apr 29" or "May 11" to ISO "2026-04-29"
+// for native date inputs. Returns '' for unrecognized input — UI shows
+// a blank picker in that case.
+const MKT_MONTH_TO_NUM = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
+function mktDisplayToIso(s) {
+  if (!s) return '';
+  const m = String(s).match(/^([A-Z][a-z]{2})\s+(\d{1,2})/);
+  if (!m) return '';
+  const mn = MKT_MONTH_TO_NUM[m[1]];
+  if (!mn) return '';
+  const d = parseInt(m[2], 10);
+  return `2026-${String(mn).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
-const MKT_DATE_OPTIONS = buildMktDateOptions();
+// Reverse: "2026-04-29" → "Apr 29"
+const MKT_NUM_TO_MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function mktIsoToDisplay(iso) {
+  if (!iso) return '';
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return '';
+  return `${MKT_NUM_TO_MONTH[parseInt(m[2],10) - 1]} ${parseInt(m[3],10)}`;
+}
+// Day-of-week label for an ISO date, e.g. "Wednesday"
+function mktDayOfWeek(iso) {
+  if (!iso) return '';
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return '';
+  const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dt.getUTCDay()];
+}
 
 // Time options: 6:00 AM → 11:45 PM in 15-minute steps.
 function buildMktTimeOptions() {
@@ -3989,6 +4002,25 @@ function mktSelectHtml(id, field, options, currentValue, extraStyle = '') {
     opts = `<option value="" disabled selected>—</option>` + opts;
   }
   return `<select class="mkt-input" data-edit="${id}" data-field="${field}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;${extraStyle}">${opts}</select>`;
+}
+
+// Native date picker with day-of-week chip beneath. The hidden mkt-input is
+// what the save reads (in display format like "Apr 29"); the visible
+// <input type="date"> is the picker. A small wireDateInput() pass keeps
+// the two in sync.
+function mktDateFieldHtml(id, currentValue) {
+  const iso = mktDisplayToIso(currentValue);
+  const dow = mktDayOfWeek(iso);
+  return `
+    <div class="mkt-date-wrap" data-send="${id}">
+      <input type="date" class="mkt-date-picker" data-send="${id}"
+             value="${escapeAttr(iso)}" min="2026-04-01" max="2026-06-30"
+             style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff; font-family:inherit;"/>
+      <input type="hidden" class="mkt-input" data-edit="${id}" data-field="date"
+             value="${escapeAttr(currentValue || '')}"/>
+      <div class="mkt-date-dow" data-send="${id}" style="font-size:11px; color:var(--muted); margin-top:3px; min-height:14px;">${escapeHtml(dow)}</div>
+    </div>
+  `;
 }
 
 function renderPipeline() {
@@ -4042,6 +4074,10 @@ function renderSendRow(send) {
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="scott" style="padding:6px 12px; font-size:12px;">→ Test to Scott</button>
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="sherry" style="padding:6px 12px; font-size:12px;">→ Test to Sherry</button>
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="both" style="padding:6px 12px; font-size:12px;">→ Both</button>
+        ${send.channel === 'Email' || send.channel === 'email' ? `
+          <span style="width:1px; height:18px; background:var(--border); margin:0 4px;"></span>
+          <button class="mkt-preview-send-btn" data-send="${send.id}" style="padding:6px 14px; font-size:12px; background:#0b1b3c; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">📨 Preview &amp; send to audience…</button>
+        ` : ''}
         <span class="mkt-test-result" data-send="${send.id}" style="font-size:12px; color:var(--muted); align-self:center; margin-left:6px;"></span>
       </div>
     </div>
@@ -4100,7 +4136,7 @@ function renderEditor(send) {
       <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
         <label style="display:block;">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Date</div>
-          ${mktSelectHtml(id, 'date', MKT_DATE_OPTIONS, send.date)}
+          ${mktDateFieldHtml(id, send.date)}
         </label>
         <label style="display:block;">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Time</div>
@@ -4156,11 +4192,8 @@ function renderEditor(send) {
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <button class="btn btn-primary mkt-save-btn" data-send="${id}" style="padding:7px 16px; font-size:13px;">Save changes</button>
         <button class="btn btn-secondary mkt-cancel-btn" data-send="${id}" style="padding:7px 16px; font-size:13px;">Cancel</button>
-        ${isEmail ? `
-          <span style="width:1px; height:22px; background:var(--border); margin:0 4px;"></span>
-          <button class="mkt-preview-send-btn" data-send="${id}" style="padding:7px 16px; font-size:13px; background:#0b1b3c; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">📨 Preview send…</button>
-        ` : ''}
         <span class="mkt-save-result" data-send="${id}" style="font-size:12px; color:var(--muted); margin-left:6px;"></span>
+        ${isEmail ? `<span style="font-size:11px; color:var(--muted); margin-left:auto; align-self:center;">↑ <strong>Preview &amp; send</strong> button is in the row header above</span>` : ''}
       </div>
 
       <details class="mkt-activity-toggle" data-send="${id}" style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border);">
@@ -4204,6 +4237,21 @@ function destroyRichTextFor(id) {
 }
 
 function wirePipelineEvents(root) {
+  // Native date pickers — sync the visible <input type="date"> with the
+  // hidden mkt-input (which stores display format like "Apr 29") and
+  // refresh the day-of-week label on change.
+  root.querySelectorAll('.mkt-date-picker').forEach(picker => {
+    picker.addEventListener('change', () => {
+      const id = picker.dataset.send;
+      const iso = picker.value;
+      const display = mktIsoToDisplay(iso);
+      const hidden = root.querySelector(`.mkt-input[data-edit="${id}"][data-field="date"]`);
+      if (hidden) hidden.value = display;
+      const dow = root.querySelector(`.mkt-date-dow[data-send="${id}"]`);
+      if (dow) dow.textContent = mktDayOfWeek(iso);
+    });
+  });
+
   // Edit toggle — also mounts the TipTap editor on first open
   root.querySelectorAll('.mkt-edit-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {

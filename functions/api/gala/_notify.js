@@ -65,13 +65,47 @@ export async function sendSMS(env, to, body, options = {}) {
 }
 
 export async function sendEmail(env, { to, subject, html, replyTo }) {
-  if (!env.RESEND_API_KEY) return { ok: false, error: 'Resend not configured' };
   if (!to) return { ok: false, error: 'No email address' };
 
   const from = env.GALA_FROM_EMAIL || 'gala@daviskids.org';
   // All gala emails reply to Sherry by default. Per Apr 28 2026 personnel update:
   // Val is no longer with DEF; Sherry Miggin (Executive Director) owns gala correspondence.
   const defaultReplyTo = replyTo || env.GALA_ADMIN_EMAIL || 'smiggin@dsdmail.net';
+
+  // ── Path 1: SkippyMail at mail.fosterlabs.org/send (primary) ────────────
+  // Uses the GALA_MAIL_TOKEN bearer; this is the same backend that the
+  // /api/auth/request magic-link emails go through, so we know it works.
+  if (env.GALA_MAIL_TOKEN) {
+    try {
+      const res = await fetch('https://mail.fosterlabs.org/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.GALA_MAIL_TOKEN}`,
+        },
+        body: JSON.stringify({
+          from,
+          replyTo: defaultReplyTo,
+          to,
+          subject,
+          html,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { ok: true, id: data.id || null, via: 'skippymail' };
+      }
+      const errText = await res.text().catch(() => '');
+      return { ok: false, error: `SkippyMail ${res.status}: ${errText.slice(0, 200)}` };
+    } catch (e) {
+      return { ok: false, error: 'SkippyMail network: ' + e.message };
+    }
+  }
+
+  // ── Path 2: Resend direct (fallback) ────────────────────────────────────
+  if (!env.RESEND_API_KEY) {
+    return { ok: false, error: 'No mail backend configured (need GALA_MAIL_TOKEN or RESEND_API_KEY)' };
+  }
   const payload = {
     from: `Davis Education Foundation Gala <${from}>`,
     to: [to],
@@ -79,7 +113,6 @@ export async function sendEmail(env, { to, subject, html, replyTo }) {
     html,
     reply_to: defaultReplyTo,
   };
-
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -90,7 +123,7 @@ export async function sendEmail(env, { to, subject, html, replyTo }) {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (res.ok) return { ok: true, id: data.id };
+    if (res.ok) return { ok: true, id: data.id, via: 'resend' };
     return { ok: false, error: data.message || `Resend error ${res.status}` };
   } catch (e) {
     return { ok: false, error: e.message };
