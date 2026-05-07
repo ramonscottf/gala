@@ -19,6 +19,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://assets.daviskids.org">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 
 <style>
@@ -38,21 +39,19 @@
   --ink: #1a2540;
   --ink-soft: #475569;
 
-  /* Block colors per movie + helpers */
-  --c-mando: #1e3a8a;       /* Mandalorian — deep navy/blue */
-  --c-mando-imax: #0f2a6a;  /* IMAX even deeper */
-  --c-bread: #b45309;       /* Breadwinner — warm amber */
-  --c-pad:   #6d28d9;       /* Paddington 2 — purple */
-  --c-dragon:#0e7490;       /* Dragon — teal */
-  --c-planb: #6b7280;       /* Plan B / overflow — slate */
-  --c-staff: #475569;       /* Staff / staging — neutral */
+  /* Movie-themed colors (pulled from poster palettes) */
+  --c-mando: #5b6b8c;        /* Mandalorian beskar steel-blue */
+  --c-mando-imax: #2a3556;   /* IMAX deeper */
+  --c-bread: #c75d2c;        /* Breadwinner warm sunset orange */
+  --c-pad: #d97e3a;          /* Paddington marmalade */
+  --c-dragon: #2a6f97;       /* Dragon viking sky */
+  --c-planb: #6b7280;        /* Plan B / overflow neutral */
+  --c-staff: #475569;        /* Staff staging */
 
   --c-dinner: #f0e6d2;
   --c-dinner-ink: #6b4f12;
-  --c-clean:  #fde68a;
+  --c-clean: #fde68a;
   --c-clean-ink: #92400e;
-  --c-auction:#fee2e2;
-  --c-auction-ink:#991b1b;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -62,12 +61,9 @@ html, body {
   -webkit-font-smoothing: antialiased;
   line-height: 1.55;
 }
-body {
-  min-height: 100vh;
-  padding: 0 0 60px;
-}
+body { min-height: 100vh; padding: 0 0 60px; }
 
-/* ---------- Banner ---------- */
+/* Banner */
 .banner {
   background: linear-gradient(135deg, var(--navy) 0%, var(--navy-700) 100%);
   color: #fff;
@@ -105,14 +101,70 @@ body {
   letter-spacing: 0.02em;
 }
 
-/* ---------- Wrap ---------- */
-.wrap {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px 0;
+.wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 0; }
+
+/* Movie strip */
+.movie-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+@media (max-width: 720px) {
+  .movie-strip { grid-template-columns: repeat(2, 1fr); }
+}
+.movie-tile {
+  background: var(--paper-card);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  position: relative;
+  isolation: isolate;
+  box-shadow: 0 1px 2px rgba(13,27,61,0.04);
+}
+.movie-tile.mando      { --mt-color: var(--c-mando-imax); }
+.movie-tile.bread      { --mt-color: var(--c-bread); }
+.movie-tile.pad        { --mt-color: var(--c-pad); }
+.movie-tile.dragon     { --mt-color: var(--c-dragon); }
+.movie-tile .swatch {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 4px;
+  background: var(--mt-color);
+  flex-shrink: 0;
+}
+.movie-tile .poster {
+  width: 56px;
+  height: 80px;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(13,27,61,0.05);
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(13,27,61,0.12);
+}
+.movie-tile .info { min-width: 0; flex: 1; }
+.movie-tile .info .name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--navy);
+  line-height: 1.2;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.movie-tile .info .runtime {
+  font-size: 11.5px;
+  color: var(--mute);
+  font-weight: 500;
 }
 
-/* ---------- Summary card ---------- */
+/* Summary */
 .summary {
   background: var(--paper-card);
   border: 1px solid var(--rule);
@@ -128,10 +180,7 @@ body {
   margin-bottom: 8px;
   color: var(--navy);
 }
-.summary p {
-  font-size: 14.5px;
-  color: var(--ink-soft);
-}
+.summary p { font-size: 14.5px; color: var(--ink-soft); }
 .summary .pills {
   display: flex;
   flex-wrap: wrap;
@@ -147,11 +196,10 @@ body {
   color: var(--navy);
   letter-spacing: 0.02em;
 }
-.pill.red    { background: rgba(203,38,44,0.10); color: var(--red); }
-.pill.amber  { background: rgba(180,83,9,0.10); color: var(--c-bread); }
-.pill.green  { background: rgba(4,120,87,0.10); color: #047857; }
+.pill.red   { background: rgba(203,38,44,0.10); color: var(--red); }
+.pill.amber { background: rgba(180,83,9,0.10); color: #b45309; }
+.pill.green { background: rgba(4,120,87,0.10); color: #047857; }
 
-/* ---------- Section heading ---------- */
 .section-head {
   display: flex;
   align-items: baseline;
@@ -168,13 +216,9 @@ body {
   color: var(--navy);
   letter-spacing: -0.005em;
 }
-.section-head .meta {
-  font-size: 13px;
-  color: var(--mute);
-  font-weight: 500;
-}
+.section-head .meta { font-size: 13px; color: var(--mute); font-weight: 500; }
 
-/* ---------- Timeline ---------- */
+/* Timeline */
 .timeline-card {
   background: var(--paper-card);
   border: 1px solid var(--rule);
@@ -182,30 +226,10 @@ body {
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(13,27,61,0.04);
 }
-.timeline {
-  position: relative;
-  padding: 20px 14px 14px;
-  overflow-x: auto;
-}
-.timeline-inner {
-  position: relative;
-  min-width: 920px;
-}
-
-/* Hour grid */
-.grid {
-  position: relative;
-  height: 32px;
-  margin-left: 124px;
-  border-bottom: 1px solid var(--rule);
-}
-.grid .tick {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--rule);
-}
+.timeline { position: relative; padding: 20px 14px 14px; overflow-x: auto; }
+.timeline-inner { position: relative; min-width: 920px; }
+.grid { position: relative; height: 32px; margin-left: 124px; border-bottom: 1px solid var(--rule); }
+.grid .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
 .grid .tick.major { background: rgba(13,27,61,0.18); }
 .grid .label {
   position: absolute;
@@ -216,8 +240,6 @@ body {
   color: var(--mute);
   letter-spacing: 0.04em;
 }
-
-/* Now-marker style key vertical lines (auction, doors, etc) */
 .marker {
   position: absolute;
   top: 32px;
@@ -240,7 +262,6 @@ body {
   letter-spacing: 0.05em;
 }
 
-/* Track */
 .track-row {
   display: flex;
   align-items: stretch;
@@ -258,24 +279,10 @@ body {
   flex-direction: column;
   justify-content: center;
 }
-.track-label .aud {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--navy);
-  letter-spacing: 0.02em;
-}
-.track-label .cap {
-  font-size: 10.5px;
-  color: var(--mute);
-  margin-top: 1px;
-  letter-spacing: 0.02em;
-}
-.track {
-  position: relative;
-  flex: 1;
-}
+.track-label .aud { font-size: 12px; font-weight: 700; color: var(--navy); letter-spacing: 0.02em; }
+.track-label .cap { font-size: 10.5px; color: var(--mute); margin-top: 1px; letter-spacing: 0.02em; }
+.track { position: relative; flex: 1; }
 
-/* Blocks */
 .block {
   position: absolute;
   top: 6px;
@@ -286,21 +293,37 @@ body {
   font-weight: 600;
   display: flex;
   align-items: center;
-  padding: 0 8px;
+  padding: 0 8px 0 6px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   letter-spacing: 0.01em;
   cursor: default;
+  gap: 6px;
 }
-.block .preroll {
+.block .poster-bullet {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,0.45);
+}
+.block .preroll-bar {
   display: inline-block;
-  width: 4px;
-  height: 12px;
+  width: 3px;
+  height: 14px;
   background: rgba(255,255,255,0.55);
   border-radius: 2px;
-  margin-right: 6px;
+  margin-right: 2px;
   flex-shrink: 0;
+}
+.block .label-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 .block .times {
   margin-left: auto;
@@ -308,8 +331,8 @@ body {
   font-weight: 500;
   opacity: 0.92;
   padding-left: 8px;
+  flex-shrink: 0;
 }
-
 .block.mando      { background: var(--c-mando); }
 .block.mando-imax { background: var(--c-mando-imax); }
 .block.bread      { background: var(--c-bread); }
@@ -318,8 +341,7 @@ body {
 .block.planb      { background: var(--c-planb); }
 .block.staff      { background: var(--c-staff); font-style: italic; }
 
-/* Pre-event blocks (dinner, etc) */
-.pre-block, .clean-block, .auction-block {
+.pre-block, .clean-block {
   position: absolute;
   top: 6px;
   bottom: 6px;
@@ -345,30 +367,7 @@ body {
   border: 1px solid rgba(180,83,9,0.25);
   font-weight: 700;
 }
-.auction-block {
-  background: var(--c-auction);
-  color: var(--c-auction-ink);
-  border: 1px solid rgba(220,38,38,0.30);
-  font-weight: 700;
-}
 
-/* Section divider in timeline */
-.session-divider {
-  height: 26px;
-  background: linear-gradient(180deg, rgba(13,27,61,0.04) 0%, rgba(13,27,61,0.02) 100%);
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  display: flex;
-  align-items: center;
-  padding-left: 14px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--navy);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* Legend */
 .legend {
   margin: 14px 0 6px;
   padding: 14px 16px;
@@ -388,8 +387,19 @@ body {
   vertical-align: -1px;
   margin-right: 6px;
 }
+.legend .poster-mini {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background-size: cover;
+  background-position: center;
+  vertical-align: -2px;
+  margin-right: 6px;
+  box-shadow: 0 0 0 1px rgba(13,27,61,0.15);
+}
 
-/* ---------- Tables (theater roll & timing checks) ---------- */
+/* Roll-call cards */
 .grid-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -416,11 +426,7 @@ body {
   text-transform: uppercase;
 }
 .card .card-body { padding: 6px 0 8px; }
-table.bare {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-}
+table.bare { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 table.bare th, table.bare td {
   text-align: left;
   padding: 9px 14px;
@@ -436,16 +442,25 @@ table.bare th {
 }
 table.bare tr:last-child td { border-bottom: none; }
 table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
-.dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 8px;
-  vertical-align: -1px;
+
+.movie-bullet { display: inline-flex; align-items: center; gap: 8px; }
+.movie-bullet .poster-mini {
+  width: 22px;
+  height: 30px;
+  border-radius: 3px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(13,27,61,0.10);
+  background-color: rgba(13,27,61,0.05);
+}
+.movie-bullet .stripe {
+  width: 4px;
+  height: 24px;
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
-/* Verification card */
 .verify {
   margin-top: 24px;
   background: var(--paper-card);
@@ -461,11 +476,7 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
   color: var(--navy);
   margin-bottom: 10px;
 }
-.verify ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+.verify ul { list-style: none; margin: 0; padding: 0; }
 .verify li {
   font-size: 13.5px;
   color: var(--ink-soft);
@@ -482,7 +493,7 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
   font-weight: 700;
   color: #047857;
 }
-.verify li.warn::before { content: '!'; color: var(--c-bread); }
+.verify li.warn::before { content: '!'; color: #b45309; }
 .verify li strong { color: var(--ink); }
 
 .footnote {
@@ -515,13 +526,48 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
 
 <div class="wrap">
 
-  <!-- ============== SUMMARY ============== -->
+  <section class="movie-strip">
+    <div class="movie-tile mando">
+      <div class="swatch"></div>
+      <div class="poster" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/mandalorian.png')"></div>
+      <div class="info">
+        <div class="name">The Mandalorian and Grogu</div>
+        <div class="runtime">2 hr 12 min · IMAX premier</div>
+      </div>
+    </div>
+    <div class="movie-tile bread">
+      <div class="swatch"></div>
+      <div class="poster" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/breadwinner.png')"></div>
+      <div class="info">
+        <div class="name">The Breadwinner</div>
+        <div class="runtime">1 hr 40 min</div>
+      </div>
+    </div>
+    <div class="movie-tile pad">
+      <div class="swatch"></div>
+      <div class="poster" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/paddington.png')"></div>
+      <div class="info">
+        <div class="name">Paddington 2</div>
+        <div class="runtime">1 hr 44 min</div>
+      </div>
+    </div>
+    <div class="movie-tile dragon">
+      <div class="swatch"></div>
+      <div class="poster" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/dragon.png')"></div>
+      <div class="info">
+        <div class="name">How to Train Your Dragon</div>
+        <div class="runtime">1 hr 38 min</div>
+      </div>
+    </div>
+  </section>
+
   <section class="summary">
     <h2>Two-session structure</h2>
     <p>
-      Four feature films in eight auditoriums per session. Showing 1 starts at <strong>4:30 PM</strong>
-      across the board. Showing 2 starts at <strong>7:15 PM</strong> across the board. Between them,
-      a 15-minute crew turnover, dinner served, and the silent auction closes at 6:30 PM.
+      Four feature films across eight auditoriums per session. Doors open at <strong>4:00 PM</strong>,
+      Showing 1 starts at <strong>4:30 PM</strong> across the board. Showing 2 starts at
+      <strong>7:15 PM</strong> across the board. Between them, a 15-minute crew turnover, dinner served,
+      and the silent auction closes at 6:30 PM.
     </p>
     <div class="pills">
       <span class="pill">Pre-show: 5 min DEF intro video</span>
@@ -532,7 +578,6 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
     </div>
   </section>
 
-  <!-- ============== TIMELINE ============== -->
   <div class="section-head">
     <h2>Theater-by-theater timeline</h2>
     <span class="meta">3:00 PM → 10:00 PM · Mountain Time</span>
@@ -541,28 +586,23 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
   <div class="timeline-card">
     <div class="timeline">
       <div class="timeline-inner" id="timeline">
-        <!-- Hour ticks injected by JS -->
         <div class="grid" id="grid"></div>
-        <!-- Tracks injected by JS -->
         <div id="tracks"></div>
       </div>
     </div>
 
     <div class="legend">
-      <span><span class="swatch" style="background:var(--c-mando-imax)"></span>Mandalorian (IMAX)</span>
-      <span><span class="swatch" style="background:var(--c-mando)"></span>Mandalorian</span>
-      <span><span class="swatch" style="background:var(--c-bread)"></span>Breadwinner</span>
-      <span><span class="swatch" style="background:var(--c-pad)"></span>Paddington 2</span>
-      <span><span class="swatch" style="background:var(--c-dragon)"></span>How to Train Your Dragon</span>
+      <span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/mandalorian.png')"></span>Mandalorian (IMAX & standard)</span>
+      <span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/breadwinner.png')"></span>Breadwinner</span>
+      <span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/paddington.png')"></span>Paddington 2</span>
+      <span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/dragon.png')"></span>How to Train Your Dragon</span>
       <span><span class="swatch" style="background:var(--c-planb)"></span>Plan B / Overflow</span>
       <span><span class="swatch" style="background:var(--c-staff)"></span>Staff / Staging</span>
       <span><span class="swatch" style="background:var(--c-dinner);border:1px solid rgba(180,83,9,.25)"></span>Dinner served in theater</span>
       <span><span class="swatch" style="background:var(--c-clean);border:1px solid rgba(180,83,9,.3)"></span>Crew turnover (15 min)</span>
-      <span><span class="swatch" style="background:var(--c-auction);border:1px solid rgba(220,38,38,.3)"></span>Auction closes</span>
     </div>
   </div>
 
-  <!-- ============== ROLL CALL ============== -->
   <div class="section-head">
     <h2>Theater assignments</h2>
     <span class="meta">From Kara · May 7, 2026</span>
@@ -570,63 +610,62 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
 
   <div class="grid-cards">
     <div class="card">
-      <div class="card-head">Showing 1 · 4:30 PM</div>
+      <div class="card-head">Showing 1 · 4:30 PM (doors 4:00 PM)</div>
       <div class="card-body">
         <table class="bare">
           <thead>
             <tr><th>Aud</th><th>Movie</th><th class="num">Cap</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="dot" style="background:var(--c-mando-imax)"></span><strong>#8 IMAX</strong></td><td>Mandalorian</td><td class="num">266</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-mando)"></span><strong>#9</strong></td><td>Mandalorian</td><td class="num">102</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-bread)"></span><strong>#3</strong></td><td>Breadwinner</td><td class="num">67</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-bread)"></span><strong>#13</strong></td><td>Breadwinner</td><td class="num">68</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-dragon)"></span><strong>#7</strong></td><td>How to Train Your Dragon</td><td class="num">203</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-pad)"></span><strong>#2</strong></td><td>Paddington 2</td><td class="num">113</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-planb)"></span><strong>#10</strong></td><td>Plan B</td><td class="num">67</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-planb)"></span><strong>#6</strong></td><td>Overflow</td><td class="num">68</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-staff)"></span><strong>#11, #14</strong></td><td>Staff</td><td class="num">67</td></tr>
+            <tr><td><strong>#8 IMAX</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-mando-imax)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/mandalorian.png')"></span>Mandalorian</span></td><td class="num">266</td></tr>
+            <tr><td><strong>#9</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-mando)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/mandalorian.png')"></span>Mandalorian</span></td><td class="num">102</td></tr>
+            <tr><td><strong>#3</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-bread)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/breadwinner.png')"></span>Breadwinner</span></td><td class="num">67</td></tr>
+            <tr><td><strong>#13</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-bread)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/breadwinner.png')"></span>Breadwinner</span></td><td class="num">68</td></tr>
+            <tr><td><strong>#7</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-dragon)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/dragon.png')"></span>How to Train Your Dragon</span></td><td class="num">203</td></tr>
+            <tr><td><strong>#2</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-pad)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/paddington.png')"></span>Paddington 2</span></td><td class="num">113</td></tr>
+            <tr><td><strong>#10</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-planb)"></span><span style="font-style:italic;color:var(--mute)">Plan B · flex</span></span></td><td class="num">67</td></tr>
+            <tr><td><strong>#6</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-planb)"></span><span style="font-style:italic;color:var(--mute)">Overflow · flex</span></span></td><td class="num">68</td></tr>
+            <tr><td><strong>#11, #14</strong></td><td><span style="font-style:italic;color:var(--mute)">Staff staging</span></td><td class="num">—</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-head">Showing 2 · 7:15 PM</div>
+      <div class="card-head">Showing 2 · 7:15 PM (doors 6:45 PM)</div>
       <div class="card-body">
         <table class="bare">
           <thead>
             <tr><th>Aud</th><th>Movie</th><th class="num">Cap</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="dot" style="background:var(--c-mando-imax)"></span><strong>#8 IMAX</strong></td><td>Mandalorian</td><td class="num">266</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-mando)"></span><strong>#5</strong></td><td>Mandalorian</td><td class="num">101</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-bread)"></span><strong>#4</strong></td><td>Breadwinner</td><td class="num">63</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-bread)"></span><strong>#12</strong></td><td>Breadwinner</td><td class="num">67</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-dragon)"></span><strong>#7</strong></td><td>How to Train Your Dragon</td><td class="num">203</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-pad)"></span><strong>#1</strong></td><td>Paddington 2</td><td class="num">94</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-planb)"></span><strong>#10</strong></td><td>Plan B</td><td class="num">67</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-planb)"></span><strong>#6</strong></td><td>Overflow</td><td class="num">68</td></tr>
-            <tr><td><span class="dot" style="background:var(--c-staff)"></span><strong>#11, #14</strong></td><td>Staff</td><td class="num">67</td></tr>
+            <tr><td><strong>#8 IMAX</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-mando-imax)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/mandalorian.png')"></span>Mandalorian</span></td><td class="num">266</td></tr>
+            <tr><td><strong>#5</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-mando)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/mandalorian.png')"></span>Mandalorian</span></td><td class="num">101</td></tr>
+            <tr><td><strong>#4</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-bread)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/breadwinner.png')"></span>Breadwinner</span></td><td class="num">63</td></tr>
+            <tr><td><strong>#12</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-bread)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/breadwinner.png')"></span>Breadwinner</span></td><td class="num">67</td></tr>
+            <tr><td><strong>#7</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-dragon)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/dragon.png')"></span>How to Train Your Dragon</span></td><td class="num">203</td></tr>
+            <tr><td><strong>#1</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-pad)"></span><span class="poster-mini" style="background-image:url('https://assets.daviskids.org/gala-2026/movies/paddington.png')"></span>Paddington 2</span></td><td class="num">94</td></tr>
+            <tr><td><strong>#10</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-planb)"></span><span style="font-style:italic;color:var(--mute)">Plan B · flex</span></span></td><td class="num">67</td></tr>
+            <tr><td><strong>#6</strong></td><td><span class="movie-bullet"><span class="stripe" style="background:var(--c-planb)"></span><span style="font-style:italic;color:var(--mute)">Overflow · flex</span></span></td><td class="num">68</td></tr>
+            <tr><td><strong>#11, #14</strong></td><td><span style="font-style:italic;color:var(--mute)">Staff staging</span></td><td class="num">—</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- ============== VERIFICATION ============== -->
   <section class="verify">
     <h3>Timing verification</h3>
     <ul>
-      <li><strong>Showing 1 dinner doors open 3:45 PM</strong> across all auditoriums — single call time since all S1 movies now start at 4:30 PM together.</li>
-      <li><strong>All Showing 1 movies start at 4:30 PM</strong> (5-min DEF intro, then feature). One call time for the whole house, simpler floor-ops than last year's staggered start.</li>
+      <li><strong>Doors open at 4:00 PM.</strong> Earliest guests can enter the building.</li>
+      <li><strong>All Showing 1 movies start at 4:30 PM</strong> (5-min DEF intro, then feature). One call time for the whole house, simpler floor-ops than a staggered start.</li>
       <li><strong>Movies end 6:13 → 6:47 PM.</strong> Dragon at 6:13, Breadwinner at 6:15, Paddington 2 at 6:19, Mandalorian (longest) at 6:47.</li>
-      <li><strong>Auction closes 6:30 PM.</strong> Falls inside the spillover window — guests in shorter movies are out by then; Mandalorian guests have the IMAX experience as their headline anyway.</li>
-      <li class="warn"><strong>Mandalorian S1 → S2 turnaround is tight: 28 minutes</strong> (6:47 PM end → 7:15 PM lights). 15 min crew turnover finishes 7:02 PM, leaving 13 min for dinner serve and walk-in. Confirmed acceptable per Kara — last year the floor was 50/750 and this matches it.</li>
-      <li><strong>Showing 2 dinner doors open ~6:45 PM</strong> for the three shorter-movie auds; Mandalorian aud doors as soon as crew clears (~7:02 PM).</li>
+      <li><strong>Auction closes 6:30 PM.</strong> Falls inside the spillover window — guests in shorter movies are out by then; Mandalorian audience is the IMAX premier crowd.</li>
+      <li class="warn"><strong>Mandalorian S1 → S2 turnaround is tight: 28 minutes</strong> (6:47 PM end → 7:15 PM lights). 15 min crew turnover finishes 7:02 PM, leaving 13 min for dinner serve and walk-in. Confirmed acceptable per Kara — last year's floor was 5:00 / 7:50 and this matches it.</li>
+      <li><strong>Showing 2 dinner doors open 6:45 PM</strong> for the three shorter-movie auds; Mandalorian IMAX doors as soon as crew clears (~7:02 PM).</li>
       <li><strong>All Showing 2 movies start at 7:15 PM.</strong> Dinner serve + walk-in time is the binding constraint, not crew turnover.</li>
       <li><strong>Showing 2 movies end 8:58 → 9:32 PM.</strong> Dragon out first at 8:58, Mandalorian out last at 9:32. House clear by 10 PM.</li>
-      <li><strong>Schedule is feasible.</strong> Tight on Mandalorian Showing 1 → Showing 2, but consistent with last year's operational floor.</li>
+      <li><strong>Total bookable inventory: 1,883 seats</strong> across two sessions (954 S1 + 929 S2).</li>
     </ul>
   </section>
 
@@ -637,17 +676,18 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
 </div>
 
 <script>
-/* ---------------------------------------------------------------
-   Timeline data — single source of truth.
-   Each show has runtime + show_start + dinner_doors.
-   Pre-roll = 5 min DEF intro before feature begins.
---------------------------------------------------------------- */
-const PRE_ROLL = 5;             // DEF intro video, plays at show_start
-const TURNOVER = 15;            // crew cleaning between sessions
+const PRE_ROLL = 5;
+const TURNOVER = 15;
+const T_START = 15 * 60;
+const T_END   = 22 * 60;
 
-// Timeline window — minutes from midnight
-const T_START = 15 * 60;        // 3:00 PM
-const T_END   = 22 * 60;        // 10:00 PM
+const POSTERS = {
+  mando:        'https://assets.daviskids.org/gala-2026/movies/mandalorian.png',
+  'mando-imax': 'https://assets.daviskids.org/gala-2026/movies/mandalorian.png',
+  bread:        'https://assets.daviskids.org/gala-2026/movies/breadwinner.png',
+  pad:          'https://assets.daviskids.org/gala-2026/movies/paddington.png',
+  dragon:       'https://assets.daviskids.org/gala-2026/movies/dragon.png',
+};
 
 function m(h, mn=0) { return h * 60 + mn; }
 function timeStr(mins) {
@@ -657,10 +697,9 @@ function timeStr(mins) {
   const h = ((h24 + 11) % 12) + 1;
   return `${h}:${String(mm).padStart(2,'0')} ${am ? 'AM' : 'PM'}`;
 }
-function pct(mins)   { return ((mins - T_START) / (T_END - T_START)) * 100; }
+function pct(mins)    { return ((mins - T_START) / (T_END - T_START)) * 100; }
 function widthPct(a,b){ return ((b - a) / (T_END - T_START)) * 100; }
 
-/* Auditoriums in display order */
 const TRACKS = [
   { id: 'a8',  label: 'Aud #8',  cap: 'IMAX · 266' },
   { id: 'a9',  label: 'Aud #9',  cap: 'S1 · 102' },
@@ -678,20 +717,17 @@ const TRACKS = [
   { id: 'a14', label: 'Aud #14', cap: 'Staff' },
 ];
 
-/* All shows: [trackId, klass, label, runtime, dinnerDoors, showStart, showing] */
 const SHOWS = [
-  // ===== SHOWING 1 — all start 4:30 =====
-  ['a8',  'mando-imax', 'Mandalorian', 132, m(15,45), m(16,30), 1],
-  ['a9',  'mando',      'Mandalorian', 132, m(15,45), m(16,30), 1],
-  ['a3',  'bread',      'Breadwinner', 100, m(15,45), m(16,30), 1],
-  ['a13', 'bread',      'Breadwinner', 100, m(15,45), m(16,30), 1],
-  ['a7',  'dragon',     'Dragon',       98, m(15,45), m(16,30), 1],
-  ['a2',  'pad',        'Paddington 2',104, m(15,45), m(16,30), 1],
-  ['a10', 'planb',      'Plan B',      100, m(15,45), m(16,30), 1],
-  ['a6',  'planb',      'Overflow',    100, m(15,45), m(16,30), 1],
-
-  // ===== SHOWING 2 — all start 7:15 =====
-  // Mandalorian aud dinner doors after cleaning (7:02), others at 6:45
+  // Showing 1 — doors 4:00, lights 4:30
+  ['a8',  'mando-imax', 'Mandalorian', 132, m(16, 0), m(16,30), 1],
+  ['a9',  'mando',      'Mandalorian', 132, m(16, 0), m(16,30), 1],
+  ['a3',  'bread',      'Breadwinner', 100, m(16, 0), m(16,30), 1],
+  ['a13', 'bread',      'Breadwinner', 100, m(16, 0), m(16,30), 1],
+  ['a7',  'dragon',     'Dragon',       98, m(16, 0), m(16,30), 1],
+  ['a2',  'pad',        'Paddington 2',104, m(16, 0), m(16,30), 1],
+  ['a10', 'planb',      'Plan B',      100, m(16, 0), m(16,30), 1],
+  ['a6',  'planb',      'Overflow',    100, m(16, 0), m(16,30), 1],
+  // Showing 2 — doors 6:45 (Mando IMAX 7:02), lights 7:15
   ['a8',  'mando-imax', 'Mandalorian', 132, m(19, 2), m(19,15), 2],
   ['a5',  'mando',      'Mandalorian', 132, m(18,45), m(19,15), 2],
   ['a4',  'bread',      'Breadwinner', 100, m(18,45), m(19,15), 2],
@@ -700,13 +736,11 @@ const SHOWS = [
   ['a1',  'pad',        'Paddington 2',104, m(18,45), m(19,15), 2],
   ['a10', 'planb',      'Plan B',      100, m(18,45), m(19,15), 2],
   ['a6',  'planb',      'Overflow',    100, m(18,45), m(19,15), 2],
-
-  // ===== STAFF — open all night =====
+  // Staff
   ['a11', 'staff',      'Staff / Staging', T_END - m(15,15), m(15,15), m(15,15), 0],
   ['a14', 'staff',      'Staff / Staging', T_END - m(15,15), m(15,15), m(15,15), 0],
 ];
 
-/* ----------- Build hour grid ----------- */
 const grid = document.getElementById('grid');
 for (let h = 15; h <= 22; h++) {
   const tick = document.createElement('div');
@@ -722,7 +756,6 @@ for (let h = 15; h <= 22; h++) {
   lab.textContent = `${h12} ${am ? 'AM' : 'PM'}`;
   grid.appendChild(lab);
 
-  // half-hour minor tick
   if (h < 22) {
     const tickHalf = document.createElement('div');
     tickHalf.className = 'tick';
@@ -731,7 +764,6 @@ for (let h = 15; h <= 22; h++) {
   }
 }
 
-/* ----------- Build tracks ----------- */
 const tracksWrap = document.getElementById('tracks');
 const trackEls = {};
 TRACKS.forEach(t => {
@@ -748,13 +780,11 @@ TRACKS.forEach(t => {
   trackEls[t.id] = row.querySelector('.track');
 });
 
-/* ----------- Place blocks ----------- */
 SHOWS.forEach(([id, klass, label, runtime, dinnerStart, showStart, showing]) => {
   const trk = trackEls[id];
   if (!trk) return;
   const end = showStart + PRE_ROLL + runtime;
 
-  // Dinner block
   if (showing > 0 && dinnerStart < showStart) {
     const pre = document.createElement('div');
     pre.className = 'pre-block';
@@ -765,18 +795,21 @@ SHOWS.forEach(([id, klass, label, runtime, dinnerStart, showStart, showing]) => 
     trk.appendChild(pre);
   }
 
-  // Show block (5 min DEF intro + feature)
   const blk = document.createElement('div');
   blk.className = 'block ' + klass;
   blk.style.left = pct(showStart) + '%';
   blk.style.width = widthPct(showStart, end) + '%';
+
+  const posterUrl = POSTERS[klass];
   if (showing === 0) {
-    // Staff bar
-    blk.innerHTML = `<span>${label}</span>`;
+    blk.innerHTML = `<span class="label-text">${label}</span>`;
   } else {
+    const posterHtml = posterUrl
+      ? `<span class="poster-bullet" style="background-image:url('${posterUrl}')"></span>`
+      : `<span class="preroll-bar"></span>`;
     blk.innerHTML = `
-      <span class="preroll" title="DEF intro 5 min"></span>
-      <span>${label}</span>
+      ${posterHtml}
+      <span class="label-text">${label}</span>
       <span class="times">${timeStr(showStart)}–${timeStr(end)}</span>
     `;
     blk.title = `${label} · ${timeStr(showStart)} (5-min DEF intro) → feature ends ${timeStr(end)}`;
@@ -784,16 +817,13 @@ SHOWS.forEach(([id, klass, label, runtime, dinnerStart, showStart, showing]) => 
   trk.appendChild(blk);
 });
 
-/* ----------- Cleaning blocks (per track, only auds reused in S2) -----------
-   Crew enters as soon as the S1 movie ends. 15-min turnover.
-   Auds only used in S1 (e.g. #2, #3, #9, #13) don't need re-prep. */
 const s2Auds = new Set(SHOWS.filter(s => s[6] === 2).map(s => s[0]));
 const s1EndByTrack = {};
 SHOWS.filter(s => s[6] === 1).forEach(([id,, , runtime, , showStart]) => {
   s1EndByTrack[id] = showStart + PRE_ROLL + runtime;
 });
 Object.entries(s1EndByTrack).forEach(([id, endMin]) => {
-  if (!s2Auds.has(id)) return;     // only re-clean auds that have a S2
+  if (!s2Auds.has(id)) return;
   const trk = trackEls[id];
   if (!trk) return;
   const cEnd = endMin + TURNOVER;
@@ -806,12 +836,20 @@ Object.entries(s1EndByTrack).forEach(([id, endMin]) => {
   trk.appendChild(c);
 });
 
-/* ----------- Auction marker ----------- */
+// Auction marker
 const auctionMarker = document.createElement('div');
 auctionMarker.className = 'marker';
 auctionMarker.style.left = `calc(124px + (100% - 124px) * ${(m(18,30) - T_START) / (T_END - T_START)})`;
 auctionMarker.innerHTML = `<span class="marker-label">AUCTION CLOSES · 6:30 PM</span>`;
 document.querySelector('.timeline-inner').appendChild(auctionMarker);
+
+// Doors marker
+const doorsMarker = document.createElement('div');
+doorsMarker.className = 'marker';
+doorsMarker.style.borderLeftColor = 'rgba(244,185,66,0.55)';
+doorsMarker.style.left = `calc(124px + (100% - 124px) * ${(m(16, 0) - T_START) / (T_END - T_START)})`;
+doorsMarker.innerHTML = `<span class="marker-label" style="color:#a76b00;background:rgba(255,255,255,0.94)">DOORS · 4:00 PM</span>`;
+document.querySelector('.timeline-inner').appendChild(doorsMarker);
 </script>
 
 </body>
