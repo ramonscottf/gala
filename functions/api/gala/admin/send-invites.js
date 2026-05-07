@@ -223,7 +223,7 @@ function buildInviteHtml({ contactName, company, tier, seats, portalUrl, overrid
       <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
         <tr><td style="padding:5px 0;font-size:11px;line-height:17px;color:#64748b;text-align:center;">
           <span style="color:#0d1b3d;font-weight:700;">Sponsorship &amp; gala questions</span><br/>
-          Sherry Miggin &nbsp;·&nbsp; <a href="tel:+18015129370" style="color:#64748b;text-decoration:none;">801-512-9370</a> &nbsp;·&nbsp; <a href="mailto:smiggin@dsdmail.net" style="color:#64748b;text-decoration:underline;">smiggin@dsdmail.net</a>
+          Sherry Miggin &nbsp;·&nbsp; <a href="tel:+18014024483" style="color:#64748b;text-decoration:none;">801-402-4483</a> &nbsp;·&nbsp; <a href="mailto:smiggin@dsdmail.net" style="color:#64748b;text-decoration:underline;">smiggin@dsdmail.net</a>
         </td></tr>
         <tr><td style="padding:5px 0;font-size:11px;line-height:17px;color:#64748b;text-align:center;">
           <span style="color:#0d1b3d;font-weight:700;">Technical help</span><br/>
