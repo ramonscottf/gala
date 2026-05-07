@@ -3886,12 +3886,16 @@ const SEND_BUSY = new Set();   // ids currently in-flight (test-send or save)
 async function loadLivePipeline() {
   try {
     const r = await fetch('/api/gala/marketing-pipeline', { credentials: 'include' });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    if (!r.ok) {
+      console.warn(`marketing-pipeline API returned ${r.status} — falling back to baked PIPELINE. The editor will be read-only and will show stale copy until this is fixed.`);
+      return false;
+    }
     const d = await r.json();
     if (Array.isArray(d.phases) && d.phases.length) {
       LIVE_PIPELINE = d.phases;
       return true;
     }
+    console.warn('marketing-pipeline returned no phases — falling back to baked PIPELINE');
   } catch (e) {
     console.warn('marketing-pipeline API unreachable, falling back to baked PIPELINE:', e.message);
   }

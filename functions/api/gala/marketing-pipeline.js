@@ -22,7 +22,7 @@ export async function onRequest(context) {
   const url = new URL(request.url);
 
   // Auth
-  const ok = await verifyGalaAuth(request, env.GALA_AUTH_SECRET);
+  const ok = await verifyGalaAuth(request, env.GALA_DASH_SECRET);
   if (!ok) return jsonError('Unauthorized', 401);
 
   if (!env.GALA_DB) return jsonError('Database not configured', 503);
