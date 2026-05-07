@@ -4040,7 +4040,8 @@ function renderSendRow(send) {
         <button class="btn btn-secondary mkt-edit-btn" data-send="${send.id}" style="padding:6px 12px; font-size:12px;">✎ Edit copy &amp; schedule</button>
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="scott" style="padding:6px 12px; font-size:12px;">→ Test to Scott</button>
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="sherry" style="padding:6px 12px; font-size:12px;">→ Test to Sherry</button>
-        <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="both" style="padding:6px 12px; font-size:12px;">→ Both</button>
+        <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="kara" style="padding:6px 12px; font-size:12px;">→ Test to Kara</button>
+        <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="all" style="padding:6px 12px; font-size:12px;">→ All 3</button>
         ${send.channel === 'Email' || send.channel === 'email' ? `
           <span style="width:1px; height:18px; background:var(--border); margin:0 4px;"></span>
           <button class="mkt-preview-send-btn" data-send="${send.id}" style="padding:6px 14px; font-size:12px; background:#0b1b3c; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">📨 Preview &amp; send to audience…</button>
@@ -4516,24 +4517,30 @@ function showSendConfirmModal(sendId, preview) {
   modal.style.cssText = 'position:fixed; inset:0; background:rgba(11,27,60,0.65); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;';
 
   const card = document.createElement('div');
-  card.style.cssText = 'background:#fff; border-radius:12px; max-width:640px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);';
-
-  const recipientList = preview.recipients.slice(0, 15).map(r =>
-    `<li style="padding:4px 0; font-size:13px;"><strong>${escapeHtml(r.name)}</strong> <span style="color:var(--muted);">&lt;${escapeHtml(r.email)}&gt;</span> <span style="color:var(--muted); font-size:11px;">· ${escapeHtml(r.tier || '')}</span></li>`
-  ).join('');
-  const moreLine = preview.recipients.length > 15
-    ? `<li style="padding:4px 0; font-size:13px; color:var(--muted); font-style:italic;">…and ${preview.recipients.length - 15} more</li>`
-    : '';
+  card.style.cssText = 'background:#fff; border-radius:12px; max-width:760px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);';
 
   const isZero = preview.recipientCount === 0;
   const missingCount = preview.missingEmailCount || 0;
-  const missingList = (preview.missingEmail || []).slice(0, 12).map(r =>
-    `<li style="padding:3px 0; font-size:12px;"><strong>${escapeHtml(r.name)}</strong> <span style="color:var(--muted); font-size:11px;">· ${escapeHtml(r.tier || '')}</span></li>`
-  ).join('');
-  const missingMore = (preview.missingEmail || []).length > 12
-    ? `<li style="padding:3px 0; font-size:12px; color:var(--muted); font-style:italic;">…and ${(preview.missingEmail.length - 12)} more</li>`
-    : '';
   const totalMatched = preview.recipientCount + missingCount;
+
+  // Full recipient list — scrollable, table-style for easy scanning
+  const recipientRows = preview.recipients.map((r, i) =>
+    `<tr style="border-bottom:1px solid #eef0f4;">
+      <td style="padding:8px 12px; font-size:12px; color:var(--muted); width:34px; text-align:right; vertical-align:top;">${i+1}</td>
+      <td style="padding:8px 10px; font-size:13px; vertical-align:top;"><strong>${escapeHtml(r.name)}</strong></td>
+      <td style="padding:8px 10px; font-size:12px; color:#475569; vertical-align:top; word-break:break-all;">${escapeHtml(r.email)}</td>
+      <td style="padding:8px 10px; font-size:11px; color:var(--muted); vertical-align:top; white-space:nowrap;">${escapeHtml(r.tier || '')}</td>
+    </tr>`
+  ).join('');
+
+  // Full missing-email list — same table treatment
+  const missingRows = (preview.missingEmail || []).map((r, i) =>
+    `<tr style="border-bottom:1px solid #f4e4c6;">
+      <td style="padding:6px 12px; font-size:12px; color:#92400e; width:34px; text-align:right; vertical-align:top;">${i+1}</td>
+      <td style="padding:6px 10px; font-size:12px; color:#78350f; vertical-align:top;"><strong>${escapeHtml(r.name)}</strong></td>
+      <td style="padding:6px 10px; font-size:11px; color:#a16207; vertical-align:top; white-space:nowrap;">${escapeHtml(r.tier || '')}</td>
+    </tr>`
+  ).join('');
 
   card.innerHTML = `
     <div style="padding:20px 24px 12px; border-bottom:1px solid var(--border);">
@@ -4552,14 +4559,31 @@ function showSendConfirmModal(sendId, preview) {
         <strong style="color:#92400e; font-size:13px;">${missingCount} of ${totalMatched} matched sponsors will NOT get this email — no email address on file</strong>
       </div>
       <div style="font-size:12px; color:#92400e; margin-bottom:8px;">Fix in the <strong>Sponsors</strong> tab before sending if you want them included. Sending now will skip these:</div>
-      <ul style="list-style:none; padding:0; margin:0;">${missingList}${missingMore}</ul>
+      <div style="max-height:160px; overflow-y:auto; border:1px solid #fde68a; border-radius:6px; background:#fffbeb;">
+        <table style="width:100%; border-collapse:collapse;">${missingRows}</table>
+      </div>
     </div>
     ` : ''}
     <div style="padding:14px 24px;">
-      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Will send to (${preview.recipientCount})</div>
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted);">Will send to <span style="color:#0b1b3c;">(${preview.recipientCount})</span></div>
+        ${preview.recipientCount > 8 ? `<div style="font-size:11px; color:var(--muted); font-style:italic;">scroll for full list</div>` : ''}
+      </div>
       ${isZero
         ? `<div style="color:#dc2626; padding:8px 0;">No recipients matched audience "${escapeHtml(preview.audience || '')}". Edit the row to pick a different audience, or add sponsors with this tier.</div>`
-        : `<ul style="list-style:none; padding:0; margin:0;">${recipientList}${moreLine}</ul>`
+        : `<div style="max-height:280px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:#fff;">
+            <table style="width:100%; border-collapse:collapse;">
+              <thead style="position:sticky; top:0; background:#f8fafc; z-index:1;">
+                <tr style="border-bottom:1px solid var(--border);">
+                  <th style="padding:6px 12px; font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted); text-align:right;">#</th>
+                  <th style="padding:6px 10px; font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted); text-align:left;">Name</th>
+                  <th style="padding:6px 10px; font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted); text-align:left;">Email</th>
+                  <th style="padding:6px 10px; font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted); text-align:left;">Tier</th>
+                </tr>
+              </thead>
+              <tbody>${recipientRows}</tbody>
+            </table>
+          </div>`
       }
     </div>
     <div style="padding:16px 24px 20px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; align-items:center;">
