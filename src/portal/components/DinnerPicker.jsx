@@ -43,6 +43,7 @@ export default function DinnerPicker({
   token,
   apiBase = '',
   onChange,
+  onSaved,
   size = 'md',
 }) {
   const [pending, setPending] = useState(false);
@@ -73,6 +74,7 @@ export default function DinnerPicker({
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || `HTTP ${res.status}`);
       }
+      if (onSaved) await onSaved(next).catch(() => {});
     } catch (err) {
       setError(err);
       // Revert the optimistic update so the UI stays in sync with server.

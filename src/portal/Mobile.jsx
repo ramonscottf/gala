@@ -14,7 +14,7 @@
 //
 // Visual fidelity is held to debug-glass.png and the design source.
 
-import { useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { BRAND, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
@@ -23,7 +23,7 @@ import { useFinalize } from '../hooks/useFinalize.js';
 import { useTheme } from '../hooks/useTheme.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import SettingsSheet from './SettingsSheet.jsx';
-import DinnerPicker from './components/DinnerPicker.jsx';
+import DinnerPicker, { dinnerLabel } from './components/DinnerPicker.jsx';
 import NightOfContent from './components/NightOfContent.jsx';
 // Phase 1.15 — adopt PR #56 architecture. Three purpose-built sheets
 // replace the Phase 1.14 Step2Pick-export overlay:
@@ -35,7 +35,10 @@ import NightOfContent from './components/NightOfContent.jsx';
 import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
+import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
+
+const SheetFrameContext = createContext(false);
 
 // ── shared mini-components ─────────────────────────────────────────────
 
@@ -1112,13 +1115,237 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
 
 // ── Tickets tab ───────────────────────────────────────────────────────
 
-const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh }) => {
-  const { tickets, blockSize, seatMath } = data;
+const seatLabel = (seat) => String(seat || '').replace('-', '');
+
+const assignmentOwner = (row, fallback) => (
+  row?.ownerName ||
+  row?.delegationName ||
+  row?.guest_name ||
+  fallback ||
+  'Guest'
+);
+
+const TicketQrCard = ({ token, apiBase = '' }) => {
+  const checkInUrl = `https://gala.daviskids.org/checkin?t=${encodeURIComponent(token || '')}`;
+  const qrSrc = `${apiBase}/api/gala/qr?t=${encodeURIComponent(token || '')}&size=220`;
+  return (
+    <section
+      data-testid="ticket-qr-card"
+      className="ticket-pass-card"
+      style={{
+        margin: '16px 18px 0',
+        borderRadius: 18,
+        border: `1px solid var(--rule)`,
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(168,177,255,0.08))',
+        padding: 14,
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr) 112px',
+        gap: 14,
+        alignItems: 'center',
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.6, color: 'var(--accent-text)', textTransform: 'uppercase' }}>
+          Check-in pass
+        </div>
+        <div style={{ marginTop: 7, fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, color: 'var(--ink-on-ground)', lineHeight: 1.1 }}>
+          Your Gala QR
+        </div>
+        <a
+          href={checkInUrl}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            marginTop: 10,
+            color: 'var(--accent-italic)',
+            fontSize: 12,
+            fontWeight: 800,
+            textDecoration: 'none',
+          }}
+        >
+          <Icon name="qr" size={14} /> Open check-in code
+        </a>
+      </div>
+      <div
+        style={{
+          width: 112,
+          height: 112,
+          borderRadius: 12,
+          padding: 8,
+          background: '#fff',
+          boxShadow: '0 14px 28px rgba(0,0,0,0.24)',
+        }}
+      >
+        <img src={qrSrc} alt="Check-in QR code" style={{ width: '100%', height: '100%', display: 'block' }} />
+      </div>
+    </section>
+  );
+};
+
+const TicketCard = ({ ticket, onOpenTicket, token, apiBase, onRefresh, guest = false, onOpenGuest }) => {
+  const [open, setOpen] = useState(false);
   const { isLight } = useTheme();
+  const actionButtonStyle = {
+    ...miniBtn('ghost', isLight),
+    border: `1px solid var(--rule)`,
+    background: 'rgba(168,177,255,0.14)',
+    color: 'var(--ink-on-ground)',
+  };
+  const rows = ticket.assignmentRows || [];
+  const ownerNames = [...new Set(rows.map((row) => assignmentOwner(row, ticket.delegationName || ticket.guestName)).filter(Boolean))];
+  const ownerLine = guest
+    ? `${ticket.delegationName || 'Guest'} guest seats`
+    : ownerNames.length
+      ? ownerNames.join(', ')
+      : ticket.guestName || ticket.delegationName || 'No guest assigned';
+
+  return (
+    <article
+      data-testid={guest ? 'guest-ticket-card' : 'ticket-card'}
+      style={{
+        borderRadius: 14,
+        background: 'var(--surface)',
+        border: `1px solid var(--rule)`,
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          padding: 14,
+          display: 'grid',
+          gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+          gap: 12,
+          alignItems: 'center',
+        }}
+      >
+        <PosterMini poster={ticket.posterUrl} color={ticket.color} label={ticket.movieShort} size={42} showLabel={false} />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.5, color: guest ? 'var(--accent-italic)' : 'var(--accent-text)', textTransform: 'uppercase' }}>
+            {guest ? 'Guest ticket' : ticket.showLabel || 'Showing'} · {ticket.showTime}
+          </div>
+          <div style={{ marginTop: 3, fontSize: 15, fontWeight: 800, color: 'var(--ink-on-ground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {ticket.movieTitle}
+          </div>
+          <div style={{ marginTop: 4, fontSize: 12, color: 'var(--mute)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {ownerLine}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {!guest && (
+            <button onClick={() => onOpenTicket(ticket)} style={actionButtonStyle}>
+              Manage
+            </button>
+          )}
+          {guest && onOpenGuest && (
+            <button onClick={onOpenGuest} style={actionButtonStyle}>
+              View
+            </button>
+          )}
+          <button
+            data-testid="ticket-card-toggle"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 99,
+              border: `1px solid var(--rule)`,
+              background: 'rgba(255,255,255,0.05)',
+              color: 'var(--ink-on-ground)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transform: open ? 'rotate(90deg)' : 'none',
+              transition: 'transform 160ms ease',
+            }}
+          >
+            <Icon name="chev" size={15} />
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div
+          data-testid="ticket-card-details"
+          style={{
+            padding: '0 14px 14px',
+            display: 'grid',
+            gap: 8,
+          }}
+        >
+          {rows.map((row) => (
+            <div
+              key={row.seat_id}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '48px minmax(0, 1fr)',
+                gap: 10,
+                alignItems: 'center',
+                padding: 10,
+                borderRadius: 10,
+                border: `1px solid var(--rule)`,
+                background: 'rgba(0,0,0,0.14)',
+              }}
+            >
+              <span
+                style={{
+                  padding: '6px 8px',
+                  borderRadius: 6,
+                  background: 'rgba(168,177,255,0.18)',
+                  color: 'var(--accent-italic)',
+                  fontSize: 11,
+                  fontWeight: 900,
+                  textAlign: 'center',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {seatLabel(row.seat_id)}
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                  <strong style={{ minWidth: 0, color: 'var(--ink-on-ground)', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {row.ownerKind === 'guest' ? 'Guest: ' : 'Seat holder: '}
+                    {assignmentOwner(row, ticket.delegationName || ticket.guestName)}
+                  </strong>
+                  <span style={{ color: row.ownerKind === 'guest' ? 'var(--accent-italic)' : 'var(--mute)', fontSize: 10, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase' }}>
+                    {row.ownerKind === 'guest' ? 'Guest' : 'Yours'}
+                  </span>
+                </div>
+                <div style={{ marginTop: 7 }}>
+                  {!guest && row.status === 'claimed' && row.managedBySponsor !== false ? (
+                    <DinnerPicker
+                      assignment={row}
+                      token={token}
+                      apiBase={apiBase}
+                      size="sm"
+                      onChange={() => onRefresh && onRefresh()}
+                    />
+                  ) : (
+                    <span style={{ color: 'var(--mute)', fontSize: 12 }}>
+                      Dinner: {dinnerLabel(row.dinner_choice) || 'not selected yet'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
+  );
+};
+
+export const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh, onOpenDelegation }) => {
+  const { tickets, guestTickets = [], delegations = [], blockSize, seatMath } = data;
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
+  const guestPlaced = guestTickets.reduce((n, t) => n + t.seats.length, 0);
   // personalQuota — see HomeTab/Welcome notes. Sponsors with sub-delegations
   // can only place (blockSize - delegated) themselves.
   const personalQuota = Math.max(0, blockSize - (seatMath?.delegated ?? 0));
+
+  const delegationById = Object.fromEntries(delegations.map((d) => [d.id, d]));
 
   return (
     <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
@@ -1137,209 +1364,44 @@ const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefres
           All <i style={{ color: 'var(--accent-text)', fontWeight: 500 }}>{blockSize} seats.</i>
         </h1>
         <div style={{ fontSize: 13, color: 'var(--mute)' }}>
-          {placed} placed · {Math.max(0, personalQuota - placed)} still open · tap any seat to reassign
+          {placed} yours · {guestPlaced} guest seats · {Math.max(0, personalQuota - placed)} still open
         </div>
       </div>
 
+      <TicketQrCard token={token} apiBase={apiBase} />
+
       <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {tickets.map((t) => (
-          <div
-            key={t.id}
-            style={{
-              borderRadius: 14,
-              background: 'var(--surface)',
-              border: `1px solid var(--rule)`,
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                padding: '12px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                borderBottom: `1px solid var(--rule)`,
-              }}
-            >
-              <PosterMini poster={t.posterUrl} color={t.color} label={t.movieShort} size={34} showLabel={false} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 800,
-                    letterSpacing: 1.6,
-                    color: 'var(--accent-text)',
-                  }}
-                >
-                  {(t.showLabel || '').toUpperCase()} ·{' '}
-                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>{t.showTime}</span>
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', marginTop: 2 }}>
-                  {t.movieTitle}
-                </div>
-              </div>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: 'var(--mute)',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {t.seats.length} seats
-              </span>
-            </div>
-            <div
-              style={{
-                padding: '12px 14px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 12,
-                background: 'rgba(0,0,0,0.15)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-                {t.guestName ? (
-                  <Avatar name={t.guestName} size={32} />
-                ) : (
-                  <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 99,
-                      border: `1.5px dashed var(--rule)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon name="user" size={14} />
-                  </div>
-                )}
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color:
-                        t.guestName || t.delegationName
-                          ? 'var(--ink-on-ground)'
-                          : 'var(--mute)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {t.guestName ||
-                      (t.delegationName
-                        ? `Held by ${t.delegationName}`
-                        : 'No guest assigned')}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
-                    {t.guestName
-                      ? ''
-                      : t.delegationName
-                        ? 'tap to reassign'
-                        : 'tap to assign'}
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => onOpenTicket(t)} style={miniBtn('ghost', isLight)}>
-                Manage
-              </button>
-            </div>
-            <div style={{ padding: '10px 14px 14px', display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-              {t.seats.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => onOpenTicket(t)}
-                  style={{
-                    padding: '6px 9px',
-                    borderRadius: 5,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    background: 'rgba(168,177,255,0.18)',
-                    color: 'var(--accent-italic)',
-                    fontVariantNumeric: 'tabular-nums',
-                    letterSpacing: 0.3,
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {s.replace('-', '')}
-                </button>
-              ))}
-            </div>
-            {/* H1 — per-seat dinner picker. Only finalized (claimed)
-                seats are eligible; pending holds render greyed out
-                until they finalize. */}
-            <div
-              style={{
-                padding: '0 14px 14px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-                borderTop: `1px solid var(--rule)`,
-                paddingTop: 12,
-                marginTop: 4,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 800,
-                  letterSpacing: 1.4,
-                  color: 'var(--accent-text)',
-                  marginBottom: 2,
-                }}
-              >
-                DINNER
-              </div>
-              {(t.assignmentRows || []).map((a) => (
-                <div
-                  key={a.seat_id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 38,
-                      flexShrink: 0,
-                      padding: '4px 6px',
-                      borderRadius: 5,
-                      background: 'rgba(168,177,255,0.18)',
-                      color: 'var(--accent-italic)',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      fontVariantNumeric: 'tabular-nums',
-                      letterSpacing: 0.3,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {a.seat_id.replace('-', '')}
-                  </span>
-                  {a.status === 'claimed' ? (
-                    <DinnerPicker
-                      assignment={a}
-                      token={token}
-                      apiBase={apiBase}
-                      size="sm"
-                      onChange={() => onRefresh && onRefresh()}
-                    />
-                  ) : (
-                    <span style={{ fontSize: 11, color: 'var(--mute)', fontStyle: 'italic' }}>
-                      Hold pending — finalize to set dinner
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+        {tickets.map((ticket) => (
+          <TicketCard
+            key={ticket.id}
+            ticket={ticket}
+            onOpenTicket={onOpenTicket}
+            token={token}
+            apiBase={apiBase}
+            onRefresh={onRefresh}
+          />
         ))}
       </div>
+
+      {guestTickets.length > 0 && (
+        <div style={{ padding: '18px 18px 0' }}>
+          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.5, color: 'var(--accent-text)', textTransform: 'uppercase', marginBottom: 10 }}>
+            Guest seats
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {guestTickets.map((ticket) => (
+              <TicketCard
+                key={ticket.id}
+                ticket={ticket}
+                guest
+                token={token}
+                apiBase={apiBase}
+                onOpenGuest={() => onOpenDelegation?.(delegationById[ticket.delegationId])}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ padding: '18px 18px 0' }}>
         <Btn
@@ -1393,7 +1455,7 @@ export const DelegationStatusPill = ({ status }) => {
   );
 };
 
-const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
+export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
   const { delegations, seatMath, blockSize } = data;
   const totalAllocated = delegations.reduce((n, d) => n + (d.seatsAllocated || 0), 0);
   const totalPlaced = delegations.reduce((n, d) => n + (d.seatsPlaced || 0), 0);
@@ -1511,6 +1573,27 @@ const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
               >
                 {d.seatsPlaced} of {d.seatsAllocated} placed
               </div>
+              {d.assignments?.length > 0 && (
+                <div style={{ marginTop: 7, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {d.assignments.map((a) => (
+                    <span
+                      key={`${a.theater_id}-${a.seat_id}`}
+                      style={{
+                        padding: '4px 7px',
+                        borderRadius: 5,
+                        background: 'rgba(168,177,255,0.16)',
+                        color: 'var(--accent-italic)',
+                        fontSize: 10,
+                        fontWeight: 800,
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {a.movieShort || 'Seat'} · {seatLabel(a.seat_id)}
+                      {a.dinner_choice ? ` · ${dinnerLabel(a.dinner_choice)}` : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <DelegationStatusPill status={d.status} />
           </button>
@@ -1815,7 +1898,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 // + good-to-know tiles, with the audit-doc corrections: dinner is
 // served IN auditoriums, Sherry not Sasha, Apple Maps deep link on
 // parking).
-const NightTab = () => (
+export const NightTab = () => (
   <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
     <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 14px 22px' }}>
       <SectionEyebrow>The night</SectionEyebrow>
@@ -2108,21 +2191,29 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
     }
     const t = ticketMap.get(key);
     const sid = `${row.row_label}-${row.seat_num}`;
+    const delegationId = row.delegation_id || null;
+    const delegation = delegationId ? delegationsById[delegationId] : null;
+    const sponsorName = name.trim().toLowerCase();
+    const directGuestName = (row.guest_name || '').trim();
+    const directGuest = !!directGuestName && (!sponsorName || directGuestName.toLowerCase() !== sponsorName);
     t.seats.push(sid);
-    t.seatDelegations[sid] = row.delegation_id || null;
+    t.seatDelegations[sid] = delegationId;
     t.assignmentRows.push({
       seat_id: sid,
       theater_id: row.theater_id,
       row_label: row.row_label,
       seat_num: row.seat_num,
       dinner_choice: row.dinner_choice || null,
+      guest_name: row.guest_name || null,
+      delegation_id: delegationId,
+      delegationName: delegation?.delegateName || row.delegate_name || null,
+      ownerName: delegation?.delegateName || row.delegate_name || row.guest_name || name || null,
+      ownerKind: delegationId || directGuest ? 'guest' : 'sponsor',
+      managedBySponsor: !delegationId,
       status,
     });
     if (!t.guestName && row.guest_name) t.guestName = row.guest_name;
-    if (!t.delegationName && row.delegation_id) {
-      const d = delegationsById[row.delegation_id];
-      if (d) t.delegationName = d.delegateName;
-    }
+    if (!t.delegationName && delegation) t.delegationName = delegation.delegateName;
     if (status === 'pending' && t.status === 'claimed') t.status = 'pending';
   };
   (portal.myAssignments || []).forEach((r) => addRow(r, 'claimed'));
@@ -2131,12 +2222,79 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
     (a, b) => (a.showingNumber || 0) - (b.showingNumber || 0)
   );
 
+  const decorateDelegationAssignment = (row) => {
+    const st = showtimeByTheater[row.theater_id];
+    const theater = theatersById[row.theater_id];
+    const sid = `${row.row_label}-${row.seat_num}`;
+    return {
+      seat_id: sid,
+      theater_id: row.theater_id,
+      row_label: row.row_label,
+      seat_num: row.seat_num,
+      dinner_choice: row.dinner_choice || null,
+      guest_name: row.guest_name || null,
+      delegation_id: row.delegation_id || null,
+      delegationName: row.delegate_name || delegationsById[row.delegation_id]?.delegateName || null,
+      ownerName: row.delegate_name || delegationsById[row.delegation_id]?.delegateName || row.guest_name || null,
+      ownerKind: 'guest',
+      managedBySponsor: false,
+      showLabel: st?.showing_number === 1 ? 'Early' : st?.showing_number === 2 ? 'Late' : '',
+      showTime: formatShowTime(st?.show_start),
+      movieId: st?.movie_id,
+      movieTitle: st?.movie_title,
+      movieShort: st?.movie_title?.split(' ')[0] || '',
+      posterUrl: st?.poster_url,
+      theaterName: theater?.name || `Theater ${row.theater_id}`,
+      status: 'claimed',
+    };
+  };
+
+  const childAssignments = (portal.childDelegationAssignments || []).map(decorateDelegationAssignment);
+  const childAssignmentsByDelegation = {};
+  childAssignments.forEach((row) => {
+    if (!row.delegation_id) return;
+    if (!childAssignmentsByDelegation[row.delegation_id]) childAssignmentsByDelegation[row.delegation_id] = [];
+    childAssignmentsByDelegation[row.delegation_id].push(row);
+  });
+
+  const guestTicketMap = new Map();
+  childAssignments.forEach((row) => {
+    const key = `${row.delegation_id}-${row.theater_id}`;
+    if (!guestTicketMap.has(key)) {
+      guestTicketMap.set(key, {
+        id: `g-${key}`,
+        theaterId: row.theater_id,
+        delegationId: row.delegation_id,
+        delegationName: row.delegationName,
+        showLabel: row.showLabel,
+        showTime: row.showTime,
+        movieId: row.movieId,
+        movieTitle: row.movieTitle,
+        movieShort: row.movieShort,
+        posterUrl: row.posterUrl,
+        theaterName: row.theaterName,
+        seats: [],
+        assignmentRows: [],
+        ownerKind: 'guest',
+      });
+    }
+    const t = guestTicketMap.get(key);
+    t.seats.push(row.seat_id);
+    t.assignmentRows.push(row);
+  });
+  const guestTickets = [...guestTicketMap.values()].sort(
+    (a, b) => (a.showTime || '').localeCompare(b.showTime || '') || (a.movieTitle || '').localeCompare(b.movieTitle || '')
+  );
+
   // delegations — sub-token records from the API (sponsor_delegations
   // table). Each has its own portal token, SMS/email invite history, and
   // seatsAllocated/seatsPlaced counters. Phase 1.6 promotes these to the
   // primary "Group" tab concept; they replace the v1.5 synthesized "guest"
   // list (which was just unique guest_name strings off seat_assignments).
-  const delegations = portal.childDelegations || [];
+  const delegations = (portal.childDelegations || []).map((d) => ({
+    ...d,
+    assignments: childAssignmentsByDelegation[d.id] || [],
+  }));
 
   // lineup — unique movies across all showtimes
   const movieMap = new Map();
@@ -2174,6 +2332,7 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
     isDelegation,
     blockSize,
     tickets,
+    guestTickets,
     delegations,
     lineup,
     daysOut: daysUntilGala(),
@@ -2427,6 +2586,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
 
 const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
   const { isDark: systemDark } = useTheme();
+  const withinFrame = useContext(SheetFrameContext);
   // Phase 1.15 — forceDark lets the SeatPickSheet host the cinema/seat-pick
   // experience in dark navy regardless of system theme, matching its
   // dark-cinema intent. PostPickSheet and AssignTheseSheet leave forceDark
@@ -2437,7 +2597,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
     <div
       onClick={onClose}
       style={{
-        position: 'fixed',
+        position: withinFrame ? 'absolute' : 'fixed',
         inset: 0,
         background: 'rgba(0,0,0,0.55)',
         zIndex: 50,
@@ -2547,7 +2707,7 @@ const SmallAvatar = ({ name, size = 16 }) => {
   );
 };
 
-const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pending }) => {
+export const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pending }) => {
   const delegationsById = {};
   delegations.forEach((d) => {
     delegationsById[d.id] = d;
@@ -2687,7 +2847,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
 // opens DelegateForm in seat-bound mode (seats locked to 1, on submit
 // chains POST /assign for the new delegation).
 
-const SeatAssignSheet = ({
+export const SeatAssignSheet = ({
   seat,
   ticket,
   delegations,
@@ -2845,6 +3005,7 @@ export default function Mobile({
   isDev,
   onRefresh,
   openSheetOnMount = false,
+  desktopFrame = false,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -3022,19 +3183,22 @@ export default function Mobile({
   }
 
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        background: isDark ? BRAND.navyDeep : 'var(--ground)',
-        color: isDark ? '#fff' : BRAND.ink,
-        fontFamily: FONT_UI,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <SheetFrameContext.Provider value={desktopFrame}>
+      <div
+        className={desktopFrame ? 'mobile-shell-root mobile-shell-root--desktop-frame' : 'mobile-shell-root'}
+        data-testid="mobile-shell-root"
+        style={{
+          width: '100%',
+          height: '100dvh',
+          overflow: 'hidden',
+          position: 'relative',
+          background: isDark ? BRAND.navyDeep : 'var(--ground)',
+          color: isDark ? '#fff' : BRAND.ink,
+          fontFamily: FONT_UI,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
       {isDev && <DevBanner />}
       <FloatingAvatar name={data.name} onTap={() => setSettingsOpen(true)} />
 
@@ -3058,6 +3222,7 @@ export default function Mobile({
           token={token}
           apiBase={config.apiBase}
           onRefresh={onRefresh}
+          onOpenDelegation={(d) => setDelegationSheet(d)}
         />
       )}
       {tab === 'group' && (
@@ -3267,54 +3432,33 @@ export default function Mobile({
         title="Pick dinners"
       >
         {dinnerOpen && postPick && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 12, color: 'var(--mute)', marginBottom: 4 }}>
-              Choose a meal for each seat you just placed.
-            </div>
-            {(portal?.myAssignments || [])
-              .filter((r) => postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`))
-              .map((r) => (
-                <div
-                  key={`${r.theater_id}-${r.row_label}-${r.seat_num}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: 10,
-                    borderRadius: 10,
-                    border: `1px solid var(--rule)`,
-                    background: 'var(--surface)',
-                  }}
-                >
-                  <span
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: 4,
-                      background: 'rgba(168,177,255,0.18)',
-                      color: BRAND.indigoLight,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      fontVariantNumeric: 'tabular-nums',
-                      minWidth: 44,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {r.row_label}
-                    {r.seat_num}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <DinnerPicker
-                      assignment={r}
-                      token={token}
-                      apiBase={config.apiBase}
-                      onChange={() => {
-                        if (onRefresh) onRefresh();
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-          </div>
+          <PostPickDinnerSheet
+            assignments={(portal?.myAssignments || []).filter((r) =>
+              postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`)
+            )}
+            token={token}
+            apiBase={config.apiBase}
+            onRefresh={onRefresh}
+            canFinalize={canFinalize}
+            onFinalize={async () => {
+              try {
+                await finalize();
+                setPostPick(null);
+                setAssignThese(null);
+                setDinnerOpen(false);
+              } catch {
+                // useFinalize sets error state; sheet stays open.
+              }
+            }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
+            onDone={() => {
+              setPostPick(null);
+              setAssignThese(null);
+              setDinnerOpen(false);
+            }}
+          />
         )}
       </Sheet>
 
@@ -3339,6 +3483,7 @@ export default function Mobile({
           onClose={() => setMovieDetail(null)}
         />
       )}
-    </div>
+      </div>
+    </SheetFrameContext.Provider>
   );
 }

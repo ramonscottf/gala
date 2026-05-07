@@ -77,6 +77,22 @@ export async function onRequestGet(context) {
         WHERE d.parent_delegation_id = ? AND d.status != 'reclaimed'
         ORDER BY d.created_at`;
   const childDelegs = await env.GALA_DB.prepare(childDelegsQ).bind(resolved.record.id).all();
+  const childDelegRows = childDelegs.results || [];
+  let childDelegationAssignments = [];
+  if (childDelegRows.length > 0) {
+    const ids = childDelegRows.map((d) => Number(d.id)).filter(Number.isFinite);
+    if (ids.length > 0) {
+      const placeholders = ids.map(() => '?').join(',');
+      const childAssignmentsQ = await env.GALA_DB.prepare(
+        `SELECT sa.*, d.delegate_name, d.delegate_email, d.delegate_phone, d.status AS delegation_status
+           FROM seat_assignments sa
+           JOIN sponsor_delegations d ON d.id = sa.delegation_id
+          WHERE sa.delegation_id IN (${placeholders})
+          ORDER BY d.delegate_name, sa.theater_id, sa.row_label, sa.seat_num`
+      ).bind(...ids).all();
+      childDelegationAssignments = childAssignmentsQ.results || [];
+    }
+  }
 
   // ALL assignments across venue (to render the chart — seats others have taken)
   const allAssignments = await env.GALA_DB.prepare(
@@ -120,7 +136,7 @@ export async function onRequestGet(context) {
     identity,
     seatMath,
     myAssignments: myAssignments.results || [],
-    childDelegations: (childDelegs.results || []).map(d => ({
+    childDelegations: childDelegRows.map(d => ({
       id: d.id,
       token: d.token,
       delegateName: d.delegate_name,
@@ -133,6 +149,7 @@ export async function onRequestGet(context) {
       accessedAt: d.accessed_at,
       finalizedAt: d.finalized_at,
     })),
+    childDelegationAssignments,
     allAssignments: allAssignments.results || [],
     myHolds,
     otherHolds,

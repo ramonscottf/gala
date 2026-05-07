@@ -26,6 +26,23 @@ export async function onRequest(context) {
     return context.env.ASSETS.fetch(context.request);
   }
 
+  // Branch QA preview page. Cloudflare Pages clean URLs redirect
+  // /sponsor/qa/preview/sponsor-shell.html to the extensionless path, so
+  // serve that path explicitly before falling through to the sponsor SPA.
+  if (url.pathname === '/sponsor/qa/preview/sponsor-shell') {
+    const previewUrl = new URL('/sponsor/qa/preview/sponsor-shell.html', url.origin);
+    const preview = await context.env.ASSETS.fetch(previewUrl.toString());
+    if (preview.ok) {
+      return new Response(preview.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate',
+        },
+      });
+    }
+  }
+
   // Fetch the SPA shell by its real path (excluded from /sponsor/* in
   // _routes.json so this serves directly without re-entering the function).
   const indexUrl = new URL('/sponsor/index.html', url.origin);
