@@ -4618,9 +4618,10 @@ function showSendConfirmModal(sendId, preview) {
   if (!isZero) {
     confirmBtn.addEventListener('click', async () => {
       confirmBtn.disabled = true; confirmBtn.style.opacity = '0.6';
-      resultSpan.textContent = 'Sending…'; resultSpan.style.color = 'var(--muted)';
+      resultSpan.textContent = 'Enqueuing…'; resultSpan.style.color = 'var(--muted)';
       try {
-        const r = await fetch('/api/gala/marketing-send-now', {
+        // ── Step 1: enqueue (returns in <1s, no 30s timeout risk) ────
+        const r = await fetch('/api/gala/marketing-send-queued', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -4633,14 +4634,62 @@ function showSendConfirmModal(sendId, preview) {
           confirmBtn.disabled = false; confirmBtn.style.opacity = '1';
           return;
         }
-        resultSpan.textContent = `✓ Sent ${data.sent} of ${data.total}${data.failed ? ` · ${data.failed} failed` : ''}`;
-        resultSpan.style.color = 'var(--green, #15803d)';
-        confirmBtn.textContent = 'Done';
-        // Refresh the activity disclosure for this row + the global panel
-        const target = document.querySelector(`.mkt-activity-content[data-send="${sendId}"]`);
-        if (target) target.dataset.loaded = '';
-        loadGlobalSendActivity();
-        setTimeout(() => modal.remove(), 1800);
+
+        const { runId, queued, total } = data;
+        resultSpan.textContent = `Sending… 0 / ${total}`;
+        confirmBtn.textContent = `Queued ${queued}`;
+
+        // ── Step 2: poll progress every 1.5s until logged === total ──
+        let pollCount = 0;
+        const maxPolls = 120; // 3 minutes max — handles even huge sends
+        const poll = async () => {
+          pollCount++;
+          try {
+            const pr = await fetch(`/api/gala/marketing-send-progress?run_id=${encodeURIComponent(runId)}`, {
+              credentials: 'include',
+            });
+            const pd = await pr.json();
+            const sent = pd.sent || 0;
+            const failed = pd.failed || 0;
+            const logged = pd.logged || 0;
+
+            if (logged >= total) {
+              // Complete
+              resultSpan.textContent = `✓ Sent ${sent} of ${total}${failed ? ` · ${failed} failed` : ''}`;
+              resultSpan.style.color = failed > 0 ? 'var(--amber, #d97706)' : 'var(--green, #15803d)';
+              confirmBtn.textContent = 'Done';
+              const target = document.querySelector(`.mkt-activity-content[data-send="${sendId}"]`);
+              if (target) target.dataset.loaded = '';
+              loadGlobalSendActivity();
+              setTimeout(() => modal.remove(), 2200);
+              return;
+            }
+
+            // Still in flight — update UI and keep polling
+            resultSpan.textContent = `Sending… ${logged} / ${total}${failed ? ` · ${failed} failed` : ''}`;
+            if (pollCount < maxPolls) {
+              setTimeout(poll, 1500);
+            } else {
+              // Timeout — but the consumer is still working, just stop polling
+              resultSpan.textContent = `Still sending… (${logged}/${total}). Check back in a minute.`;
+              resultSpan.style.color = 'var(--amber, #d97706)';
+              confirmBtn.textContent = 'Close';
+              confirmBtn.disabled = false;
+              confirmBtn.style.opacity = '1';
+              confirmBtn.onclick = () => modal.remove();
+            }
+          } catch (e) {
+            // Network blip — try again unless we've maxed out
+            if (pollCount < maxPolls) {
+              setTimeout(poll, 2500);
+            } else {
+              resultSpan.textContent = `Polling failed. Send may still be in progress — check activity log.`;
+              resultSpan.style.color = 'var(--red)';
+            }
+          }
+        };
+        // Kick off polling after a small delay so the first batch has time to land
+        setTimeout(poll, 1200);
       } catch (err) {
         resultSpan.textContent = '✗ Network error: ' + err.message;
         resultSpan.style.color = 'var(--red)';
