@@ -77,11 +77,13 @@ export async function resolveAudience(audience, db) {
   // Add more presets here as the pipeline grows.
 
   if (tiers.length === 0) {
-    return { tiers: [], recipients: [] };
+    return { tiers: [], recipients: [], missingEmail: [] };
   }
 
   const placeholders = tiers.map(() => '?').join(',');
-  const sql = `
+
+  // Recipients we WILL send to: tier-matching, not archived, has email
+  const recipientsSql = `
     SELECT id, email, first_name, last_name, company, sponsorship_tier
     FROM sponsors
     WHERE sponsorship_tier IN (${placeholders})
@@ -90,8 +92,26 @@ export async function resolveAudience(audience, db) {
       AND email != ''
     ORDER BY sponsorship_tier, company COLLATE NOCASE, last_name COLLATE NOCASE
   `;
-  const result = await db.prepare(sql).bind(...tiers).all();
-  return { tiers, recipients: result.results || [] };
+  const recResult = await db.prepare(recipientsSql).bind(...tiers).all();
+
+  // Missing-email rows: tier-matching, not archived, but no usable email.
+  // These are the silent-skip cases — surface in the preview modal so admin
+  // knows to fix sponsor records before sending.
+  const missingSql = `
+    SELECT id, first_name, last_name, company, sponsorship_tier
+    FROM sponsors
+    WHERE sponsorship_tier IN (${placeholders})
+      AND archived_at IS NULL
+      AND (email IS NULL OR email = '')
+    ORDER BY sponsorship_tier, company COLLATE NOCASE, last_name COLLATE NOCASE
+  `;
+  const missResult = await db.prepare(missingSql).bind(...tiers).all();
+
+  return {
+    tiers,
+    recipients: recResult.results || [],
+    missingEmail: missResult.results || [],
+  };
 }
 
 /** Best-effort display name for log rows. */

@@ -1650,16 +1650,6 @@ body {
         </div>
       </div>
 
-      <div class="card">
-        <div class="card__header" style="border-bottom: 1px solid var(--border); padding: 18px 24px;">
-          <div class="card__title" style="font-size: 18px; font-weight: 700; color: var(--text);">⚠️ Open Questions / Blockers</div>
-          <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Need answers before May 28</div>
-        </div>
-        <div id="mkt-questions" style="padding: 8px 24px 20px;">
-          <!-- Questions injected -->
-        </div>
-      </div>
-
     </div>
 
     <!-- Audience matrix -->
@@ -1672,18 +1662,6 @@ body {
         <table id="mkt-matrix" style="width: 100%; border-collapse: collapse; font-size: 13px;">
           <!-- Matrix injected -->
         </table>
-      </div>
-    </div>
-
-    <!-- Reply routing + SMS provider call-out -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-      <div style="background: var(--amber-bg); border-left: 4px solid var(--amber); padding: 16px 20px; border-radius: 8px;">
-        <div style="font-weight: 700; color: var(--text); margin-bottom: 6px;">📨 Reply routing — TBD</div>
-        <div style="font-size: 13px; color: var(--muted);">Where do replies to these emails go? Sherry / Val shared inbox? Forwarded to Scott? Voices-of-America-style dashboard? Decide before Apr 29.</div>
-      </div>
-      <div style="background: var(--blue-bg); border-left: 4px solid var(--blue); padding: 16px 20px; border-radius: 8px;">
-        <div style="font-weight: 700; color: var(--text); margin-bottom: 6px;">📱 SMS provider this cycle</div>
-        <div style="font-size: 13px; color: var(--muted);">DEF Twilio (<code style="font-size: 11px;">AC225d59...</code>) is temporary. Wicko A2P 10DLC for 801-690-7449 still pending campaign approval. Confirm DEF account is the channel.</div>
       </div>
     </div>
 
@@ -3846,17 +3824,6 @@ const ASSETS = [
   { name: 'Preliminary Gala app screenshot', detail: 'Clean preview screenshot for Apr 29 send', status: 'inprogress' },
 ];
 
-const QUESTIONS = [
-  { q: 'Apr 29 send list source of truth', detail: 'Is Val\'s sales list a CSV? In the new internal system? Need definitive recipient list.', owner: 'Val', urgency: 'high' },
-  { q: 'SMS provider this cycle', detail: 'DEF Twilio AC225d59... is temporary. Wicko A2P 10DLC pending. Confirm channel.', owner: 'Scott', urgency: 'high' },
-  { q: 'Reply routing', detail: 'Where do replies to these emails go? Shared inbox? Forwarded to Scott?', owner: 'Sherry/Val', urgency: 'high' },
-  { q: 'Auction registration link timing', detail: 'Confirmed for May 28 main event. Held back from Apr 29. Sanity check.', owner: 'Sherry', urgency: 'med' },
-  { q: 'Heidi Moore — what\'s her thread?', detail: 'Flagged in Omi sync — context unclear', owner: 'Scott', urgency: 'med' },
-  { q: 'Late-showing capacity decision', detail: '542 cap vs 1,014 sold = 53% threshold. Overflow Aud 6? Soft-cap UI?', owner: 'Sherry/Val', urgency: 'high' },
-  { q: 'Dinner deadline / lock', detail: 'Catering needs how much advance notice? Add dinner_locked_at flag?', owner: 'Sherry', urgency: 'med' },
-  { q: 'Movie runtimes confirmed', detail: 'Disclosure Day inserted at 110 min — verify actual runtime.', owner: 'Scott', urgency: 'low' },
-];
-
 const MATRIX = {
   cols: ['Confirmed buyers', 'Sponsors (tier)', 'Prior buyers', 'Walk-up'],
   rows: [
@@ -4559,6 +4526,14 @@ function showSendConfirmModal(sendId, preview) {
     : '';
 
   const isZero = preview.recipientCount === 0;
+  const missingCount = preview.missingEmailCount || 0;
+  const missingList = (preview.missingEmail || []).slice(0, 12).map(r =>
+    `<li style="padding:3px 0; font-size:12px;"><strong>${escapeHtml(r.name)}</strong> <span style="color:var(--muted); font-size:11px;">· ${escapeHtml(r.tier || '')}</span></li>`
+  ).join('');
+  const missingMore = (preview.missingEmail || []).length > 12
+    ? `<li style="padding:3px 0; font-size:12px; color:var(--muted); font-style:italic;">…and ${(preview.missingEmail.length - 12)} more</li>`
+    : '';
+  const totalMatched = preview.recipientCount + missingCount;
 
   card.innerHTML = `
     <div style="padding:20px 24px 12px; border-bottom:1px solid var(--border);">
@@ -4570,8 +4545,18 @@ function showSendConfirmModal(sendId, preview) {
       <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Body preview</div>
       <div style="background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:12px; font-size:13px; color:var(--text); line-height:1.5;">${escapeHtml(preview.bodyPreview)}…</div>
     </div>
+    ${missingCount > 0 ? `
+    <div style="margin:0 24px 14px; padding:12px 16px; background:#fffbeb; border:1px solid #f59e0b; border-radius:6px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <span style="font-size:16px;">⚠️</span>
+        <strong style="color:#92400e; font-size:13px;">${missingCount} of ${totalMatched} matched sponsors will NOT get this email — no email address on file</strong>
+      </div>
+      <div style="font-size:12px; color:#92400e; margin-bottom:8px;">Fix in the <strong>Sponsors</strong> tab before sending if you want them included. Sending now will skip these:</div>
+      <ul style="list-style:none; padding:0; margin:0;">${missingList}${missingMore}</ul>
+    </div>
+    ` : ''}
     <div style="padding:14px 24px;">
-      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Recipients (${preview.recipientCount})</div>
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Will send to (${preview.recipientCount})</div>
       ${isZero
         ? `<div style="color:#dc2626; padding:8px 0;">No recipients matched audience "${escapeHtml(preview.audience || '')}". Edit the row to pick a different audience, or add sponsors with this tier.</div>`
         : `<ul style="list-style:none; padding:0; margin:0;">${recipientList}${moreLine}</ul>`
@@ -4664,26 +4649,6 @@ function renderAssets() {
   root.innerHTML = html;
 }
 
-function renderQuestions() {
-  const root = document.getElementById('mkt-questions');
-  if (!root) return;
-  const urgencyColor = { high: '#DC2626', med: '#f0a830', low: '#94A3B8' };
-  let html = '';
-  for (const q of QUESTIONS) {
-    html += `
-      <div style="display:flex; gap:12px; padding:10px 0; border-bottom: 1px solid var(--border); align-items:flex-start;">
-        <div style="width:4px; align-self:stretch; background: ${urgencyColor[q.urgency]}; border-radius:2px; flex-shrink:0;"></div>
-        <div style="flex:1;">
-          <div style="font-weight:600; color:var(--text); font-size:14px;">${q.q}</div>
-          <div style="font-size:12px; color:var(--muted); margin-top:2px;">${q.detail}</div>
-          <div style="font-size:11px; color:var(--light); margin-top:4px;">Owner: <strong style="color:var(--text);">${q.owner}</strong></div>
-        </div>
-      </div>
-    `;
-  }
-  root.innerHTML = html;
-}
-
 function renderMatrix() {
   const t = document.getElementById('mkt-matrix');
   if (!t) return;
@@ -4739,7 +4704,6 @@ async function loadMarketing() {
   await loadLivePipeline();
   renderPipeline();
   renderAssets();
-  renderQuestions();
   renderMatrix();
   renderMarketingKpis();
   // Load global send activity panel

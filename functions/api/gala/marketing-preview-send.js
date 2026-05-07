@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
   if (!send.subject) return jsonError('No subject line set on this send', 400);
   if (!send.body) return jsonError('No body content set on this send', 400);
 
-  const { tiers, recipients } = await resolveAudience(send.audience, db);
+  const { tiers, recipients, missingEmail } = await resolveAudience(send.audience, db);
 
   return jsonOk({
     sendId: send.send_id,
@@ -61,6 +61,12 @@ export async function onRequestPost({ request, env }) {
       tier: r.sponsorship_tier,
     })),
     recipientCount: recipients.length,
+    missingEmail: (missingEmail || []).map(r => ({
+      id: r.id,
+      name: displayName(r),
+      tier: r.sponsorship_tier,
+    })),
+    missingEmailCount: (missingEmail || []).length,
   });
 }
 
