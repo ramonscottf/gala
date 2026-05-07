@@ -766,7 +766,15 @@ const StepWelcome = ({
 
       {/* Optional dinner-warning chip — only renders when there are
           finalized seats missing dinner picks. Tap routes to Step 4
-          where the DinnerPicker dropdowns live. */}
+          where the DinnerPicker dropdowns live.
+          TODO Task 7: re-wire to dinner picker. After StepConfirm is
+          deleted, dinner-picker access for previously-placed seats
+          needs a new entry point (likely a Welcome-level DinnerPicker
+          modal opened via a new onSetDinners prop). For now the chip
+          still routes via onReview which opens SeatPickSheet — the
+          tooltip on the disabled "Set dinners to finalize" Btn at
+          line ~990 is the user-facing hint that dinners need attention.
+          Tracked in Task 12's PR body. */}
       {dinnerMissing > 0 && (
         <button
           onClick={onReview}
