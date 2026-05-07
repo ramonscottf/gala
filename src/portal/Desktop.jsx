@@ -603,6 +603,12 @@ const GroupRail = ({ delegations, seatMath, blockSize, onInvite, onOpenDelegatio
 
 const StepWelcome = ({
   blockSize,
+  // personalQuota — sponsor's directly-placeable cap (blockSize minus seats
+  // delegated to a sub-delegation). Used for "X of Y placed" + remaining +
+  // canFinalize so the Welcome view matches the seat picker's reality.
+  // Defaults to blockSize when no delegation exists (delegated = 0 →
+  // personalQuota === blockSize).
+  personalQuota,
   tier,
   name,
   placedCount,
@@ -694,7 +700,12 @@ const StepWelcome = ({
 
   // BRANCH B — sponsor has at least one placed seat. Mirror Mobile's
   // HomeTab "Your tickets" section (Mobile.jsx:553-682) at desktop scale.
-  const remaining = Math.max(0, blockSize - placedCount);
+  // remaining = personalQuota - placedCount (NOT blockSize - placedCount).
+  // Sponsors with sub-delegations can only personally place (blockSize -
+  // delegated) seats; the rest is the sub-delegation's responsibility.
+  // Defaults to blockSize when personalQuota isn't supplied (back-compat).
+  const cap = personalQuota ?? blockSize;
+  const remaining = Math.max(0, cap - placedCount);
   const dinnerMissing = dinnerCompleteness?.missingCount || 0;
 
   return (
@@ -721,7 +732,7 @@ const StepWelcome = ({
         Your night <i style={{ color: 'var(--accent-italic)' }}>at the gala.</i>
       </Display>
       <div style={{ fontSize: 14, color: 'var(--mute)', marginTop: -8 }}>
-        Wednesday, June 10 · {placedCount} of {blockSize} seat{blockSize === 1 ? '' : 's'} placed
+        Wednesday, June 10 · {placedCount} of {cap} seat{cap === 1 ? '' : 's'} placed
         {remaining > 0 ? ` · ${remaining} still to place` : ''}
       </div>
 
@@ -1060,7 +1071,16 @@ export default function Desktop({
     : company;
 
   const [step, setStep] = useState(1);
-  const remaining = blockSize - seats.totalAssigned;
+  // personalQuota — what THIS sponsor can place themselves. Server-side
+  // pick.js:240 caps direct placements at (total - delegated): seats given
+  // to a sub-delegation are the delegate's responsibility, not the parent
+  // sponsor's. Without this distinction, sponsors with active sub-delegations
+  // hit "You've already placed your full N seats" from the server before
+  // the client thinks they're done — and canFinalize never trips because
+  // placedCount can't reach blockSize.
+  const delegatedAway = portal?.seatMath?.delegated ?? 0;
+  const personalQuota = Math.max(0, blockSize - delegatedAway);
+  const remaining = Math.max(0, personalQuota - seats.totalAssigned);
   // T2 v2 — useFinalize provides confirmationData (consumed by the
   // ConfirmationScreen short-circuit below) plus finalize/finalizing
   // for the canonical PostPickSheet "Done" CTA. Replaces the prior
@@ -1135,7 +1155,12 @@ export default function Desktop({
   // placed". Dinners are NOT part of the gate; sponsors pick them
   // later. PostPickSheet's "Done" CTA flips to "I'm done — send my
   // QR" when canFinalize is true.
-  const canFinalize = placedCount >= (blockSize || 0) && (blockSize || 0) > 0;
+  // canFinalize gates on personalQuota, NOT blockSize. With a sub-delegation
+  // active, the sponsor can never reach blockSize themselves — the delegate
+  // places the remaining `delegatedAway` seats. Server is permissive on
+  // /finalize (≥1 placed seat) so this is purely a client-side "all done"
+  // gate from the sponsor's perspective.
+  const canFinalize = placedCount >= personalQuota && personalQuota > 0;
 
   // Synthesize a "post-pick" payload of the placed seats currently
   // missing dinner choices, so the dinner-picker Modal — which scopes
@@ -1212,7 +1237,7 @@ export default function Desktop({
           }}
         >
           <span>
-            <b style={{ color: '#fff' }}>{seats.totalAssigned}</b> / {blockSize} placed
+            <b style={{ color: '#fff' }}>{seats.totalAssigned}</b> / {personalQuota} placed
           </span>
           <span>·</span>
           <span>
@@ -1238,6 +1263,7 @@ export default function Desktop({
           {step === 1 && (
             <StepWelcome
               blockSize={blockSize}
+              personalQuota={personalQuota}
               tier={tier}
               name={name}
               placedCount={placedCount}
