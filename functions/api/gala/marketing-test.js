@@ -415,25 +415,38 @@ export async function onRequestPost(context) {
   const baseSend = SENDS[sendId];
   if (!baseSend) return jsonError(`Unknown sendId: ${sendId}`, 404);
 
-  // Check marketing_edits in D1 for overrides — if Sherry/Kara/Scott edited
-  // the send via /gala-review/, that's the live copy. Falls back to baked-in
-  // copy if the row is missing or the DB is unreachable.
+  // Source priority: marketing_sends (new admin editor, single source of
+  // truth) → marketing_edits (legacy gala-review overrides, kept for safety
+  // until that tool is fully retired) → in-code SENDS registry.
   let send = baseSend;
   try {
     if (env.GALA_DB) {
-      const row = await env.GALA_DB.prepare(
-        `SELECT subject_override, body_override FROM marketing_edits WHERE send_id = ?`
+      const live = await env.GALA_DB.prepare(
+        `SELECT subject, body FROM marketing_sends WHERE send_id = ?`
       ).bind(sendId).first();
-      if (row && (row.subject_override || row.body_override)) {
+      if (live && (live.subject || live.body)) {
         send = {
           ...baseSend,
-          subject: row.subject_override || baseSend.subject,
-          body: row.body_override || baseSend.body,
+          subject: live.subject || baseSend.subject,
+          body: live.body || baseSend.body,
         };
+      } else {
+        // Legacy fallback — the row didn't exist in marketing_sends yet,
+        // try the old marketing_edits override table.
+        const legacy = await env.GALA_DB.prepare(
+          `SELECT subject_override, body_override FROM marketing_edits WHERE send_id = ?`
+        ).bind(sendId).first();
+        if (legacy && (legacy.subject_override || legacy.body_override)) {
+          send = {
+            ...baseSend,
+            subject: legacy.subject_override || baseSend.subject,
+            body: legacy.body_override || baseSend.body,
+          };
+        }
       }
     }
   } catch (e) {
-    // If anything goes wrong, fall back to baked-in copy. Don't block the send.
+    // Don't block the send on a DB hiccup — fall back to baked-in copy.
     console.error('Override fetch failed, using default:', e.message);
   }
 

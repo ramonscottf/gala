@@ -3870,62 +3870,290 @@ function channelBadge(ch) {
   return `<span style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; font-size:11px; font-weight:600; border-radius:6px; background:#fdecec; color:#CB262C;">📧 Email</span>`;
 }
 
+// ── Marketing pipeline data: API-driven, with PIPELINE as fallback ─────────
+//
+// LIVE_PIPELINE is the authoritative client cache. Populated by
+// loadLivePipeline() which hits /api/gala/marketing-pipeline. If the API
+// is unreachable, the hardcoded PIPELINE constant above is used so the page
+// still renders.
+//
+// Source of truth in production: D1 marketing_sends. The legacy
+// /gala-review/ tool (def-site repo) is being archived — this page is now
+// the single editor.
+let LIVE_PIPELINE = null;
+const SEND_BUSY = new Set();   // ids currently in-flight (test-send or save)
+
+async function loadLivePipeline() {
+  try {
+    const r = await fetch('/api/gala/marketing-pipeline', { credentials: 'include' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    if (Array.isArray(d.phases) && d.phases.length) {
+      LIVE_PIPELINE = d.phases;
+      return true;
+    }
+  } catch (e) {
+    console.warn('marketing-pipeline API unreachable, falling back to baked PIPELINE:', e.message);
+  }
+  return false;
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
 function renderPipeline() {
   const root = document.getElementById('mkt-pipeline');
   if (!root) return;
 
+  const phases = LIVE_PIPELINE || PIPELINE;
   let html = '';
-  for (const phase of PIPELINE) {
+  for (const phase of phases) {
     html += `
       <div style="border-top: 1px solid var(--border); padding: 18px 24px;">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
           <div style="width: 32px; height: 32px; border-radius: 8px; background: ${phase.color}; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">${phase.phase}</div>
           <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 16px; color: var(--text);">Phase ${phase.phase} — ${phase.title}</div>
-            <div style="font-size: 12px; color: var(--muted); margin-top: 2px;">${phase.range} • ${phase.sends.length} touches</div>
+            <div style="font-weight: 700; font-size: 16px; color: var(--text);">Phase ${phase.phase} — ${escapeHtml(phase.title)}</div>
+            <div style="font-size: 12px; color: var(--muted); margin-top: 2px;">${escapeHtml(phase.range)} • ${phase.sends.length} touches</div>
           </div>
         </div>
-        <div style="font-size: 13px; color: var(--muted); margin-bottom: 14px; padding-left: 44px;">${phase.desc}</div>
+        <div style="font-size: 13px; color: var(--muted); margin-bottom: 14px; padding-left: 44px;">${escapeHtml(phase.desc)}</div>
         <div style="display: flex; flex-direction: column; gap: 6px; padding-left: 44px;">
     `;
     for (const send of phase.sends) {
-      const sub = send.subject ? `<div style="font-size:12px; color:var(--muted); margin-top:3px; font-style:italic;">"${send.subject}"</div>` : '';
-      const notes = send.notes ? `<div style="font-size:12px; color:var(--text); margin-top:6px; padding:6px 10px; background:var(--card-alt); border-radius:6px;">${send.notes}</div>` : '';
-      const channelLabel = send.channel === 'SMS' ? 'SMS' : 'Email';
-      const testControls = `
-        <div style="margin-top:12px; padding:10px 12px; background:var(--card-alt); border-radius:8px;">
-          <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:8px;">🧪 Send test ${channelLabel.toLowerCase()}</div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="scott" style="padding:6px 12px; font-size:12px;">→ Scott</button>
-            <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="sherry" style="padding:6px 12px; font-size:12px;">→ Sherry</button>
-            <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="both" style="padding:6px 12px; font-size:12px;">→ Both</button>
-            <span class="mkt-test-result" data-send="${send.id}" style="font-size:12px; color:var(--muted); align-self:center; margin-left:6px;"></span>
-          </div>
-        </div>
-      `;
-      html += `
-        <details style="background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;">
-          <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-            <span style="font-weight: 700; color: var(--text); min-width: 70px;">${send.date}</span>
-            <span style="font-size: 12px; color: var(--muted); min-width: 80px;">${send.time}</span>
-            ${channelBadge(send.channel)}
-            <span style="flex: 1; font-weight: 600; color: var(--text); min-width: 200px;">${send.title}</span>
-            <span style="font-size: 12px; color: var(--muted); padding: 2px 8px; background: var(--card-alt); border-radius: 99px;">${send.audience}</span>
-            ${statusBadge(send.status)}
-          </summary>
-          <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">
-            ${sub}
-            ${notes}
-            ${testControls}
-          </div>
-        </details>
-      `;
+      html += renderSendRow(send);
     }
     html += `</div></div>`;
   }
   root.innerHTML = html;
 
-  // Wire up test send buttons (event delegation since we just regenerated the DOM)
+  wirePipelineEvents(root);
+}
+
+function renderSendRow(send) {
+  const channelLabel = send.channel === 'SMS' ? 'SMS' : 'Email';
+  const subjectLine = send.subject
+    ? `<div style="font-size:12px; color:var(--muted); margin-top:3px; font-style:italic;">"${escapeHtml(send.subject)}"</div>`
+    : '';
+  const notesLine = send.notes
+    ? `<div style="font-size:12px; color:var(--text); margin-top:6px; padding:6px 10px; background:var(--card-alt); border-radius:6px;">${escapeHtml(send.notes)}</div>`
+    : '';
+
+  const editControls = `
+    <div style="margin-top:12px; padding:10px 12px; background:var(--card-alt); border-radius:8px;">
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-secondary mkt-edit-btn" data-send="${send.id}" style="padding:6px 12px; font-size:12px;">✎ Edit copy &amp; schedule</button>
+        <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="scott" style="padding:6px 12px; font-size:12px;">→ Test to Scott</button>
+        <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="sherry" style="padding:6px 12px; font-size:12px;">→ Test to Sherry</button>
+        <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="both" style="padding:6px 12px; font-size:12px;">→ Both</button>
+        <span class="mkt-test-result" data-send="${send.id}" style="font-size:12px; color:var(--muted); align-self:center; margin-left:6px;"></span>
+      </div>
+    </div>
+  `;
+
+  // Body preview (collapsible — emails get a full HTML preview, SMS shows raw text)
+  const bodyPreview = send.body ? renderBodyPreview(send) : '';
+
+  // Editor (hidden by default; toggled by Edit button)
+  const editor = renderEditor(send);
+
+  return `
+    <details data-send-row="${send.id}" style="background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;">
+      <summary style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span style="font-weight: 700; color: var(--text); min-width: 70px;" data-field-display="date">${escapeHtml(send.date)}</span>
+        <span style="font-size: 12px; color: var(--muted); min-width: 80px;" data-field-display="time">${escapeHtml(send.time)}</span>
+        ${channelBadge(send.channel)}
+        <span style="flex: 1; font-weight: 600; color: var(--text); min-width: 200px;" data-field-display="title">${escapeHtml(send.title || '')}</span>
+        <span style="font-size: 12px; color: var(--muted); padding: 2px 8px; background: var(--card-alt); border-radius: 99px;" data-field-display="audience">${escapeHtml(send.audience || '')}</span>
+        ${statusBadge(send.status)}
+      </summary>
+      <div class="mkt-row-body" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">
+        <div class="mkt-view-mode" data-send="${send.id}">
+          ${subjectLine}
+          ${notesLine}
+          ${bodyPreview}
+          ${editControls}
+        </div>
+        ${editor}
+      </div>
+    </details>
+  `;
+}
+
+function renderBodyPreview(send) {
+  if (!send.body) return '';
+  if (send.channel === 'SMS') {
+    return `
+      <div style="margin-top:10px; padding:12px 14px; background:#f5f5f7; border:1px solid var(--border); border-radius:8px; font-family:'SF Mono',Menlo,Monaco,Consolas,monospace; font-size:13px; line-height:1.5; color:var(--text); white-space:pre-wrap; word-break:break-word;">${escapeHtml(send.body)}</div>
+    `;
+  }
+  // Email: show in a sandboxed iframe-like div so its styles don't leak
+  return `
+    <details style="margin-top:10px;">
+      <summary style="cursor:pointer; font-size:12px; color:var(--muted); padding:4px 0;">▸ Show email body preview</summary>
+      <div style="margin-top:8px; padding:14px; background:#fff; border:1px solid var(--border); border-radius:8px; max-height:400px; overflow:auto; font-size:13px;">${send.body}</div>
+    </details>
+  `;
+}
+
+function renderEditor(send) {
+  const id = send.id;
+  const isEmail = send.channel === 'Email';
+  return `
+    <div class="mkt-edit-mode" data-send="${id}" style="display:none; margin-top:10px;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
+        <label style="display:block;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Date</div>
+          <input type="text" class="mkt-input" data-edit="${id}" data-field="date" value="${escapeAttr(send.date)}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+        </label>
+        <label style="display:block;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Time</div>
+          <input type="text" class="mkt-input" data-edit="${id}" data-field="time" value="${escapeAttr(send.time)}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+        </label>
+        <label style="display:block;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Audience</div>
+          <input type="text" class="mkt-input" data-edit="${id}" data-field="audience" value="${escapeAttr(send.audience || '')}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+        </label>
+        <label style="display:block;">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Status</div>
+          <select class="mkt-input" data-edit="${id}" data-field="status" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;">
+            <option value="upcoming" ${send.status === 'upcoming' ? 'selected' : ''}>upcoming</option>
+            <option value="inprogress" ${send.status === 'inprogress' ? 'selected' : ''}>in progress</option>
+            <option value="done" ${send.status === 'done' ? 'selected' : ''}>done</option>
+            <option value="blocked" ${send.status === 'blocked' ? 'selected' : ''}>blocked</option>
+          </select>
+        </label>
+      </div>
+
+      <label style="display:block; margin-bottom:10px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Internal title</div>
+        <input type="text" class="mkt-input" data-edit="${id}" data-field="title" value="${escapeAttr(send.title || '')}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+      </label>
+
+      ${isEmail ? `
+      <label style="display:block; margin-bottom:10px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Subject line</div>
+        <input type="text" class="mkt-input" data-edit="${id}" data-field="subject" value="${escapeAttr(send.subject || '')}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+      </label>
+      ` : ''}
+
+      <label style="display:block; margin-bottom:10px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">${isEmail ? 'Body (HTML)' : 'SMS body (plain text)'}</div>
+        <textarea class="mkt-input" data-edit="${id}" data-field="body" rows="${isEmail ? 16 : 4}" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:'SF Mono',Menlo,Monaco,Consolas,monospace; line-height:1.5; background:#fff; resize:vertical;">${escapeHtml(send.body || '')}</textarea>
+        ${isEmail ? `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Tip: paste from Word; the wrapper masthead and footer are added automatically on send.</div>` : `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Use {TOKEN} as a placeholder for the per-recipient sponsor token.</div>`}
+      </label>
+
+      <label style="display:block; margin-bottom:12px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Notes (internal — not sent)</div>
+        <textarea class="mkt-input" data-edit="${id}" data-field="notes" rows="2" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; line-height:1.5; background:#fff; resize:vertical;">${escapeHtml(send.notes || '')}</textarea>
+      </label>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-primary mkt-save-btn" data-send="${id}" style="padding:7px 16px; font-size:13px;">Save changes</button>
+        <button class="btn btn-secondary mkt-cancel-btn" data-send="${id}" style="padding:7px 16px; font-size:13px;">Cancel</button>
+        <span class="mkt-save-result" data-send="${id}" style="font-size:12px; color:var(--muted); margin-left:6px;"></span>
+      </div>
+    </div>
+  `;
+}
+
+function wirePipelineEvents(root) {
+  // Edit toggle
+  root.querySelectorAll('.mkt-edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const id = btn.dataset.send;
+      const view = root.querySelector(`.mkt-view-mode[data-send="${id}"]`);
+      const edit = root.querySelector(`.mkt-edit-mode[data-send="${id}"]`);
+      if (view) view.style.display = 'none';
+      if (edit) edit.style.display = 'block';
+    });
+  });
+
+  // Cancel
+  root.querySelectorAll('.mkt-cancel-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const id = btn.dataset.send;
+      const view = root.querySelector(`.mkt-view-mode[data-send="${id}"]`);
+      const edit = root.querySelector(`.mkt-edit-mode[data-send="${id}"]`);
+      if (view) view.style.display = '';
+      if (edit) edit.style.display = 'none';
+    });
+  });
+
+  // Save
+  root.querySelectorAll('.mkt-save-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const id = btn.dataset.send;
+      if (SEND_BUSY.has(id)) return;
+      SEND_BUSY.add(id);
+
+      const fields = ['date','time','audience','status','title','subject','body','notes'];
+      const payload = {};
+      fields.forEach(f => {
+        const el = root.querySelector(`.mkt-input[data-edit="${id}"][data-field="${f}"]`);
+        if (el) payload[f] = el.value;
+      });
+
+      const result = root.querySelector(`.mkt-save-result[data-send="${id}"]`);
+      if (result) { result.style.color = 'var(--muted)'; result.textContent = 'Saving…'; }
+      btn.disabled = true; btn.style.opacity = '0.5';
+
+      try {
+        const r = await fetch(`/api/gala/marketing-pipeline/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          if (result) { result.style.color = 'var(--red)'; result.textContent = '✗ ' + (data.error || `HTTP ${r.status}`); }
+        } else {
+          // Patch the local cache so a re-render shows the new values
+          if (LIVE_PIPELINE) {
+            for (const phase of LIVE_PIPELINE) {
+              const idx = phase.sends.findIndex(s => s.id === id);
+              if (idx >= 0) {
+                phase.sends[idx] = { ...phase.sends[idx], ...payload };
+                break;
+              }
+            }
+          }
+          if (result) { result.style.color = 'var(--green)'; result.textContent = '✓ Saved'; }
+          // Soft re-render just this row's view-mode summary text
+          const row = root.querySelector(`details[data-send-row="${id}"]`);
+          if (row) {
+            ['date','time','title','audience'].forEach(f => {
+              const el = row.querySelector(`[data-field-display="${f}"]`);
+              if (el && payload[f] !== undefined) el.textContent = payload[f];
+            });
+          }
+          // Switch back to view mode after a moment
+          setTimeout(() => {
+            const view = root.querySelector(`.mkt-view-mode[data-send="${id}"]`);
+            const edit = root.querySelector(`.mkt-edit-mode[data-send="${id}"]`);
+            if (view) view.style.display = '';
+            if (edit) edit.style.display = 'none';
+            // Refresh the body preview by re-fetching pipeline (simplest and cheap)
+            loadLivePipeline().then(() => renderPipeline());
+          }, 800);
+        }
+      } catch (err) {
+        if (result) { result.style.color = 'var(--red)'; result.textContent = '✗ Network error: ' + err.message; }
+      } finally {
+        btn.disabled = false; btn.style.opacity = '1';
+        SEND_BUSY.delete(id);
+      }
+    });
+  });
+
+  // Test sends (unchanged behavior — fires marketing-test which now reads live)
   root.querySelectorAll('.mkt-test-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -3934,7 +4162,6 @@ function renderPipeline() {
       const recipient = btn.dataset.recipient;
       const resultEl = root.querySelector(`.mkt-test-result[data-send="${sendId}"]`);
 
-      // Disable all 3 buttons for this send while in flight
       const groupBtns = root.querySelectorAll(`.mkt-test-btn[data-send="${sendId}"]`);
       groupBtns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
       if (resultEl) {
@@ -4049,8 +4276,9 @@ function renderMarketingKpis() {
   const daysEl = document.getElementById('mkt-days-to-gala');
   if (daysEl) daysEl.textContent = days;
 
-  // Aggregate stats
-  const all = PIPELINE.flatMap(p => p.sends);
+  // Aggregate stats — prefer LIVE_PIPELINE if loaded, else fall back to baked
+  const sourcePhases = LIVE_PIPELINE || PIPELINE;
+  const all = sourcePhases.flatMap(p => p.sends);
   const done = all.filter(s => s.status === 'done').length;
   const blocked = all.filter(s => s.status === 'blocked').length + ASSETS.filter(a => a.status === 'blocked').length + QUESTIONS.filter(q => q.urgency === 'high').length;
 
@@ -4070,7 +4298,9 @@ function renderMarketingKpis() {
 }
 
 let marketingLoaded = false;
-function loadMarketing() {
+async function loadMarketing() {
+  // Pull live pipeline first (network); fall back to baked PIPELINE if it fails.
+  await loadLivePipeline();
   renderPipeline();
   renderAssets();
   renderQuestions();
