@@ -1612,6 +1612,20 @@ body {
       </div>
     </div>
 
+    <!-- Due Now banner — surfaces sends that need a human click -->
+    <div id="mkt-due-now" class="card" style="margin-bottom: 28px; display:none;">
+      <div class="card__header" style="border-bottom: 1px solid var(--border); padding: 18px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="card__title" style="font-size: 18px; font-weight: 700; color: var(--text);">⏰ Due Now</div>
+          <div id="mkt-due-now-summary" style="font-size: 13px; color: var(--muted); margin-top: 4px;">—</div>
+        </div>
+        <button id="mkt-due-now-refresh" style="padding:7px 14px; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer;">↻ Refresh</button>
+      </div>
+      <div id="mkt-due-now-body" style="padding: 14px 24px 20px;">
+        <div style="color:var(--muted); font-style:italic;">Loading…</div>
+      </div>
+    </div>
+
     <!-- Send Activity (global) -->
     <div class="card" style="margin-bottom: 28px;">
       <div class="card__header" style="border-bottom: 1px solid var(--border); padding: 18px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
@@ -4635,6 +4649,159 @@ function showSendConfirmModal(sendId, preview) {
     });
   }
 }
+
+// ── Due Now banner ──────────────────────────────────────────────────
+async function loadDueNow() {
+  const card = document.getElementById('mkt-due-now');
+  const summary = document.getElementById('mkt-due-now-summary');
+  const body = document.getElementById('mkt-due-now-body');
+  if (!card || !body) return;
+
+  try {
+    const r = await fetch('/api/gala/marketing-due-now', { credentials: 'include' });
+    if (!r.ok) {
+      body.innerHTML = `<div style="color:#dc2626;">Failed to load due-now (${r.status}). Try refresh.</div>`;
+      summary.textContent = 'Error loading';
+      card.style.display = '';
+      return;
+    }
+    const data = await r.json();
+    renderDueNow(data);
+  } catch (e) {
+    body.innerHTML = `<div style="color:#dc2626;">Network error loading due-now: ${escapeHtml(String(e.message || e))}</div>`;
+    card.style.display = '';
+  }
+}
+
+function renderDueNow(data) {
+  const card = document.getElementById('mkt-due-now');
+  const summary = document.getElementById('mkt-due-now-summary');
+  const body = document.getElementById('mkt-due-now-body');
+
+  const overdue = data.overdue || [];
+  const due = data.due || [];
+  const soon = data.soon || [];
+  const blocked = data.blocked || [];
+
+  const totalNeedsAttention = overdue.length + due.length;
+
+  // Hide the card entirely if nothing relevant in the next 24 hours and nothing overdue/blocked
+  if (overdue.length === 0 && due.length === 0 && soon.length === 0 && blocked.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = '';
+
+  // Summary line
+  const bits = [];
+  if (overdue.length) bits.push(`${overdue.length} overdue`);
+  if (due.length) bits.push(`${due.length} due in next hour`);
+  if (soon.length) bits.push(`${soon.length} due in next 24h`);
+  if (blocked.length) bits.push(`${blocked.length} blocked`);
+  summary.textContent = bits.join(' · ') || 'All clear';
+
+  // Make the title pulse red if there's anything that NEEDS attention right now
+  const titleEl = card.querySelector('.card__title');
+  if (titleEl) {
+    if (totalNeedsAttention > 0) {
+      titleEl.innerHTML = `⏰ Due Now <span style="display:inline-block; padding:2px 8px; background:#dc2626; color:#fff; border-radius:10px; font-size:11px; font-weight:700; margin-left:6px; vertical-align:middle;">${totalNeedsAttention}</span>`;
+    } else {
+      titleEl.textContent = '⏰ Due Now';
+    }
+  }
+
+  const sectionHtml = (heading, items, color, urgency) => {
+    if (!items.length) return '';
+    return `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:${color}; margin-bottom:8px;">${heading}</div>
+        ${items.map(it => dueNowRow(it, color, urgency)).join('')}
+      </div>
+    `;
+  };
+
+  body.innerHTML = `
+    ${sectionHtml(`Overdue (${overdue.length})`, overdue, '#dc2626', 'overdue')}
+    ${sectionHtml(`Due in the next hour (${due.length})`, due, '#ea580c', 'due')}
+    ${sectionHtml(`Due in the next 24 hours (${soon.length})`, soon, '#0b1b3c', 'soon')}
+    ${sectionHtml(`Blocked (${blocked.length})`, blocked, '#7c2d12', 'blocked')}
+  `;
+
+  // Click handlers — scroll to row + open preview modal
+  body.querySelectorAll('[data-due-send]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sendId = btn.getAttribute('data-due-send');
+      // Find the row in the pipeline (rows have data-send-id-row attribute or
+      // we hunt by the preview button)
+      const previewBtn = document.querySelector(`.mkt-preview-send-btn[data-send="${sendId}"]`);
+      if (previewBtn) {
+        previewBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Brief highlight to orient the user
+        const row = previewBtn.closest('[data-mkt-row], .mkt-row, div');
+        if (row) {
+          row.style.transition = 'background-color 0.6s';
+          const orig = row.style.backgroundColor;
+          row.style.backgroundColor = '#fef3c7';
+          setTimeout(() => { row.style.backgroundColor = orig; }, 1200);
+        }
+        // Auto-click the preview button after the scroll lands
+        setTimeout(() => previewBtn.click(), 700);
+      } else {
+        alert(`Couldn't find row for ${sendId}. Scroll to find it manually.`);
+      }
+    });
+  });
+}
+
+function dueNowRow(item, color, urgency) {
+  const channelBadge = item.channel === 'SMS'
+    ? '<span style="display:inline-block; padding:2px 7px; background:#e0f2fe; color:#075985; border-radius:4px; font-size:10px; font-weight:700; vertical-align:middle;">SMS</span>'
+    : '<span style="display:inline-block; padding:2px 7px; background:#fce7f3; color:#9d174d; border-radius:4px; font-size:10px; font-weight:700; vertical-align:middle;">Email</span>';
+  const when = formatWhen(item, urgency);
+  const audienceTag = item.audience ? `<span style="font-size:11px; color:var(--muted);"> · ${escapeHtml(item.audience)}</span>` : '';
+  return `
+    <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; background:#f8fafc; border:1px solid var(--border); border-radius:6px; margin-bottom:6px;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:600; color:var(--text);">${channelBadge} ${escapeHtml(item.title || item.sendId)}${audienceTag}</div>
+        <div style="font-size:11px; color:${color}; margin-top:2px; font-weight:600;">${when}</div>
+      </div>
+      <button data-due-send="${escapeAttr(item.sendId)}" style="padding:6px 12px; font-size:12px; background:${urgency==='overdue'||urgency==='due'?'#dc2626':'#0b1b3c'}; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600; white-space:nowrap;">📨 Preview &amp; send →</button>
+    </div>
+  `;
+}
+
+function formatWhen(item, urgency) {
+  if (urgency === 'blocked') return `Was scheduled ${escapeHtml(item.date || '?')} ${escapeHtml(item.time || '')} · marked blocked`;
+  if (!item.scheduledAt || item.msUntil === null) return `${escapeHtml(item.date || '?')} ${escapeHtml(item.time || '')}`;
+  const ms = item.msUntil;
+  if (ms < 0) {
+    const mins = Math.round(-ms / 60000);
+    if (mins < 60) return `Overdue by ${mins} min · was ${escapeHtml(item.time || '')}`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return `Overdue by ${hrs} hr · was ${escapeHtml(item.date || '')} ${escapeHtml(item.time || '')}`;
+    const days = Math.round(hrs / 24);
+    return `Overdue by ${days} day${days===1?'':'s'} · was ${escapeHtml(item.date || '')} ${escapeHtml(item.time || '')}`;
+  }
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return `Due in ${mins} min · ${escapeHtml(item.time || '')}`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `Due in ${hrs} hr · ${escapeHtml(item.date || '')} ${escapeHtml(item.time || '')}`;
+  const days = Math.round(hrs / 24);
+  return `Due in ${days} day${days===1?'':'s'} · ${escapeHtml(item.date || '')} ${escapeHtml(item.time || '')}`;
+}
+
+// Hook up refresh + initial load
+(function initDueNow() {
+  const btn = document.getElementById('mkt-due-now-refresh');
+  if (btn) btn.addEventListener('click', loadDueNow);
+  // Auto-load when marketing tab activates. The tab system in this admin
+  // shows everything in one DOM, so just call it once on page load.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadDueNow);
+  } else {
+    loadDueNow();
+  }
+})();
 
 // ── Global Send Activity panel ───────────────────────────────────────
 async function loadGlobalSendActivity() {
