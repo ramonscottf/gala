@@ -37,4 +37,22 @@ test.describe('sponsor shell preview', () => {
     await expect(page.getByTestId('desktop-companion-notes')).toHaveCount(0);
     await expect(page.getByTestId('cta-place-seats').first()).toBeVisible();
   });
+
+  test('dinner picker reveals a done button after all just-placed dinners are selected', async ({ page }) => {
+    await preparePage(page);
+    await page.setViewportSize({ width: 1365, height: 900 });
+    await page.goto(`${PREVIEW_URL}?surface=desktop`);
+
+    await page.getByTestId('cta-place-seats').first().click();
+    await page.getByTestId('seat-pick-sheet').waitFor();
+    await page.locator('[data-seat="A-1"]').click();
+    await page.getByTestId('seat-pick-commit').click();
+
+    await page.getByRole('button', { name: /Pick dinners/i }).click();
+    await expect(page.getByLabel('Dinner for seat A-1')).toBeVisible();
+    await expect(page.getByTestId('dinner-done')).toHaveCount(0);
+
+    await page.getByLabel('Dinner for seat A-1').selectOption('brisket');
+    await expect(page.getByTestId('dinner-done')).toBeVisible();
+  });
 });

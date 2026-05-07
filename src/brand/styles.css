@@ -894,6 +894,151 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.post-pick-dinner-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-pick-dinner-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--mute);
+  font-size: 12px;
+}
+
+.post-pick-dinner-intro span {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: var(--accent-italic);
+  background: rgba(168, 177, 255, 0.14);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-pick-dinner-intro strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-on-ground);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-pick-dinner-list {
+  display: grid;
+  gap: 10px;
+}
+
+.post-pick-dinner-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.post-pick-dinner-row .dinner-select {
+  width: 100%;
+}
+
+.post-pick-dinner-seat {
+  padding: 6px 8px;
+  border-radius: 5px;
+  color: var(--accent-italic);
+  background: rgba(168, 177, 255, 0.16);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-pick-dinner-empty,
+.post-pick-dinner-error {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.post-pick-dinner-empty {
+  color: var(--mute);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+}
+
+.post-pick-dinner-error {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  color: #ff8da4;
+  background: rgba(215, 40, 70, 0.12);
+  border: 1px solid rgba(215, 40, 70, 0.3);
+}
+
+.post-pick-dinner-error button {
+  all: unset;
+  cursor: pointer;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.post-pick-dinner-done {
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  margin-top: 2px;
+  color: #fff;
+  background: linear-gradient(95deg, #d72846, #3b3f9f);
+  box-shadow: 0 16px 34px rgba(215, 40, 70, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  animation: dinnerDoneIn 180ms ease-out;
+}
+
+.post-pick-dinner-done:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.post-pick-dinner-done span {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes dinnerDoneIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 1180px) {
   .desktop-parity-shell {
     grid-template-columns: minmax(240px, 300px) minmax(520px, 1fr);

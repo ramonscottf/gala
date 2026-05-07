@@ -17,7 +17,7 @@ import {
 import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
-import DinnerPicker from './components/DinnerPicker.jsx';
+import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 
 const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
@@ -478,21 +478,29 @@ export default function Desktop({
 
       <DesktopModal open={dinnerOpen} onClose={() => setDinnerOpen(false)} title="Pick dinners">
         {dinnerOpen && postPick && (
-          <div className="desktop-dinner-list">
-            {(portal?.myAssignments || [])
-              .filter((r) => postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`))
-              .map((r) => (
-                <div key={`${r.theater_id}-${r.row_label}-${r.seat_num}`}>
-                  <span>{r.row_label}{r.seat_num}</span>
-                  <DinnerPicker
-                    assignment={r}
-                    token={token}
-                    apiBase={config.apiBase}
-                    onChange={() => onRefresh && onRefresh()}
-                  />
-                </div>
-              ))}
-          </div>
+          <PostPickDinnerSheet
+            assignments={(portal?.myAssignments || []).filter((r) =>
+              postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`)
+            )}
+            token={token}
+            apiBase={config.apiBase}
+            onRefresh={onRefresh}
+            canFinalize={canFinalize}
+            onFinalize={async () => {
+              await finalize();
+              setPostPick(null);
+              setAssignThese(null);
+              setDinnerOpen(false);
+            }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
+            onDone={() => {
+              setPostPick(null);
+              setAssignThese(null);
+              setDinnerOpen(false);
+            }}
+          />
         )}
       </DesktopModal>
 

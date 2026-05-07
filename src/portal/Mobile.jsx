@@ -35,6 +35,7 @@ import NightOfContent from './components/NightOfContent.jsx';
 import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
+import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 
 const SheetFrameContext = createContext(false);
@@ -3274,54 +3275,33 @@ export default function Mobile({
         title="Pick dinners"
       >
         {dinnerOpen && postPick && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 12, color: 'var(--mute)', marginBottom: 4 }}>
-              Choose a meal for each seat you just placed.
-            </div>
-            {(portal?.myAssignments || [])
-              .filter((r) => postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`))
-              .map((r) => (
-                <div
-                  key={`${r.theater_id}-${r.row_label}-${r.seat_num}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: 10,
-                    borderRadius: 10,
-                    border: `1px solid var(--rule)`,
-                    background: 'var(--surface)',
-                  }}
-                >
-                  <span
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: 4,
-                      background: 'rgba(168,177,255,0.18)',
-                      color: BRAND.indigoLight,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      fontVariantNumeric: 'tabular-nums',
-                      minWidth: 44,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {r.row_label}
-                    {r.seat_num}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <DinnerPicker
-                      assignment={r}
-                      token={token}
-                      apiBase={config.apiBase}
-                      onChange={() => {
-                        if (onRefresh) onRefresh();
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-          </div>
+          <PostPickDinnerSheet
+            assignments={(portal?.myAssignments || []).filter((r) =>
+              postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`)
+            )}
+            token={token}
+            apiBase={config.apiBase}
+            onRefresh={onRefresh}
+            canFinalize={canFinalize}
+            onFinalize={async () => {
+              try {
+                await finalize();
+                setPostPick(null);
+                setAssignThese(null);
+                setDinnerOpen(false);
+              } catch {
+                // useFinalize sets error state; sheet stays open.
+              }
+            }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
+            onDone={() => {
+              setPostPick(null);
+              setAssignThese(null);
+              setDinnerOpen(false);
+            }}
+          />
         )}
       </Sheet>
 
