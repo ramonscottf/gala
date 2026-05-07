@@ -32,6 +32,7 @@ import {
 import { SeatMap, SeatLegend, adaptTheater, seatById } from './SeatEngine.jsx';
 import { otherTakenForTheater, checkBatchOrphans } from '../hooks/useSeats.js';
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../hooks/usePortal.js';
+import { useFinalize } from '../hooks/useFinalize.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import SettingsSheet from './SettingsSheet.jsx';
@@ -1657,7 +1658,15 @@ const StepConfirm = ({
   onPrev,
   apiBase,
   token,
-  onFinalized,
+  // T2 v2 — finalize and finalizing are now provided by the parent
+  // Desktop component via the shared useFinalize hook (src/hooks/
+  // useFinalize.js). The local finalize() / setFinalizing pair was
+  // deleted to keep both shells on a single /finalize call site.
+  // Task 7 deletes StepConfirm entirely — for now the legacy stepper
+  // path uses the same canonical hook the canonical PostPickSheet
+  // does so the parity test treats them as one wire-level flow.
+  finalize,
+  finalizing,
   // H1 — portal payload + onRefresh so the Mode B placed-seats list
   // can render DinnerPicker per claimed seat and bounce server state
   // back into local on a successful set_dinner POST.
@@ -1665,7 +1674,6 @@ const StepConfirm = ({
   onRefresh,
 }) => {
   const [placing, setPlacing] = useState(false);
-  const [finalizing, setFinalizing] = useState(false);
   const [err, setErr] = useState(null);
 
   const place = async () => {
@@ -1689,31 +1697,6 @@ const StepConfirm = ({
       setErr(e);
     } finally {
       setPlacing(false);
-    }
-  };
-
-  // D1 — finalize the entire RSVP (not just this batch). Mirrors mobile
-  // F1: POST /finalize, capture {seatCount, qrImgUrl, email/sms.sent},
-  // hand it back to the Desktop root which short-circuits to
-  // ConfirmationScreen. The /finalize endpoint flips rsvp_status to
-  // 'completed' and sends the QR via Twilio + email — seats stay
-  // editable until June 9.
-  const finalize = async () => {
-    if (finalizing) return;
-    setFinalizing(true);
-    setErr(null);
-    try {
-      const res = await fetch(`${apiBase}/api/gala/portal/${token}/finalize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      onFinalized(data);
-    } catch (e) {
-      setErr(e);
-    } finally {
-      setFinalizing(false);
     }
   };
 
@@ -2183,10 +2166,19 @@ export default function Desktop({
 
   const [sel, setSel] = useState(new Set());
   const remaining = blockSize - seats.totalAssigned;
-  // D1: confirmation short-circuit — when /finalize succeeds StepConfirm
-  // sets this state and Desktop early-returns the shared
-  // ConfirmationScreen instead of the wizard chrome.
-  const [confirmationData, setConfirmationData] = useState(null);
+  // T2 v2 — useFinalize provides confirmationData (consumed by the
+  // ConfirmationScreen short-circuit below) plus finalize/finalizing
+  // for both the legacy StepConfirm and the canonical PostPickSheet.
+  // Replaces the StepConfirm-local finalize() and the
+  // useState(null)/setConfirmationData pair the desktop root used to
+  // own. Both call sites POST the same body via the same hook so the
+  // parity test sees one wire-level flow.
+  const {
+    finalize,
+    finalizing,
+    confirmationData,
+    setConfirmationData,
+  } = useFinalize({ apiBase, token, onRefresh });
   // D4: MovieDetailSheet open state — augmented with __showLabel /
   // __showTime / __showingNumber so the sheet can render the
   // "Show 4:30 PM · Early showing" badge per F4 mobile pattern.
@@ -2226,6 +2218,13 @@ export default function Desktop({
   const tickets = mobileData?.tickets || [];
   const dinnerCompleteness = useDinnerCompleteness(portal?.myAssignments);
   const placedCount = seats.totalAssigned;
+  // T2 v2 — canonical finalize gate. Server contract is permissive
+  // (only requires >= 1 placed seat; see functions/api/gala/portal/
+  // [token]/finalize.js), so the UX gate is "all entitled seats
+  // placed". Dinners are NOT part of the gate; sponsors pick them
+  // later. PostPickSheet's "Done" CTA flips to "I'm done — send my
+  // QR" when canFinalize is true.
+  const canFinalize = placedCount >= (blockSize || 0) && (blockSize || 0) > 0;
 
   const onPlaced = () => {
     setSel(new Set());
@@ -2397,7 +2396,8 @@ export default function Desktop({
               onPrev={() => setStep(3)}
               apiBase={apiBase}
               token={token}
-              onFinalized={(data) => setConfirmationData(data)}
+              finalize={finalize}
+              finalizing={finalizing}
               portal={portal}
               onRefresh={onRefresh}
             />
@@ -2539,6 +2539,17 @@ export default function Desktop({
               setPostPick(null);
               setAssignThese(null);
               setDinnerOpen(false);
+            }}
+            canFinalize={canFinalize}
+            onFinalize={async () => {
+              try {
+                await finalize();
+                setPostPick(null);
+                setAssignThese(null);
+                setDinnerOpen(false);
+              } catch {
+                // useFinalize sets error state; modal stays open
+              }
             }}
           />
         )}

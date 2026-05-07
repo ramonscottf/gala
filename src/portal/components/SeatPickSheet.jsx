@@ -316,6 +316,7 @@ export default function SeatPickSheet({
 
   return (
     <div
+      data-testid="seat-pick-sheet"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -816,6 +817,7 @@ export default function SeatPickSheet({
           disabled={mode !== 'place' || !sel.size || committing}
           onClick={commit}
           icon={<Icon name="arrowR" size={16} />}
+          testId="seat-pick-commit"
         >
           {committing
             ? 'Placing…'

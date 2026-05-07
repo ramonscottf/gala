@@ -104,7 +104,7 @@ Shipped as commits `9059482` + `0bf40c8`. Code-reviewed clean.
 
 **Steps:**
 
-- [ ] **Step 1: Restore the testid scaffolding from the v1 stash (component-level only).**
+- [x] **Step 1: Restore the testid scaffolding from the v1 stash (component-level only).**
 
 ```bash
 git stash show -p stash@{0} -- src/brand/atoms.jsx src/portal/components/SeatPickSheet.jsx src/portal/components/PostPickSheet.jsx | git apply
@@ -112,7 +112,7 @@ git diff --stat
 ```
 Expected: 3 files modified, ~6 single-line `data-testid` additions.
 
-- [ ] **Step 2a: Verify server-side `/finalize` contract before building the hook.**
+- [x] **Step 2a: Verify server-side `/finalize` contract before building the hook.**
 
 The client gate (`canFinalize = allPlaced && allDinnersSet`) only matters if the server actually enforces those conditions. If the server is permissive, our client gate may be over-restrictive. If the server is stricter, our gate is missing checks.
 
@@ -132,14 +132,14 @@ Read end-to-end. Look specifically for:
 
 Capture the finding in the Step 9 commit body as a one-line "Server-side contract: <permissive | gated on X | gated on dinners + seats>" so the gate decision is traceable.
 
-- [ ] **Step 2b: Read the existing client finalize implementations.**
+- [x] **Step 2b: Read the existing client finalize implementations.**
 
 Read `Desktop.jsx:1696-1724` and `MobileWizard.jsx:2126-2160`. Document:
 - Request: POST `${apiBase}/api/gala/portal/${token}/finalize`, body `{}`
 - Response: sets a local `confirmationData`/`finalizeData` state; ConfirmationScreen short-circuits at `Desktop.jsx:2188` and `Mobile.jsx:2837`.
 - Differences between Desktop's and MobileWizard's finalize (likely error handling). The hook absorbs the union.
 
-- [ ] **Step 3: Create `src/hooks/useFinalize.js`.**
+- [x] **Step 3: Create `src/hooks/useFinalize.js`.**
 
 ```jsx
 // src/hooks/useFinalize.js
@@ -183,7 +183,7 @@ export function useFinalize({ apiBase, token, onRefresh }) {
 }
 ```
 
-- [ ] **Step 4: Modify `PostPickSheet.jsx`.**
+- [x] **Step 4: Modify `PostPickSheet.jsx`.**
 
 Add props `canFinalize` (boolean, default false) and `onFinalize` (function, default null). Replace the third `<ActionCard>` (the "Done — back to overview" one):
 
@@ -200,7 +200,7 @@ Add props `canFinalize` (boolean, default false) and `onFinalize` (function, def
 
 Same icon both states (avoids needing a `send` icon if it doesn't exist; the title+sub copy carries the meaning).
 
-- [ ] **Step 5: Modify `Mobile.jsx`.**
+- [x] **Step 5: Modify `Mobile.jsx`.**
 
 ```jsx
 import { useFinalize } from '../hooks/useFinalize.js';
@@ -233,7 +233,7 @@ The existing ConfirmationScreen short-circuit at `Mobile.jsx:2837` already handl
 
 Verify the `seatMath.entitled` shape via `grep -n "seatMath\|entitled" src/portal/Mobile.jsx`. Use whatever the existing `placedCount`/`tier` logic uses.
 
-- [ ] **Step 6: Modify `Desktop.jsx`.**
+- [x] **Step 6: Modify `Desktop.jsx`.**
 
 ```jsx
 import { useFinalize } from '../hooks/useFinalize.js';
@@ -257,14 +257,14 @@ canFinalize={canFinalize}
 onFinalize={finalize}
 ```
 
-- [ ] **Step 7: Build.**
+- [x] **Step 7: Build.**
 
 ```bash
 npm run build
 ```
 Must succeed without errors. If TS-style errors appear, the `useFinalize` import path may be off — verify `src/hooks/useFinalize.js` location and `import` paths.
 
-- [ ] **Step 8: Manual browser verification — use Kara, not Wicko.**
+- [x] **Step 8: Manual browser verification — use Kara, not Wicko.**
 
 ⚠️ **This step finalizes Kara's RSVP server-side.** After this step, Kara is `rsvp_status='completed'` (or whatever the server flips it to) until reset.
 
@@ -299,7 +299,7 @@ Repeat at desktop width (1280px) on a fresh tab. Should land directly on Confirm
 
 If anything breaks: stop and debug before committing.
 
-- [ ] **Step 9: Commit.**
+- [x] **Step 9: Commit.**
 
 ```bash
 git add src/hooks/useFinalize.js src/portal/components/PostPickSheet.jsx \

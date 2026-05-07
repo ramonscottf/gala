@@ -15,6 +15,14 @@
 //   onAssign() — opens AssignTheseSheet
 //   onPickDinners() — opens DinnerPicker scoped to placed.seatIds
 //   onDone() — dismiss everything, return to overview
+//   canFinalize: boolean — when true, the third card switches into
+//     "send my QR" mode and clicking it fires onFinalize instead of
+//     onDone. The host computes canFinalize from portal state (all
+//     entitled seats placed). Server-side /finalize is permissive
+//     (only requires >= 1 placed seat) so dinners are NOT part of the
+//     gate; sponsors can pick dinners later via the dinner picker.
+//   onFinalize() — POSTs /finalize via the useFinalize hook. Required
+//     when canFinalize is true; ignored otherwise.
 
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Icon } from '../../brand/atoms.jsx';
@@ -25,6 +33,8 @@ export default function PostPickSheet({
   onAssign,
   onPickDinners,
   onDone,
+  canFinalize = false,
+  onFinalize = null,
 }) {
   if (!placed) return null;
   const N = placed.seatIds?.length || 0;
@@ -121,18 +131,24 @@ export default function PostPickSheet({
       />
       <ActionCard
         icon="check"
-        title="Done — back to overview"
-        sub="Return to your tickets"
-        onClick={onDone}
+        title={canFinalize ? "I'm done — send my QR" : 'Done — back to overview'}
+        sub={
+          canFinalize
+            ? "We'll email and text your QR code"
+            : 'Return to your tickets'
+        }
+        onClick={canFinalize && onFinalize ? onFinalize : onDone}
         primary
+        testId="post-pick-done"
       />
     </div>
   );
 }
 
-const ActionCard = ({ icon, title, sub, onClick, accent, primary }) => (
+const ActionCard = ({ icon, title, sub, onClick, accent, primary, testId }) => (
   <button
     onClick={onClick}
+    data-testid={testId}
     style={{
       all: 'unset',
       cursor: 'pointer',

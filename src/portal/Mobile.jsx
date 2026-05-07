@@ -19,6 +19,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { BRAND, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
 import { config } from '../config.js';
+import { useFinalize } from '../hooks/useFinalize.js';
 import { useTheme } from '../hooks/useTheme.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import SettingsSheet from './SettingsSheet.jsx';
@@ -2834,14 +2835,24 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   // so we land on the right tab without needing a global tab store.
   const initialTab = searchParams.get('tab') || 'home';
   const [tab, setTab] = useState(initialTab);
-  // After /finalize succeeds, MobileWizard navigates back here with route
-  // state carrying the QR + delivery channels. We promote that into local
-  // state on mount so subsequent re-renders + tab switches don't re-show
-  // confirmation if the user clears it; "Edit my seats" both clears local
-  // state AND replaces route state to drop the back-stack entry.
-  const [confirmationData, setConfirmationData] = useState(
-    () => location.state?.confirmation || null
-  );
+  // After /finalize succeeds via the canonical PostPickSheet "Done" CTA,
+  // useFinalize captures the response in confirmationData and Mobile
+  // short-circuits to ConfirmationScreen. The legacy MobileWizard path
+  // also feeds in via route state (navigate('', {state:{confirmation}}))
+  // — initialConfirmationData seeds from route state on first render so
+  // both entry points reach the same ConfirmationScreen short-circuit
+  // without flicker.
+  const {
+    finalize,
+    finalizing: _finalizing,
+    confirmationData,
+    setConfirmationData,
+  } = useFinalize({
+    apiBase: config.apiBase,
+    token,
+    onRefresh,
+    initialConfirmationData: location.state?.confirmation || null,
+  });
   const [ticketSheet, setTicketSheet] = useState(null);
   const [delegationSheet, setDelegationSheet] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -2878,6 +2889,14 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   );
 
   if (!data) return null;
+
+  // canFinalize gate — the host computes whether PostPickSheet's "Done"
+  // CTA should fire /finalize (canonical canFinalize=true) or just
+  // dismiss (false). Server contract is permissive (only requires >= 1
+  // placed seat), so the UX gate is "all entitled seats placed". Dinners
+  // are NOT part of the gate; sponsors pick them later.
+  const placedCount = (portal?.myAssignments || []).length;
+  const canFinalize = placedCount >= (data.blockSize || 0) && (data.blockSize || 0) > 0;
 
   // Tickets are passed through without the v1 localGuestId shim — per-seat
   // assignment now lives in ticket.seatDelegations from the API.
@@ -3160,6 +3179,17 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
               setPostPick(null);
               setAssignThese(null);
               setDinnerOpen(false);
+            }}
+            canFinalize={canFinalize}
+            onFinalize={async () => {
+              try {
+                await finalize();
+                setPostPick(null);
+                setAssignThese(null);
+                setDinnerOpen(false);
+              } catch {
+                // useFinalize sets error state; sheet stays open
+              }
             }}
           />
         )}

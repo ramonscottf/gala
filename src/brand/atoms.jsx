@@ -73,6 +73,7 @@ export const Btn = ({
   full,
   disabled,
   style = {},
+  testId,
 }) => {
   const sizes = {
     sm: { h: 34, px: 14, fs: 13 },
@@ -102,6 +103,7 @@ export const Btn = ({
     <button
       onClick={onClick}
       disabled={disabled}
+      data-testid={testId}
       className={kind === 'primary' ? 'force-dark' : undefined}
       style={{
         height: s.h,
