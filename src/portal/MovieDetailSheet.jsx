@@ -1,5 +1,5 @@
 // MovieDetailSheet — full-height bottom sheet with backdrop hero + poster
-// inset + trailer embed (Cloudflare Stream first, YouTube fallback) +
+// inset + in-app trailer playback (Cloudflare Stream / R2 video) +
 // synopsis. Triggered by F3's "More about this movie →" link on the
 // selected movie card in MobileWizard step 2.
 //
@@ -7,33 +7,33 @@
 // movie_title / poster_url / backdrop_url / trailer_url / stream_uid /
 // synopsis / rating / year / runtime_minutes already.
 //
-// Trailer playback priority (per Phase 1.7 plan):
-//   1. Cloudflare Stream — if streamUid is set, embed customer
-//      `customer-iy642ze20tq7w2hz`'s player (premium quality, no
-//      YouTube branding).
-//   2. YouTube fallback — parse the YouTube ID from trailer_url and
-//      embed via youtube-nocookie. Logic ported from
-//      gala-seats-app.html buildTrailerEmbed (1835-1862).
-//
-// CSP — public/_headers allows frame-src for *.cloudflarestream.com
-// and youtube-nocookie.com so neither embed is blocked.
+// Sponsor-facing playback intentionally does not link out to YouTube.
+// The DB carries Stream UIDs for the active gala lineup; trailer_video_url
+// remains supported for direct R2-hosted MP4/WebM assets.
 
 import React from 'react';
 import { BRAND, FONT_DISPLAY, FONT_UI } from '../brand/tokens.js';
 import { Icon } from '../brand/atoms.jsx';
+import { enrichMovieScores, formatRottenBadge } from './movieScores.js';
 
 const STREAM_CUSTOMER = 'customer-iy642ze20tq7w2hz';
 
-// Returns an iframe src for the trailer or '' if neither source resolves.
-// Prefers Cloudflare Stream when available; falls back to YouTube via the
-// nocookie domain (CSP-friendly + no tracking pixels by default).
-export function buildTrailerSrc(movie) {
-  if (!movie) return '';
-  if (movie.streamUid) {
-    return `https://${STREAM_CUSTOMER}.cloudflarestream.com/${movie.streamUid}/iframe?autoplay=true&muted=true&loop=true&controls=true&preload=auto`;
+export function buildTrailerSource(movie, { allowYouTubeFallback = false } = {}) {
+  if (!movie) return null;
+  const streamUid = movie.streamUid || movie.stream_uid;
+  if (streamUid) {
+    return {
+      kind: 'iframe',
+      src: `https://${STREAM_CUSTOMER}.cloudflarestream.com/${streamUid}/iframe?autoplay=true&muted=true&loop=true&controls=true&preload=auto`,
+    };
   }
+  const directVideo = (movie.trailerVideoUrl || movie.trailer_video_url || '').trim();
+  if (directVideo) {
+    return { kind: 'video', src: directVideo };
+  }
+  if (!allowYouTubeFallback) return null;
   const url = (movie.trailerUrl || '').trim();
-  if (!url) return '';
+  if (!url) return null;
   let videoId = '';
   let match = url.match(/youtu\.be\/([\w-]{6,})/i);
   if (match) videoId = match[1];
@@ -46,9 +46,63 @@ export function buildTrailerSrc(movie) {
     if (match) videoId = match[1];
   }
   if (!videoId && /^[\w-]{11}$/.test(url)) videoId = url;
-  if (!videoId) return '';
-  return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+  if (!videoId) return null;
+  return {
+    kind: 'iframe',
+    src: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`,
+  };
 }
+
+// Kept as a small compatibility wrapper for older unit/preview callers.
+export function buildTrailerSrc(movie, opts) {
+  return buildTrailerSource(movie, opts)?.src || '';
+}
+
+const TrailerPlayer = ({ source, title, modal = false }) => {
+  if (!source?.src) return null;
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: modal ? 180 : undefined,
+        aspectRatio: modal ? undefined : '16 / 9',
+        borderRadius: 12,
+        overflow: 'hidden',
+        background: '#000',
+        marginBottom: 16,
+        boxShadow: modal ? '0 14px 36px rgba(0,0,0,0.32)' : 'none',
+      }}
+    >
+      {source.kind === 'video' ? (
+        <video
+          data-testid="movie-trailer-frame"
+          src={source.src}
+          title={`${title} trailer`}
+          width="100%"
+          height="100%"
+          controls
+          playsInline
+          preload="metadata"
+          style={{ display: 'block', border: 0, objectFit: 'cover' }}
+        />
+      ) : (
+        <iframe
+          data-testid="movie-trailer-frame"
+          src={source.src}
+          title={`${title} trailer`}
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          style={{ display: 'block', border: 0 }}
+        />
+      )}
+    </div>
+  );
+};
 
 export default function MovieDetailSheet({
   movie,
@@ -57,10 +111,13 @@ export default function MovieDetailSheet({
   onClose,
   variant = 'sheet',
 }) {
-  if (!movie) return null;
-  const backdrop = movie.backdropUrl || movie.posterUrl;
-  const trailerSrc = buildTrailerSrc(movie);
+  const displayMovie = enrichMovieScores(movie);
+  if (!displayMovie) return null;
+  const backdrop = displayMovie.backdropUrl || displayMovie.posterUrl;
+  const trailerSource = buildTrailerSource(displayMovie, { allowYouTubeFallback: false });
+  const trailerSrc = trailerSource?.src || '';
   const isModal = variant === 'modal';
+  const [trailerOpen, setTrailerOpen] = React.useState(false);
   // Reset the inner scroll container to top whenever the sheet opens
   // for a new movie. Without this, if the user previously opened a
   // sheet and scrolled, the next open could remember scrollTop and
@@ -69,16 +126,17 @@ export default function MovieDetailSheet({
   const innerRef = React.useRef(null);
   React.useEffect(() => {
     if (innerRef.current) innerRef.current.scrollTop = 0;
-  }, [movie?.id]);
+    setTrailerOpen(!isModal && !!trailerSrc);
+  }, [displayMovie?.id, isModal, trailerSrc]);
 
   return (
     <div
       onClick={onClose}
       style={{
-        position: 'absolute',
+        position: isModal ? 'fixed' : 'absolute',
         inset: 0,
         background: 'rgba(0,0,0,0.65)',
-        zIndex: 60,
+        zIndex: isModal ? 140 : 60,
         display: 'flex',
         // sheet: anchor to bottom of viewport (mobile bottom-sheet pattern).
         // modal: center vertically with horizontal padding (desktop modal).
@@ -162,21 +220,21 @@ export default function MovieDetailSheet({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: movie.posterUrl ? '92px minmax(0, 1fr)' : '1fr',
+              gridTemplateColumns: displayMovie.posterUrl ? '92px minmax(0, 1fr)' : '1fr',
               gap: 14,
               alignItems: 'start',
               marginTop: isModal ? -56 : -42,
               marginBottom: 14,
             }}
           >
-            {movie.posterUrl && (
+            {displayMovie.posterUrl && (
               <div
                 data-testid="movie-detail-poster"
                 style={{
                   width: 92,
                   aspectRatio: '2 / 3',
                   borderRadius: 8,
-                  background: `url(${movie.posterUrl}) center/cover no-repeat`,
+                  background: `url(${displayMovie.posterUrl}) center/cover no-repeat`,
                   boxShadow: '0 12px 28px rgba(0,0,0,0.55)',
                   border: `1px solid var(--rule)`,
                 }}
@@ -195,13 +253,13 @@ export default function MovieDetailSheet({
                   color: '#fff',
                 }}
               >
-                {movie.title}
-                {movie.year ? (
-                  <span style={{ color: 'var(--mute)', fontWeight: 500 }}> ({movie.year})</span>
+                {displayMovie.title}
+                {displayMovie.year ? (
+                  <span style={{ color: 'var(--mute)', fontWeight: 500 }}> ({displayMovie.year})</span>
                 ) : null}
               </h2>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {movie.rating && (
+                {displayMovie.rating && (
                   <span
                     style={{
                       padding: '3px 8px',
@@ -213,10 +271,10 @@ export default function MovieDetailSheet({
                       letterSpacing: 0.6,
                     }}
                   >
-                    {movie.rating}
+                    {displayMovie.rating}
                   </span>
                 )}
-                {movie.runtime && (
+                {displayMovie.runtime && (
                   <span
                     style={{
                       padding: '3px 8px',
@@ -228,10 +286,10 @@ export default function MovieDetailSheet({
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
-                    {movie.runtime} min
+                    {displayMovie.runtime} min
                   </span>
                 )}
-                {movie.tmdbScore != null && movie.tmdbScore >= 1 && (
+                {formatRottenBadge(displayMovie, { audience: true }) && (
                   <span
                     style={{
                       padding: '3px 8px',
@@ -245,9 +303,9 @@ export default function MovieDetailSheet({
                       gap: 3,
                       fontVariantNumeric: 'tabular-nums',
                     }}
-                    title={`${movie.tmdbVoteCount?.toLocaleString() || 0} votes on TMDB`}
+                    title={displayMovie.rtPending ? 'Rotten Tomatoes score pending' : 'Rotten Tomatoes critics and audience scores'}
                   >
-                    ★ {movie.tmdbScore.toFixed(1)}
+                    {formatRottenBadge(displayMovie, { audience: true })}
                   </span>
                 )}
                 {(showLabel || showTime) && (
@@ -268,10 +326,9 @@ export default function MovieDetailSheet({
                 )}
               </div>
               {isModal && trailerSrc && (
-                <a
-                  href={movie.trailerUrl || trailerSrc}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setTrailerOpen((open) => !open)}
                   style={{
                     marginTop: 10,
                     display: 'inline-flex',
@@ -280,42 +337,24 @@ export default function MovieDetailSheet({
                     color: 'var(--accent-italic)',
                     fontSize: 12,
                     fontWeight: 800,
-                    textDecoration: 'none',
+                    background: 'transparent',
+                    border: 0,
+                    padding: 0,
+                    fontFamily: FONT_UI,
+                    cursor: 'pointer',
                   }}
                 >
-                  <Icon name="play" size={12} stroke={2.4} /> Watch trailer
-                </a>
+                  <Icon name="play" size={12} stroke={2.4} /> {trailerOpen ? 'Hide trailer' : 'Watch trailer'}
+                </button>
               )}
             </div>
           </div>
 
-          {!isModal && trailerSrc && (
-            <div
-              style={{
-                aspectRatio: '16 / 9',
-                width: '100%',
-                borderRadius: 12,
-                overflow: 'hidden',
-                background: '#000',
-                marginBottom: 16,
-              }}
-            >
-              <iframe
-                src={trailerSrc}
-                title={`${movie.title} trailer`}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                style={{ display: 'block', border: 0 }}
-              />
-            </div>
+          {trailerOpen && trailerSource && (
+            <TrailerPlayer source={trailerSource} title={displayMovie.title} modal={isModal} />
           )}
 
-          {movie.synopsis && (
+          {displayMovie.synopsis && (
             <div>
               <div
                 style={{
@@ -337,7 +376,7 @@ export default function MovieDetailSheet({
                   margin: 0,
                 }}
               >
-                {movie.synopsis}
+                {displayMovie.synopsis}
               </p>
             </div>
           )}

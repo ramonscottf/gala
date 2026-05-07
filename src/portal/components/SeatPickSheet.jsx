@@ -28,10 +28,180 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
-import { SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock } from '../SeatEngine.jsx';
+import { SeatLegend, SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock, seatById } from '../SeatEngine.jsx';
 import { otherTakenForTheater, checkBatchOrphans } from '../../hooks/useSeats.js';
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../../hooks/usePortal.js';
 import { formatShowTime } from '../Mobile.jsx';
+import { enrichMovieScores, formatRottenBadge } from '../movieScores.js';
+
+const SEAT_TYPE_ORDER = ['luxury', 'standard', 'dbox', 'loveseat', 'wheelchair', 'companion'];
+
+const SEAT_TYPE_DETAILS = {
+  luxury: {
+    name: 'Luxury Recliner',
+    copy: 'Wide recliner seats with clear sightlines.',
+    note: 'Best everyday gala seats',
+  },
+  standard: {
+    name: 'Standard',
+    copy: 'Classic theater seats with the same seat numbers guests see at Megaplex.',
+    note: 'Simple, centered rows',
+  },
+  dbox: {
+    name: 'D-BOX',
+    copy: 'Premium motion seats shown in gold on the map.',
+    note: 'Motion enabled',
+  },
+  loveseat: {
+    name: 'Loveseat',
+    copy: 'Paired sofa-style seats for guests sitting together.',
+    note: 'Couple seating',
+  },
+  wheelchair: {
+    name: 'Accessible Space',
+    copy: 'Wheelchair spaces in the auditorium layout.',
+    note: 'Accessible',
+  },
+  companion: {
+    name: 'Companion',
+    copy: 'Companion seats adjacent to accessible spaces.',
+    note: 'Next to accessible',
+  },
+};
+
+const formatSeatLabel = (id = '') => id.replace('-', '');
+
+const SeatTypeVisual = ({ type, small = false }) => {
+  const color = SEAT_TYPES[type]?.color || '#6f75d8';
+  const isLoveseat = type === 'loveseat';
+  const isAccessible = type === 'wheelchair';
+  const isCompanion = type === 'companion';
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        width: small ? 48 : 64,
+        height: small ? 42 : 54,
+        borderRadius: 9,
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.18))',
+        border: `1px solid ${BRAND.rule}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      {isLoveseat ? (
+        <div
+          style={{
+            width: small ? 36 : 46,
+            height: small ? 24 : 31,
+            borderRadius: '12px 12px 7px 7px',
+            background: color,
+            boxShadow: `0 8px 0 ${color}55`,
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: small ? 26 : 34,
+            height: small ? 25 : 32,
+            borderRadius: isAccessible || isCompanion ? 99 : 8,
+            background: color,
+            boxShadow: `0 7px 0 ${color}55`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'rgba(13,18,36,0.85)',
+            fontSize: small ? 14 : 17,
+            fontWeight: 900,
+          }}
+        >
+          {isAccessible ? 'A' : isCompanion ? 'C' : ''}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SeatTypeGuide = ({ types }) => (
+  <div
+    data-testid="seat-type-guide"
+    className="no-scrollbar"
+    style={{
+      display: 'flex',
+      gap: 8,
+      overflowX: 'auto',
+      paddingBottom: 2,
+      scrollSnapType: 'x proximity',
+    }}
+  >
+    {types.map((type) => {
+      const detail = SEAT_TYPE_DETAILS[type] || { name: SEAT_TYPES[type]?.label || type, copy: '' };
+      return (
+        <div
+          key={type}
+          style={{
+            minWidth: 158,
+            flex: '1 0 158px',
+            scrollSnapAlign: 'start',
+            display: 'flex',
+            gap: 10,
+            alignItems: 'center',
+            padding: 9,
+            borderRadius: 10,
+            border: `1px solid ${BRAND.rule}`,
+            background: 'rgba(255,255,255,0.045)',
+          }}
+        >
+          <SeatTypeVisual type={type} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: '#fff', fontSize: 11, fontWeight: 800, lineHeight: 1.15 }}>
+              {detail.name}
+            </div>
+            <div style={{ marginTop: 3, color: BRAND.mute, fontSize: 10, lineHeight: 1.25 }}>
+              {detail.note}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+);
+
+const SelectedSeatPreview = ({ seats }) => {
+  if (!seats.length) return null;
+  const first = seats[0];
+  const detail = SEAT_TYPE_DETAILS[first.t] || {};
+  const typeName = detail.name || SEAT_TYPES[first.t]?.label || first.t;
+  return (
+    <div
+      data-testid="selected-seat-preview"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 12px',
+        borderRadius: 10,
+        border: `1px solid rgba(168,177,255,0.28)`,
+        background: 'rgba(168,177,255,0.10)',
+      }}
+    >
+      <SeatTypeVisual type={first.t} small />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ color: '#fff', fontSize: 13, fontWeight: 800 }}>
+          Seat {formatSeatLabel(first.id)} · {typeName}
+        </div>
+        <div style={{ marginTop: 2, color: BRAND.mute, fontSize: 11, lineHeight: 1.35 }}>
+          {detail.copy || 'Seat selected for this block.'}
+          {seats.length > 1 ? ` ${seats.length - 1} more selected.` : ''}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function SeatPickSheet({
   portal,
@@ -78,7 +248,7 @@ export default function SeatPickSheet({
     showtimes.forEach((s) => {
       if (!m[s.showing_number]) m[s.showing_number] = new Map();
       if (!m[s.showing_number].has(s.movie_id)) {
-        m[s.showing_number].set(s.movie_id, {
+        m[s.showing_number].set(s.movie_id, enrichMovieScores({
           id: s.movie_id,
           title: s.movie_title,
           short: s.movie_title?.split(' ')[0] || '',
@@ -86,6 +256,7 @@ export default function SeatPickSheet({
           thumbnailUrl: s.thumbnail_url,
           backdropUrl: s.backdrop_url,
           trailerUrl: s.trailer_url,
+          trailerVideoUrl: s.trailer_video_url,
           streamUid: s.stream_uid,
           synopsis: s.synopsis,
           year: s.year,
@@ -93,7 +264,10 @@ export default function SeatPickSheet({
           runtime: s.runtime_minutes,
           theaterIds: new Set([s.theater_id]),
           totalCapacity: s.capacity || 0,
-        });
+          rtCriticsScore: s.rt_critics_score,
+          rtAudienceScore: s.rt_audience_score,
+          rtUrl: s.rt_url,
+        }));
       } else {
         const entry = m[s.showing_number].get(s.movie_id);
         entry.theaterIds.add(s.theater_id);
@@ -172,6 +346,16 @@ export default function SeatPickSheet({
     () => (theaterId ? adaptTheater(theatersById[theaterId]) : null),
     [theaterId, theatersById]
   );
+  const seatTypesPresent = useMemo(() => {
+    if (!adaptedTheater) return [];
+    const found = new Set();
+    adaptedTheater.rows.forEach((row) => {
+      row.seats.forEach((seat) => {
+        if (seat?.t && SEAT_TYPE_ORDER.includes(seat.t)) found.add(seat.t);
+      });
+    });
+    return SEAT_TYPE_ORDER.filter((type) => found.has(type));
+  }, [adaptedTheater]);
   const otherTaken = useMemo(
     () => (theaterId ? otherTakenForTheater(portal, theaterId) : new Set()),
     [portal, theaterId]
@@ -186,6 +370,14 @@ export default function SeatPickSheet({
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState(null);
   const remaining = blockSize - seats.totalAssigned;
+  const selectedSeatDetails = useMemo(
+    () =>
+      [...sel]
+        .map((id) => seatById(adaptedTheater, id))
+        .filter(Boolean)
+        .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })),
+    [adaptedTheater, sel]
+  );
 
   const switchMode = (next) => {
     if (next === mode) return;
@@ -482,6 +674,22 @@ export default function SeatPickSheet({
                   {movie.rating}
                 </span>
               )}
+              {formatRottenBadge(movie) && (
+                <span
+                  style={{
+                    padding: '1px 6px',
+                    borderRadius: 3,
+                    background: 'rgba(244,185,66,0.16)',
+                    color: BRAND.gold,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    letterSpacing: 0.5,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {formatRottenBadge(movie)}
+                </span>
+              )}
               {movie.runtime && (
                 <span style={{ fontSize: 10, color: BRAND.mute, fontVariantNumeric: 'tabular-nums' }}>
                   {movie.runtime} min · {movie.audCount} aud
@@ -573,6 +781,8 @@ export default function SeatPickSheet({
         </select>
       </div>
 
+      {seatTypesPresent.length > 0 && <SeatTypeGuide types={seatTypesPresent} />}
+
       {/* Seat map — capped height so the whole sheet stays scrollable.
           Mobile sheet caps at 88vh; modal at 90vh. We give the map a
           comfortable 360px (compact) / 440px (modal) ceiling. */}
@@ -622,34 +832,11 @@ export default function SeatPickSheet({
       </div>
 
       {/* Legend */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 10,
-          fontSize: 10,
-          color: BRAND.mute,
-          justifyContent: 'center',
-        }}
-      >
-        {['luxury', 'loveseat', 'dbox', 'wheelchair'].map((t) => (
-          <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            <span
-              style={{
-                width: 9,
-                height: 9,
-                borderRadius: 2,
-                background: SEAT_TYPES[t].color,
-              }}
-            />
-            {SEAT_TYPES[t].short}
-          </span>
-        ))}
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 2, background: BRAND.indigoLight }} />
-          Yours
-        </span>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <SeatLegend dark={true} types={seatTypesPresent.length ? seatTypesPresent : undefined} />
       </div>
+
+      <SelectedSeatPreview seats={selectedSeatDetails} />
 
       {/* Auto-pick chip OR selected-seat chips */}
       {sel.size === 0 && remaining > 0 && mode === 'place' && (

@@ -18,6 +18,7 @@ test.describe('sponsor shell preview', () => {
 
     await expect(page.getByTestId('desktop-lineup-rail')).toBeVisible();
     await expect(page.getByTestId('desktop-lineup-card')).toHaveCount(4);
+    await expect(page.getByTestId('desktop-lineup-card').first()).toContainText(/RT 95%/i);
     await expect(page.getByTestId('desktop-placed-ticket-card')).toHaveCount(2);
     await expect(page.getByTestId('desktop-placed-seat-placeholder')).toHaveCount(0);
     await expect(page.getByTestId('desktop-guests-stat')).toContainText(/Guests invited/i);
@@ -27,6 +28,12 @@ test.describe('sponsor shell preview', () => {
     await expect(picker).toBeVisible();
     const box = await picker.boundingBox();
     expect(box?.width).toBeGreaterThan(680);
+    await expect(page.getByTestId('seat-type-guide')).toContainText(/Luxury Recliner/i);
+    await expect(page.getByTestId('seat-type-guide')).toContainText(/Standard/i);
+    await expect(page.getByTestId('seat-type-guide')).toContainText(/D-BOX/i);
+    await page.locator('[data-seat="E-1"]').click();
+    await expect(page.getByTestId('selected-seat-preview')).toContainText(/E1/i);
+    await expect(page.getByTestId('selected-seat-preview')).toContainText(/Standard/i);
   });
 
   test('desktop preview opens mobile tab information in desktop popups', async ({ page }) => {
@@ -74,6 +81,12 @@ test.describe('sponsor shell preview', () => {
 
     await page.getByTestId('desktop-lineup-card').first().click();
     await expect(page.getByTestId('movie-detail-sheet')).toBeVisible();
+    await expect(page.getByTestId('movie-detail-sheet')).toContainText(/RT 95%/i);
+    await expect(page.getByTestId('movie-detail-sheet').locator('a[href*="youtube"]')).toHaveCount(0);
+    await page.getByRole('button', { name: /watch trailer/i }).click();
+    const trailer = page.getByTestId('movie-trailer-frame');
+    await expect(trailer).toBeVisible();
+    await expect(trailer).toHaveAttribute('src', /cloudflarestream\.com\/preview-breadwinner-stream/);
     const sheetBox = await page.getByTestId('movie-detail-sheet').boundingBox();
     expect(sheetBox?.width).toBeLessThan(760);
     expect(sheetBox?.height).toBeLessThan(680);
@@ -81,6 +94,24 @@ test.describe('sponsor shell preview', () => {
     const posterBox = await page.getByTestId('movie-detail-poster').boundingBox();
     const titleBox = await page.getByTestId('movie-detail-title').boundingBox();
     expect(titleBox?.x).toBeGreaterThan((posterBox?.x || 0) + (posterBox?.width || 0));
+  });
+
+  test('seat picker movie info keeps the trailer in the in-app Stream player', async ({ page }) => {
+    await preparePage(page);
+    await page.setViewportSize({ width: 1365, height: 900 });
+    await page.goto(`${PREVIEW_URL}?surface=desktop`);
+
+    await page.getByTestId('cta-place-seats').first().click();
+    await expect(page.getByTestId('seat-pick-sheet')).toBeVisible();
+    await page.getByText(/More about this movie/i).click();
+
+    await expect(page.getByTestId('movie-detail-sheet')).toBeVisible();
+    await expect(page.getByTestId('movie-detail-sheet').locator('a[href*="youtube"]')).toHaveCount(0);
+    await page.getByRole('button', { name: /watch trailer/i }).click();
+    await expect(page.getByTestId('movie-trailer-frame')).toHaveAttribute(
+      'src',
+      /cloudflarestream\.com\//
+    );
   });
 
   test('mobile preview renders the mobile shell without desktop companion chrome', async ({ page }) => {

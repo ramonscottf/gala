@@ -37,6 +37,7 @@ import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
+import { enrichMovieScores, formatRottenBadge } from './movieScores.js';
 
 const SheetFrameContext = createContext(false);
 
@@ -1055,10 +1056,7 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                   {m.short || m.title}
                 </div>
               )}
-              {/* TMDB score badge — top-left corner of poster.
-                  Only shows if score >= 1 (filters out unreleased/zero-vote
-                  films like the 2026 releases that haven't been rated yet). */}
-              {m.tmdbScore != null && m.tmdbScore >= 1 && (
+              {formatRottenBadge(m) && (
                 <div
                   style={{
                     position: 'absolute',
@@ -1080,8 +1078,8 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
                     border: '1px solid rgba(255,255,255,0.14)',
                   }}
                 >
-                  <span style={{ color: '#f4b942' }}>★</span>
-                  {m.tmdbScore.toFixed(1)}
+                  <span style={{ color: '#f4b942' }}>RT</span>
+                  {formatRottenBadge(m).replace(/^RT\s*/, '')}
                 </div>
               )}
             </div>
@@ -2300,7 +2298,7 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
   const movieMap = new Map();
   showtimes.forEach((s) => {
     if (movieMap.has(s.movie_id)) return;
-    movieMap.set(s.movie_id, {
+    movieMap.set(s.movie_id, enrichMovieScores({
       id: s.movie_id,
       title: s.movie_title,
       short: s.movie_title?.split(' ')[0] || '',
@@ -2314,12 +2312,16 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       thumbnailUrl: s.thumbnail_url,
       backdropUrl: s.backdrop_url,
       trailerUrl: s.trailer_url,
+      trailerVideoUrl: s.trailer_video_url,
       streamUid: s.stream_uid,
       synopsis: s.synopsis,
       year: s.year,
       tmdbScore: s.tmdb_score,
       tmdbVoteCount: s.tmdb_vote_count,
-    });
+      rtCriticsScore: s.rt_critics_score,
+      rtAudienceScore: s.rt_audience_score,
+      rtUrl: s.rt_url,
+    }));
   });
   const lineup = [...movieMap.values()];
 
