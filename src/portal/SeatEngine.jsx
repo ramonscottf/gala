@@ -159,6 +159,7 @@ export const SeatMap = ({
   zoom: zoomProp,
   onZoomChange,
   highlightRows,
+  highlightSeatType,
 }) => {
   const rows = theater?.rows || [];
   const W = theater?.cols || 0;
@@ -234,6 +235,14 @@ export const SeatMap = ({
       return 'rgba(13,18,36,0.82)';
     }
     return 'rgba(255,255,255,0.78)';
+  };
+  const opacityFor = (seat) => {
+    if (!seat) return 1;
+    const st = status(seat.id);
+    if (st === 'other') return 0.4;
+    if (selected.has(seat.id)) return 1;
+    if (highlightSeatType && seat.t !== highlightSeatType) return 0.2;
+    return 1;
   };
   const seatNumberNode = (seat, x, y, w = cell, h = cell, key = 'num') => {
     if (!showSeatNumbers || !seat?.n) return null;
@@ -476,7 +485,7 @@ export const SeatMap = ({
                             transition: 'fill 0.12s',
                           }}
                           onClick={(e) => handleSeatClick(s.id, e)}
-                          opacity={st === 'other' ? 0.4 : 1}
+                          opacity={opacityFor(s)}
                         />
                         {seatNumberNode(s, x, y, w, lvHeight)}
                         {/* seam highlight — drawn on the left-half so it's
@@ -524,7 +533,7 @@ export const SeatMap = ({
                             transition: 'fill 0.12s',
                           }}
                           onClick={(e) => handleSeatClick(s.id, e)}
-                          opacity={st === 'other' ? 0.4 : 1}
+                          opacity={opacityFor(s)}
                         />
                         {seatNumberNode(s, xR, y, w, lvHeight)}
                       </g>
@@ -552,7 +561,7 @@ export const SeatMap = ({
                           transition: 'fill 0.12s',
                         }}
                         onClick={(e) => handleSeatClick(s.id, e)}
-                        opacity={st === 'other' ? 0.4 : 1}
+                        opacity={opacityFor(s)}
                       />
                       {seatNumberNode(s, x, y)}
                     </g>
@@ -577,7 +586,7 @@ export const SeatMap = ({
                         transition: 'fill 0.12s',
                       }}
                       onClick={(e) => handleSeatClick(s.id, e)}
-                      opacity={st === 'other' ? 0.4 : 1}
+                      opacity={opacityFor(s)}
                     />
                     {seatNumberNode(s, x, y)}
                   </g>

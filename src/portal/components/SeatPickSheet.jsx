@@ -28,7 +28,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
-import { SeatLegend, SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock, seatById } from '../SeatEngine.jsx';
+import { SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock, seatById } from '../SeatEngine.jsx';
 import { otherTakenForTheater, checkBatchOrphans } from '../../hooks/useSeats.js';
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../../hooks/usePortal.js';
 import { formatShowTime } from '../Mobile.jsx';
@@ -39,33 +39,33 @@ const SEAT_TYPE_ORDER = ['luxury', 'standard', 'dbox', 'loveseat', 'wheelchair',
 const SEAT_TYPE_DETAILS = {
   luxury: {
     name: 'Luxury Recliner',
-    copy: 'Wide recliner seats with clear sightlines.',
-    note: 'Best everyday gala seats',
+    copy: 'Recliner seat.',
+    note: 'Recliner',
   },
   standard: {
     name: 'Standard',
-    copy: 'Classic theater seats with the same seat numbers guests see at Megaplex.',
-    note: 'Simple, centered rows',
+    copy: 'Classic theater seat.',
+    note: 'Classic',
   },
   dbox: {
     name: 'D-BOX',
-    copy: 'Premium motion seats shown in gold on the map.',
-    note: 'Motion enabled',
+    copy: 'Motion-enabled seat.',
+    note: 'Motion',
   },
   loveseat: {
     name: 'Loveseat',
-    copy: 'Paired sofa-style seats for guests sitting together.',
-    note: 'Couple seating',
+    copy: 'Paired sofa-style seat.',
+    note: 'Pair',
   },
   wheelchair: {
-    name: 'Accessible Space',
-    copy: 'Wheelchair spaces in the auditorium layout.',
-    note: 'Accessible',
+    name: 'Wheelchair',
+    copy: 'Wheelchair space.',
+    note: 'Space',
   },
   companion: {
     name: 'Companion',
-    copy: 'Companion seats adjacent to accessible spaces.',
-    note: 'Next to accessible',
+    copy: 'Seat next to a wheelchair space.',
+    note: 'Adjacent',
   },
 };
 
@@ -126,7 +126,7 @@ const SeatTypeVisual = ({ type, small = false }) => {
   );
 };
 
-const SeatTypeGuide = ({ types }) => (
+const SeatTypeGuide = ({ types, activeType, onSelectType }) => (
   <div
     data-testid="seat-type-guide"
     className="no-scrollbar"
@@ -140,10 +140,17 @@ const SeatTypeGuide = ({ types }) => (
   >
     {types.map((type) => {
       const detail = SEAT_TYPE_DETAILS[type] || { name: SEAT_TYPES[type]?.label || type, copy: '' };
+      const active = activeType === type;
       return (
-        <div
+        <button
+          type="button"
           key={type}
+          data-testid="seat-type-button"
+          aria-pressed={active}
+          onClick={() => onSelectType?.(active ? null : type)}
           style={{
+            all: 'unset',
+            boxSizing: 'border-box',
             minWidth: 158,
             flex: '1 0 158px',
             scrollSnapAlign: 'start',
@@ -152,8 +159,10 @@ const SeatTypeGuide = ({ types }) => (
             alignItems: 'center',
             padding: 9,
             borderRadius: 10,
-            border: `1px solid ${BRAND.rule}`,
-            background: 'rgba(255,255,255,0.045)',
+            border: active ? `1.5px solid ${BRAND.gold}` : `1px solid ${BRAND.rule}`,
+            background: active ? 'rgba(244,185,66,0.12)' : 'rgba(255,255,255,0.045)',
+            cursor: 'pointer',
+            boxShadow: active ? '0 0 0 2px rgba(244,185,66,0.08)' : 'none',
           }}
         >
           <SeatTypeVisual type={type} />
@@ -162,10 +171,10 @@ const SeatTypeGuide = ({ types }) => (
               {detail.name}
             </div>
             <div style={{ marginTop: 3, color: BRAND.mute, fontSize: 10, lineHeight: 1.25 }}>
-              {detail.note}
+              {active ? 'Highlighted' : detail.note}
             </div>
           </div>
-        </div>
+        </button>
       );
     })}
   </div>
@@ -356,6 +365,12 @@ export default function SeatPickSheet({
     });
     return SEAT_TYPE_ORDER.filter((type) => found.has(type));
   }, [adaptedTheater]);
+  const [highlightedSeatType, setHighlightedSeatType] = useState(null);
+  useEffect(() => {
+    if (highlightedSeatType && !seatTypesPresent.includes(highlightedSeatType)) {
+      setHighlightedSeatType(null);
+    }
+  }, [highlightedSeatType, seatTypesPresent]);
   const otherTaken = useMemo(
     () => (theaterId ? otherTakenForTheater(portal, theaterId) : new Set()),
     [portal, theaterId]
@@ -509,6 +524,7 @@ export default function SeatPickSheet({
   return (
     <div
       data-testid="seat-pick-sheet"
+      data-highlighted-seat-type={highlightedSeatType || undefined}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -781,7 +797,13 @@ export default function SeatPickSheet({
         </select>
       </div>
 
-      {seatTypesPresent.length > 0 && <SeatTypeGuide types={seatTypesPresent} />}
+      {seatTypesPresent.length > 0 && (
+        <SeatTypeGuide
+          types={seatTypesPresent}
+          activeType={highlightedSeatType}
+          onSelectType={setHighlightedSeatType}
+        />
+      )}
 
       {/* Seat map — capped height so the whole sheet stays scrollable.
           Mobile sheet caps at 88vh; modal at 90vh. We give the map a
@@ -822,6 +844,7 @@ export default function SeatPickSheet({
               assignedOther={otherTaken}
               selected={sel}
               onSelect={onSelect}
+              highlightSeatType={highlightedSeatType}
             />
           ) : (
             <div style={{ padding: 24, color: BRAND.mute, textAlign: 'center' }}>
@@ -829,11 +852,6 @@ export default function SeatPickSheet({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Legend */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <SeatLegend dark={true} types={seatTypesPresent.length ? seatTypesPresent : undefined} />
       </div>
 
       <SelectedSeatPreview seats={selectedSeatDetails} />

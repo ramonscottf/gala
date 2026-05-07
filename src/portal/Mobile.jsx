@@ -1001,111 +1001,111 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
         </div>
       </div>
       <div
-        className="no-scrollbar"
+        data-testid="mobile-lineup-grid"
         style={{
-          marginTop: 14,
-          paddingLeft: 18,
-          display: 'flex',
-          gap: 10,
-          overflowX: 'auto',
-          paddingBottom: 6,
-          paddingRight: 18,
-          scrollSnapType: 'x mandatory',
+          marginTop: 16,
+          padding: '0 22px 8px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: '18px 14px',
         }}
       >
-        {lineup.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => onMovieDetail && onMovieDetail(m)}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              flexShrink: 0,
-              width: 160,
-              scrollSnapAlign: 'start',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <div
+        {lineup.map((m) => {
+          const rtBadge = formatRottenBadge(m);
+          return (
+            <button
+              key={m.id}
+              data-testid="mobile-lineup-card"
+              onClick={() => onMovieDetail && onMovieDetail(m)}
               style={{
-                width: '100%',
-                aspectRatio: '2/3',
-                borderRadius: 10,
-                background: m.posterUrl
-                  ? `url(${m.posterUrl}) center/cover`
-                  : `linear-gradient(160deg, ${m.color || BRAND.navyMid}, ${BRAND.navyDeep})`,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                padding: 10,
-                position: 'relative',
-                overflow: 'hidden',
+                all: 'unset',
+                boxSizing: 'border-box',
+                cursor: 'pointer',
+                minWidth: 0,
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {!m.posterUrl && (
-                <div
-                  style={{
-                    fontFamily: FONT_DISPLAY,
-                    fontStyle: 'italic',
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: '#fff',
-                    lineHeight: 1.05,
-                  }}
-                >
-                  {m.short || m.title}
-                </div>
-              )}
-              {formatRottenBadge(m) && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    left: 8,
-                    background: 'rgba(13,15,36,0.85)',
-                    backdropFilter: 'blur(6px)',
-                    WebkitBackdropFilter: 'blur(6px)',
-                    color: '#fff',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                    borderRadius: 99,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    fontVariantNumeric: 'tabular-nums',
-                    letterSpacing: 0.2,
-                    border: '1px solid rgba(255,255,255,0.14)',
-                  }}
-                >
-                  <span style={{ color: '#f4b942' }}>RT</span>
-                  {formatRottenBadge(m).replace(/^RT\s*/, '')}
-                </div>
-              )}
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--ink-on-ground)',
-                marginTop: 8,
-                lineHeight: 1.25,
-              }}
-            >
-              {m.title}
-            </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: 'var(--mute)',
-                marginTop: 2,
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {m.rating} · {m.runtime}m
-            </div>
-          </button>
-        ))}
+              <div
+                data-testid="mobile-lineup-poster"
+                style={{
+                  width: '100%',
+                  aspectRatio: '2 / 3',
+                  borderRadius: 10,
+                  background: m.posterUrl
+                    ? `url(${m.posterUrl}) center/cover`
+                    : `linear-gradient(160deg, ${m.color || BRAND.navyMid}, ${BRAND.navyDeep})`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  padding: 10,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: '0 12px 28px rgba(0,0,0,0.24)',
+                }}
+              >
+                {!m.posterUrl && (
+                  <div
+                    style={{
+                      fontFamily: FONT_DISPLAY,
+                      fontStyle: 'italic',
+                      fontSize: 18,
+                      fontWeight: 600,
+                      color: '#fff',
+                      lineHeight: 1.05,
+                    }}
+                  >
+                    {m.short || m.title}
+                  </div>
+                )}
+                {rtBadge && (
+                  <div
+                    data-testid="mobile-lineup-score"
+                    style={{
+                      position: 'absolute',
+                      top: 8,
+                      left: 8,
+                      background: 'rgba(13,15,36,0.85)',
+                      backdropFilter: 'blur(6px)',
+                      WebkitBackdropFilter: 'blur(6px)',
+                      color: '#f4b942',
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: '3px 8px',
+                      borderRadius: 99,
+                      fontVariantNumeric: 'tabular-nums',
+                      letterSpacing: 0.2,
+                      border: '1px solid rgba(255,255,255,0.14)',
+                    }}
+                  >
+                    {rtBadge}
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'var(--ink-on-ground)',
+                  marginTop: 8,
+                  lineHeight: 1.2,
+                  minHeight: '2.4em',
+                }}
+              >
+                {m.title}
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'var(--mute)',
+                  marginTop: 2,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {m.rating} · {m.runtime}m
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

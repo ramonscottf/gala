@@ -522,6 +522,15 @@ button.desktop-parity-stat:focus-visible {
   gap: 10px;
 }
 
+.desktop-ticket-picker-modal {
+  display: grid;
+  gap: 14px;
+}
+
+.desktop-ticket-picker-modal .desktop-center-heading {
+  margin-bottom: 0;
+}
+
 .desktop-center-ticket,
 .desktop-center-empty {
   all: unset;
@@ -716,7 +725,7 @@ button.desktop-parity-stat:focus-visible {
   margin-top: 12px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
+  gap: 14px 12px;
 }
 
 .desktop-lineup-card {
@@ -728,7 +737,7 @@ button.desktop-parity-stat:focus-visible {
 
 .desktop-lineup-poster {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 2 / 3;
   border-radius: 7px;
   overflow: hidden;
   position: relative;
@@ -781,6 +790,11 @@ button.desktop-parity-stat:focus-visible {
   color: #fff;
   font-size: 12px;
   line-height: 1.18;
+  min-height: 2.36em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
 }
 
 .desktop-lineup-copy span {

@@ -62,10 +62,10 @@ const TrailerPlayer = ({ source, title, modal = false }) => {
   if (!source?.src) return null;
   return (
     <div
+      data-testid="movie-trailer-player"
       style={{
         width: '100%',
-        height: modal ? 180 : undefined,
-        aspectRatio: modal ? undefined : '16 / 9',
+        aspectRatio: '16 / 9',
         borderRadius: 12,
         overflow: 'hidden',
         background: '#000',
