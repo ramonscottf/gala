@@ -69,9 +69,17 @@ export async function sendEmail(env, { to, subject, html, replyTo }) {
 
   const fromAddr = env.GALA_FROM_EMAIL || 'gala@daviskids.org';
   const fromDisplay = `Davis Education Foundation Gala <${fromAddr}>`;
-  // All gala emails reply to Sherry by default. Per Apr 28 2026 personnel update:
-  // Val is no longer with DEF; Sherry Miggin (Executive Director) owns gala correspondence.
-  const defaultReplyTo = replyTo || env.GALA_ADMIN_EMAIL || 'smiggin@dsdmail.net';
+  // Default reply routing: Sherry Miggin primary, Scott Foster secondary.
+  // SkippyMail/Resend both honor a comma-separated Reply-To header — when
+  // the sponsor clicks Reply, both addresses populate. Scott is NOT on Cc
+  // (would expose his address to sponsors and pull him into reply-all
+  // chains visibly) — Reply-To keeps his inbox in the loop without
+  // revealing him on outbound mail.
+  // Per Apr 28 2026 personnel update: Val is no longer with DEF; Sherry
+  // owns gala correspondence with Scott looped in for ops support.
+  const defaultReplyTo = replyTo
+    || env.GALA_ADMIN_EMAIL
+    || 'smiggin@dsdmail.net, sfoster@dsdmail.net';
 
   // ── Path 1: SkippyMail at mail.fosterlabs.org/send (primary) ────────────
   // Uses the GALA_MAIL_TOKEN bearer; this is the same backend that the
