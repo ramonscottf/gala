@@ -67,7 +67,8 @@ export async function sendSMS(env, to, body, options = {}) {
 export async function sendEmail(env, { to, subject, html, replyTo }) {
   if (!to) return { ok: false, error: 'No email address' };
 
-  const from = env.GALA_FROM_EMAIL || 'gala@daviskids.org';
+  const fromAddr = env.GALA_FROM_EMAIL || 'gala@daviskids.org';
+  const fromDisplay = `Davis Education Foundation Gala <${fromAddr}>`;
   // All gala emails reply to Sherry by default. Per Apr 28 2026 personnel update:
   // Val is no longer with DEF; Sherry Miggin (Executive Director) owns gala correspondence.
   const defaultReplyTo = replyTo || env.GALA_ADMIN_EMAIL || 'smiggin@dsdmail.net';
@@ -84,7 +85,7 @@ export async function sendEmail(env, { to, subject, html, replyTo }) {
           Authorization: `Bearer ${env.GALA_MAIL_TOKEN}`,
         },
         body: JSON.stringify({
-          from,
+          from: fromDisplay,
           replyTo: defaultReplyTo,
           to,
           subject,
@@ -93,7 +94,7 @@ export async function sendEmail(env, { to, subject, html, replyTo }) {
       });
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
-        return { ok: true, id: data.id || null, via: 'skippymail' };
+        return { ok: true, id: data.id || data.resend_id || null, via: 'skippymail' };
       }
       const errText = await res.text().catch(() => '');
       return { ok: false, error: `SkippyMail ${res.status}: ${errText.slice(0, 200)}` };
@@ -107,7 +108,7 @@ export async function sendEmail(env, { to, subject, html, replyTo }) {
     return { ok: false, error: 'No mail backend configured (need GALA_MAIL_TOKEN or RESEND_API_KEY)' };
   }
   const payload = {
-    from: `Davis Education Foundation Gala <${from}>`,
+    from: fromDisplay,
     to: [to],
     subject,
     html,
