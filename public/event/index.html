@@ -580,21 +580,13 @@ h1 {
   overflow: hidden;
   background: #000;
   border: 1px solid rgba(255,255,255,0.14);
-  aspect-ratio: 2.40 / 1;
-  position: relative;
+  aspect-ratio: 16 / 9;
 }
 
 .trailer-shell iframe {
   display: block;
-  position: absolute;
-  bottom: 0;
-  left: 0;
   width: 100%;
-  /* iframe stays 16:9 internally; we scale its height so its rendered height
-     equals container_width / 1.778. Anchoring to bottom keeps the Stream
-     player controls flush with the visible frame; the upper letterbox bar
-     overflows above (no UI lives there). */
-  height: calc(100% * (2.40 / (16 / 9)));
+  height: 100%;
   border: 0;
 }
 
