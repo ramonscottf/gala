@@ -773,6 +773,16 @@ Summary: targeted read of MobileWizard.jsx (imports + signature + finalize ±50 
 
 Summary: mini boarding-pass card. Match existing `showLabel`+`showTime` format from `Mobile.jsx`. Static preview harness at `qa/preview/placed-tickets.html`. Component snapshot test (local-only). File CI-runnable follow-up issue.
 
+- [x] **Step 1: Component contract.** Created `src/portal/components/PlacedTicketsPreview.jsx` (~125 lines) per v1 Task 7 Step 1 JSX.
+- [x] **Step 2: Verify `BRAND.gold` + match boarding-pass format.** `BRAND.gold = '#f4b942'` exists. `Mobile.jsx:1164,2570` renders `(showLabel || '').toUpperCase() · {showTime}` (uppercase + middle-dot). Component now uppercases `showLabel` to match family.
+- [x] **Step 3: Component file written.**
+- [x] **Step 4: `npm run build`** succeeds cleanly. Bundle unchanged (component tree-shaken; unused until Task 10).
+- [x] **Step 5: Static preview harness** at `qa/preview/placed-tickets.html` + `qa/preview/placed-tickets.jsx`. Reachable via vite dev at `http://localhost:5173/sponsor/qa/preview/placed-tickets.html` (vite `base: '/sponsor/'` prefix required).
+- [x] **Step 6: Visual smoke** — verified via Playwright snapshot test in Step 7.
+- [x] **Step 7: Playwright snapshot baseline** generated at `qa/__screenshots__/{project}/component-preview.spec.js/placed-tickets.png` for all 4 projects (desktop-light/dark, mobile-light/dark). All 4 pass on second run with `maxDiffPixelRatio: 0.04`.
+- [x] **Step 8: CI-runnable harness follow-up filed** as #2.
+- [x] **Step 9: Commit** — see Task 9 commit on `feat/flow-unification`.
+
 ---
 
 ## Task 10 (was Task 8 v1): Wire `PlacedTicketsPreview` into `PostPickSheet`
