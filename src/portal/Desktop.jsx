@@ -21,6 +21,7 @@ import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
+import { formatRottenBadge } from './movieScores.js';
 
 const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
@@ -68,30 +69,32 @@ const DesktopModal = ({ open, onClose, title, children, wide = false, forceDark 
   );
 };
 
-const LineupCard = ({ movie, onOpen }) => (
-  <button
-    className="desktop-lineup-card"
-    data-testid="desktop-lineup-card"
-    onClick={() => onOpen?.(movie)}
-  >
-    <div
-      className="desktop-lineup-poster force-dark"
-      style={{
-        background: movie.posterUrl
-          ? `url(${movie.posterUrl}) center/cover`
-          : `linear-gradient(160deg, ${BRAND.indigo}, ${BRAND.navyDeep})`,
-      }}
+const LineupCard = ({ movie, onOpen }) => {
+  const rtBadge = formatRottenBadge(movie);
+  return (
+    <button
+      className="desktop-lineup-card"
+      data-testid="desktop-lineup-card"
+      onClick={() => onOpen?.(movie)}
     >
-      {!movie.posterUrl && <span>{movie.short || movie.title}</span>}
-    </div>
-    <div className="desktop-lineup-copy">
-      <strong>{movie.title}</strong>
-      <span>
-        {[movie.rating, movie.runtime ? `${movie.runtime} min` : null].filter(Boolean).join(' · ')}
-      </span>
-    </div>
-  </button>
-);
+      <div
+        className="desktop-lineup-poster force-dark"
+        style={{
+          background: movie.posterUrl
+            ? `url(${movie.posterUrl}) center/cover`
+            : `linear-gradient(160deg, ${BRAND.indigo}, ${BRAND.navyDeep})`,
+        }}
+      >
+        {rtBadge && <span className="desktop-lineup-score">{rtBadge}</span>}
+        {!movie.posterUrl && <span>{movie.short || movie.title}</span>}
+      </div>
+      <div className="desktop-lineup-copy">
+        <strong>{movie.title}</strong>
+        <span>{[movie.rating, movie.runtime ? `${movie.runtime} min` : null].filter(Boolean).join(' · ')}</span>
+      </div>
+    </button>
+  );
+};
 
 const TicketLine = ({ ticket, onOpen }) => {
   const seats = ticket.seats.map((seat) => seat.replace('-', '')).join(', ');

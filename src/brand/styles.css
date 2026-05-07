@@ -731,6 +731,7 @@ button.desktop-parity-stat:focus-visible {
   aspect-ratio: 4 / 5;
   border-radius: 7px;
   overflow: hidden;
+  position: relative;
   display: flex;
   align-items: flex-end;
   padding: 7px;
@@ -743,6 +744,25 @@ button.desktop-parity-stat:focus-visible {
   font-size: 12px;
   font-weight: 800;
   line-height: 1;
+}
+
+.desktop-lineup-poster .desktop-lineup-score {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  max-width: calc(100% - 14px);
+  padding: 3px 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  color: #f4b942;
+  background: rgba(13, 15, 36, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .desktop-lineup-copy {
