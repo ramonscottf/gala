@@ -164,7 +164,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
         <a
-          href="tel:8015129370"
+          href="tel:8014024483"
           style={{
             padding: '14px',
             borderRadius: 12,
@@ -190,7 +190,7 @@ export default function SettingsSheet({ identity, isDelegation, token, apiBase, 
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
-              (801) 512-9370 · DEF Foundation
+              (801) 402-4483 · DEF Foundation
             </div>
           </div>
           <Icon name="chev" size={14} />

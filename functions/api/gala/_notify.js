@@ -192,7 +192,7 @@ export function galaEmailHtml({ firstName, body, footerLine }) {
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
               <tr><td style="padding:6px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#666;text-align:center;">
                 <span style="color:#0d1b3d;font-weight:600;">Sponsorship &amp; gala questions</span><br/>
-                Sherry Miggin &nbsp;·&nbsp; <a href="tel:+18015129370" style="color:#666;text-decoration:none;">801-512-9370</a> &nbsp;·&nbsp; <a href="mailto:smiggin@dsdmail.net" style="color:#666;text-decoration:underline;">smiggin@dsdmail.net</a>
+                Sherry Miggin &nbsp;·&nbsp; <a href="tel:+18014024483" style="color:#666;text-decoration:none;">801-402-4483</a> &nbsp;·&nbsp; <a href="mailto:smiggin@dsdmail.net" style="color:#666;text-decoration:underline;">smiggin@dsdmail.net</a>
               </td></tr>
               <tr><td style="padding:6px 0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#666;text-align:center;">
                 <span style="color:#0d1b3d;font-weight:600;">Technical help</span><br/>
