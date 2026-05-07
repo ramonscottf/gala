@@ -24,7 +24,7 @@ export const AUDIENCE_PRESETS = [
   'Individual Seats',
   'All Sponsors (paid)',
   'All Sponsors + Friends & Family',
-  'Confirmed Buyers',          // legacy — same as 'All Sponsors (paid)' for now
+  'Confirmed Buyers',          // Everyone who has bought a tier and is attending — all paid + F&F + Individual Seats
 ];
 
 // Lowercase substring match against sponsorship_tier. Returns an array
@@ -68,10 +68,20 @@ export async function resolveAudience(audience, db) {
   else if (lc.includes('friends')) tiers = tierMatches('friends');
   else if (lc.includes('individual')) tiers = tierMatches('individual');
   // Aggregate presets
-  else if (lc.includes('all sponsors + friends') || lc.includes('all sponsors + ff')) {
-    tiers = ['Platinum', 'Gold', 'Silver', 'Bronze', 'Friends and Family', 'Split Friends & Family', 'Individual Seats', 'IndividualSeats'];
+  // 'Confirmed Buyers' = anyone who's bought a tier and is attending the gala.
+  // Reads as 'everyone confirmed coming' to a human; that's how it should resolve.
+  // Donations / Silent Auction live in the donors table and are excluded by definition.
+  else if (lc.includes('confirmed buyers') ||
+           lc.includes('all sponsors + friends') ||
+           lc.includes('all sponsors + ff')) {
+    tiers = ['Platinum', 'Gold', 'Silver', 'Bronze',
+             'Friends and Family', 'Split Friends & Family',
+             'Individual Seats', 'IndividualSeats'];
   }
-  else if (lc.includes('all sponsors') || lc.includes('confirmed buyers') || lc.includes('paid sponsors')) {
+  // 'All Sponsors' / 'Paid Sponsors' = the top four corporate tiers only.
+  // Use this when you specifically want Platinum/Gold/Silver/Bronze (e.g.
+  // logo-on-screen, tier-only thank-yous, sponsor-recognition messaging).
+  else if (lc.includes('all sponsors') || lc.includes('paid sponsors')) {
     tiers = ['Platinum', 'Gold', 'Silver', 'Bronze'];
   }
   // Add more presets here as the pipeline grows.
