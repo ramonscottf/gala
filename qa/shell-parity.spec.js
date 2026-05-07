@@ -197,7 +197,20 @@ async function prePlaceSeats(token, target) {
 async function pickAndFinalizeViaSheet(page, token, block) {
   // eslint-disable-next-line no-console
   console.log(`[shell-parity] driving with block: theater=${block.theaterId} seats=${block.seatIds.join(',')}`);
-  await page.getByTestId('cta-place-seats').first().click();
+  // Task 6: on the /seats deep-link path, SeatPickStepWrapper (Desktop.jsx)
+  // mounts at step===3 and immediately opens SeatPickSheet via useEffect.
+  // The Welcome-step `cta-place-seats` button is hidden behind the modal,
+  // so clicking it would target an off-screen element and either fail or
+  // toggle state we don't want. Skip the click when the sheet is already
+  // visible. Canonical mobile/desktop runs land on Welcome with no sheet
+  // open, so the click still fires there.
+  const sheetAlreadyOpen = await page
+    .getByTestId('seat-pick-sheet')
+    .isVisible()
+    .catch(() => false);
+  if (!sheetAlreadyOpen) {
+    await page.getByTestId('cta-place-seats').first().click();
+  }
   await page.getByTestId('seat-pick-sheet').waitFor({ timeout: 15_000 });
   // SeatPickSheet auto-navigates to the theater of myAssignments[0] on
   // mount. Wait a beat for that effect to settle so [data-seat] targets
@@ -234,16 +247,14 @@ test.describe('shell parity', () => {
   test.afterEach(async () => { await cleanupToken(QA_TOKEN); });
 
   test('canonical completion fires /finalize exactly once on both shells', async ({ browser }) => {
-    // INTENTIONAL SEQUENCING: desktop-legacy is skipped here in Task 4.
-    // The legacy /seats deep link currently routes through StepSeats →
-    // StepConfirm (a separate code path). Driving it would require a
-    // programmatic step-control hack to bypass onPlaced's bounce-to-
-    // step-2 (Desktop.jsx onPlaced). Task 5 wires the canonical
-    // SeatPickSheet into desktop's case-2/3 — at that point /seats
-    // becomes desktop-canonical-via-SeatPickSheet, no separate testid
-    // needed. Task 6 re-enables this leg by uncommenting below after
-    // Task 5 lands. setDinnersForPlacedSeats() is preserved above for
-    // that future run.
+    // Task 5 wired canonical SeatPickSheet into desktop's case-2/3 via
+    // SeatPickStepWrapper, which mounts at step===3 (App.jsx hands
+    // initialStep={3} for the /seats deep link) and immediately opens
+    // SeatPickSheet on mount. The legacy /seats deep link is now
+    // functionally identical to the canonical path — same sheet, same
+    // PostPickSheet → /finalize wiring. So pickAndFinalizeViaSheet drives
+    // all three legs; the only delta is the sheet is already open on
+    // mount for desktop-legacy (handled inside the helper).
     const runs = [
       {
         label: 'mobile',
@@ -257,10 +268,12 @@ test.describe('shell parity', () => {
         path: '',
         drive: pickAndFinalizeViaSheet,
       },
-      // { label: 'desktop-legacy',
-      //   context: { viewport: { width: 1365, height: 900 } },
-      //   path: '/seats',
-      //   drive: pickAndFinalizeViaLegacy }, // re-enable in Task 6
+      {
+        label: 'desktop-legacy',
+        context: { viewport: { width: 1365, height: 900 } },
+        path: '/seats',
+        drive: pickAndFinalizeViaSheet,
+      },
     ];
 
     // Determine the test sponsor's blockSize so we can pre-place enough
@@ -385,7 +398,7 @@ test.describe('shell parity', () => {
     // Leg (a): /finalize POSTs exactly once per shell.
     expect(captures['mobile'].count, 'mobile fired /finalize exactly once').toBe(1);
     expect(captures['desktop-canonical'].count, 'desktop-canonical fired /finalize exactly once').toBe(1);
-    // Task 6 re-enables: expect(captures['desktop-legacy'].count, 'desktop-legacy fired /finalize once').toBe(1);
+    expect(captures['desktop-legacy'].count, 'desktop-legacy fired /finalize exactly once').toBe(1);
 
     // Leg (b): ConfirmationScreen rendered. Already asserted above via
     // `await page.locator('img[alt*="QR" i]').waitFor(...)` per shell —
@@ -399,6 +412,9 @@ test.describe('shell parity', () => {
       captures['desktop-canonical'].body,
       'desktop-canonical body equals mobile body after normalization'
     ).toBe(captures['mobile'].body);
-    // Task 6 re-enables: expect(captures['desktop-legacy'].body, 'legacy body matches mobile').toBe(captures['mobile'].body);
+    expect(
+      captures['desktop-legacy'].body,
+      'desktop-legacy body equals mobile body after normalization'
+    ).toBe(captures['mobile'].body);
   });
 });

@@ -693,6 +693,8 @@ Summary: replace `<StepShowing>` (case 2) and `<StepSeats>` (case 3) renders wit
 
 Summary: run `qa:parity`. Mobile + desktop-canonical should pass (already passing post-Task 4 v2). Desktop-legacy should also pass — Task 5 just re-routes the legacy step renders through `SeatPickSheet`, finalize CTA remains the legacy `cta-finalize` button on Welcome (now wired by Task 3). No commit.
 
+- [x] Task 6 complete — `qa:parity` 3-of-3 green against `localhost:5173` (1.7m). Re-enabled the desktop-legacy leg in `qa/shell-parity.spec.js` and adapted `pickAndFinalizeViaSheet` to skip the `cta-place-seats` click when the sheet is already visible (deep-link path mounts with the sheet open). Receipt: `qa/output/parity-result-task6.txt`.
+
 ---
 
 ## Task 7 (was Task 5 v1, expanded): Delete legacy `StepShowing` + `StepSeats` + `StepConfirm` + dead code
