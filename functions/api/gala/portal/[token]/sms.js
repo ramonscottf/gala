@@ -16,6 +16,7 @@
 // Twilio: uses Account SID + Auth Token + From Number from Pages env.
 
 import { resolveToken, jsonError, jsonOk } from '../../_sponsor_portal.js';
+import { buildConfirmationSms } from '../../_confirmation_sms.js';
 
 function toE164(raw) {
   if (!raw) return null;
@@ -70,44 +71,12 @@ async function checkRateLimit(env, token) {
 }
 
 async function buildSponsorMessage(env, sponsorId, sponsorCompany, token) {
-  const q = await env.GALA_DB.prepare(
-    `SELECT sa.theater_id, sa.row_label, sa.seat_num,
-            s.showing_number, s.show_start, s.dinner_time,
-            m.title AS movie_title
-       FROM seat_assignments sa
-       JOIN showtimes s ON s.theater_id = sa.theater_id
-                       AND s.showing_number = sa.showing_number
-       JOIN movies m ON m.id = s.movie_id
-      WHERE sa.sponsor_id = ?
-      ORDER BY sa.theater_id, sa.row_label, sa.seat_num`
-  ).bind(sponsorId).all();
-  const rows = q.results || [];
-
-  const byShow = new Map();
-  rows.forEach((r) => {
-    const key = `${r.movie_title}|${r.theater_id}`;
-    if (!byShow.has(key)) {
-      byShow.set(key, { movie: r.movie_title, theaterId: r.theater_id, seats: [] });
-    }
-    byShow.get(key).seats.push(`${r.row_label}${r.seat_num}`);
+  return buildConfirmationSms(env, {
+    kind: 'sponsor',
+    recordId: sponsorId,
+    company: sponsorCompany,
+    token,
   });
-
-  const parts = [
-    `🎬 GALA · 2026 — ${sponsorCompany}`,
-    `Wed June 10 · Megaplex Legacy Crossing · Doors 3:15 PM`,
-    '',
-  ];
-  if (byShow.size === 0) {
-    parts.push(`No seats placed yet.`);
-  } else {
-    for (const show of byShow.values()) {
-      parts.push(`${show.movie} (Aud ${show.theaterId})`);
-      parts.push(`Seats: ${show.seats.join(', ')}`);
-      parts.push('');
-    }
-  }
-  parts.push(`Manage: gala.daviskids.org/sponsor/${token}`);
-  return parts.join('\n').trim();
 }
 
 export async function onRequest({ request, env, params }) {

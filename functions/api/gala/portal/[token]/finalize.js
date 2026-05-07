@@ -4,6 +4,7 @@
 
 import { resolveToken, jsonError, jsonOk } from '../../_sponsor_portal.js';
 import { sendSMS, sendEmail } from '../../_notify.js';
+import { buildConfirmationSms } from '../../_confirmation_sms.js';
 
 export async function onRequestPost(context) {
   const { env, params } = context;
@@ -103,7 +104,12 @@ export async function onRequestPost(context) {
 </div>
 </body></html>`;
 
-  const smsText = `✓ Your ${seatList.length} seat${seatList.length===1?'':'s'} for the DEF Gala on June 10 are confirmed. ${seatSummarySms}. Check-in QR: ${checkInUrl}`;
+  const smsText = await buildConfirmationSms(env, {
+    kind: resolved.kind,
+    recordId: resolved.record.id,
+    company,
+    token,
+  });
 
   // Send both channels (non-blocking so the portal returns fast)
   const results = await Promise.allSettled([
