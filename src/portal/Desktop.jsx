@@ -2176,6 +2176,8 @@ export default function Desktop({
   const {
     finalize,
     finalizing,
+    error: finalizeError,
+    clearError: clearFinalizeError,
     confirmationData,
     setConfirmationData,
   } = useFinalize({ apiBase, token, onRefresh });
@@ -2548,9 +2550,13 @@ export default function Desktop({
                 setAssignThese(null);
                 setDinnerOpen(false);
               } catch {
-                // useFinalize sets error state; modal stays open
+                // useFinalize sets error state; modal stays open and
+                // PostPickSheet renders the error banner.
               }
             }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
           />
         )}
       </Modal>

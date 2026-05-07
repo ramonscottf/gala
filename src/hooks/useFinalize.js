@@ -20,7 +20,7 @@
 //             email: { sent }, sms: { sent } } — consumed by
 // ConfirmationScreen.
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 export function useFinalize({ apiBase, token, onRefresh, initialConfirmationData = null }) {
   const [finalizing, setFinalizing] = useState(false);
@@ -29,9 +29,17 @@ export function useFinalize({ apiBase, token, onRefresh, initialConfirmationData
   // (e.g. Mobile.jsx promotes route state from MobileWizard's legacy
   // exit() flow). Default null = canonical first-time finalize.
   const [confirmationData, setConfirmationData] = useState(initialConfirmationData);
+  // useRef-backed sync re-entry guard. The state-based `finalizing`
+  // is for UI rendering; it lags one render behind. Two fast taps
+  // would both pass `if (finalizing) return` before React flushes
+  // the setFinalizing(true) — causing two POST /finalize calls and
+  // two SMS+email deliveries. The ref is updated synchronously and
+  // catches the double-tap.
+  const inflightRef = useRef(false);
 
   const finalize = async () => {
-    if (finalizing) return;
+    if (inflightRef.current) return;
+    inflightRef.current = true;
     setFinalizing(true);
     setError(null);
     try {
@@ -48,9 +56,12 @@ export function useFinalize({ apiBase, token, onRefresh, initialConfirmationData
       setError(e);
       throw e;
     } finally {
+      inflightRef.current = false;
       setFinalizing(false);
     }
   };
 
-  return { finalize, finalizing, error, confirmationData, setConfirmationData };
+  const clearError = () => setError(null);
+
+  return { finalize, finalizing, error, clearError, confirmationData, setConfirmationData };
 }

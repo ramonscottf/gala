@@ -2844,7 +2844,9 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   // without flicker.
   const {
     finalize,
-    finalizing: _finalizing,
+    finalizing,
+    error: finalizeError,
+    clearError: clearFinalizeError,
     confirmationData,
     setConfirmationData,
   } = useFinalize({
@@ -3188,9 +3190,13 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
                 setAssignThese(null);
                 setDinnerOpen(false);
               } catch {
-                // useFinalize sets error state; sheet stays open
+                // useFinalize sets error state; sheet stays open and
+                // PostPickSheet renders the error banner.
               }
             }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
           />
         )}
       </Sheet>
