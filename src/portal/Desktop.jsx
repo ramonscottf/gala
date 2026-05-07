@@ -390,7 +390,7 @@ export default function Desktop({
             {data.tickets.length > 0 ? (
               <div className="desktop-center-ticket-list">
                 {data.tickets.map((ticket) => (
-                  <CenterTicketCard key={ticket.id} ticket={ticket} onOpen={setTicketSheet} />
+                  <CenterTicketCard key={ticket.id} ticket={ticket} onOpen={() => setDesktopTab('tickets')} />
                 ))}
               </div>
             ) : (
@@ -424,7 +424,7 @@ export default function Desktop({
             <div className="desktop-parity-ticket-list">
               {data.tickets.length > 0 ? (
                 data.tickets.map((ticket) => (
-                  <TicketLine key={ticket.id} ticket={ticket} onOpen={setTicketSheet} />
+                  <TicketLine key={ticket.id} ticket={ticket} onOpen={() => setDesktopTab('tickets')} />
                 ))
               ) : (
                 <div className="desktop-parity-empty" data-testid="desktop-placed-seat-placeholder">

@@ -75,6 +75,11 @@ test.describe('sponsor shell preview', () => {
     await expect(page.getByLabel(/Dinner for seat C-6/i)).toBeVisible();
 
     await page.getByLabel('Close dialog').click();
+    await page.getByTestId('desktop-center-ticket').first().click();
+    await expect(page.getByRole('dialog', { name: 'All tickets' })).toBeVisible();
+    await expect(page.getByTestId('ticket-card')).toHaveCount(2);
+
+    await page.getByLabel('Close dialog').click();
     await page.getByTestId('desktop-open-night').click();
     await expect(page.getByRole('dialog', { name: 'Tonight details' })).toBeVisible();
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/What to expect/i);
