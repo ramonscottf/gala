@@ -38,7 +38,8 @@ export async function onRequestPost({ request, env }) {
              title: sendId, subject: legacy.subject || '', body: legacy.body || '' };
   }
 
-  if (send.channel !== 'email') {
+  const channelLc = (send.channel || '').toLowerCase();
+  if (channelLc !== 'email') {
     return jsonError(`Send Now currently supports email only. This row is ${send.channel}.`, 400);
   }
   if (!send.subject) return jsonError('No subject line set on this send', 400);

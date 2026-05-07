@@ -33,7 +33,8 @@ export async function onRequestPost({ request, env }) {
     'SELECT send_id, channel, audience, subject, body FROM marketing_sends WHERE send_id = ?'
   ).bind(sendId).first();
   if (!send) return jsonError(`Send ${sendId} not found in marketing_sends`, 404);
-  if (send.channel !== 'email') {
+  const channelLc = (send.channel || '').toLowerCase();
+  if (channelLc !== 'email') {
     return jsonError(`Send Now is email only — this row is ${send.channel}`, 400);
   }
   if (!send.subject || !send.body) return jsonError('Subject and body required', 400);
