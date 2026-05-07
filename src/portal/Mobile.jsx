@@ -2550,7 +2550,7 @@ const SmallAvatar = ({ name, size = 16 }) => {
   );
 };
 
-const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pending }) => {
+export const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pending }) => {
   const delegationsById = {};
   delegations.forEach((d) => {
     delegationsById[d.id] = d;
@@ -2690,7 +2690,7 @@ const TicketManage = ({ ticket, delegations, onTapSeat, onUnplace, onClose, pend
 // opens DelegateForm in seat-bound mode (seats locked to 1, on submit
 // chains POST /assign for the new delegation).
 
-const SeatAssignSheet = ({
+export const SeatAssignSheet = ({
   seat,
   ticket,
   delegations,

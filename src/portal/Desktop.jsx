@@ -1,8 +1,27 @@
-import Mobile, { adaptPortalToMobileData } from './Mobile.jsx';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { config } from '../config.js';
 import { BRAND, FONT_DISPLAY } from '../brand/tokens.js';
 import { GalaWordmark, Icon, Logo, TierBadge } from '../brand/atoms.jsx';
+import { useFinalize } from '../hooks/useFinalize.js';
+import ConfirmationScreen from './ConfirmationScreen.jsx';
+import MovieDetailSheet from './MovieDetailSheet.jsx';
+import SettingsSheet from './SettingsSheet.jsx';
+import {
+  DelegateForm,
+  DelegateManage,
+  SeatAssignSheet,
+  TicketManage,
+  adaptPortalToMobileData,
+} from './Mobile.jsx';
+import SeatPickSheet from './components/SeatPickSheet.jsx';
+import PostPickSheet from './components/PostPickSheet.jsx';
+import AssignTheseSheet from './components/AssignTheseSheet.jsx';
+import DinnerPicker from './components/DinnerPicker.jsx';
 
 const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
+
+const firstNameFor = (name) => (name || 'Sponsor').trim().split(/\s+/)[0] || 'Sponsor';
 
 const Stat = ({ icon, value, label, tone = 'default' }) => (
   <div className={`desktop-parity-stat desktop-parity-stat--${tone}`}>
@@ -16,10 +35,58 @@ const Stat = ({ icon, value, label, tone = 'default' }) => (
   </div>
 );
 
-const TicketLine = ({ ticket }) => {
+const DesktopModal = ({ open, onClose, title, children, wide = false, forceDark = true }) => {
+  if (!open) return null;
+  return (
+    <div className="desktop-modal-backdrop" onClick={onClose}>
+      <div
+        className={`desktop-modal ${forceDark ? 'force-dark-vars' : ''} ${wide ? 'desktop-modal--wide' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || 'Dialog'}
+      >
+        <div className="desktop-modal-header">
+          <strong>{title}</strong>
+          <button aria-label="Close dialog" onClick={onClose}>
+            <Icon name="close" size={17} />
+          </button>
+        </div>
+        <div className="desktop-modal-body scroll-container">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+const LineupCard = ({ movie, onOpen }) => (
+  <button
+    className="desktop-lineup-card"
+    data-testid="desktop-lineup-card"
+    onClick={() => onOpen?.(movie)}
+  >
+    <div
+      className="desktop-lineup-poster force-dark"
+      style={{
+        background: movie.posterUrl
+          ? `url(${movie.posterUrl}) center/cover`
+          : `linear-gradient(160deg, ${BRAND.indigo}, ${BRAND.navyDeep})`,
+      }}
+    >
+      {!movie.posterUrl && <span>{movie.short || movie.title}</span>}
+    </div>
+    <div className="desktop-lineup-copy">
+      <strong>{movie.title}</strong>
+      <span>
+        {[movie.rating, movie.runtime ? `${movie.runtime} min` : null].filter(Boolean).join(' · ')}
+      </span>
+    </div>
+  </button>
+);
+
+const TicketLine = ({ ticket, onOpen }) => {
   const seats = ticket.seats.map((seat) => seat.replace('-', '')).join(', ');
   return (
-    <div className="desktop-parity-ticket">
+    <button className="desktop-parity-ticket" data-testid="desktop-placed-ticket-card" onClick={() => onOpen(ticket)}>
       <div
         className="desktop-parity-ticket-poster force-dark"
         style={{
@@ -32,42 +99,87 @@ const TicketLine = ({ ticket }) => {
       </div>
       <div className="desktop-parity-ticket-copy">
         <strong>{ticket.movieTitle || ticket.movieShort || 'Movie showing'}</strong>
-        <small>
-          {[ticket.showTime, ticket.theaterName, seats].filter(Boolean).join(' · ')}
-        </small>
+        <small>{[ticket.showTime, ticket.theaterName, seats].filter(Boolean).join(' · ')}</small>
       </div>
-    </div>
+      <Icon name="chev" size={14} />
+    </button>
   );
 };
 
-const LineupPoster = ({ movie }) => (
-  <div
-    className="desktop-parity-lineup-poster force-dark"
-    title={movie.title}
-    style={{
-      background: movie.posterUrl
-        ? `url(${movie.posterUrl}) center/cover`
-        : `linear-gradient(160deg, ${BRAND.indigo}, ${BRAND.navyDeep})`,
-    }}
-  >
-    {!movie.posterUrl && <span>{movie.short || movie.title}</span>}
-  </div>
+const CenterTicketCard = ({ ticket, onOpen }) => (
+  <button className="desktop-center-ticket" onClick={() => onOpen(ticket)}>
+    <div
+      className="desktop-center-ticket-poster force-dark"
+      style={{
+        background: ticket.posterUrl
+          ? `url(${ticket.posterUrl}) center/cover`
+          : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+      }}
+    />
+    <div className="desktop-center-ticket-copy">
+      <strong>{ticket.movieTitle || 'Movie showing'}</strong>
+      <span>{[ticket.showTime, ticket.theaterName].filter(Boolean).join(' · ')}</span>
+      <div>
+        {ticket.seats.slice(0, 8).map((seat) => (
+          <em key={seat}>{seat.replace('-', '')}</em>
+        ))}
+        {ticket.seats.length > 8 && <small>+{ticket.seats.length - 8}</small>}
+      </div>
+    </div>
+    <span className="desktop-center-ticket-action">Manage</span>
+  </button>
 );
 
-export default function Desktop(props) {
-  const data = adaptPortalToMobileData(props.portal, props.theaterLayouts);
+export default function Desktop({
+  portal,
+  token,
+  theaterLayouts,
+  seats,
+  isDev,
+  openSheetOnMount = false,
+  onRefresh,
+}) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const data = useMemo(
+    () => adaptPortalToMobileData(portal, theaterLayouts),
+    [portal, theaterLayouts]
+  );
+  const {
+    finalize,
+    finalizing,
+    error: finalizeError,
+    clearError: clearFinalizeError,
+    confirmationData,
+    setConfirmationData,
+  } = useFinalize({
+    apiBase: config.apiBase,
+    token,
+    onRefresh,
+    initialConfirmationData: location.state?.confirmation || null,
+  });
 
-  if (!data) {
-    return (
-      <div className="desktop-parity-stage">
-        <div className="desktop-parity-phone">
-          <Mobile {...props} desktopFrame />
-        </div>
-      </div>
-    );
-  }
+  const [seatPickOpen, setSeatPickOpen] = useState(false);
+  const [postPick, setPostPick] = useState(null);
+  const [assignThese, setAssignThese] = useState(null);
+  const [dinnerOpen, setDinnerOpen] = useState(false);
+  const [ticketSheet, setTicketSheet] = useState(null);
+  const [seatPicker, setSeatPicker] = useState(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [delegationSheet, setDelegationSheet] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [movieDetail, setMovieDetail] = useState(null);
+
+  useEffect(() => {
+    if (openSheetOnMount) setSeatPickOpen(true);
+  }, [openSheetOnMount]);
+
+  if (!data) return null;
 
   const placed = data.tickets.reduce((sum, ticket) => sum + ticket.seats.length, 0);
+  const assignedCount = data.tickets
+    .filter((t) => t.guestName || t.localGuestId)
+    .reduce((sum, ticket) => sum + ticket.seats.length, 0);
   const delegatedAway = data.seatMath?.delegated ?? 0;
   const personalQuota = Math.max(0, data.blockSize - delegatedAway);
   const stillOpen = Math.max(0, personalQuota - placed);
@@ -78,8 +190,56 @@ export default function Desktop(props) {
   const subtitle = data.isDelegation
     ? data.subline
     : [data.company, plural(data.blockSize, 'seat')].filter(Boolean).join(' · ');
-  const ticketLines = data.tickets.slice(0, 4);
-  const lineup = data.lineup.slice(0, 6);
+  const canFinalize = placed >= personalQuota && personalQuota > 0;
+  const lineup = data.lineup.slice(0, 4);
+  const firstUnassigned = data.tickets.find((t) => !t.guestName && !t.localGuestId);
+
+  const goSeats = async () => {
+    if (onRefresh) await onRefresh();
+    setSeatPickOpen(true);
+  };
+
+  const onUnplace = async () => {
+    if (!ticketSheet || !seats) return;
+    await seats.unplace(ticketSheet.theaterId, ticketSheet.seats);
+    setTicketSheet(null);
+  };
+
+  const inviteForSeat = (seat, theaterId) => {
+    setSeatPicker(null);
+    setInviteOpen({ seat, theaterId });
+  };
+
+  const onDelegationCreated = async (newDeleg) => {
+    const seatBinding = typeof inviteOpen === 'object' ? inviteOpen : null;
+    if (seatBinding && newDeleg?.id) {
+      await fetch(`${config.apiBase}/api/gala/portal/${token}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          theater_id: seatBinding.theaterId,
+          seat_ids: [seatBinding.seat],
+          delegation_id: newDeleg.id,
+        }),
+      }).catch(() => {});
+    }
+    if (onRefresh) await onRefresh();
+  };
+
+  if (confirmationData) {
+    return (
+      <ConfirmationScreen
+        name={data.name}
+        data={confirmationData}
+        isDev={isDev}
+        logoUrl={data.logoUrl}
+        onEdit={() => {
+          setConfirmationData(null);
+          navigate('', { replace: true });
+        }}
+      />
+    );
+  }
 
   return (
     <div className="desktop-parity-stage">
@@ -120,56 +280,311 @@ export default function Desktop(props) {
           </div>
         </aside>
 
-        <section className="desktop-parity-phone-wrap" aria-label="Live sponsor portal">
-          <div className="desktop-parity-phone-label">
-            <span>Live portal</span>
-            <strong>{stillOpen > 0 ? 'Seat placement ready' : 'Ticket management ready'}</strong>
-          </div>
-          <div className="desktop-parity-phone" data-testid="desktop-live-mobile-shell">
-            <Mobile {...props} desktopFrame />
-          </div>
-        </section>
+        <main className="desktop-main-panel" data-testid="desktop-main-panel">
+          <section className="desktop-main-hero">
+            <div className="desktop-main-kicker">
+              <span>Lights · Camera · Take Action · 2026</span>
+              <TierBadge tier={data.tier} />
+            </div>
+            <h2 style={{ fontFamily: FONT_DISPLAY }}>
+              {firstNameFor(data.name)}, your gala portal is ready.
+            </h2>
+            <p>
+              Place seats, assign guests, choose dinners, and keep the night-of details in one
+              desktop workspace.
+            </p>
+            <div className="desktop-main-actions">
+              <button className="desktop-primary-action" data-testid="cta-place-seats" onClick={goSeats}>
+                <Icon name="seat" size={17} />
+                {stillOpen > 0 ? `Place ${stillOpen} seat${stillOpen === 1 ? '' : 's'}` : 'Edit seats'}
+              </button>
+              {firstUnassigned && (
+                <button className="desktop-secondary-action" onClick={() => setTicketSheet(firstUnassigned)}>
+                  <Icon name="users" size={16} />
+                  Assign guests
+                </button>
+              )}
+              <button className="desktop-secondary-action" onClick={() => setSettingsOpen(true)}>
+                <Icon name="user" size={16} />
+                Settings
+              </button>
+            </div>
+          </section>
 
-        <aside className="desktop-parity-panel desktop-parity-snapshot" aria-label="Ticket snapshot">
-          <div className="desktop-parity-panel-heading">
-            <span>Tonight at a glance</span>
-            <strong>{data.daysOut} days out</strong>
-          </div>
+          <section className="desktop-progress-row">
+            <div>
+              <strong>{data.blockSize}</strong>
+              <span>Total seats</span>
+            </div>
+            <div>
+              <strong>{placed}</strong>
+              <span>Placed</span>
+            </div>
+            <div>
+              <strong>{assignedCount}</strong>
+              <span>With guests</span>
+            </div>
+            <div>
+              <strong>{stillOpen}</strong>
+              <span>Still open</span>
+            </div>
+          </section>
 
-          <div className="desktop-parity-ticket-list">
-            {ticketLines.length > 0 ? (
-              ticketLines.map((ticket) => <TicketLine key={ticket.id} ticket={ticket} />)
-            ) : (
-              <div className="desktop-parity-empty">
-                <Icon name="seat" size={18} />
-                <span>Seats will appear here after placement.</span>
+          <section className="desktop-center-section">
+            <div className="desktop-center-heading">
+              <div>
+                <span>Your tickets</span>
+                <strong>{placed > 0 ? `${plural(placed, 'seat')} placed` : 'No seats placed yet'}</strong>
               </div>
-            )}
-          </div>
+              <button onClick={goSeats}>
+                <Icon name="plus" size={14} />
+                Add showing
+              </button>
+            </div>
 
-          {lineup.length > 0 && (
-            <div className="desktop-parity-lineup">
-              <div className="desktop-parity-panel-heading">
-                <span>Film lineup</span>
-                <strong>{plural(data.lineup.length, 'film')}</strong>
-              </div>
-              <div className="desktop-parity-lineup-strip">
-                {lineup.map((movie) => (
-                  <LineupPoster key={movie.id} movie={movie} />
+            {data.tickets.length > 0 ? (
+              <div className="desktop-center-ticket-list">
+                {data.tickets.map((ticket) => (
+                  <CenterTicketCard key={ticket.id} ticket={ticket} onOpen={setTicketSheet} />
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <button className="desktop-center-empty" onClick={goSeats}>
+                <Icon name="seat" size={22} />
+                <strong>Start by placing seats</strong>
+                <span>The seat map will open wide on desktop so you can scan rows and showtimes.</span>
+              </button>
+            )}
+          </section>
+        </main>
 
-          <div className="desktop-parity-night">
-            <Icon name="pin" size={16} />
-            <div>
-              <strong>Megaplex Legacy Crossing</strong>
-              <span>Wednesday, June 10 · doors 3:15 PM</span>
+        <aside className="desktop-parity-panel desktop-parity-snapshot" aria-label="Ticket snapshot">
+          <section className="desktop-lineup-rail" data-testid="desktop-lineup-rail">
+            <div className="desktop-parity-panel-heading">
+              <span>Film lineup</span>
+              <strong>{plural(data.lineup.length, 'film')}</strong>
             </div>
-          </div>
+            <div className="desktop-lineup-grid">
+              {lineup.map((movie) => (
+                <LineupCard key={movie.id} movie={movie} onOpen={setMovieDetail} />
+              ))}
+            </div>
+          </section>
+
+          <section className="desktop-right-section">
+            <div className="desktop-parity-panel-heading">
+              <span>Placed seats</span>
+              <strong>{placed} / {data.blockSize}</strong>
+            </div>
+            <div className="desktop-parity-ticket-list">
+              {data.tickets.length > 0 ? (
+                data.tickets.map((ticket) => (
+                  <TicketLine key={ticket.id} ticket={ticket} onOpen={setTicketSheet} />
+                ))
+              ) : (
+                <div className="desktop-parity-empty" data-testid="desktop-placed-seat-placeholder">
+                  <Icon name="seat" size={18} />
+                  <span>Seats will appear here after placement.</span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="desktop-right-section">
+            <div className="desktop-parity-panel-heading">
+              <span>Tonight at a glance</span>
+              <strong>{data.daysOut} days out</strong>
+            </div>
+            <div className="desktop-parity-night">
+              <Icon name="pin" size={16} />
+              <div>
+                <strong>Megaplex Legacy Crossing</strong>
+                <span>Wednesday, June 10 · doors 3:15 PM</span>
+              </div>
+            </div>
+          </section>
         </aside>
       </div>
+
+      <DesktopModal open={seatPickOpen} onClose={() => setSeatPickOpen(false)} title="Place seats" wide forceDark>
+        <SeatPickSheet
+          portal={portal}
+          theaterLayouts={theaterLayouts}
+          seats={seats}
+          blockSize={data.blockSize}
+          token={token}
+          apiBase={config.apiBase}
+          onRefresh={onRefresh}
+          onMovieDetail={setMovieDetail}
+          variant="modal"
+          onCommitted={(placedSeats) => {
+            setSeatPickOpen(false);
+            setPostPick(placedSeats);
+          }}
+          onClose={() => setSeatPickOpen(false)}
+        />
+      </DesktopModal>
+
+      <DesktopModal open={!!postPick} onClose={() => setPostPick(null)} title="Seats placed">
+        {postPick && (
+          <PostPickSheet
+            placed={postPick}
+            missingDinnerCount={
+              (portal?.myAssignments || [])
+                .filter((a) => postPick.seatIds?.includes(`${a.row_label}-${a.seat_num}`))
+                .filter((a) => !a.dinner_choice).length
+            }
+            onAssign={() => setAssignThese(postPick)}
+            onPickDinners={() => setDinnerOpen(true)}
+            onDone={() => {
+              setPostPick(null);
+              setAssignThese(null);
+              setDinnerOpen(false);
+            }}
+            canFinalize={canFinalize}
+            onFinalize={async () => {
+              await finalize();
+              setPostPick(null);
+              setAssignThese(null);
+              setDinnerOpen(false);
+            }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
+          />
+        )}
+      </DesktopModal>
+
+      <DesktopModal open={!!assignThese} onClose={() => setAssignThese(null)} title="Assign seats">
+        {assignThese && (
+          <AssignTheseSheet
+            placed={assignThese}
+            delegations={data.delegations || []}
+            token={token}
+            apiBase={config.apiBase}
+            onSaved={async () => {
+              if (onRefresh) await onRefresh();
+              setAssignThese(null);
+              setPostPick(null);
+            }}
+            onSkip={() => setAssignThese(null)}
+            onInviteNew={() => {
+              setAssignThese(null);
+              setInviteOpen(true);
+            }}
+          />
+        )}
+      </DesktopModal>
+
+      <DesktopModal open={dinnerOpen} onClose={() => setDinnerOpen(false)} title="Pick dinners">
+        {dinnerOpen && postPick && (
+          <div className="desktop-dinner-list">
+            {(portal?.myAssignments || [])
+              .filter((r) => postPick.seatIds?.includes(`${r.row_label}-${r.seat_num}`))
+              .map((r) => (
+                <div key={`${r.theater_id}-${r.row_label}-${r.seat_num}`}>
+                  <span>{r.row_label}{r.seat_num}</span>
+                  <DinnerPicker
+                    assignment={r}
+                    token={token}
+                    apiBase={config.apiBase}
+                    onChange={() => onRefresh && onRefresh()}
+                  />
+                </div>
+              ))}
+          </div>
+        )}
+      </DesktopModal>
+
+      <DesktopModal open={!!ticketSheet} onClose={() => setTicketSheet(null)} title="Manage ticket">
+        {ticketSheet && (
+          <TicketManage
+            ticket={ticketSheet}
+            delegations={data.delegations}
+            onTapSeat={(seat) => setSeatPicker({ seat, ticket: ticketSheet })}
+            onUnplace={onUnplace}
+            onClose={() => setTicketSheet(null)}
+            pending={seats?.pending}
+          />
+        )}
+      </DesktopModal>
+
+      <DesktopModal
+        open={!!seatPicker}
+        onClose={() => setSeatPicker(null)}
+        title={seatPicker ? `Seat ${seatPicker.seat.replace('-', '')}` : ''}
+      >
+        {seatPicker && (
+          <SeatAssignSheet
+            seat={seatPicker.seat}
+            ticket={seatPicker.ticket}
+            delegations={data.delegations}
+            token={token}
+            apiBase={config.apiBase}
+            onRefresh={onRefresh || (() => Promise.resolve())}
+            onClose={() => setSeatPicker(null)}
+            onInviteNew={inviteForSeat}
+          />
+        )}
+      </DesktopModal>
+
+      <DesktopModal
+        open={!!inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        title={typeof inviteOpen === 'object' ? `Invite for seat ${inviteOpen.seat.replace('-', '')}` : 'Invite to seats'}
+      >
+        <DelegateForm
+          token={token}
+          apiBase={config.apiBase}
+          available={
+            typeof inviteOpen === 'object'
+              ? Math.max(1, data.seatMath?.available ?? 1)
+              : (data.seatMath?.available ?? 0)
+          }
+          lockSeats={typeof inviteOpen === 'object' ? 1 : null}
+          onCreated={onDelegationCreated}
+          onClose={() => setInviteOpen(false)}
+        />
+      </DesktopModal>
+
+      <DesktopModal open={!!delegationSheet} onClose={() => setDelegationSheet(null)} title="Manage invite">
+        {delegationSheet && (
+          <DelegateManage
+            delegation={delegationSheet}
+            token={token}
+            apiBase={config.apiBase}
+            onRefresh={onRefresh || (() => Promise.resolve())}
+            onClose={() => setDelegationSheet(null)}
+          />
+        )}
+      </DesktopModal>
+
+      <DesktopModal open={settingsOpen} onClose={() => setSettingsOpen(false)} title="Settings">
+        <SettingsSheet
+          identity={portal?.identity}
+          isDelegation={data.isDelegation}
+          token={token}
+          apiBase={config.apiBase}
+          onClose={() => setSettingsOpen(false)}
+          onSaved={onRefresh}
+        />
+      </DesktopModal>
+
+      {movieDetail && (
+        <MovieDetailSheet
+          movie={movieDetail}
+          showLabel={
+            movieDetail.__showLabel ||
+            (movieDetail.__showingNumber === 1
+              ? 'Early showing'
+              : movieDetail.__showingNumber === 2
+                ? 'Late showing'
+                : '')
+          }
+          showTime={movieDetail.__showTime}
+          onClose={() => setMovieDetail(null)}
+        />
+      )}
     </div>
   );
 }
