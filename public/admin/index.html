@@ -1180,6 +1180,11 @@ body {
   .ticket-editor__row { flex-direction: column; gap: 0; }
 }
 </style>
+
+<!-- Marketing pipeline rich-text editor (TipTap, IIFE bundle).
+     Built by `npm run build:admin` from src/admin/editor-mount.js.
+     Exposes window.GalaEditor.mount(targetDiv, initialHtml, onChange). -->
+<script src="./assets/editor.js" defer></script>
 </head>
 <body>
 
@@ -3912,6 +3917,12 @@ function renderPipeline() {
   const root = document.getElementById('mkt-pipeline');
   if (!root) return;
 
+  // Tear down any live editors — we're about to wipe their DOM via innerHTML
+  if (typeof MKT_EDITORS !== 'undefined') {
+    MKT_EDITORS.forEach((inst) => { try { inst.destroy(); } catch (_) {} });
+    MKT_EDITORS.clear();
+  }
+
   const phases = LIVE_PIPELINE || PIPELINE;
   let html = '';
   for (const phase of phases) {
@@ -4045,9 +4056,12 @@ function renderEditor(send) {
       ` : ''}
 
       <label style="display:block; margin-bottom:10px;">
-        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">${isEmail ? 'Body (HTML)' : 'SMS body (plain text)'}</div>
-        <textarea class="mkt-input" data-edit="${id}" data-field="body" rows="${isEmail ? 16 : 4}" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:'SF Mono',Menlo,Monaco,Consolas,monospace; line-height:1.5; background:#fff; resize:vertical;">${escapeHtml(send.body || '')}</textarea>
-        ${isEmail ? `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Tip: paste from Word; the wrapper masthead and footer are added automatically on send.</div>` : `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Use {TOKEN} as a placeholder for the per-recipient sponsor token.</div>`}
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">${isEmail ? 'Body' : 'SMS body (plain text)'}</div>
+        ${isEmail
+          ? `<div class="mkt-richtext-host" data-edit="${id}" data-field="body" data-initial-html="${escapeAttr(send.body || '')}"></div>`
+          : `<textarea class="mkt-input" data-edit="${id}" data-field="body" rows="4" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:'SF Mono',Menlo,Monaco,Consolas,monospace; line-height:1.5; background:#fff; resize:vertical;">${escapeHtml(send.body || '')}</textarea>`
+        }
+        ${isEmail ? `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Paste from Word, format with the toolbar, or click the &lt;&gt; icon to view raw HTML. The wrapper masthead and footer are added automatically on send.</div>` : `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Use {TOKEN} as a placeholder for the per-recipient sponsor token.</div>`}
       </label>
 
       <label style="display:block; margin-bottom:12px;">
@@ -4064,8 +4078,36 @@ function renderEditor(send) {
   `;
 }
 
+// Live TipTap instances keyed by sendId. We mount lazily on first Edit click
+// and destroy on Cancel or after a successful save (the row re-renders fresh).
+const MKT_EDITORS = new Map();
+
+function mountRichTextFor(id, root) {
+  if (MKT_EDITORS.has(id)) return MKT_EDITORS.get(id);
+  if (!window.GalaEditor) {
+    console.warn('GalaEditor bundle not loaded — falling back to raw HTML view');
+    return null;
+  }
+  const host = root.querySelector(`.mkt-richtext-host[data-edit="${id}"]`);
+  if (!host) return null;
+  const initialHtml = host.dataset.initialHtml || '';
+  const instance = window.GalaEditor.mount(host, initialHtml, () => {
+    // No-op for now — body is read from instance.getHtml() on save.
+  });
+  MKT_EDITORS.set(id, instance);
+  return instance;
+}
+
+function destroyRichTextFor(id) {
+  const inst = MKT_EDITORS.get(id);
+  if (inst) {
+    try { inst.destroy(); } catch (_) {}
+    MKT_EDITORS.delete(id);
+  }
+}
+
 function wirePipelineEvents(root) {
-  // Edit toggle
+  // Edit toggle — also mounts the TipTap editor on first open
   root.querySelectorAll('.mkt-edit-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -4074,10 +4116,12 @@ function wirePipelineEvents(root) {
       const edit = root.querySelector(`.mkt-edit-mode[data-send="${id}"]`);
       if (view) view.style.display = 'none';
       if (edit) edit.style.display = 'block';
+      // Mount rich text (no-op if already mounted, no-op if SMS row)
+      mountRichTextFor(id, root);
     });
   });
 
-  // Cancel
+  // Cancel — close edit pane and tear down editor
   root.querySelectorAll('.mkt-cancel-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -4086,6 +4130,7 @@ function wirePipelineEvents(root) {
       const edit = root.querySelector(`.mkt-edit-mode[data-send="${id}"]`);
       if (view) view.style.display = '';
       if (edit) edit.style.display = 'none';
+      destroyRichTextFor(id);
     });
   });
 
@@ -4097,12 +4142,20 @@ function wirePipelineEvents(root) {
       if (SEND_BUSY.has(id)) return;
       SEND_BUSY.add(id);
 
-      const fields = ['date','time','audience','status','title','subject','body','notes'];
+      const fields = ['date','time','audience','status','title','subject','notes'];
       const payload = {};
       fields.forEach(f => {
         const el = root.querySelector(`.mkt-input[data-edit="${id}"][data-field="${f}"]`);
         if (el) payload[f] = el.value;
       });
+      // Body comes from the rich-text editor for emails, or the textarea for SMS
+      const editorInst = MKT_EDITORS.get(id);
+      if (editorInst) {
+        payload.body = editorInst.getHtml();
+      } else {
+        const bodyEl = root.querySelector(`.mkt-input[data-edit="${id}"][data-field="body"]`);
+        if (bodyEl) payload.body = bodyEl.value;
+      }
 
       const result = root.querySelector(`.mkt-save-result[data-send="${id}"]`);
       if (result) { result.style.color = 'var(--muted)'; result.textContent = 'Saving…'; }
@@ -4144,6 +4197,8 @@ function wirePipelineEvents(root) {
             const edit = root.querySelector(`.mkt-edit-mode[data-send="${id}"]`);
             if (view) view.style.display = '';
             if (edit) edit.style.display = 'none';
+            // Tear down the rich-text editor (its DOM is about to be replaced)
+            destroyRichTextFor(id);
             // Refresh the body preview by re-fetching pipeline (simplest and cheap)
             loadLivePipeline().then(() => renderPipeline());
           }, 800);
