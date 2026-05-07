@@ -4,9 +4,11 @@
 // multi-prefix scheme (/gala-dev, /gala-seats, /gala) is gone after the
 // May 2026 migration to gala.daviskids.org.
 //
-// Task 11: `/seats` deep link routes through canonical Mobile/Desktop +
+// `/seats` deep link routes through canonical Mobile/Desktop +
 // SeatPickSheet via `openSheetOnMount={onSeatsRoute}`. The legacy
-// MobileWizard branch is gone (Task 8 removes the file).
+// MobileWizard 4-step wizard was deleted in May 2026 — the boarding-pass
+// shell + SeatPickSheet covers the deep-link case via the same canonical
+// flow that Welcome/Home uses.
 
 import { useEffect, useState } from 'react';
 import { Routes, Route, useParams, useLocation } from 'react-router-dom';
