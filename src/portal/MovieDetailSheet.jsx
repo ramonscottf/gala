@@ -267,10 +267,29 @@ export default function MovieDetailSheet({
                   </span>
                 )}
               </div>
+              {isModal && trailerSrc && (
+                <a
+                  href={movie.trailerUrl || trailerSrc}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    marginTop: 10,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    color: 'var(--accent-italic)',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Icon name="play" size={12} stroke={2.4} /> Watch trailer
+                </a>
+              )}
             </div>
           </div>
 
-          {trailerSrc && (
+          {!isModal && trailerSrc && (
             <div
               style={{
                 aspectRatio: '16 / 9',

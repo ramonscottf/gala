@@ -11,6 +11,7 @@ const showtime = ({
   posterUrl = null,
   thumbnailUrl = null,
   backdropUrl = null,
+  trailerUrl = null,
 }) => ({
   theater_id: theaterId,
   showing_number: showingNumber,
@@ -23,7 +24,7 @@ const showtime = ({
   poster_url: posterUrl,
   thumbnail_url: thumbnailUrl,
   backdrop_url: backdropUrl,
-  trailer_url: null,
+  trailer_url: trailerUrl,
   stream_uid: null,
   synopsis: `${title} preview synopsis for the sponsor shell harness.`,
   year: 2026,
@@ -125,6 +126,7 @@ export const createPreviewPortal = () => ({
       posterUrl: 'https://image.tmdb.org/t/p/w500/4apG9Xk6HQvV48JKEjSUeiebju7.jpg',
       thumbnailUrl: 'https://assets.daviskids.org/gala-2026/movies/breadwinner.png',
       backdropUrl: 'https://image.tmdb.org/t/p/w1280/epIN71wb1bZBPmPu0EV4z6ce5J8.jpg',
+      trailerUrl: 'https://www.youtube.com/watch?v=ysz5S6PUM-U',
     }),
     showtime({
       theaterId: 2,

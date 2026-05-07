@@ -76,6 +76,7 @@ test.describe('sponsor shell preview', () => {
     await expect(page.getByTestId('movie-detail-sheet')).toBeVisible();
     const sheetBox = await page.getByTestId('movie-detail-sheet').boundingBox();
     expect(sheetBox?.width).toBeLessThan(760);
+    expect(sheetBox?.height).toBeLessThan(680);
 
     const posterBox = await page.getByTestId('movie-detail-poster').boundingBox();
     const titleBox = await page.getByTestId('movie-detail-title').boundingBox();
