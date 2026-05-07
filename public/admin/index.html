@@ -1612,6 +1612,20 @@ body {
       </div>
     </div>
 
+    <!-- Send Activity (global) -->
+    <div class="card" style="margin-bottom: 28px;">
+      <div class="card__header" style="border-bottom: 1px solid var(--border); padding: 18px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="card__title" style="font-size: 18px; font-weight: 700; color: var(--text);">📨 Send Activity</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Last 50 marketing sends across all rows. Auto-refreshes after each Send Now.</div>
+        </div>
+        <button id="mkt-send-activity-refresh" style="padding:7px 14px; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer;">↻ Refresh</button>
+      </div>
+      <div id="mkt-send-activity" style="padding: 14px 24px 20px;">
+        <div style="color:var(--muted); font-style:italic;">Click Refresh to load.</div>
+      </div>
+    </div>
+
     <!-- Phase Pipeline -->
     <div class="card" style="margin-bottom: 28px;">
       <div class="card__header" style="border-bottom: 1px solid var(--border); padding: 18px 24px;">
@@ -3913,6 +3927,70 @@ function escapeHtml(s) {
 }
 function escapeAttr(s) { return escapeHtml(s); }
 
+// ── Marketing pipeline helpers ───────────────────────────────────────────
+
+// Date options: April 1 → June 30 2026 (full campaign window).
+// Format: "MMM D" (e.g. "Apr 29", "May 14"). The DB column is text so we
+// store the same display string verbatim.
+function buildMktDateOptions() {
+  const out = [];
+  const months = [
+    { name: 'Apr', m: 3, days: 30 },
+    { name: 'May', m: 4, days: 31 },
+    { name: 'Jun', m: 5, days: 30 },
+  ];
+  for (const M of months) {
+    for (let d = 1; d <= M.days; d++) out.push(`${M.name} ${d}`);
+  }
+  return out;
+}
+const MKT_DATE_OPTIONS = buildMktDateOptions();
+
+// Time options: 6:00 AM → 11:45 PM in 15-minute steps.
+function buildMktTimeOptions() {
+  const out = [];
+  for (let h = 6; h <= 23; h++) {
+    for (const min of [0, 15, 30, 45]) {
+      const period = h < 12 ? 'AM' : 'PM';
+      const h12 = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+      out.push(`${h12}:${String(min).padStart(2,'0')} ${period}`);
+    }
+  }
+  return out;
+}
+const MKT_TIME_OPTIONS = buildMktTimeOptions();
+
+// Audience options — these strings drive server-side audience resolution
+// in functions/api/gala/_audience.js. Keep in sync with that module.
+const MKT_AUDIENCE_OPTIONS = [
+  'Platinum Sponsors',
+  'Gold Sponsors',
+  'Silver Sponsors',
+  'Bronze Sponsors',
+  'Friends & Family',
+  'Individual Seats',
+  'All Sponsors (paid)',
+  'All Sponsors + Friends & Family',
+  'Confirmed Buyers',
+];
+
+// Render a <select> with the given options and selected value.
+// If `currentValue` doesn't match any option (legacy data), it's preserved
+// as a "(custom)" option so we don't silently lose data.
+function mktSelectHtml(id, field, options, currentValue, extraStyle = '') {
+  const cur = currentValue || '';
+  let opts = options.map(o =>
+    `<option value="${escapeAttr(o)}"${o === cur ? ' selected' : ''}>${escapeHtml(o)}</option>`
+  ).join('');
+  if (cur && !options.includes(cur)) {
+    opts = `<option value="${escapeAttr(cur)}" selected>${escapeHtml(cur)} (custom)</option>` + opts;
+  }
+  if (!cur) {
+    opts = `<option value="" disabled selected>—</option>` + opts;
+  }
+  return `<select class="mkt-input" data-edit="${id}" data-field="${field}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;${extraStyle}">${opts}</select>`;
+}
+
 function renderPipeline() {
   const root = document.getElementById('mkt-pipeline');
   if (!root) return;
@@ -4022,15 +4100,15 @@ function renderEditor(send) {
       <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
         <label style="display:block;">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Date</div>
-          <input type="text" class="mkt-input" data-edit="${id}" data-field="date" value="${escapeAttr(send.date)}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+          ${mktSelectHtml(id, 'date', MKT_DATE_OPTIONS, send.date)}
         </label>
         <label style="display:block;">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Time</div>
-          <input type="text" class="mkt-input" data-edit="${id}" data-field="time" value="${escapeAttr(send.time)}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+          ${mktSelectHtml(id, 'time', MKT_TIME_OPTIONS, send.time)}
         </label>
         <label style="display:block;">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Audience</div>
-          <input type="text" class="mkt-input" data-edit="${id}" data-field="audience" value="${escapeAttr(send.audience || '')}" style="width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fff;"/>
+          ${mktSelectHtml(id, 'audience', MKT_AUDIENCE_OPTIONS, send.audience)}
         </label>
         <label style="display:block;">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Status</div>
@@ -4061,7 +4139,13 @@ function renderEditor(send) {
           ? `<div class="mkt-richtext-host" data-edit="${id}" data-field="body" data-initial-html="${escapeAttr(send.body || '')}"></div>`
           : `<textarea class="mkt-input" data-edit="${id}" data-field="body" rows="4" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; font-family:'SF Mono',Menlo,Monaco,Consolas,monospace; line-height:1.5; background:#fff; resize:vertical;">${escapeHtml(send.body || '')}</textarea>`
         }
-        ${isEmail ? `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Paste from Word, format with the toolbar, or click the &lt;&gt; icon to view raw HTML. The wrapper masthead and footer are added automatically on send.</div>` : `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Use {TOKEN} as a placeholder for the per-recipient sponsor token.</div>`}
+        ${isEmail ? `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; flex-wrap:wrap;">
+            <div style="font-size:11px; color:var(--muted); flex:1; min-width:240px;">Paste from Word, format with the toolbar, or click the &lt;&gt; icon to view raw HTML. The wrapper masthead and footer are added automatically on send.</div>
+            <button type="button" class="mkt-polish-btn" data-send="${id}" style="padding:6px 12px; font-size:12px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600; white-space:nowrap;">✨ Polish + Format</button>
+          </div>
+          <div class="mkt-polish-result" data-send="${id}" style="font-size:11px; color:var(--muted); margin-top:6px; display:none;"></div>
+        ` : `<div style="font-size:11px; color:var(--muted); margin-top:4px;">Use {TOKEN} as a placeholder for the per-recipient sponsor token.</div>`}
       </label>
 
       <label style="display:block; margin-bottom:12px;">
@@ -4069,11 +4153,24 @@ function renderEditor(send) {
         <textarea class="mkt-input" data-edit="${id}" data-field="notes" rows="2" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; line-height:1.5; background:#fff; resize:vertical;">${escapeHtml(send.notes || '')}</textarea>
       </label>
 
-      <div style="display:flex; gap:8px; align-items:center;">
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <button class="btn btn-primary mkt-save-btn" data-send="${id}" style="padding:7px 16px; font-size:13px;">Save changes</button>
         <button class="btn btn-secondary mkt-cancel-btn" data-send="${id}" style="padding:7px 16px; font-size:13px;">Cancel</button>
+        ${isEmail ? `
+          <span style="width:1px; height:22px; background:var(--border); margin:0 4px;"></span>
+          <button class="mkt-preview-send-btn" data-send="${id}" style="padding:7px 16px; font-size:13px; background:#0b1b3c; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">📨 Preview send…</button>
+        ` : ''}
         <span class="mkt-save-result" data-send="${id}" style="font-size:12px; color:var(--muted); margin-left:6px;"></span>
       </div>
+
+      <details class="mkt-activity-toggle" data-send="${id}" style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border);">
+        <summary style="cursor:pointer; font-size:12px; font-weight:700; text-transform:uppercase; color:var(--muted); list-style:none;">
+          ▸ Recent sends from this row
+        </summary>
+        <div class="mkt-activity-content" data-send="${id}" style="margin-top:10px; font-size:13px;">
+          <div style="color:var(--muted); font-style:italic;">Click to load…</div>
+        </div>
+      </details>
     </div>
   `;
 }
@@ -4267,6 +4364,238 @@ function wirePipelineEvents(root) {
       }
     });
   });
+
+  // ── Polish + Format (AI) ─────────────────────────────────────────────
+  root.querySelectorAll('.mkt-polish-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const id = btn.dataset.send;
+      const inst = MKT_EDITORS.get(id);
+      const resultEl = root.querySelector(`.mkt-polish-result[data-send="${id}"]`);
+      if (!inst) {
+        if (resultEl) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--red)'; resultEl.textContent = 'Editor not mounted yet — try opening Edit again.'; }
+        return;
+      }
+
+      const before = inst.getHtml();
+      if (!before || !before.trim()) {
+        if (resultEl) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--red)'; resultEl.textContent = 'Body is empty — type something first.'; }
+        return;
+      }
+
+      btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = '✨ Polishing…';
+      if (resultEl) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--muted)'; resultEl.textContent = 'Sending to AI… this takes 2-4 seconds.'; }
+
+      try {
+        const r = await fetch('/api/gala/marketing-format', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ html: before }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          if (resultEl) { resultEl.style.color = 'var(--red)'; resultEl.textContent = '✗ ' + (data.error || `HTTP ${r.status}`); }
+        } else {
+          inst.setHtml(data.formattedHtml);
+          if (resultEl) {
+            resultEl.style.color = 'var(--green, #15803d)';
+            resultEl.textContent = `✓ Polished (${data.inputLength} → ${data.outputLength} chars). Review and click Save changes when ready.`;
+          }
+        }
+      } catch (err) {
+        if (resultEl) { resultEl.style.color = 'var(--red)'; resultEl.textContent = '✗ Network error: ' + err.message; }
+      } finally {
+        btn.disabled = false; btn.style.opacity = '1'; btn.textContent = '✨ Polish + Format';
+      }
+    });
+  });
+
+  // ── Preview Send (step 1 of two-step Send Now) ──────────────────────
+  root.querySelectorAll('.mkt-preview-send-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const id = btn.dataset.send;
+      btn.disabled = true; btn.style.opacity = '0.6';
+      try {
+        const r = await fetch('/api/gala/marketing-preview-send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ sendId: id }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          alert('Preview failed: ' + (data.error || `HTTP ${r.status}`));
+          return;
+        }
+        showSendConfirmModal(id, data);
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.style.opacity = '1';
+      }
+    });
+  });
+
+  // ── Per-row activity disclosure: load on first expand ───────────────
+  root.querySelectorAll('.mkt-activity-toggle').forEach(toggle => {
+    toggle.addEventListener('toggle', async () => {
+      if (!toggle.open) return;
+      const id = toggle.dataset.send;
+      const target = root.querySelector(`.mkt-activity-content[data-send="${id}"]`);
+      if (!target || target.dataset.loaded === 'yes') return;
+      target.innerHTML = `<div style="color:var(--muted); font-style:italic;">Loading…</div>`;
+      try {
+        const r = await fetch(`/api/gala/marketing-send-log?sendId=${encodeURIComponent(id)}&limit=20`, { credentials: 'include' });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+        target.innerHTML = renderActivityList(data.runs);
+        target.dataset.loaded = 'yes';
+      } catch (err) {
+        target.innerHTML = `<div style="color:var(--red);">Failed to load: ${escapeHtml(err.message)}</div>`;
+      }
+    });
+  });
+}
+
+// ── Render the per-row activity list ─────────────────────────────────
+function renderActivityList(runs) {
+  if (!runs || runs.length === 0) {
+    return `<div style="color:var(--muted); font-style:italic;">No sends yet for this row. Click <strong>Preview send</strong> above when you're ready.</div>`;
+  }
+  return runs.map(run => {
+    const ts = new Date(run.sentAt + 'Z').toLocaleString();
+    const failBadge = run.failed > 0
+      ? `<span style="background:#fef2f2; color:#dc2626; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600;">${run.failed} failed</span>`
+      : '';
+    const okBadge = `<span style="background:#f0fdf4; color:#15803d; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:600;">${run.sent} sent</span>`;
+    const recipientLines = run.recipients.slice(0, 12).map(r => {
+      const color = r.status === 'sent' ? 'var(--text)' : '#dc2626';
+      const icon = r.status === 'sent' ? '✓' : '✗';
+      return `<li style="color:${color}; padding:2px 0;">${icon} ${escapeHtml(r.name)} <span style="color:var(--muted);">&lt;${escapeHtml(r.email)}&gt;</span>${r.error ? ` <em style="color:#dc2626;">— ${escapeHtml(r.error)}</em>` : ''}</li>`;
+    }).join('');
+    const more = run.recipients.length > 12 ? `<li style="color:var(--muted); font-style:italic; padding:2px 0;">…and ${run.recipients.length - 12} more</li>` : '';
+    return `
+      <div style="border:1px solid var(--border); border-radius:6px; padding:10px 12px; margin-bottom:8px; background:#f8fafc;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
+          ${okBadge}${failBadge}
+          <span style="color:var(--muted); font-size:12px;">${ts}</span>
+          <span style="color:var(--muted); font-size:12px;">· audience: ${escapeHtml(run.audienceLabel || '—')}</span>
+        </div>
+        <div style="font-size:12px; color:var(--text); margin-bottom:4px;"><strong>Subject:</strong> ${escapeHtml(run.subject || '—')}</div>
+        <ul style="list-style:none; padding:0; margin:6px 0 0; font-size:12px;">${recipientLines}${more}</ul>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Send confirmation modal ──────────────────────────────────────────
+function showSendConfirmModal(sendId, preview) {
+  // Strip any existing modal
+  const existing = document.getElementById('mkt-send-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'mkt-send-modal';
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(11,27,60,0.65); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;';
+
+  const card = document.createElement('div');
+  card.style.cssText = 'background:#fff; border-radius:12px; max-width:640px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+
+  const recipientList = preview.recipients.slice(0, 15).map(r =>
+    `<li style="padding:4px 0; font-size:13px;"><strong>${escapeHtml(r.name)}</strong> <span style="color:var(--muted);">&lt;${escapeHtml(r.email)}&gt;</span> <span style="color:var(--muted); font-size:11px;">· ${escapeHtml(r.tier || '')}</span></li>`
+  ).join('');
+  const moreLine = preview.recipients.length > 15
+    ? `<li style="padding:4px 0; font-size:13px; color:var(--muted); font-style:italic;">…and ${preview.recipients.length - 15} more</li>`
+    : '';
+
+  const isZero = preview.recipientCount === 0;
+
+  card.innerHTML = `
+    <div style="padding:20px 24px 12px; border-bottom:1px solid var(--border);">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:4px;">Preview send · ${escapeHtml(sendId)}</div>
+      <h3 style="margin:0; color:var(--text); font-size:18px;">${escapeHtml(preview.subject)}</h3>
+      <div style="font-size:12px; color:var(--muted); margin-top:6px;">Audience: <strong>${escapeHtml(preview.audience || '—')}</strong> · Channel: ${escapeHtml(preview.channel)}</div>
+    </div>
+    <div style="padding:14px 24px;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Body preview</div>
+      <div style="background:#f8fafc; border:1px solid var(--border); border-radius:6px; padding:12px; font-size:13px; color:var(--text); line-height:1.5;">${escapeHtml(preview.bodyPreview)}…</div>
+    </div>
+    <div style="padding:14px 24px;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Recipients (${preview.recipientCount})</div>
+      ${isZero
+        ? `<div style="color:#dc2626; padding:8px 0;">No recipients matched audience "${escapeHtml(preview.audience || '')}". Edit the row to pick a different audience, or add sponsors with this tier.</div>`
+        : `<ul style="list-style:none; padding:0; margin:0;">${recipientList}${moreLine}</ul>`
+      }
+    </div>
+    <div style="padding:16px 24px 20px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; align-items:center;">
+      <span class="mkt-confirm-result" style="font-size:12px; color:var(--muted); margin-right:auto;"></span>
+      <button class="mkt-confirm-cancel" style="padding:8px 16px; font-size:13px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer;">Cancel</button>
+      <button class="mkt-confirm-send" ${isZero ? 'disabled' : ''} style="padding:8px 18px; font-size:13px; background:${isZero ? '#94a3b8' : '#dc2626'}; color:#fff; border:0; border-radius:6px; cursor:${isZero ? 'not-allowed' : 'pointer'}; font-weight:600;">📨 Confirm and send to ${preview.recipientCount}</button>
+    </div>
+  `;
+
+  modal.appendChild(card);
+  document.body.appendChild(modal);
+
+  card.querySelector('.mkt-confirm-cancel').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+  const confirmBtn = card.querySelector('.mkt-confirm-send');
+  const resultSpan = card.querySelector('.mkt-confirm-result');
+  if (!isZero) {
+    confirmBtn.addEventListener('click', async () => {
+      confirmBtn.disabled = true; confirmBtn.style.opacity = '0.6';
+      resultSpan.textContent = 'Sending…'; resultSpan.style.color = 'var(--muted)';
+      try {
+        const r = await fetch('/api/gala/marketing-send-now', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ sendId, confirmedRecipientCount: preview.recipientCount }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          resultSpan.textContent = '✗ ' + (data.error || `HTTP ${r.status}`);
+          resultSpan.style.color = 'var(--red)';
+          confirmBtn.disabled = false; confirmBtn.style.opacity = '1';
+          return;
+        }
+        resultSpan.textContent = `✓ Sent ${data.sent} of ${data.total}${data.failed ? ` · ${data.failed} failed` : ''}`;
+        resultSpan.style.color = 'var(--green, #15803d)';
+        confirmBtn.textContent = 'Done';
+        // Refresh the activity disclosure for this row + the global panel
+        const target = document.querySelector(`.mkt-activity-content[data-send="${sendId}"]`);
+        if (target) target.dataset.loaded = '';
+        loadGlobalSendActivity();
+        setTimeout(() => modal.remove(), 1800);
+      } catch (err) {
+        resultSpan.textContent = '✗ Network error: ' + err.message;
+        resultSpan.style.color = 'var(--red)';
+        confirmBtn.disabled = false; confirmBtn.style.opacity = '1';
+      }
+    });
+  }
+}
+
+// ── Global Send Activity panel ───────────────────────────────────────
+async function loadGlobalSendActivity() {
+  const root = document.getElementById('mkt-send-activity');
+  if (!root) return;
+  root.innerHTML = `<div style="color:var(--muted); font-style:italic; padding:12px 0;">Loading…</div>`;
+  try {
+    const r = await fetch('/api/gala/marketing-send-log?limit=50', { credentials: 'include' });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    if (!data.runs || data.runs.length === 0) {
+      root.innerHTML = `<div style="color:var(--muted); font-style:italic; padding:12px 0;">No marketing sends yet. When you click <strong>Preview send</strong> on a pipeline row and confirm, runs will show up here.</div>`;
+      return;
+    }
+    root.innerHTML = renderActivityList(data.runs);
+  } catch (err) {
+    root.innerHTML = `<div style="color:var(--red);">Failed to load: ${escapeHtml(err.message)}</div>`;
+  }
 }
 
 function renderAssets() {
@@ -4365,6 +4694,14 @@ async function loadMarketing() {
   renderQuestions();
   renderMatrix();
   renderMarketingKpis();
+  // Load global send activity panel
+  loadGlobalSendActivity();
+  // Wire refresh button (idempotent if loaded twice)
+  const refreshBtn = document.getElementById('mkt-send-activity-refresh');
+  if (refreshBtn && !refreshBtn.dataset.wired) {
+    refreshBtn.dataset.wired = 'yes';
+    refreshBtn.addEventListener('click', loadGlobalSendActivity);
+  }
 }
 document.querySelector('.nav-tab[data-tab="marketing"]')?.addEventListener('click', () => {
   if (!marketingLoaded) { marketingLoaded = true; loadMarketing(); }
