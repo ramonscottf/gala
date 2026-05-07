@@ -1029,6 +1029,29 @@ const StepWelcome = ({
   );
 };
 
+// ── SeatPickStepWrapper ───────────────────────────────────────────────
+// Task 5 — replaces the legacy StepShowing/StepSeats renders for the
+// wizard's case-2/case-3 paths. Mounts when the wizard reaches step 2
+// or step 3 (e.g. via the `/sponsor/{token}/seats` deep-link which
+// hands `initialStep={3}` from App.jsx) and immediately opens the
+// canonical SeatPickSheet via the existing `<Modal open={seatPickOpen}>`
+// at the bottom of Desktop. Closing the sheet without committing is
+// handled by the modal's `onClose`, which returns the wizard to step 1.
+//
+// Empty deps are intentional: this is one-shot per-mount. Route changes
+// land via Task 11's `openSheetOnMount` prop refactor, not here.
+const SeatPickStepWrapper = ({ seatPickOpen, setSeatPickOpen }) => {
+  useEffect(() => {
+    if (!seatPickOpen) setSeatPickOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div style={{ padding: 40, textAlign: 'center', color: 'var(--mute)' }}>
+      Opening seat picker…
+    </div>
+  );
+};
+
 // ── Step 2: Showing picker ────────────────────────────────────────────
 
 const StepShowing = ({
@@ -2440,59 +2463,15 @@ export default function Desktop({
             />
           )}
           {step === 2 && (
-            <StepShowing
-              showingsRich={ctx.showingsRich}
-              showingNumber={showingNumber}
-              setShowingNumber={setShowingNumber}
-              moviesHere={moviesHere}
-              movieId={movieId}
-              setMovieId={setMovieId}
-              theaterChoices={theaterChoices}
-              theaterId={theaterId}
-              setTheaterId={setTheaterId}
-              theatersById={ctx.theatersById}
-              onNext={() => setStep(3)}
-              onMovieDetail={(m) => {
-                const ctxShowing = ctx.showingsRich.find((sr) => sr.number === showingNumber);
-                setMovieDetail({
-                  ...m,
-                  __showingNumber: showingNumber,
-                  __showLabel: ctxShowing?.label,
-                  __showTime: ctxShowing?.time,
-                });
-              }}
+            <SeatPickStepWrapper
+              seatPickOpen={seatPickOpen}
+              setSeatPickOpen={setSeatPickOpen}
             />
           )}
           {step === 3 && (
-            <StepSeats
-              adaptedTheater={adaptedTheater}
-              movie={movie}
-              theaterMeta={theaterMeta}
-              theatersById={ctx.theatersById}
-              showingNumber={showingNumber}
-              seats={seats}
-              sel={sel}
-              setSel={setSel}
-              otherTaken={otherTaken}
-              remaining={remaining}
-              blockSize={blockSize}
-              onNext={() => setStep(4)}
-              showingsRich={ctx.showingsRich}
-              setShowingNumber={setShowingNumber}
-              moviesHere={moviesHere}
-              movieId={movieId}
-              setMovieId={setMovieId}
-              theaterChoices={theaterChoices}
-              setTheaterId={setTheaterId}
-              onMovieDetail={(m) => {
-                const ctxShowing = ctx.showingsRich.find((sr) => sr.number === showingNumber);
-                setMovieDetail({
-                  ...m,
-                  __showingNumber: showingNumber,
-                  __showLabel: ctxShowing?.label,
-                  __showTime: ctxShowing?.time,
-                });
-              }}
+            <SeatPickStepWrapper
+              seatPickOpen={seatPickOpen}
+              setSeatPickOpen={setSeatPickOpen}
             />
           )}
           {step === 4 && (
@@ -2609,7 +2588,14 @@ export default function Desktop({
           back-compat with email deep links. */}
       <Modal
         open={seatPickOpen}
-        onClose={() => setSeatPickOpen(false)}
+        onClose={() => {
+          setSeatPickOpen(false);
+          // Task 5 — when the sheet was opened by SeatPickStepWrapper
+          // (wizard case-2/3, e.g. the `/seats` deep link), bounce back
+          // to Welcome so the user doesn't see the wrapper's
+          // "Opening seat picker…" placeholder.
+          if (step === 2 || step === 3) setStep(1);
+        }}
         title="Place seats"
         maxWidth={760}
       >
@@ -2627,8 +2613,15 @@ export default function Desktop({
             onCommitted={(placed) => {
               setSeatPickOpen(false);
               setPostPick(placed);
+              // After a successful placement from case-2/3, return to
+              // Welcome so PostPickSheet renders over the canonical
+              // overview rather than over the wrapper placeholder.
+              if (step === 2 || step === 3) setStep(1);
             }}
-            onClose={() => setSeatPickOpen(false)}
+            onClose={() => {
+              setSeatPickOpen(false);
+              if (step === 2 || step === 3) setStep(1);
+            }}
           />
         )}
       </Modal>

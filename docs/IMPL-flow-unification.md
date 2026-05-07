@@ -683,6 +683,8 @@ EOF
 
 Summary: replace `<StepShowing>` (case 2) and `<StepSeats>` (case 3) renders with `<SeatPickStepWrapper>` that opens `SeatPickSheet` on mount. Modal `onClose` returns to step 1. Three-scenario manual verification (canonical, deep-link, cancel-path). Single commit: `feat: wire SeatPickSheet into desktop wizard cases 2-3`.
 
+- [x] Task 5 complete — see commit on `feat/flow-unification`.
+
 ---
 
 ## Task 6 (was Task 4 v1): Run shell-parity test (TDD green for wiring)
