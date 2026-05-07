@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.admin.config.js",
     "preview": "vite preview",
     "qa:install": "playwright install chromium",
     "qa:smoke": "playwright test -c qa/playwright.config.js qa/smoke.spec.js",
@@ -16,9 +16,15 @@
     "qa:stress": "node qa/api-stress.mjs --yes",
     "qa:lighthouse": "node qa/performance.mjs",
     "qa:webpagetest": "node qa/webpagetest.mjs",
-    "qa:all": "npm run qa:smoke && npm run qa:a11y && npm run qa:parity && (npm run qa:visual || true) && npm run qa:lighthouse && npm run qa:stress"
+    "qa:all": "npm run qa:smoke && npm run qa:a11y && npm run qa:parity && (npm run qa:visual || true) && npm run qa:lighthouse && npm run qa:stress",
+    "build:admin": "vite build --config vite.admin.config.js"
   },
   "dependencies": {
+    "@tiptap/core": "^3.22.5",
+    "@tiptap/extension-link": "^3.22.5",
+    "@tiptap/extension-placeholder": "^3.22.5",
+    "@tiptap/pm": "^3.22.5",
+    "@tiptap/starter-kit": "^3.22.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0"
