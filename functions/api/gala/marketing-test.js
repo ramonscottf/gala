@@ -13,15 +13,19 @@ import { sendSMS, sendEmail, galaEmailHtml } from './_notify.js';
 // ── Recipient resolution ───────────────────────────────────────────────────
 const SCOTT_EMAIL = 'sfoster@dsdmail.net';
 const SHERRY_EMAIL = 'smiggin@dsdmail.net';
+const KARA_EMAIL = 'ktoone@dsdmail.net';
 
 function resolveRecipients(env, who) {
-  // who: 'scott' | 'sherry' | 'both'
+  // who: 'scott' | 'sherry' | 'kara' | 'all' (legacy 'both' = scott + sherry)
   const list = [];
-  if (who === 'scott' || who === 'both') {
+  if (who === 'scott' || who === 'both' || who === 'all') {
     list.push({ email: SCOTT_EMAIL, phone: env.GALA_TEST_PHONE_SCOTT, label: 'Scott' });
   }
-  if (who === 'sherry' || who === 'both') {
+  if (who === 'sherry' || who === 'both' || who === 'all') {
     list.push({ email: SHERRY_EMAIL, phone: env.GALA_TEST_PHONE_SHERRY, label: 'Sherry' });
+  }
+  if (who === 'kara' || who === 'all') {
+    list.push({ email: KARA_EMAIL, phone: env.GALA_TEST_PHONE_KARA, label: 'Kara' });
   }
   return list;
 }
