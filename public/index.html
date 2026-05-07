@@ -205,29 +205,29 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   </div>
 
   <div class="body">
-    <h2 class="headline">Sign in</h2>
-    <p class="subhead">Enter your email and we'll send you a link.</p>
+    <h2 class="headline">Admin sign in</h2>
+    <p class="subhead">Enter the admin password.</p>
 
     <form id="loginForm" autocomplete="on">
-      <label for="email">Email</label>
+      <label for="password">Password</label>
       <input
-        type="email"
-        id="email"
-        name="email"
+        type="password"
+        id="password"
+        name="password"
         required
         autofocus
-        autocomplete="email"
-        placeholder="you@example.com"
+        autocomplete="current-password"
+        placeholder="Password"
         spellcheck="false"
         autocapitalize="none"
       >
-      <button type="submit" id="submitBtn">Send me a link</button>
+      <button type="submit" id="submitBtn">Sign in</button>
     </form>
 
     <div id="status" class="status" role="status"></div>
 
     <div class="fineprint">
-      <strong>Sponsor?</strong> If you have your invitation email, you can open the link there directly. This form is just for replacing a lost link or for admins.<br><br>
+      <strong>Sponsor?</strong> Use the link in your invitation email — that's how you reach your sponsor portal. This form is just for DEF admins.<br><br>
       Questions: <a href="mailto:smiggin@dsdmail.net">smiggin@dsdmail.net</a>
     </div>
   </div>
@@ -235,7 +235,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 <script>
 const form = document.getElementById('loginForm');
-const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
 const submitBtn = document.getElementById('submitBtn');
 const status = document.getElementById('status');
 
@@ -250,35 +250,37 @@ function clearStatus() {
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const email = emailInput.value.trim().toLowerCase();
-  if (!email) return;
+  const password = passwordInput.value;
+  if (!password) return;
 
   clearStatus();
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Sending...';
+  submitBtn.textContent = 'Signing in...';
 
   try {
-    const res = await fetch('/api/auth/request', {
+    const res = await fetch('/api/gala/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ password }),
     });
     const data = await res.json().catch(() => ({}));
 
     if (res.ok) {
-      // Always show generic success — don't leak whether email is in allowlist
-      showStatus('If that email is on file, we just sent you a sign-in link. Check your inbox (and spam).', 'success');
-      form.reset();
-    } else if (res.status === 429) {
-      showStatus('Too many requests. Wait a minute and try again.', 'error');
+      // Cookie is set by the server — go straight to admin
+      showStatus('Signed in. Redirecting…', 'success');
+      const next = new URLSearchParams(location.search).get('next') || '/admin';
+      window.location.href = next;
+    } else if (res.status === 401) {
+      showStatus('Incorrect password.', 'error');
+      passwordInput.select();
     } else {
-      showStatus(data.error || 'Something went wrong. Try again in a moment.', 'error');
+      showStatus(data.error || 'Something went wrong. Try again.', 'error');
     }
   } catch (err) {
     showStatus('Network error. Check your connection and retry.', 'error');
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Send me a link';
+    submitBtn.textContent = 'Sign in';
   }
 });
 </script>

@@ -21,7 +21,7 @@
 
 const PROTECTED_PREFIXES = ['/admin'];
 const COOKIE_NAME = 'gala_session';
-const MAX_AGE_SEC = 86400; // 24 hours — matches def-site
+const MAX_AGE_SEC = 2592000; // 30 days — admin convenience, password-protected
 
 async function verifySession(cookie, secret) {
   if (!cookie) return false;

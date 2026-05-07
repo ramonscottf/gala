@@ -1,5 +1,5 @@
 const COOKIE_NAME = 'gala_session';
-const MAX_AGE_SEC = 86400;
+const MAX_AGE_SEC = 2592000; // 30 days
 
 export async function createSession(secret) {
   const ts = String(Date.now());
