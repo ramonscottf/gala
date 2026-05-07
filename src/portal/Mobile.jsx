@@ -14,7 +14,7 @@
 //
 // Visual fidelity is held to debug-glass.png and the design source.
 
-import { useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { BRAND, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
@@ -36,6 +36,8 @@ import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
+
+const SheetFrameContext = createContext(false);
 
 // ── shared mini-components ─────────────────────────────────────────────
 
@@ -2427,6 +2429,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
 
 const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
   const { isDark: systemDark } = useTheme();
+  const withinFrame = useContext(SheetFrameContext);
   // Phase 1.15 — forceDark lets the SeatPickSheet host the cinema/seat-pick
   // experience in dark navy regardless of system theme, matching its
   // dark-cinema intent. PostPickSheet and AssignTheseSheet leave forceDark
@@ -2437,7 +2440,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
     <div
       onClick={onClose}
       style={{
-        position: 'fixed',
+        position: withinFrame ? 'absolute' : 'fixed',
         inset: 0,
         background: 'rgba(0,0,0,0.55)',
         zIndex: 50,
@@ -2845,6 +2848,7 @@ export default function Mobile({
   isDev,
   onRefresh,
   openSheetOnMount = false,
+  desktopFrame = false,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -3022,19 +3026,22 @@ export default function Mobile({
   }
 
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100dvh',
-        overflow: 'hidden',
-        position: 'relative',
-        background: isDark ? BRAND.navyDeep : 'var(--ground)',
-        color: isDark ? '#fff' : BRAND.ink,
-        fontFamily: FONT_UI,
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <SheetFrameContext.Provider value={desktopFrame}>
+      <div
+        className={desktopFrame ? 'mobile-shell-root mobile-shell-root--desktop-frame' : 'mobile-shell-root'}
+        data-testid="mobile-shell-root"
+        style={{
+          width: '100%',
+          height: '100dvh',
+          overflow: 'hidden',
+          position: 'relative',
+          background: isDark ? BRAND.navyDeep : 'var(--ground)',
+          color: isDark ? '#fff' : BRAND.ink,
+          fontFamily: FONT_UI,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
       {isDev && <DevBanner />}
       <FloatingAvatar name={data.name} onTap={() => setSettingsOpen(true)} />
 
@@ -3339,6 +3346,7 @@ export default function Mobile({
           onClose={() => setMovieDetail(null)}
         />
       )}
-    </div>
+      </div>
+    </SheetFrameContext.Provider>
   );
 }

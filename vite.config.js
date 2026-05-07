@@ -42,6 +42,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      '/assets': {
+        target: 'https://gala.daviskids.org',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
 });
