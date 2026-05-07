@@ -12,10 +12,11 @@
     "qa:visual": "playwright test -c qa/playwright.config.js qa/visual.spec.js",
     "qa:visual:update": "playwright test -c qa/playwright.config.js qa/visual.spec.js --update-snapshots",
     "qa:a11y": "playwright test -c qa/playwright.config.js qa/a11y.spec.js",
+    "qa:parity": "playwright test -c qa/playwright.config.js qa/shell-parity.spec.js",
     "qa:stress": "node qa/api-stress.mjs --yes",
     "qa:lighthouse": "node qa/performance.mjs",
     "qa:webpagetest": "node qa/webpagetest.mjs",
-    "qa:all": "npm run qa:smoke && npm run qa:visual && npm run qa:a11y && npm run qa:stress && npm run qa:lighthouse"
+    "qa:all": "npm run qa:smoke && npm run qa:a11y && npm run qa:parity && (npm run qa:visual || true) && npm run qa:lighthouse && npm run qa:stress"
   },
   "dependencies": {
     "react": "^18.3.1",

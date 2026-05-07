@@ -450,7 +450,7 @@ Today (on `main`, before Tasks 2-3) leg (a) fails for canonical Mobile + Desktop
 
 **Steps:**
 
-- [ ] **Step 1: Restore the QA scaffolding from the stash.**
+- [x] **Step 1: Restore the QA scaffolding from the stash.**
 
 ```bash
 git stash show -p stash@{0} -- qa/lib/normalize.js qa/shell-parity.spec.js \
@@ -461,11 +461,11 @@ Expected: 2 created, 2 modified.
 
 ⚠️ Do NOT apply `docs/IMPL-flow-unification.md` from the stash — v1's checkbox ticks don't match v2's task structure.
 
-- [ ] **Step 2: Re-confirm endpoint contracts (top-of-spec comment block).**
+- [x] **Step 2: Re-confirm endpoint contracts (top-of-spec comment block).**
 
 The comment block at the top of `qa/shell-parity.spec.js` already documents the contracts. Re-verify by re-reading `functions/api/gala/portal/[token]/finalize.js` and `pick.js`. Update the spec's contract block if anything changed.
 
-- [ ] **Step 3: Rewrite the test body in `qa/shell-parity.spec.js`.**
+- [x] **Step 3: Rewrite the test body in `qa/shell-parity.spec.js`.**
 
 Replace the v1 test (which asserted byte-identical sequences) with v2 (which asserts each run hits /finalize once and renders ConfirmationScreen):
 
@@ -612,7 +612,7 @@ test.describe('shell parity', () => {
 
 **Caveat 2:** `legacy-finalize` testid lives on a button in `StepConfirm` which is gated on `dinner.allComplete` AND requires the user to be on step 4. The `onPlaced` bounce-to-step-2 (`Desktop.jsx:2232`) is the obstacle. The driver may need to programmatically navigate to step 4 via `page.evaluate(() => window.__setStep?.(4))` if the wizard exposes a step-control hook, OR click through the step controls. Verify by inspecting Desktop.jsx's step-control buttons.
 
-- [ ] **Step 4: Run against the WIP branch (Tasks 2-3 applied) — should pass.**
+- [x] **Step 4: Run against the WIP branch (Tasks 2-3 applied) — should pass.**
 
 ```bash
 QA_TOKEN=dgu5lwmfmgtecky3 npm run qa:parity 2>&1 | tee qa/output/parity-result-task4.txt
@@ -625,7 +625,7 @@ If a run fails:
 - (b) Selector timeout on the legacy run → testid placement issue. Verify.
 - (c) `count === 0` for legacy → couldn't navigate to step 4. Add a step-control workaround.
 
-- [ ] **Step 5: Run against `main` (TDD-red receipt for the commit body).**
+- [x] **Step 5: Run against `main` (TDD-red receipt for the commit body).**
 
 ```bash
 git stash push -u -m "task-4-validate-against-main"
@@ -643,7 +643,7 @@ Expected: mobile and desktop-canonical FAIL (`count === 0` because no canonical 
 
 `qa/output/parity-failure-on-main.txt` is the TDD-red receipt — paste into Step 6's commit body.
 
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
 
 ```bash
 git add qa/shell-parity.spec.js qa/lib/normalize.js package.json qa/README.md
