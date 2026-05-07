@@ -1041,7 +1041,7 @@ export default function Desktop({
   theaterLayouts,
   seats,
   isDev,
-  initialStep = 1,
+  openSheetOnMount = false,
   apiBase = '',
   onRefresh,
 }) {
@@ -1059,7 +1059,7 @@ export default function Desktop({
     ? `${company} invited you to ${blockSize} seat${blockSize === 1 ? '' : 's'}`
     : company;
 
-  const [step, setStep] = useState(initialStep);
+  const [step, setStep] = useState(1);
   const remaining = blockSize - seats.totalAssigned;
   // T2 v2 — useFinalize provides confirmationData (consumed by the
   // ConfirmationScreen short-circuit below) plus finalize/finalizing
@@ -1089,10 +1089,20 @@ export default function Desktop({
   // surfaces the same NightOfContent via a top-nav button.
   const [nightOpen, setNightOpen] = useState(false);
   // SeatPickSheet (in Modal wrapper) is the canonical seat-pick surface
-  // and chains to PostPickSheet → AssignTheseSheet / DinnerPicker. Stepper
-  // cases 2/3 still mount SeatPickStepWrapper for /seats deep-link
-  // back-compat (Task 11 collapses that to a direct prop).
+  // and chains to PostPickSheet → AssignTheseSheet / DinnerPicker.
+  //
+  // Task 11: `/seats` deep-link now flows through `openSheetOnMount`
+  // — the prop arrives true, the effect below opens the sheet, and the
+  // wizard stays on step 1 underneath. Deps `[openSheetOnMount]` (NOT
+  // `[]`) so route changes from `/:token` → `/:token/seats` re-fire when
+  // React Router keeps the same component instance mounted across path
+  // changes. SeatPickStepWrapper still exists for the wizard's case-2/3
+  // renders but is no longer reachable via App.jsx (cases 2/3 are dead
+  // code — separately deleted in a future refactor pass).
   const [seatPickOpen, setSeatPickOpen] = useState(false);
+  useEffect(() => {
+    if (openSheetOnMount) setSeatPickOpen(true);
+  }, [openSheetOnMount]);
   const [postPick, setPostPick] = useState(null);
   const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);

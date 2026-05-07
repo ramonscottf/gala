@@ -1,8 +1,12 @@
-// Router root — viewport-aware shell that dispatches to Mobile/MobileWizard
-// (<880px) or Desktop (≥880px). Routes are relative to the /sponsor
-// basename set by main.jsx, so they read as ('/:token', '/:token/seats').
-// The previous multi-prefix scheme (/gala-dev, /gala-seats, /gala) is gone
-// after the May 2026 migration to gala.daviskids.org.
+// Router root — viewport-aware shell that dispatches to Mobile (<880px) or
+// Desktop (≥880px). Routes are relative to the /sponsor basename set by
+// main.jsx, so they read as ('/:token', '/:token/seats'). The previous
+// multi-prefix scheme (/gala-dev, /gala-seats, /gala) is gone after the
+// May 2026 migration to gala.daviskids.org.
+//
+// Task 11: `/seats` deep link routes through canonical Mobile/Desktop +
+// SeatPickSheet via `openSheetOnMount={onSeatsRoute}`. The legacy
+// MobileWizard branch is gone (Task 8 removes the file).
 
 import { useEffect, useState } from 'react';
 import { Routes, Route, useParams, useLocation } from 'react-router-dom';
@@ -13,7 +17,6 @@ import { useSeats } from './hooks/useSeats.js';
 import { useViewport } from './hooks/useViewport.js';
 import { useTheme } from './hooks/useTheme.js';
 import Mobile from './portal/Mobile.jsx';
-import MobileWizard from './portal/MobileWizard.jsx';
 import Desktop from './portal/Desktop.jsx';
 
 function isDevPrefix() {
@@ -105,19 +108,6 @@ function PortalContainer() {
   }
 
   if (isMobile) {
-    if (onSeatsRoute) {
-      return (
-        <MobileWizard
-          portal={portal.state}
-          token={token}
-          theaterLayouts={layouts}
-          seats={seats}
-          onDone={() => portal.refresh()}
-          apiBase={config.apiBase}
-          onRefresh={portal.refresh}
-        />
-      );
-    }
     return (
       <Mobile
         portal={portal.state}
@@ -126,6 +116,7 @@ function PortalContainer() {
         seats={seats}
         isDev={dev}
         onRefresh={portal.refresh}
+        openSheetOnMount={onSeatsRoute}
       />
     );
   }
@@ -137,7 +128,7 @@ function PortalContainer() {
       theaterLayouts={layouts}
       seats={seats}
       isDev={dev}
-      initialStep={onSeatsRoute ? 3 : 1}
+      openSheetOnMount={onSeatsRoute}
       apiBase={config.apiBase}
       onRefresh={portal.refresh}
     />

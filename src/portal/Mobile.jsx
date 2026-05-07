@@ -14,7 +14,7 @@
 //
 // Visual fidelity is held to debug-glass.png and the design source.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { BRAND, FONT_DISPLAY, FONT_UI, TIERS } from '../brand/tokens.js';
 import { Btn, Icon, SectionEyebrow } from '../brand/atoms.jsx';
@@ -2827,7 +2827,15 @@ const SeatAssignSheet = ({
 
 // ── Mobile root ───────────────────────────────────────────────────────
 
-export default function Mobile({ portal, token, theaterLayouts, seats, isDev, onRefresh }) {
+export default function Mobile({
+  portal,
+  token,
+  theaterLayouts,
+  seats,
+  isDev,
+  onRefresh,
+  openSheetOnMount = false,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -2873,6 +2881,15 @@ export default function Mobile({ portal, token, theaterLayouts, seats, isDev, on
   // three cards. AssignTheseSheet does multi-seat batch delegation.
   // DinnerPicker scopes to just-placed seats.
   const [seatPickOpen, setSeatPickOpen] = useState(false);
+  // Task 11: `/seats` deep-link now flows through `openSheetOnMount`
+  // (App.jsx no longer routes /seats to MobileWizard). Deps
+  // `[openSheetOnMount]` (NOT `[]`) so route changes from `/:token` →
+  // `/:token/seats` re-fire when React Router keeps the same component
+  // instance mounted across path changes — per spec, "the URL opens the
+  // sheet, every time."
+  useEffect(() => {
+    if (openSheetOnMount) setSeatPickOpen(true);
+  }, [openSheetOnMount]);
   const [postPick, setPostPick] = useState(null);
   const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);

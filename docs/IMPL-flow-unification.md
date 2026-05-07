@@ -799,6 +799,8 @@ Summary: import + render at top of `PostPickSheet`. Both shells get the reward b
 
 Summary: `App.jsx` `openSheetOnMount={onSeatsRoute}` replaces `initialStep`. `Desktop.jsx` accepts prop with `[openSheetOnMount]` deps. The shared finalize helper extraction note from v1 is now a no-op — Task 2's `useFinalize` already covers it.
 
+- [x] Task 11 complete — `App.jsx` drops the `MobileWizard` import + the `if (onSeatsRoute) { return <MobileWizard ... />; }` branch. Both `<Mobile>` and `<Desktop>` now accept `openSheetOnMount={onSeatsRoute}`. `Desktop.jsx` drops the `initialStep` prop (replaced by the new `openSheetOnMount` + `useEffect` pattern). `Mobile.jsx` adds the same prop + effect (`useEffect` newly imported). Deps `[openSheetOnMount]` (NOT `[]`) so SPA route changes from `/:token` → `/:token/seats` re-fire the effect even when React Router preserves the component instance — verified via Playwright SPA-nav probe (sheet opens after `pushState` + `popstate` flips the URL). Hard navigations also work. `qa:parity` 1/1 (3 skipped per project pin) green; all three legs (mobile, desktop-canonical, desktop-legacy) report `count=1 body=""`. The legacy `SeatPickStepWrapper` (cases 2/3 of the wizard) stays on disk — it's no longer reachable via App.jsx but the wizard render block still defines it; deleting cases 2/3 is out of scope. Bundle delta: 170.17 → 135.00 KB raw (−35.17 KB), 43.66 → 35.84 KB gzip (−7.82 KB) — MobileWizard.jsx is no longer imported, so vite tree-shakes the entire ~2,200-line module out of the bundle. The file remains on disk for Task 8's clean `git rm`.
+
 ---
 
 ## Task 12 (was Tasks 10 + 11 v1, merged): Final QA + open PR
