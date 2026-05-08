@@ -82,11 +82,71 @@
   .gs-kpi-n { font-size: 20px; }
 }
 
+/* ── Search bar (its own row, prominent) ────────────────────────────── */
+.gs-searchbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--def-border);
+  border-radius: var(--def-radius-md);
+  padding: 0 14px;
+  margin-bottom: 12px;
+  height: 44px;
+  transition: border 0.15s, box-shadow 0.15s;
+}
+.gs-searchbar:focus-within {
+  border-color: var(--event-accent);
+  box-shadow: 0 0 0 3px var(--event-accent-soft);
+}
+.gs-searchbar-icon {
+  font-size: 14px;
+  color: var(--def-light);
+  flex-shrink: 0;
+}
+.gs-searchbar-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--def-text);
+  padding: 0;
+  min-width: 0;
+}
+.gs-searchbar-input::placeholder { color: var(--def-light); }
+.gs-searchbar-clear {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--def-light);
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.gs-searchbar-clear:hover { background: var(--def-bg-soft); color: var(--def-text); }
+.gs-searchbar-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--def-light);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* ── Filter bar ──────────────────────────────────────────────────────── */
 .gs-filterbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
@@ -94,7 +154,7 @@
   display: flex; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0;
 }
 .gs-pill {
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 20px;
   border: 1px solid var(--def-border);
   background: #fff;
@@ -102,6 +162,7 @@
   font-size: 12px; font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .gs-pill:hover { border-color: var(--def-border-hover); color: var(--def-text); }
 .gs-pill.is-active {
@@ -109,7 +170,45 @@
   color: #fff;
   border-color: var(--event-accent);
 }
+
+/* ── Sort dropdown ───────────────────────────────────────────────────── */
+.gs-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.gs-sort-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--def-muted);
+}
+.gs-sort-select {
+  padding: 5px 26px 5px 10px;
+  border: 1px solid var(--def-border);
+  border-radius: var(--def-radius-sm);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  background: #fff;
+  color: var(--def-text);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+.gs-sort-select:hover { border-color: var(--def-border-hover); }
+.gs-sort-select:focus {
+  outline: none;
+  border-color: var(--event-accent);
+  box-shadow: 0 0 0 3px var(--event-accent-soft);
+}
+
 .gs-search {
+  /* legacy class — kept in case other components reference it. New code uses .gs-searchbar */
   padding: 7px 12px;
   border: 1px solid var(--def-border);
   border-radius: var(--def-radius-md);
@@ -187,6 +286,8 @@
 .gs-badge.tier-friends  { background: #fce7f3; color: #be185d; }
 .gs-badge.tier-individual { background: var(--def-bg-softer); color: var(--def-muted); }
 .gs-badge.tier-trade    { background: var(--def-purple-soft); color: var(--def-purple); }
+.gs-badge.tier-donation { background: #ecfeff; color: #0e7490; }
+.gs-badge.tier-auction  { background: #fdf4ff; color: #86198f; }
 .gs-badge.tier-none     { background: var(--def-bg-softer); color: var(--def-light); }
 
 .gs-status {

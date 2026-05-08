@@ -9,8 +9,11 @@ const TIER_CLASS = {
   'Cell Phone': 'tier-cell',
   'Friends and Family': 'tier-friends',
   'Friends & Family': 'tier-friends',
+  'Split Friends & Family': 'tier-friends',
   'Individual Seats': 'tier-individual',
   'Trade': 'tier-trade',
+  'Donation': 'tier-donation',
+  'Silent Auction': 'tier-auction',
 };
 
 export function TierBadge({ tier }) {

@@ -13,6 +13,7 @@ export function SponsorsView() {
   const [tierFilter, setTierFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('status'); // 'status' | 'company' | 'contact' | 'activity' | 'amount'
   const [composer, setComposer] = useState(null); // { sponsor, channel }
   const [toast, setToast] = useState(null);
 
@@ -75,17 +76,36 @@ export function SponsorsView() {
         (s.email || '').toLowerCase().includes(q)
       );
     }
+    const tsOf = (s) => {
+      const v = lastActivityAt(s);
+      if (!v) return 0;
+      return new Date(v + (v.includes('Z') ? '' : 'Z')).getTime() || 0;
+    };
+    const contactName = (s) => [s.last_name, s.first_name].filter(Boolean).join(' ').toLowerCase();
+    const company = (s) => (s.company || '').toLowerCase();
+
     return [...list].sort((a, b) => {
-      const oa = statusOrder(a);
-      const ob = statusOrder(b);
-      if (oa !== ob) return oa - ob;
-      // Within group, most recent activity first.
-      const ta = new Date((lastActivityAt(a) || '') + (lastActivityAt(a) && !lastActivityAt(a).includes('Z') ? 'Z' : '')).getTime() || 0;
-      const tb = new Date((lastActivityAt(b) || '') + (lastActivityAt(b) && !lastActivityAt(b).includes('Z') ? 'Z' : '')).getTime() || 0;
-      if (tb !== ta) return tb - ta;
-      return (a.company || '').localeCompare(b.company || '');
+      switch (sortBy) {
+        case 'company':
+          return company(a).localeCompare(company(b));
+        case 'contact':
+          return contactName(a).localeCompare(contactName(b)) || company(a).localeCompare(company(b));
+        case 'activity':
+          return tsOf(b) - tsOf(a) || company(a).localeCompare(company(b));
+        case 'amount':
+          return (Number(b.amount_paid) || 0) - (Number(a.amount_paid) || 0) || company(a).localeCompare(company(b));
+        case 'status':
+        default: {
+          const oa = statusOrder(a);
+          const ob = statusOrder(b);
+          if (oa !== ob) return oa - ob;
+          const ta = tsOf(a), tb = tsOf(b);
+          if (tb !== ta) return tb - ta;
+          return company(a).localeCompare(company(b));
+        }
+      }
     });
-  }, [sponsors, tierFilter, statusFilter, search]);
+  }, [sponsors, tierFilter, statusFilter, search, sortBy]);
 
   const handleAction = async (sponsorId, action) => {
     const sponsor = sponsors.find(s => s.id === sponsorId);
@@ -168,24 +188,71 @@ export function SponsorsView() {
     <div className="gs-root event-gala">
       <KpiStrip counts={counts} activeFilter={statusFilter} onFilter={setStatusFilter} />
 
+      {/* Search row — full width, prominent */}
+      <div className="gs-searchbar">
+        <span className="gs-searchbar-icon" aria-hidden>🔍</span>
+        <input
+          className="gs-searchbar-input"
+          placeholder="Search by company, contact name, email…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          autoComplete="off"
+        />
+        {search && (
+          <button
+            type="button"
+            className="gs-searchbar-clear"
+            onClick={() => setSearch('')}
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        )}
+        <div className="gs-searchbar-count">
+          {visible.length} of {sponsors.length}
+        </div>
+      </div>
+
+      {/* Filter + sort row */}
       <div className="gs-filterbar">
         <div className="gs-filterbar-pills">
-          {['all', 'Platinum', 'Gold', 'Silver', 'Bronze'].map(t => (
+          {[
+            'all',
+            'Platinum',
+            'Gold',
+            'Silver',
+            'Bronze',
+            'Friends and Family',
+            'Individual Seats',
+            'Cell Phone',
+            'Donation',
+            'Silent Auction',
+            'Trade',
+            'Split Friends & Family',
+          ].map(t => (
             <button
               key={t}
               className={`gs-pill ${tierFilter === t ? 'is-active' : ''}`}
               onClick={() => setTierFilter(t)}
             >
-              {t === 'all' ? 'All tiers' : t}
+              {t === 'all' ? 'All tiers' : t === 'Friends and Family' ? 'Friends & Family' : t}
             </button>
           ))}
         </div>
-        <input
-          className="gs-search"
-          placeholder="Search company, name, email…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <div className="gs-sort">
+          <label className="gs-sort-label">Sort:</label>
+          <select
+            className="gs-sort-select"
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+          >
+            <option value="status">Status (stalled first)</option>
+            <option value="company">Company A→Z</option>
+            <option value="contact">Contact name A→Z</option>
+            <option value="activity">Most recent activity</option>
+            <option value="amount">Amount (highest first)</option>
+          </select>
+        </div>
       </div>
 
       {visible.length === 0 ? (
