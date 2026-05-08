@@ -32,12 +32,30 @@ export async function onRequest(context) {
 }
 
 async function handleGet(env) {
+  // Pipeline schedule + per-row aggregate of what's actually been sent.
+  // The LEFT JOIN against marketing_send_log lets us auto-derive a 'Sent'
+  // status whenever at least one log row exists for the send_id, regardless
+  // of what marketing_sends.status says. Single source of truth: the log.
   const { results } = await env.GALA_DB.prepare(
-    `SELECT send_id, phase, phase_title, phase_color, phase_desc, phase_range,
-            channel, date, time, audience, status, title, subject, body, notes,
-            sort_order, updated_at, updated_by
-       FROM marketing_sends
-       ORDER BY phase, sort_order`
+    `SELECT
+        ms.send_id, ms.phase, ms.phase_title, ms.phase_color, ms.phase_desc, ms.phase_range,
+        ms.channel, ms.date, ms.time, ms.audience, ms.status, ms.title, ms.subject, ms.body, ms.notes,
+        ms.sort_order, ms.updated_at, ms.updated_by,
+        log_agg.actual_sent       AS actual_sent,
+        log_agg.actual_failed     AS actual_failed,
+        log_agg.first_sent_at     AS first_sent_at,
+        log_agg.last_sent_at      AS last_sent_at
+       FROM marketing_sends ms
+       LEFT JOIN (
+         SELECT send_id,
+                SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END)   AS actual_sent,
+                SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS actual_failed,
+                MIN(sent_at) AS first_sent_at,
+                MAX(sent_at) AS last_sent_at
+           FROM marketing_send_log
+          GROUP BY send_id
+       ) log_agg ON log_agg.send_id = ms.send_id
+       ORDER BY ms.phase, ms.sort_order`
   ).all();
 
   // Group by phase for the dashboard's existing render shape
@@ -66,6 +84,13 @@ async function handleGet(env) {
       notes: r.notes,
       updated_at: r.updated_at,
       updated_by: r.updated_by,
+      // Real-send-derived fields. firstSentAt is the canonical "this was sent"
+      // signal — when truthy, the UI shows a green Sent pill regardless of
+      // ms.status. Counts let the UI show "✓ Sent May 7 · 93 sent".
+      actualSent: r.actual_sent || 0,
+      actualFailed: r.actual_failed || 0,
+      firstSentAt: r.first_sent_at || null,
+      lastSentAt: r.last_sent_at || null,
     });
   }
 
