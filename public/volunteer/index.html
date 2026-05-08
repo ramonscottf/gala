@@ -1685,8 +1685,14 @@ async function renderSignup() {
 
   // SMS opt-in (REQUIRED — we need to be able to text shift updates and
   // day-of changes. Default-on; submit blocks if unchecked.)
+  // NOTE: el() helper uses setAttribute which doesn't always sync the IDL
+  // `checked` property on first paint, and we hit a wave of stored 0s in
+  // production (May 6-8) where everyone showed as opted out despite the
+  // form blocking unchecked submissions. Force the property after append
+  // and read DOM state at submit time as the source of truth.
   const smsWrap = el('label', { class: 'checkbox-row' });
-  const cb = el('input', { type: 'checkbox', checked: true });
+  const cb = el('input', { type: 'checkbox', id: 'vol-sms-checkbox', checked: true });
+  cb.checked = true;            // hard-set the IDL property
   form.smsOptIn = true;
   cb.addEventListener('change', e => form.smsOptIn = e.target.checked);
   smsWrap.appendChild(cb);
@@ -1719,6 +1725,11 @@ async function renderSignup() {
         alertBox.appendChild(el('div', { class: 'alert alert--error' }, 'Please pick a position — scroll up and tap the one you want.'));
         return;
       }
+      // Read SMS opt-in straight from the DOM at submit time — the form
+      // object can desync if the change handler never fires (default-checked
+      // boxes that the user never touches). The DOM is truth.
+      const smsCb = document.getElementById('vol-sms-checkbox');
+      if (smsCb) form.smsOptIn = smsCb.checked;
       if (!form.smsOptIn) {
         alertBox.appendChild(el('div', { class: 'alert alert--error' }, 'We need your OK to text you — that\'s how we send shift reminders and day-of updates. Please check the SMS consent box.'));
         return;

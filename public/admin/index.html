@@ -1348,61 +1348,22 @@ body {
 
   <!-- ── Volunteers Tab ── -->
   <div class="tab-panel" id="panel-volunteers">
-    <!-- KPI strip -->
-    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 24px;">
-      <div class="kpi-card">
-        <div class="kpi-card__icon" style="background: var(--blue); box-shadow: none;">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div class="kpi-card__value" id="vol-kpi-total">--</div>
-        <div class="kpi-card__label">Registered</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card__icon" style="background: linear-gradient(135deg, #4caf50, #66bb6a); box-shadow: 0 0 20px rgba(76,175,80,0.3);">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div class="kpi-card__value" id="vol-kpi-checkedin">--</div>
-        <div class="kpi-card__label">Checked In</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card__icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); box-shadow: 0 0 20px rgba(245,158,11,0.3);">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div class="kpi-card__value" id="vol-kpi-waitlist">--</div>
-        <div class="kpi-card__label">Waitlisted</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-card__icon" style="background: var(--pink); box-shadow: none;">
-          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        </div>
-        <div class="kpi-card__value" id="vol-kpi-agreed">--</div>
-        <div class="kpi-card__label">Signed Agreement</div>
-      </div>
-    </div>
 
-    <!-- Capacity by role -->
-    <h3 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Capacity by Shift</h3>
-    <div id="vol-capacity" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:28px;">
-      <div class="shimmer" style="height:68px;"></div>
-      <div class="shimmer" style="height:68px;"></div>
-      <div class="shimmer" style="height:68px;"></div>
-      <div class="shimmer" style="height:68px;"></div>
-    </div>
-
-    <!-- Action row -->
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <label for="vol-filter-select" style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Filter</label>
-        <select id="vol-filter-select" class="search-input" style="padding:8px 32px 8px 12px; font-size:13px; min-width:220px; cursor:pointer; background-color:var(--card); appearance:auto;">
-          <option value="all">Show all volunteers</option>
+    <!-- ── Dense unified dashboard card (Child Spree pattern) ── -->
+    <div id="vol-dashboard" style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px; transition:border-color 0.18s;">
+      <!-- Row 1: segmented type control + filter dropdowns + KPI pills -->
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+        <!-- Adults / Students segmented control -->
+        <div id="vol-type-seg" style="display:inline-flex; background:#F1F5F9; padding:2px; border-radius:8px;">
+          <button data-vol-type="adult" class="vol-seg-btn" style="padding:6px 12px; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; background:#fff; color:var(--navy, #0a1733); box-shadow:0 1px 2px rgba(0,0,0,0.06); transition:all 0.12s;">Adults <span class="vol-seg-count" data-for="adult" style="font-weight:500; color:#94a3b8; font-variant-numeric:tabular-nums;">0</span></button>
+          <button data-vol-type="student" class="vol-seg-btn" style="padding:6px 12px; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; background:transparent; color:#64748b; transition:all 0.12s;">Students <span class="vol-seg-count" data-for="student" style="font-weight:500; color:#94a3b8; font-variant-numeric:tabular-nums;">0</span></button>
+        </div>
+        <!-- Status dropdown -->
+        <select id="vol-filter-select" style="padding:6px 10px; font-size:12px; font-weight:500; background:#F1F5F9; color:#64748b; border:1px solid transparent; border-radius:8px; cursor:pointer; appearance:auto;">
+          <option value="all">All statuses</option>
           <optgroup label="By status">
             <option value="status:registered">Registered</option>
-            <option value="status:waitlisted">Waitlist</option>
             <option value="status:checked_in">Checked In</option>
-          </optgroup>
-          <optgroup label="By participant type">
-            <option value="ptype:adult">Adults only</option>
-            <option value="ptype:student">Students only</option>
           </optgroup>
           <optgroup label="By position">
             <option value="position:candy_setup">Candy Setup</option>
@@ -1417,22 +1378,34 @@ body {
             <option value="deleted">🗑️ Recently deleted</option>
           </optgroup>
         </select>
+        <!-- KPI pills pushed to the right -->
+        <div style="margin-left:auto; display:flex; gap:6px; align-items:center; font-size:12px; color:#64748b; flex-wrap:wrap;">
+          <span><span id="vol-kpi-total" style="font-weight:700; color:var(--navy, #0a1733); font-variant-numeric:tabular-nums;">0</span> registered</span>
+          <span style="color:#CBD5E1;">·</span>
+          <span><span id="vol-kpi-checkedin" style="font-weight:700; color:#10b981; font-variant-numeric:tabular-nums;">0</span> checked in</span>
+        </div>
       </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn btn-primary" id="vol-compose-btn">Compose Message</button>
-        <button class="btn btn-secondary" id="vol-test-btn" title="Test SMS and email pipelines">Test Pipes</button>
-        <button class="btn btn-secondary" id="vol-export-btn">Export CSV</button>
-        <button class="btn btn-secondary" id="vol-refresh-btn">Refresh</button>
+
+      <!-- Row 2: Position rings (filtered by active participant type) -->
+      <div id="vol-capacity" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:4px; padding:2px; background:#FAFBFC; border-radius:10px;">
+        <div class="shimmer" style="height:54px;"></div>
+        <div class="shimmer" style="height:54px;"></div>
+        <div class="shimmer" style="height:54px;"></div>
       </div>
+
+      <!-- Row 3: Active facet summary (only when filtered) -->
+      <div id="vol-active-filters" style="display:none; align-items:center; gap:10px; margin-top:10px; padding:9px 12px; border-radius:8px; font-size:13px;"></div>
     </div>
 
-    <div class="search-bar">
-      <input type="text" id="vol-search" class="search-input" placeholder="Search by name, email, org..." />
-      <a href="/volunteer" target="_blank" class="btn btn-secondary" style="flex-shrink:0;">Public Signup ↗</a>
+    <!-- Search + actions row -->
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+      <input type="text" id="vol-search" placeholder="Search volunteers..." style="flex:1; min-width:200px; padding:8px 10px; font-size:13px; background:#fff; border:1px solid var(--border); border-radius:8px; color:var(--text-primary);"/>
+      <button class="btn btn-primary" id="vol-compose-btn" style="padding:8px 12px; font-size:12px;">Message</button>
+      <button class="btn btn-secondary" id="vol-test-btn" title="Test SMS and email pipelines" style="padding:8px 12px; font-size:12px;">Test Pipes</button>
+      <button class="btn btn-secondary" id="vol-export-btn" style="padding:8px 12px; font-size:12px;">Export</button>
+      <button class="btn btn-secondary" id="vol-refresh-btn" style="padding:8px 12px; font-size:12px;">Refresh</button>
+      <a href="/volunteer" target="_blank" class="btn btn-secondary" style="padding:8px 12px; font-size:12px;">Public Signup ↗</a>
     </div>
-
-    <!-- Active facet filters bar (shown when capacity card or arrival pill is clicked) -->
-    <div id="vol-active-filters" style="display:none; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; padding:10px 14px; background:rgba(232,84,140,0.08); border:1px solid rgba(232,84,140,0.25); border-radius:10px;"></div>
 
     <!-- Volunteer list (expandable cards, childspree pattern) -->
     <div id="vol-list" style="display:flex; flex-direction:column; gap:8px;">
@@ -1460,7 +1433,6 @@ body {
           <select id="vol-compose-to" class="search-input" style="max-width:100%; width:100%;">
             <option value="all">All volunteers</option>
             <option value="registered">Registered only</option>
-            <option value="waitlisted">Waitlist only</option>
             <option value="checked_in">Checked in only</option>
             <option value="ptype:adult">All Adults</option>
             <option value="ptype:student">All Students</option>
@@ -2955,6 +2927,7 @@ let volunteersData = [];
 let deletedVolunteersData = [];
 let volunteerFilter = 'all';
 let volunteerSearch = '';
+let volunteerTypeFilter = 'adult';      // 'adult' | 'student' — segmented control state
 let volunteerPositions = {};
 let volunteerPositionCounts = {};
 let volunteerCaps = {};
@@ -2999,81 +2972,90 @@ async function loadVolunteers() {
 }
 
 function renderVolunteerKPIs() {
+  // Pure top-line counts displayed inline in the dashboard card (no big card grid).
+  // Waitlisted is excluded from "registered" because the gala doesn't actually waitlist
+  // anyone — Scott's policy is everyone helps. Kept the field so legacy rows still load.
   const total = volunteersData.filter(v => v.status !== 'waitlisted').length;
   const checked = volunteersData.filter(v => v.checkedIn).length;
-  const wait = volunteersData.filter(v => v.status === 'waitlisted').length;
-  const agreed = volunteersData.filter(v => v.agreedToTerms).length;
-  document.getElementById('vol-kpi-total').textContent = total;
-  document.getElementById('vol-kpi-checkedin').textContent = checked;
-  document.getElementById('vol-kpi-waitlist').textContent = wait;
-  document.getElementById('vol-kpi-agreed').textContent = agreed;
+  const totalEl = document.getElementById('vol-kpi-total');
+  const checkedEl = document.getElementById('vol-kpi-checkedin');
+  if (totalEl) totalEl.textContent = total;
+  if (checkedEl) checkedEl.textContent = checked;
+
+  // Segmented-control counts (Adults / Students)
+  const adultCnt = volunteersData.filter(v => v.participantType === 'adult' && v.status !== 'waitlisted').length;
+  const studentCnt = volunteersData.filter(v => v.participantType === 'student' && v.status !== 'waitlisted').length;
+  document.querySelectorAll('.vol-seg-count[data-for="adult"]').forEach(el => el.textContent = adultCnt);
+  document.querySelectorAll('.vol-seg-count[data-for="student"]').forEach(el => el.textContent = studentCnt);
+
+  // Reflect active type in segmented control styling
+  document.querySelectorAll('.vol-seg-btn').forEach(btn => {
+    const active = btn.dataset.volType === volunteerTypeFilter;
+    btn.style.background = active ? '#fff' : 'transparent';
+    btn.style.color = active ? 'var(--navy, #0a1733)' : '#64748b';
+    btn.style.boxShadow = active ? '0 1px 2px rgba(0,0,0,0.06)' : 'none';
+  });
 }
 
 function renderVolunteerCapacity() {
   const el = document.getElementById('vol-capacity');
+  if (!el) return;
   const keys = Object.keys(volunteerPositions);
+
   if (!keys.length) {
-    // Fallback to legacy role caps
-    const roles = Object.keys(volunteerCaps);
-    if (!roles.length) { el.innerHTML = ''; return; }
-    el.innerHTML = roles.map(r => {
-      const cap = volunteerCaps[r] || 0;
-      const cnt = volunteerCounts[r] || 0;
-      const pct = cap ? Math.min(100, Math.round((cnt / cap) * 100)) : 0;
-      const color = pct >= 100 ? '#f44336' : pct >= 80 ? '#f59e0b' : '#4fc3f7';
-      return `
-        <div style="background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow);">
-          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
-            <div style="color:var(--text-secondary); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; font-weight:600;">${ROLE_LABELS[r] || r}</div>
-            <div style="font-family:'JetBrains Mono',monospace; font-size:0.9rem; color:var(--text-primary);"><strong>${cnt}</strong><span style="color:var(--text-muted);"> / ${cap}</span></div>
-          </div>
-          <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
-            <div style="height:100%; width:${pct}%; background:${color}; box-shadow:0 0 8px ${color}; transition:width 0.5s ease;"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
+    el.innerHTML = '';
     return;
   }
 
-  // Group by participant type + shift
-  const adult = keys.filter(k => volunteerPositions[k].type === 'adult');
-  const student = keys.filter(k => volunteerPositions[k].type === 'student');
+  // Filter positions to active participant type (segmented control)
+  const visibleKeys = keys.filter(k => volunteerPositions[k].type === volunteerTypeFilter);
 
-  function card(key) {
+  // Compact ring component — Linear-style, 28px ring, value inline
+  function ring(key) {
     const p = volunteerPositions[key];
     const cap = p.cap || 0;
     const cnt = volunteerPositionCounts[key] || 0;
     const pct = cap ? Math.min(100, Math.round((cnt / cap) * 100)) : 0;
     const full = pct >= 100;
-    const color = full ? '#f44336' : pct >= 80 ? '#f59e0b' : '#4fc3f7';
+    const ringColor = full ? '#DC2626' : pct > 80 ? '#F59E0B' : '#3B82F6';
     const active = volunteerFacetPositionKey === key;
+    const size = 28;
+    const stroke = 3;
+    const r = (size - stroke) / 2;
+    const circ = 2 * Math.PI * r;
+    const dash = (pct / 100) * circ;
     return `
-      <div class="vol-cap-card" data-pos-key="${escapeAttr(key)}" style="background:${active ? 'rgba(232,84,140,0.08)' : 'var(--card)'}; border:2px solid ${active ? '#E8548C' : 'var(--border)'}; border-radius:12px; padding:14px 16px; box-shadow:${active ? '0 2px 8px rgba(232,84,140,0.18)' : 'var(--shadow)'}; cursor:pointer; transition:all 0.15s;">
-        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; gap:8px;">
-          <div style="color:var(--text-primary); font-size:0.82rem; font-weight:600;">${p.label}${active ? ' <span style="color:#E8548C; font-size:0.62rem; font-weight:700; letter-spacing:0.05em;">● FILTERED</span>' : ''}</div>
-          <div style="font-family:'JetBrains Mono',monospace; font-size:0.88rem; color:${full ? '#f44336' : 'var(--text-primary)'}; white-space:nowrap;"><strong>${cnt}</strong><span style="color:var(--text-muted);"> / ${cap}</span></div>
+      <button class="vol-cap-card" data-pos-key="${escapeAttr(key)}" style="
+        flex:1; min-width:0;
+        background:${active ? ringColor + '14' : 'transparent'};
+        border:1px solid ${active ? ringColor + '40' : 'transparent'};
+        cursor:pointer; padding:10px 12px; border-radius:10px; transition:all 0.12s;
+        display:flex; align-items:center; gap:10px; text-align:left;">
+        <div style="position:relative; width:${size}px; height:${size}px; flex-shrink:0;">
+          <svg width="${size}" height="${size}" style="transform:rotate(-90deg);">
+            <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#E5E7EB" stroke-width="${stroke}"/>
+            <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${ringColor}" stroke-width="${stroke}"
+              stroke-dasharray="${dash} ${circ}" stroke-linecap="round" style="transition:stroke-dasharray 0.5s ease;"/>
+          </svg>
         </div>
-        <div style="color:var(--text-muted); font-size:0.7rem; margin-bottom:8px;">${p.shiftLabel || p.shift || ''}</div>
-        <div style="height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
-          <div style="height:100%; width:${pct}%; background:${color}; box-shadow:0 0 8px ${color}; transition:width 0.5s ease;"></div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:600; color:var(--navy, #0a1733); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeAttr(p.label)}</div>
+          <div style="font-size:11px; color:#64748b; font-variant-numeric:tabular-nums; margin-top:1px; line-height:1.2;">
+            <span style="color:${ringColor}; font-weight:600;">${cnt}</span><span style="color:#CBD5E1;">/</span>${cap} · ${pct}%
+          </div>
         </div>
-      </div>
+      </button>
     `;
   }
 
-  let html = '';
-  if (adult.length) {
-    html += `<div style="grid-column: 1/-1; color:var(--text-secondary); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; margin-top:4px;">Adult Positions</div>`;
-    html += adult.map(card).join('');
+  if (!visibleKeys.length) {
+    el.innerHTML = `<div style="padding:18px; text-align:center; color:#64748b; font-size:13px;">No ${volunteerTypeFilter} positions configured.</div>`;
+    return;
   }
-  if (student.length) {
-    html += `<div style="grid-column: 1/-1; color:var(--text-secondary); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; margin-top:14px;">Student Positions</div>`;
-    html += student.map(card).join('');
-  }
-  el.innerHTML = html;
 
-  // Attach click handlers (event delegation on the container)
+  el.innerHTML = visibleKeys.map(ring).join('');
+
+  // Click ring → toggle facet filter
   el.querySelectorAll('.vol-cap-card').forEach(c => {
     c.addEventListener('click', () => {
       const key = c.dataset.posKey;
@@ -3087,28 +3069,63 @@ function renderVolunteerCapacity() {
 
 function renderVolunteerActiveFilters() {
   const bar = document.getElementById('vol-active-filters');
+  if (!bar) return;
   const facetKey = volunteerFacetPositionKey;
-  if (!facetKey) {
+  const hasStatusFilter = volunteerFilter && volunteerFilter !== 'all' && volunteerFilter !== 'deleted';
+
+  if (!facetKey && !hasStatusFilter) {
     bar.style.display = 'none';
     bar.innerHTML = '';
+    // Reset dashboard border
+    const dash = document.getElementById('vol-dashboard');
+    if (dash) dash.style.borderColor = 'var(--border)';
     return;
   }
-  const p = volunteerPositions[facetKey];
-  const label = p ? `${p.type === 'adult' ? '👤 Adult' : '🎓 Student'} · ${p.label}` : facetKey;
-  // Count matches (mirrors logic in renderVolunteers)
-  const matches = (volunteersData || []).filter(v => positionKeyClient(v.participantType, v.position) === facetKey).length;
+
+  // Build summary bits + count matches
+  const summaryBits = [];
+  summaryBits.push(volunteerTypeFilter === 'adult' ? 'Adults' : 'Students');
+  if (facetKey) {
+    const p = volunteerPositions[facetKey];
+    if (p) summaryBits.push(p.label);
+  }
+  if (hasStatusFilter) {
+    const [type, val] = volunteerFilter.split(':');
+    if (type === 'status') summaryBits.push(val.charAt(0).toUpperCase() + val.slice(1).replace('_', ' '));
+    else if (type === 'position') summaryBits.push(val.charAt(0).toUpperCase() + val.slice(1));
+  }
+
+  // Replicate the renderVolunteers filter pipeline so the count matches what the user sees
+  let matched = (volunteersData || []).filter(v => v.participantType === volunteerTypeFilter);
+  if (facetKey) matched = matched.filter(v => positionKeyClient(v.participantType, v.position) === facetKey);
+  if (hasStatusFilter) {
+    const [type, val] = volunteerFilter.split(':');
+    if (type === 'status') {
+      if (val === 'checked_in') matched = matched.filter(v => v.checkedIn);
+      else matched = matched.filter(v => v.status === val);
+    } else if (type === 'position') matched = matched.filter(v => v.position === val);
+    else if (type === 'role') matched = matched.filter(v => v.role === val);
+  }
+
+  const heroColor = '#3B82F6';
   bar.style.display = 'flex';
+  bar.style.background = heroColor + '0d';
   bar.innerHTML = `
-    <span style="font-size:11px; font-weight:700; color:#E8548C; text-transform:uppercase; letter-spacing:0.5px;">Filtered by:</span>
-    <span style="font-size:12px; font-weight:600; background:var(--card); color:var(--text-primary); padding:4px 10px; border-radius:14px; border:1px solid var(--border); display:inline-flex; align-items:center; gap:4px;">
-      ${label}
-      <button id="vol-facet-clear" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:14px; line-height:1; padding:0; margin-left:2px;">×</button>
-    </span>
-    <span style="font-size:12px; color:var(--text-muted); margin-left:auto;">${matches} match${matches === 1 ? '' : 'es'}</span>
-    <button id="vol-facet-clearall" style="font-size:11px; font-weight:600; background:#E8548C; color:#fff; border:none; padding:4px 10px; border-radius:14px; cursor:pointer;">Clear all</button>
+    <span style="font-size:18px; font-weight:700; color:${heroColor}; font-variant-numeric:tabular-nums; line-height:1; letter-spacing:-0.3px;">${matched.length}</span>
+    <span style="color:#64748b; font-variant-numeric:tabular-nums;">of ${volunteersData.length}</span>
+    <span style="color:#CBD5E1;">·</span>
+    <span style="flex:1; color:${heroColor}; font-weight:600; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${summaryBits.join(' · ')}</span>
+    <button id="vol-facet-clearall" style="background:none; border:none; color:#64748b; font-size:12px; font-weight:500; cursor:pointer; padding:2px 6px; flex-shrink:0;">Clear</button>
   `;
-  document.getElementById('vol-facet-clear').onclick = document.getElementById('vol-facet-clearall').onclick = () => {
+
+  // Highlight the dashboard border when filtered
+  const dash = document.getElementById('vol-dashboard');
+  if (dash) dash.style.borderColor = heroColor + '30';
+
+  document.getElementById('vol-facet-clearall').onclick = () => {
     volunteerFacetPositionKey = null;
+    volunteerFilter = 'all';
+    document.getElementById('vol-filter-select').value = 'all';
     renderVolunteerCapacity();
     renderVolunteerActiveFilters();
     renderVolunteers();
@@ -3123,6 +3140,11 @@ function positionKeyClient(participantType, position) {
 function renderVolunteers() {
   const showingDeleted = volunteerFilter === 'deleted';
   let items = showingDeleted ? (deletedVolunteersData || []) : volunteersData;
+
+  // Segmented control: Adults vs Students. Skip when viewing trash.
+  if (!showingDeleted) {
+    items = items.filter(v => v.participantType === volunteerTypeFilter);
+  }
 
   // Apply pill filter (status / role / position / ptype)
   if (!showingDeleted && volunteerFilter && volunteerFilter !== 'all') {
@@ -3226,11 +3248,10 @@ function volunteerCardHtml(v, showingDeleted) {
     ? `<span style="font-size:10px; font-weight:600; background:rgba(124,58,237,0.18); color:#7C3AED; padding:2px 6px; border-radius:4px;">👥 ${escapeHtmlDash(v.groupType)}${v.groupSize ? ` (${escapeHtmlDash(v.groupSize)})` : ''}</span>`
     : '';
 
-  // Status select (admin quick-change)
-  const statusSelect = showingDeleted ? '' : `
-    <select class="vol-status-select" style="padding:5px 8px; border-radius:6px; border:1px solid var(--border); font-size:11px; cursor:pointer; background:var(--card); color:var(--text-primary);" onclick="event.stopPropagation()">
-      ${['registered','waitlisted','cancelled'].map(s => `<option value="${s}" ${s === (v.status || 'registered') ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join('')}
-    </select>`;
+  // Inline status select removed (May 2026): the gala doesn't use waitlist
+  // or cancellation flows, so a one-option dropdown was just clutter.
+  // Status changes can still happen via the edit drawer if a legacy row needs touch.
+  const statusSelect = '';
 
   // Header (always visible)
   const header = `
@@ -3362,8 +3383,15 @@ function volOpenEditDrawer(id) {
     `<option value="${t}" ${t === ptype ? 'selected' : ''}>${t === 'adult' ? 'Adult' : 'Student / Youth'}</option>`
   ).join('');
 
-  const statusOptions = ['registered', 'waitlisted', 'cancelled'].map(s =>
-    `<option value="${s}" ${s === (v.status || 'registered') ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+  // Gala policy: everyone helps — Registered is the only forward-going status.
+  // But if a legacy row is sitting on 'waitlisted' or 'cancelled', surface that
+  // value as an option so admin can promote them back to registered. New rows
+  // never see waitlist/cancel as a choice.
+  const currentStatus = v.status || 'registered';
+  const statusList = ['registered'];
+  if (currentStatus !== 'registered') statusList.push(currentStatus);
+  const statusOptions = statusList.map(s =>
+    `<option value="${s}" ${s === currentStatus ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
   ).join('');
 
   const shirtOptions = ['', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz =>
@@ -3529,6 +3557,24 @@ document.getElementById('vol-filter-select').addEventListener('change', async e 
     await loadDeletedVolunteers();
   }
   renderVolunteers();
+  renderVolunteerActiveFilters();
+});
+
+// Segmented Adults / Students control
+document.querySelectorAll('.vol-seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const newType = btn.dataset.volType;
+    if (newType === volunteerTypeFilter) return;
+    volunteerTypeFilter = newType;
+    // Clear any position facet that doesn't apply to the new type
+    if (volunteerFacetPositionKey && volunteerPositions[volunteerFacetPositionKey]?.type !== newType) {
+      volunteerFacetPositionKey = null;
+    }
+    renderVolunteerKPIs();
+    renderVolunteerCapacity();
+    renderVolunteerActiveFilters();
+    renderVolunteers();
+  });
 });
 
 async function loadDeletedVolunteers() {
