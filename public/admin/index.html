@@ -3352,10 +3352,15 @@ function volOpenEditDrawer(id) {
   overlay.className = 'drawer-overlay';
 
   const ptype = v.participantType || 'adult';
-  const positionOptions = VOL_POSITION_OPTIONS
-    .filter(o => o.participant === 'any' || o.participant === ptype || o.v === '')
-    .map(o => `<option value="${escapeAttr(o.v)}" ${o.v === (v.position || '') ? 'selected' : ''}>${escapeAttr(o.t)}</option>`)
+  const buildPositionOptions = (forType, currentPos) => VOL_POSITION_OPTIONS
+    .filter(o => o.participant === 'any' || o.participant === forType || o.v === '')
+    .map(o => `<option value="${escapeAttr(o.v)}" ${o.v === (currentPos || '') ? 'selected' : ''}>${escapeAttr(o.t)}</option>`)
     .join('');
+  const positionOptions = buildPositionOptions(ptype, v.position);
+
+  const ptypeOptions = ['adult', 'student'].map(t =>
+    `<option value="${t}" ${t === ptype ? 'selected' : ''}>${t === 'adult' ? 'Adult' : 'Student / Youth'}</option>`
+  ).join('');
 
   const statusOptions = ['registered', 'waitlisted', 'cancelled'].map(s =>
     `<option value="${s}" ${s === (v.status || 'registered') ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
@@ -3395,6 +3400,8 @@ function volOpenEditDrawer(id) {
         <div class="drawer__section">
           <div class="drawer__section-title">Assignment</div>
           <div class="field-grid">
+            <div class="field"><label for="vf-ptype">Participant Type</label>
+              <select id="vf-ptype" name="participant_type">${ptypeOptions}</select></div>
             <div class="field field--wide"><label for="vf-position">Position</label>
               <select id="vf-position" name="position">${positionOptions}</select></div>
             <div class="field"><label for="vf-status">Status</label>
@@ -3423,8 +3430,21 @@ function volOpenEditDrawer(id) {
   document.getElementById('vol-drawer-close').addEventListener('click', () => overlay.remove());
   document.getElementById('vol-drawer-cancel').addEventListener('click', () => overlay.remove());
 
+  // Flipping participant type re-filters the position dropdown.
+  // If the current position isn't valid for the new type, drop it to "— No assignment —".
+  document.getElementById('vf-ptype').addEventListener('change', (e) => {
+    const newType = e.target.value;
+    const positionSel = document.getElementById('vf-position');
+    const currentPos = positionSel.value;
+    const stillValid = VOL_POSITION_OPTIONS.some(o =>
+      o.v === currentPos && (o.participant === 'any' || o.participant === newType || o.v === '')
+    );
+    positionSel.innerHTML = buildPositionOptions(newType, stillValid ? currentPos : '');
+  });
+
   document.getElementById('vol-drawer-save').addEventListener('click', async () => {
     const positionVal = document.getElementById('vf-position').value;
+    const newPtype = document.getElementById('vf-ptype').value;
     const opt = VOL_POSITION_OPTIONS.find(o => o.v === positionVal);
     const payload = {
       first_name:   document.getElementById('vf-first').value.trim(),
@@ -3436,6 +3456,10 @@ function volOpenEditDrawer(id) {
       shirt_size:   document.getElementById('vf-shirt').value,
       notes:        document.getElementById('vf-notes').value.trim(),
     };
+    // Participant type change (adult ↔ student) — common for kids who signed up as adults.
+    if (newPtype !== (v.participantType || 'adult')) {
+      payload.participant_type = newPtype;
+    }
     // Position drives role + shift (server stores all three)
     if (positionVal !== (v.position || '')) {
       payload.position = positionVal || '';
