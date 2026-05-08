@@ -1,0 +1,30 @@
+# wrangler.toml — gala-resend-webhook
+#
+# Receives Resend webhook events for delivered/opened/clicked/bounced/etc.
+# Writes to marketing_email_events in gala-seating D1.
+#
+# Deploy:
+#   cd workers/gala-resend-webhook
+#   wrangler deploy
+#
+# Required secrets (set via `wrangler secret put NAME`):
+#   WEBHOOK_SECRET   — Svix signing secret from Resend webhook config (whsec_...)
+#   ADMIN_TOKEN      — token for /events and /summary lookup endpoints
+#
+# After deploy, copy the worker's webhook URL into:
+#   Resend dashboard → Webhooks → Add Endpoint
+# Subscribe to events: email.sent, email.delivered, email.opened,
+# email.clicked, email.bounced, email.complained, email.delivery_delayed,
+# email.failed.
+
+name = "gala-resend-webhook"
+main = "index.mjs"
+compatibility_date = "2024-09-23"
+
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "GALA_DB"
+database_name = "gala-seating"
+database_id = "1468a0b3-cc6c-49a6-ad89-421e9fb00a86"
