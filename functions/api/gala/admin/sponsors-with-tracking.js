@@ -1,5 +1,5 @@
-import { verifyGalaAuth, jsonError, jsonOk } from './_auth.js';
-import { hasSponsorArchiveSupport } from './_gala_data.js';
+import { verifyGalaAuth, jsonError, jsonOk } from '../_auth.js';
+import { hasSponsorArchiveSupport } from '../_gala_data.js';
 
 /**
  * /api/gala/admin/sponsors-with-tracking
