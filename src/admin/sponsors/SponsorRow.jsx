@@ -206,7 +206,7 @@ function EditPanel({ sponsor, onSave, portalUrl }) {
         <div className="gs-field">
           <label className="gs-label">Tier</label>
           <select className="gs-select" value={draft.sponsorship_tier} onChange={e => update('sponsorship_tier', e.target.value)}>
-            {['', 'Platinum', 'Gold', 'Silver', 'Bronze', 'Cell Phone', 'Friends and Family', 'Individual Seats', 'Trade'].map(t => (
+            {['', 'Platinum', 'Gold', 'Silver', 'Bronze', 'Cell Phone', 'Friends and Family', 'Split Friends & Family', 'Individual Seats', 'Donation', 'Silent Auction', 'Trade'].map(t => (
               <option key={t} value={t}>{t || '(none)'}</option>
             ))}
           </select>
