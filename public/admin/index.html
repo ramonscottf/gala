@@ -1612,33 +1612,79 @@ body {
       </div>
     </div>
 
-    <!-- Due Now banner — surfaces sends that need a human click -->
-    <div id="mkt-due-now" class="card" style="margin-bottom: 28px; display:none;">
+    <!-- Activity Dashboard — unified KPIs, live runs, campaign rollup, throughput -->
+    <div id="mkt-activity-card" class="card" style="margin-bottom: 28px;">
       <div class="card__header" style="border-bottom: 1px solid var(--border); padding: 18px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <div>
-          <div class="card__title" style="font-size: 18px; font-weight: 700; color: var(--text);">⏰ Due Now</div>
-          <div id="mkt-due-now-summary" style="font-size: 13px; color: var(--muted); margin-top: 4px;">—</div>
+        <div style="flex:1; min-width:0;">
+          <div class="card__title" style="font-size: 18px; font-weight: 700; color: var(--text);">📊 Marketing Activity</div>
+          <div id="mkt-activity-summary" style="font-size: 13px; color: var(--muted); margin-top: 4px;">Loading…</div>
         </div>
-        <button id="mkt-due-now-refresh" style="padding:7px 14px; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer;">↻ Refresh</button>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span id="mkt-activity-live-dot" style="display:none; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 0 rgba(34,197,94,0.5); animation:mkt-pulse 1.5s infinite;"></span>
+          <button id="mkt-activity-refresh" style="padding:7px 14px; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer;">↻ Refresh</button>
+          <button id="mkt-activity-toggle-btn" style="padding:7px 14px; font-size:12px; background:#0d1b3d; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">Expand ▾</button>
+        </div>
       </div>
-      <div id="mkt-due-now-body" style="padding: 14px 24px 20px;">
-        <div style="color:var(--muted); font-style:italic;">Loading…</div>
-      </div>
-    </div>
 
-    <!-- Send Activity (global) -->
-    <div class="card" style="margin-bottom: 28px;">
-      <div class="card__header" style="border-bottom: 1px solid var(--border); padding: 18px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <div>
-          <div class="card__title" style="font-size: 18px; font-weight: 700; color: var(--text);">📨 Send Activity</div>
-          <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Last 50 marketing sends across all rows. Auto-refreshes after each Send Now.</div>
+      <!-- Compact view (always visible) -->
+      <div id="mkt-activity-compact" style="padding: 16px 24px;">
+        <div id="mkt-activity-kpi-strip" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px;">
+          <div style="text-align:center; padding:8px 0;">
+            <div style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Today</div>
+            <div id="mkt-kpi-today-sent" style="font-size:28px; font-weight:800; color:var(--text); margin-top:4px;">—</div>
+            <div id="mkt-kpi-today-rate" style="font-size:11px; color:var(--muted); margin-top:2px;">delivered</div>
+          </div>
+          <div style="text-align:center; padding:8px 0; border-left:1px solid var(--border);">
+            <div style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">This week</div>
+            <div id="mkt-kpi-week-sent" style="font-size:28px; font-weight:800; color:var(--text); margin-top:4px;">—</div>
+            <div id="mkt-kpi-week-rate" style="font-size:11px; color:var(--muted); margin-top:2px;">delivered</div>
+          </div>
+          <div style="text-align:center; padding:8px 0; border-left:1px solid var(--border);">
+            <div style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">All time</div>
+            <div id="mkt-kpi-lifetime-sent" style="font-size:28px; font-weight:800; color:var(--text); margin-top:4px;">—</div>
+            <div id="mkt-kpi-lifetime-rate" style="font-size:11px; color:var(--muted); margin-top:2px;">delivered</div>
+          </div>
+          <div style="text-align:center; padding:8px 0; border-left:1px solid var(--border);">
+            <div style="font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">System</div>
+            <div id="mkt-kpi-system-status" style="font-size:18px; font-weight:800; color:#22c55e; margin-top:4px;">●</div>
+            <div id="mkt-kpi-system-label" style="font-size:11px; color:var(--muted); margin-top:2px;">checking…</div>
+          </div>
         </div>
-        <button id="mkt-send-activity-refresh" style="padding:7px 14px; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer;">↻ Refresh</button>
       </div>
-      <div id="mkt-send-activity" style="padding: 14px 24px 20px;">
-        <div style="color:var(--muted); font-style:italic;">Click Refresh to load.</div>
+
+      <!-- Expanded view (hidden by default) -->
+      <div id="mkt-activity-expanded" style="display:none; border-top:1px solid var(--border);">
+
+        <!-- Active runs banner (only shows when something is sending) -->
+        <div id="mkt-activity-active" style="display:none; padding: 16px 24px; background:linear-gradient(90deg, rgba(34,197,94,0.06), transparent); border-bottom:1px solid var(--border);"></div>
+
+        <!-- Throughput chart -->
+        <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+          <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px;">Sends — last 24 hours</div>
+          <div id="mkt-throughput-chart" style="height:80px; display:flex; align-items:flex-end; gap:2px;"></div>
+          <div id="mkt-throughput-empty" style="display:none; font-size:12px; color:var(--muted); font-style:italic; text-align:center; padding:20px 0;">No sends in the last 24 hours.</div>
+        </div>
+
+        <!-- Per-campaign rollup -->
+        <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+          <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px;">Campaign performance</div>
+          <div id="mkt-campaign-rollup" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <!-- Recent run history -->
+        <div style="padding: 20px 24px;">
+          <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px;">Recent send runs</div>
+          <div id="mkt-recent-runs" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
       </div>
     </div>
+    <style>
+      @keyframes mkt-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+        70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+        100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+      }
+    </style>
 
     <!-- Phase Pipeline -->
     <div class="card" style="margin-bottom: 28px;">
@@ -4660,7 +4706,7 @@ function showSendConfirmModal(sendId, preview) {
               confirmBtn.textContent = 'Done';
               const target = document.querySelector(`.mkt-activity-content[data-send="${sendId}"]`);
               if (target) target.dataset.loaded = '';
-              loadGlobalSendActivity();
+              loadMarketingActivity();
               setTimeout(() => modal.remove(), 2200);
               return;
             }
@@ -4839,16 +4885,253 @@ function formatWhen(item, urgency) {
   return `Due in ${days} day${days===1?'':'s'} · ${escapeHtml(item.date || '')} ${escapeHtml(item.time || '')}`;
 }
 
-// Hook up refresh + initial load
-(function initDueNow() {
-  const btn = document.getElementById('mkt-due-now-refresh');
-  if (btn) btn.addEventListener('click', loadDueNow);
-  // Auto-load when marketing tab activates. The tab system in this admin
-  // shows everything in one DOM, so just call it once on page load.
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadDueNow);
+// ── (legacy `Due Now` and standalone `Send Activity` panels removed
+//      2026-05-07; replaced by unified Marketing Activity dashboard
+//      below. loadDueNow + its helpers retained as dead code only if
+//      another place still calls them — check before deleting.) ──
+
+// ── Marketing Activity dashboard ──────────────────────────────────────
+// Single card, replaces "Due Now" + "Send Activity". Compact KPI strip
+// always visible; expand button reveals throughput chart, per-campaign
+// rollup, and recent run history. Auto-refreshes every 10s.
+
+let mktActivityExpanded = false;
+let mktActivityTimer = null;
+
+async function loadMarketingActivity() {
+  try {
+    const r = await fetch('/api/gala/marketing-stats', { credentials: 'include' });
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({}));
+      throw new Error(data.error || `HTTP ${r.status}`);
+    }
+    const data = await r.json();
+    renderMarketingActivity(data);
+  } catch (err) {
+    const sum = document.getElementById('mkt-activity-summary');
+    if (sum) sum.textContent = `Failed to load: ${err.message}`;
+  }
+}
+
+function renderMarketingActivity(data) {
+  // KPI strip (always visible)
+  const fmt = (n) => (n || 0).toLocaleString();
+  const fmtRate = (r) => (r === null || r === undefined) ? '—' : `${r}% delivered`;
+
+  document.getElementById('mkt-kpi-today-sent').textContent = fmt(data.today.sent);
+  document.getElementById('mkt-kpi-today-rate').textContent = fmtRate(data.today.deliveryRate);
+  document.getElementById('mkt-kpi-week-sent').textContent = fmt(data.week.sent);
+  document.getElementById('mkt-kpi-week-rate').textContent = fmtRate(data.week.deliveryRate);
+  document.getElementById('mkt-kpi-lifetime-sent').textContent = fmt(data.lifetime.sent);
+  document.getElementById('mkt-kpi-lifetime-rate').textContent = fmtRate(data.lifetime.deliveryRate);
+
+  // System status
+  const sysDot = document.getElementById('mkt-kpi-system-status');
+  const sysLabel = document.getElementById('mkt-kpi-system-label');
+  if (data.health?.consumerLastSeen) {
+    const lastSeenMs = new Date(data.health.consumerLastSeen.replace(' ', 'T') + 'Z').getTime();
+    const nowMs = new Date(data.health.nowUtc.replace(' ', 'T') + 'Z').getTime();
+    const ageMin = Math.floor((nowMs - lastSeenMs) / 60000);
+    if (ageMin < 60) {
+      sysDot.style.color = '#22c55e';
+      sysLabel.textContent = ageMin < 1 ? 'sending now' : `active ${ageMin}m ago`;
+    } else if (ageMin < 60 * 24) {
+      sysDot.style.color = '#22c55e';
+      sysLabel.textContent = `idle ${Math.round(ageMin/60)}h`;
+    } else {
+      sysDot.style.color = '#22c55e';
+      sysLabel.textContent = 'ready';
+    }
   } else {
-    loadDueNow();
+    sysDot.style.color = '#22c55e';
+    sysLabel.textContent = 'ready';
+  }
+
+  // Active live indicator dot
+  const liveDot = document.getElementById('mkt-activity-live-dot');
+  const isLive = (data.activeRuns || []).some(r => r.isActive);
+  if (liveDot) liveDot.style.display = isLive ? '' : 'none';
+
+  // Headline summary line
+  const sum = document.getElementById('mkt-activity-summary');
+  if (sum) {
+    if (isLive) {
+      const active = data.activeRuns.find(r => r.isActive);
+      sum.innerHTML = `<strong style="color:#22c55e;">● Live</strong> — sending to ${escapeHtml(active.audience || '?')} (${active.sent} sent)`;
+    } else if (data.today.sent > 0) {
+      const rate = data.today.deliveryRate;
+      sum.textContent = `Today: ${fmt(data.today.sent)} sent · ${rate === null ? '' : rate + '% delivered'}${data.today.failed ? ` · ${data.today.failed} failed` : ' · all clean'}`;
+    } else if (data.lifetime.sent > 0) {
+      sum.textContent = `${fmt(data.lifetime.sent)} sent total · ${data.lifetime.deliveryRate}% delivered overall`;
+    } else {
+      sum.textContent = 'No sends yet. When you click Preview & Send on a pipeline row, runs show here.';
+    }
+  }
+
+  // Stop here if not expanded — render the expanded sections lazily
+  if (!mktActivityExpanded) return;
+
+  renderActiveRunsBanner(data.activeRuns);
+  renderThroughputChart(data.throughput);
+  renderCampaignRollup(data.campaignRollup);
+  renderRecentRuns(data.recentRuns);
+}
+
+function renderActiveRunsBanner(activeRuns) {
+  const banner = document.getElementById('mkt-activity-active');
+  if (!banner) return;
+  const live = (activeRuns || []).filter(r => r.isActive);
+  if (live.length === 0) {
+    banner.style.display = 'none';
+    return;
+  }
+  banner.style.display = '';
+  banner.innerHTML = live.map(r => `
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="width:10px; height:10px; border-radius:50%; background:#22c55e; animation:mkt-pulse 1.2s infinite;"></div>
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:13px; font-weight:700; color:var(--text);">Sending now: ${escapeHtml(r.subject || r.sendId)}</div>
+        <div style="font-size:11px; color:var(--muted); margin-top:2px;">${escapeHtml(r.audience || '')} · ${r.sent} sent${r.failed ? `, ${r.failed} failed` : ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderThroughputChart(throughput) {
+  const root = document.getElementById('mkt-throughput-chart');
+  const empty = document.getElementById('mkt-throughput-empty');
+  if (!root) return;
+  if (!throughput || throughput.length === 0) {
+    root.style.display = 'none';
+    if (empty) empty.style.display = '';
+    return;
+  }
+  root.style.display = '';
+  if (empty) empty.style.display = 'none';
+
+  // Build 24h buckets — fill in missing hours so the chart shows a real timeline
+  const now = new Date();
+  const buckets = [];
+  for (let i = 23; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 3600 * 1000);
+    // Match SQL's strftime('%Y-%m-%d %H:00') format
+    const key = d.toISOString().slice(0, 13).replace('T', ' ') + ':00';
+    buckets.push({ hour: key, count: 0, sent: 0, failed: 0 });
+  }
+  const map = new Map(buckets.map(b => [b.hour, b]));
+  for (const t of throughput) {
+    if (map.has(t.hour)) Object.assign(map.get(t.hour), t);
+  }
+
+  const max = Math.max(1, ...buckets.map(b => b.count));
+  root.innerHTML = buckets.map(b => {
+    const h = Math.max(2, Math.round((b.count / max) * 76));
+    const tooltipTime = new Date(b.hour.replace(' ', 'T') + 'Z').toLocaleString([], { hour: 'numeric', month:'short', day:'numeric' });
+    const color = b.failed > 0 ? '#f59e0b' : (b.count > 0 ? '#22c55e' : '#e5e7eb');
+    return `<div title="${tooltipTime}: ${b.sent} sent${b.failed ? `, ${b.failed} failed` : ''}" style="flex:1; min-width:6px; max-width:24px; height:${h}px; background:${color}; border-radius:2px 2px 0 0;"></div>`;
+  }).join('');
+}
+
+function renderCampaignRollup(rollup) {
+  const root = document.getElementById('mkt-campaign-rollup');
+  if (!root) return;
+  if (!rollup || rollup.length === 0) {
+    root.innerHTML = `<div style="color:var(--muted); font-style:italic; font-size:13px;">No campaigns sent yet.</div>`;
+    return;
+  }
+  root.innerHTML = rollup.map(c => {
+    const total = c.sent + c.failed;
+    const rate = total > 0 ? Math.round((c.sent / total) * 1000) / 10 : 0;
+    const rateColor = rate === 100 ? '#15803d' : (rate >= 95 ? '#65a30d' : '#dc2626');
+    return `
+      <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; background:#f8fafc; border:1px solid var(--border); border-radius:6px;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.subject || c.sendId)}</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:2px;">${escapeHtml(c.audience || '')} · ${escapeHtml(c.sendId)} · last ${formatRelativeTime(c.lastSent)}</div>
+        </div>
+        <div style="text-align:right; min-width:90px;">
+          <div style="font-size:14px; font-weight:700; color:var(--text);">${c.sent} sent</div>
+          <div style="font-size:11px; color:${rateColor}; font-weight:600;">${rate}% delivered${c.failed ? ` · ${c.failed} failed` : ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRecentRuns(runs) {
+  const root = document.getElementById('mkt-recent-runs');
+  if (!root) return;
+  if (!runs || runs.length === 0) {
+    root.innerHTML = `<div style="color:var(--muted); font-style:italic; font-size:13px;">No recent runs.</div>`;
+    return;
+  }
+  root.innerHTML = runs.map(r => {
+    const total = r.sent + r.failed;
+    const rate = total > 0 ? Math.round((r.sent / total) * 100) : 0;
+    const dotColor = r.failed > 0 ? '#f59e0b' : '#22c55e';
+    return `
+      <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
+        <div style="width:8px; height:8px; border-radius:50%; background:${dotColor}; flex-shrink:0;"></div>
+        <div style="flex:1; min-width:0; font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          <strong>${escapeHtml(r.subject || r.sendId)}</strong>
+          <span style="color:var(--muted);"> · ${escapeHtml(r.audience || '')}</span>
+        </div>
+        <div style="font-size:11px; color:var(--muted); white-space:nowrap;">
+          ${r.sent}${r.failed ? `/${total}` : ''} · ${formatRelativeTime(r.lastSeen)}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatRelativeTime(iso) {
+  if (!iso) return '—';
+  const t = new Date(iso.replace(' ', 'T') + 'Z').getTime();
+  const ageMs = Date.now() - t;
+  const min = Math.round(ageMs / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.round(hr / 24);
+  return `${day}d ago`;
+}
+
+// Hook up — toggle, refresh, auto-refresh
+(function initMarketingActivity() {
+  const wire = () => {
+    const toggleBtn = document.getElementById('mkt-activity-toggle-btn');
+    const refreshBtn = document.getElementById('mkt-activity-refresh');
+    const expanded = document.getElementById('mkt-activity-expanded');
+    if (!toggleBtn || !refreshBtn || !expanded) return false;
+
+    toggleBtn.addEventListener('click', () => {
+      mktActivityExpanded = !mktActivityExpanded;
+      expanded.style.display = mktActivityExpanded ? '' : 'none';
+      toggleBtn.textContent = mktActivityExpanded ? 'Collapse ▴' : 'Expand ▾';
+      // Re-render to populate expanded sections if just opened
+      if (mktActivityExpanded) loadMarketingActivity();
+    });
+    refreshBtn.addEventListener('click', loadMarketingActivity);
+
+    // Auto-refresh every 10s while marketing tab is visible
+    if (mktActivityTimer) clearInterval(mktActivityTimer);
+    mktActivityTimer = setInterval(() => {
+      // Only refresh if the marketing tab is visible (panel display !== none)
+      const panel = document.getElementById('marketing-panel') || document.querySelector('[data-panel="marketing"]') || document.getElementById('mkt-activity-card');
+      if (panel && panel.offsetParent !== null) {
+        loadMarketingActivity();
+      }
+    }, 10000);
+
+    // Initial load
+    loadMarketingActivity();
+    return true;
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => wire());
+  } else {
+    wire();
   }
 })();
 
@@ -4946,14 +5229,9 @@ async function loadMarketing() {
   renderAssets();
   renderMatrix();
   renderMarketingKpis();
-  // Load global send activity panel
-  loadGlobalSendActivity();
-  // Wire refresh button (idempotent if loaded twice)
-  const refreshBtn = document.getElementById('mkt-send-activity-refresh');
-  if (refreshBtn && !refreshBtn.dataset.wired) {
-    refreshBtn.dataset.wired = 'yes';
-    refreshBtn.addEventListener('click', loadGlobalSendActivity);
-  }
+  // Activity dashboard auto-loads on its own (see initMarketingActivity).
+  // Refresh it here too in case data changed.
+  loadMarketingActivity();
 }
 document.querySelector('.nav-tab[data-tab="marketing"]')?.addEventListener('click', () => {
   if (!marketingLoaded) { marketingLoaded = true; loadMarketing(); }
