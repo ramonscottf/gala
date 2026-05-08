@@ -49,7 +49,7 @@ export async function onRequestGet(context) {
       LEFT JOIN (
         SELECT sponsor_id,
                COUNT(*) AS assigned,
-               MAX(created_at) AS last_assigned_at
+               MAX(assigned_at) AS last_assigned_at
           FROM seat_assignments
          WHERE sponsor_id IS NOT NULL
          GROUP BY sponsor_id
