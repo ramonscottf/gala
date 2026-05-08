@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { SponsorRow } from './SponsorRow.jsx';
 import { Composer } from './Composer.jsx';
+import { CatchUpComposer } from './CatchUpComposer.jsx';
 import { AddSponsor } from './AddSponsor.jsx';
 import { KpiStrip } from './components.jsx';
 import { deriveStatus, statusOrder, lastActivityAt } from './status.js';
-import { loadSponsorsWithTracking, updateSponsor, createSponsor, sendMessage, resendInvite } from './api.js';
+import { loadSponsorsWithTracking, updateSponsor, createSponsor, sendMessage, resendInvite, sendOneToSponsor } from './api.js';
 
 export function SponsorsView() {
   const [sponsors, setSponsors] = useState([]);
@@ -16,6 +17,8 @@ export function SponsorsView() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('status'); // 'status' | 'company' | 'contact' | 'activity' | 'amount'
   const [composer, setComposer] = useState(null); // { sponsor, channel }
+  const [catchup, setCatchup]   = useState(null); // { sponsor, send }
+  const [pipelineRefreshKey, setPipelineRefreshKey] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -171,6 +174,23 @@ export function SponsorsView() {
     }
   };
 
+  // Catch-up send: open the composer pre-filled with a pipeline send's copy.
+  // Called from PipelineSection's "Send now" / "Resend" buttons.
+  const handleSendNow = (sponsor, send) => {
+    setCatchup({ sponsor, send });
+  };
+
+  const handleCatchupSend = async ({ sponsorId, sendId, subjectOverride, bodyOverride }) => {
+    await sendOneToSponsor(sponsorId, sendId, { subjectOverride, bodyOverride });
+    setToast({ kind: 'success', text: 'Catch-up sent' });
+    setCatchup(null);
+    // Bump the refresh key so any open PipelineSection re-fetches and shows
+    // the just-sent message as 'sent' rather than 'missed'.
+    setPipelineRefreshKey(k => k + 1);
+    // Also refresh the sponsor list so timeline / pipeline pills update.
+    setTimeout(refresh, 800);
+  };
+
   if (loading) {
     return (
       <div className="gs-root event-gala">
@@ -288,6 +308,8 @@ export function SponsorsView() {
               onToggle={() => setOpenId(openId === s.id ? null : s.id)}
               onAction={handleAction}
               onSave={handleSave}
+              onSendNow={handleSendNow}
+              pipelineRefreshKey={pipelineRefreshKey}
             />
           ))}
         </div>
@@ -299,6 +321,15 @@ export function SponsorsView() {
           channel={composer.channel}
           onClose={() => setComposer(null)}
           onSend={handleSend}
+        />
+      )}
+
+      {catchup && (
+        <CatchUpComposer
+          sponsor={catchup.sponsor}
+          send={catchup.send}
+          onClose={() => setCatchup(null)}
+          onSend={handleCatchupSend}
         />
       )}
 

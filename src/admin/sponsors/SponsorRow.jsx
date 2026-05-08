@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TierBadge, StatusBadge, PipelinePills, Timeline } from './components.jsx';
 import { SponsorAvatar } from './SponsorAvatar.jsx';
+import { PipelineSection } from './PipelineSection.jsx';
 import { deriveStatus, pipelineState } from './status.js';
 
 function fmtCurrency(n) {
@@ -8,7 +9,7 @@ function fmtCurrency(n) {
   return '$' + Number(n).toLocaleString('en-US');
 }
 
-export function SponsorRow({ sponsor, isOpen, onToggle, onAction, onSave }) {
+export function SponsorRow({ sponsor, isOpen, onToggle, onAction, onSave, onSendNow, pipelineRefreshKey }) {
   const status = deriveStatus(sponsor);
   const pipeline = pipelineState(sponsor);
 
@@ -123,6 +124,11 @@ export function SponsorRow({ sponsor, isOpen, onToggle, onAction, onSave }) {
             </div>
             <EditPanel sponsor={sponsor} onSave={onSave} portalUrl={portalUrl} />
           </div>
+          <PipelineSection
+            sponsor={sponsor}
+            onSendNow={onSendNow}
+            refreshKey={pipelineRefreshKey}
+          />
           <div className="gs-exp-footer">
             <button
               className="gs-btn gs-btn-text"

@@ -64,3 +64,27 @@ export async function resendInvite(sponsorId) {
     body: JSON.stringify({ sponsor_ids: [sponsorId], force: true }),
   });
 }
+
+/**
+ * Load the per-sponsor marketing pipeline view. Returns the full schedule
+ * with per-row status (sent | missed | not-targeted | upcoming) plus a
+ * summary roll-up.
+ */
+export async function loadSponsorPipeline(sponsorId) {
+  return fetchJson(`/api/gala/admin/sponsor-pipeline?sponsor_id=${encodeURIComponent(sponsorId)}`);
+}
+
+/**
+ * Send one scheduled message to one sponsor. subject/body overrides are
+ * optional — when omitted, the canonical pipeline copy is sent verbatim.
+ * Logs to marketing_send_log with send_run_id = manual-{ts}-{id}.
+ */
+export async function sendOneToSponsor(sponsorId, sendId, { subjectOverride, bodyOverride } = {}) {
+  const body = { sponsor_id: sponsorId, send_id: sendId };
+  if (subjectOverride != null) body.subject_override = subjectOverride;
+  if (bodyOverride != null)    body.body_override = bodyOverride;
+  return fetchJson('/api/gala/admin/send-one', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
