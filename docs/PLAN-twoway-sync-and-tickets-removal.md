@@ -43,9 +43,15 @@ xlsx (SharePoint) ⇄ MS Graph ⇄ Worker: gala-xlsx-sync ⇄ D1: gala-seating
 - `functions/api/gala/sponsors.js` — add fields to EDITABLE + type coercion + ctx.waitUntil call
 - `public/admin/index.html` — strip tickets markup, refactor KPI
 
-## Phase 1 — today (~3 hr)
+## Phase 1 — today (~4.5 hr)
 
-The bleeding-stop phase. After this, dashboard saves work correctly and write back to xlsx. Tickets tab is gone. Power Automate inbound STILL RUNS (safety net).
+The bleeding-stop phase. After this: Sponsors EditPanel saves correctly, has feature parity with the legacy Tickets modal, Tickets tab is gone, and xlsx outbound sync is live. Power Automate inbound STILL RUNS (safety net).
+
+**Revised sequencing (2026-05-08, mid-execution):** Initial plan was to remove Tickets tab first. Discovered two issues during code audit:
+1. Sponsors React island PATCH route is broken — calls `PATCH /api/gala/sponsors/:id` but the actual route is `PATCH /api/gala/sponsors` with id in body. Saves from Sponsors edit panel currently fail silently. (curl-confirmed.)
+2. Sponsors EditPanel doesn't have seats / amount / logoUrl / websiteUrl fields. The legacy Tickets modal is the only place to edit those. Removing Tickets tab without first adding these fields = losing that capability entirely.
+
+New sequence: fix routing, add missing fields to EditPanel, verify parity, THEN remove Tickets tab, THEN build xlsx sync.
 
 ### Step 1.1 — Fix EDITABLE allowlist (5 min)
 
@@ -76,7 +82,47 @@ if (Object.prototype.hasOwnProperty.call(body, 'amount_paid')) {
 
 Test: PATCH with `{ id: 80, seats_purchased: 13 }` → row updates. (Sponsor 80 = Wicko, safe to test on.)
 
-### Step 1.2 — Provision Azure app (30 min)
+### Step 1.2 — Fix broken Sponsors PATCH route (30 min)
+
+`src/admin/sponsors/api.js` calls `PATCH /api/gala/sponsors/:id` but the actual route is `PATCH /api/gala/sponsors` with id in body.
+
+Two fix options:
+- **A.** Change `api.js` to send `PATCH /api/gala/sponsors` with `{ id, ...patch }` body.
+- **B.** Add a dynamic Pages route at `functions/api/gala/sponsors/[id].js` that re-exports the handler from `sponsors.js` after stuffing the URL param into the body.
+
+**Choosing A** — single source of truth, no duplicated route, matches the existing tickets.js pattern.
+
+```js
+// src/admin/sponsors/api.js
+export async function updateSponsor(id, patch) {
+  return fetchJson('/api/gala/sponsors', {
+    method: 'PATCH',
+    body: JSON.stringify({ id, ...patch }),
+  });
+}
+```
+
+Rebuild Sponsors island: `npm run build` (Vite outputs to `public/admin/assets/sponsors.js`).
+
+**Test:** load admin, edit a sponsor, save, verify D1 row updated. Compare network tab — should see PATCH to `/api/gala/sponsors` (not `/sponsors/:id`) with 200 response.
+
+### Step 1.3 — Add seats/amount/logo/website to EditPanel (1 hr)
+
+`src/admin/sponsors/SponsorRow.jsx` `EditPanel` component currently has: company, first_name, last_name, email, phone, sponsorship_tier, payment_status, notes.
+
+Add to draft state and form:
+- `seats_purchased` (number input, min=0, step=1)
+- `amount_paid` (number input, min=0, step=50, prefix `$`)
+- `logo_url` (url input)
+- `website_url` (url input)
+
+Layout: keep existing fields where they are. Add a row with Seats + Amount side-by-side (matches legacy modal pattern). Add a Logo URL row with live thumbnail preview (port the preview logic from legacy modal at `public/admin/index.html:2575-2585`). Website URL row below logo.
+
+**The PATCH endpoint already accepts these fields** after Step 1.1, so frontend-only work here.
+
+Rebuild Sponsors island, deploy, verify all four fields persist on save.
+
+### Step 1.4 — Provision Azure app (30 min)
 
 Decision tree:
 - Try Child Spree app (`ddf5d2a5-...`, tenant `3d9cf274-...`) first.
@@ -90,7 +136,7 @@ Decision tree:
   wrangler secret put MS_TENANT_ID
   ```
 
-### Step 1.3 — Build worker (~90 min)
+### Step 1.5 — Build worker (~90 min)
 
 Skeleton at `workers/xlsx-sync/`:
 
@@ -215,7 +261,7 @@ async function handleSyncFromD1(request, env) {
 
 `mapSponsorToColumn(sponsor, columnName)` is the inverse of the existing `rowToSponsor()` in sheet-webhook.js. Same column names, opposite direction.
 
-### Step 1.4 — Wire Pages PATCH to worker (10 min)
+### Step 1.6 — Wire Pages PATCH to worker (10 min)
 
 In `functions/api/gala/sponsors.js`, after the successful UPDATE:
 
@@ -234,7 +280,7 @@ if (env.XLSX_SYNC_WORKER_URL) {
 
 Add `XLSX_SYNC_WORKER_URL` to Pages env vars in CF dashboard.
 
-### Step 1.5 — Remove Tickets tab (45 min)
+### Step 1.7 — Remove Tickets tab (45 min)
 
 `public/admin/index.html`:
 
@@ -246,18 +292,15 @@ Add `XLSX_SYNC_WORKER_URL` to Pages env vars in CF dashboard.
 6. Delete CSV export builder around line 2840 (for tickets specifically)
 7. **Refactor KPI line 1244-1249 ("Tickets Sold")** — currently reads from `ticketInfo.totalTickets`. Change to compute from sponsors data: `sponsors.reduce((sum, s) => sum + (s.seats_purchased || 0), 0)`. Keep the KPI tile, kill the data dependency.
 
-### Step 1.6 — Modal copy fix (5 min)
+### Step 1.8 — Add the sync-status copy to the React EditPanel (5 min)
 
-`src/admin/sponsors/SponsorRow.jsx` (or wherever the modal lives):
+The legacy modal copy ("source of truth", "Save to Monday") is gone with the Tickets tab. Add a small status note to `EditPanel` so users understand what saving does:
 
-Replace the green callout text:
-> **Old:** Changes save to the gala database. Note: Sherry's spreadsheet is the source of truth — fields synced from her sheet (company, seats, tier, payment, contact) will be overwritten on the next 2-hour sync. Logo URL and Website URL are dashboard-only and won't be touched.
->
-> **New:** Changes save to the gala database and sync to Sherry's spreadsheet within seconds. Logo URL and Website URL are dashboard-only. If Sherry edits the same row in Excel after you save here, her edit wins on the next sync.
+> Changes save to the gala database and sync to Sherry's spreadsheet within seconds. If Sherry edits the same row in Excel after you save here, her edit wins on the next sync.
 
-Save button label: "Save to Monday" → "Save".
+Place it as a subtle green callout above the form fields, similar to the legacy modal's `.ticket-editor__sub` styling. Use `var(--text-muted)` color, small font, no border.
 
-### Step 1.7 — Smoke test + deploy
+### Step 1.9 — Smoke test + deploy
 
 1. Deploy worker: `cd workers/xlsx-sync && wrangler deploy`
 2. Deploy Pages: `git push origin main` (CF Pages auto-deploys)

@@ -31,9 +31,9 @@ export async function loadSponsorsWithTracking() {
 }
 
 export async function updateSponsor(id, patch) {
-  return fetchJson(`/api/gala/sponsors/${id}`, {
+  return fetchJson('/api/gala/sponsors', {
     method: 'PATCH',
-    body: JSON.stringify(patch),
+    body: JSON.stringify({ id, ...patch }),
   });
 }
 

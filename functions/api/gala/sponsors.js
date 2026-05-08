@@ -167,10 +167,31 @@ export async function onRequestPatch(context) {
     body.sponsorship_tier = normalizeSponsorTier(body.sponsorship_tier) || null;
   }
 
+  // Type coercion for numeric fields — modal sends strings.
+  if (Object.prototype.hasOwnProperty.call(body, 'seats_purchased')) {
+    if (body.seats_purchased === '' || body.seats_purchased === null) {
+      body.seats_purchased = null;
+    } else {
+      const n = parseInt(body.seats_purchased, 10);
+      body.seats_purchased = isNaN(n) ? null : n;
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(body, 'amount_paid')) {
+    if (body.amount_paid === '' || body.amount_paid === null) {
+      body.amount_paid = null;
+    } else {
+      const cleaned = String(body.amount_paid).replace(/[$,\s]/g, '');
+      const n = parseFloat(cleaned);
+      body.amount_paid = isNaN(n) ? null : n;
+    }
+  }
+
   const EDITABLE = [
     'company', 'first_name', 'last_name', 'email', 'phone', 'notes',
     'street_address', 'city', 'state', 'zip',
     'payment_status', 'sponsorship_tier',
+    'seats_purchased', 'amount_paid',
+    'logo_url', 'website_url',
   ];
 
   const sets = [];

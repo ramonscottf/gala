@@ -164,6 +164,10 @@ function EditPanel({ sponsor, onSave, portalUrl }) {
     phone: sponsor.phone || '',
     sponsorship_tier: sponsor.sponsorship_tier || '',
     payment_status: sponsor.payment_status || '',
+    seats_purchased: sponsor.seats_purchased ?? '',
+    amount_paid: sponsor.amount_paid ?? '',
+    logo_url: sponsor.logo_url || '',
+    website_url: sponsor.website_url || '',
     notes: sponsor.notes || '',
   });
   const [saving, setSaving] = useState(false);
@@ -179,7 +183,14 @@ function EditPanel({ sponsor, onSave, portalUrl }) {
     }
   };
 
-  const dirty = Object.keys(draft).some(k => draft[k] !== (sponsor[k] || ''));
+  // Compare against current sponsor values, treating null/undefined as ''.
+  const cmp = (k) => {
+    const cur = sponsor[k];
+    const draftVal = draft[k];
+    if (cur === null || cur === undefined) return draftVal === '' || draftVal === null;
+    return String(draftVal) === String(cur);
+  };
+  const dirty = Object.keys(draft).some(k => !cmp(k));
 
   return (
     <div>
@@ -206,6 +217,28 @@ function EditPanel({ sponsor, onSave, portalUrl }) {
           <input className="gs-input" type="tel" value={draft.phone} onChange={e => update('phone', e.target.value)} />
         </div>
         <div className="gs-field">
+          <label className="gs-label">Seats</label>
+          <input
+            className="gs-input"
+            type="number"
+            min="0"
+            step="1"
+            value={draft.seats_purchased}
+            onChange={e => update('seats_purchased', e.target.value)}
+          />
+        </div>
+        <div className="gs-field">
+          <label className="gs-label">Amount ($)</label>
+          <input
+            className="gs-input"
+            type="number"
+            min="0"
+            step="50"
+            value={draft.amount_paid}
+            onChange={e => update('amount_paid', e.target.value)}
+          />
+        </div>
+        <div className="gs-field">
           <label className="gs-label">Tier</label>
           <select className="gs-select" value={draft.sponsorship_tier} onChange={e => update('sponsorship_tier', e.target.value)}>
             {['', 'Platinum', 'Gold', 'Silver', 'Bronze', 'Cell Phone', 'Friends and Family', 'Split Friends & Family', 'Individual Seats', 'Donation', 'Silent Auction', 'Trade'].map(t => (
@@ -220,6 +253,47 @@ function EditPanel({ sponsor, onSave, portalUrl }) {
               <option key={p} value={p}>{p || '(none)'}</option>
             ))}
           </select>
+        </div>
+        <div className="gs-field gs-field--wide">
+          <label className="gs-label">Logo URL</label>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 6, overflow: 'hidden',
+              background: '#0a1733', flex: '0 0 auto',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid var(--border, #e2e8f0)',
+            }}>
+              {draft.logo_url ? (
+                <img
+                  src={draft.logo_url}
+                  alt=""
+                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                  onError={e => { e.target.style.display = 'none'; }}
+                  onLoad={e => { e.target.style.display = ''; }}
+                />
+              ) : (
+                <span style={{ color: '#64748b', fontSize: 11 }}>?</span>
+              )}
+            </div>
+            <input
+              className="gs-input"
+              type="url"
+              placeholder="https://example.com/logo.png"
+              value={draft.logo_url}
+              onChange={e => update('logo_url', e.target.value)}
+              style={{ flex: 1 }}
+            />
+          </div>
+        </div>
+        <div className="gs-field gs-field--wide">
+          <label className="gs-label">Website</label>
+          <input
+            className="gs-input"
+            type="url"
+            placeholder="https://example.com"
+            value={draft.website_url}
+            onChange={e => update('website_url', e.target.value)}
+          />
         </div>
         <div className="gs-field gs-field--wide">
           <label className="gs-label">Notes</label>
