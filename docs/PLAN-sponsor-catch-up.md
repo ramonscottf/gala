@@ -1,9 +1,9 @@
 ---
 title: Gala Sponsor Catch-Up — Per-Sponsor Marketing Pipeline View
-status: 📋 Spec — handoff for new chat
+status: ✅ Code shipped — awaiting Scott smoke-test on Wicko id 80
 project: gala (ramonscottf/gala)
 phase: Bridge between Sponsors tab and Marketing tab. Per-sponsor view of which scheduled marketing sends they did/didn't receive, with per-message manual-send escape hatch for late-added sponsors. No actual purchase webhook; sponsors are added by hand via the "+ Add sponsor" button shipped 2026-05-08, then caught up manually.
-source_chat: 2026-05-08-gala-twoway-sync (ended at ~75-80% context, handing off cleanly)
+source_chat: 2026-05-08-gala-twoway-sync (ended at ~75-80% context, handing off cleanly) → 2026-05-08-gala-sponsor-catch-up (this build)
 created: 2026-05-08
 last_updated: 2026-05-08
 ---

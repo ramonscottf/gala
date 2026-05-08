@@ -570,3 +570,193 @@
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
 }
+
+/* =========================================================================
+   Per-sponsor pipeline section (catch-up view)
+   Lives inside the expanded sponsor row, full-width below the Timeline /
+   EditPanel grid. Collapsed by default.
+   ========================================================================= */
+.gs-pipe {
+  margin-top: 14px;
+  border: 1px solid var(--def-border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+.gs-pipe-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--def-bg-soft, #f8fafc);
+  border: 0;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  color: var(--def-text);
+}
+.gs-pipe-head:hover { background: var(--def-bg-softer); }
+.gs-pipe-head.is-open { background: var(--def-bg-softer); }
+.gs-pipe-head.has-missed .gs-pipe-head-title { color: var(--def-warn); }
+.gs-pipe-chev {
+  font-size: 12px;
+  color: var(--def-light);
+  width: 14px;
+  display: inline-block;
+}
+.gs-pipe-head-title { font-weight: 600; }
+.gs-pipe-head-summary {
+  color: var(--def-muted, #64748b);
+  font-size: 12px;
+  margin-left: 8px;
+}
+.gs-pipe-missed-badge {
+  margin-left: auto;
+  background: var(--def-warn-soft);
+  color: var(--def-warn);
+  font-weight: 600;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.gs-pipe-body {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--def-border, #e2e8f0);
+}
+.gs-pipe-loading,
+.gs-pipe-error,
+.gs-pipe-empty {
+  font-size: 13px;
+  color: var(--def-muted, #64748b);
+  padding: 8px 0;
+}
+.gs-pipe-error { color: var(--def-danger); }
+
+.gs-pipe-phases { display: flex; flex-direction: column; gap: 14px; }
+.gs-pipe-phase { }
+.gs-pipe-phase-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--def-border, #e2e8f0);
+}
+.gs-pipe-phase-title { font-size: 12px; font-weight: 700; color: var(--def-navy); }
+.gs-pipe-phase-progress { font-size: 11px; color: var(--def-muted); }
+
+.gs-pipe-sends { display: flex; flex-direction: column; gap: 6px; }
+.gs-pipe-send {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--def-bg-soft, #f8fafc);
+}
+.gs-pipe-send.is-not-targeted { opacity: 0.55; }
+.gs-pipe-send.is-missed { background: var(--def-warn-soft); }
+.gs-pipe-send-icon {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.gs-pipe-send-icon.is-sent         { background: var(--def-success-soft); color: var(--def-success); }
+.gs-pipe-send-icon.is-missed       { background: #fee2e2;                 color: #b91c1c; }
+.gs-pipe-send-icon.is-upcoming     { background: var(--def-info-soft);    color: var(--def-info); }
+.gs-pipe-send-icon.is-not-targeted { background: var(--def-bg-softer);    color: var(--def-light); }
+.gs-pipe-send-main { flex: 1; min-width: 0; }
+.gs-pipe-send-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--def-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gs-pipe-send-sub {
+  font-size: 11px;
+  color: var(--def-muted, #64748b);
+  margin-top: 2px;
+}
+.gs-pipe-send-channel {
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.gs-pipe-send-dot { margin: 0 4px; }
+.gs-pipe-send-action { flex: 0 0 auto; }
+.gs-pipe-send-action .gs-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+/* Catch-up composer extras (extends .gs-modal patterns) */
+.gs-pipe-modal-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: var(--def-bg-soft);
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.gs-pipe-modal-meta-val {
+  display: block;
+  font-weight: 600;
+  color: var(--def-text);
+  margin-top: 2px;
+}
+.gs-pipe-modal-recipient {
+  font-size: 13px;
+  color: var(--def-text);
+  padding: 6px 0;
+}
+.gs-pipe-modal-edited-tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--def-warn-soft);
+  color: var(--def-warn);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.gs-pipe-modal-sms-meter {
+  font-size: 11px;
+  color: var(--def-light);
+  margin-top: 4px;
+  text-align: right;
+}
+.gs-pipe-modal-hint {
+  font-size: 11px;
+  color: var(--def-muted, #64748b);
+  background: var(--def-bg-softer);
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.gs-pipe-modal-error {
+  background: var(--def-danger-soft, #fee2e2);
+  color: var(--def-danger);
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.gs-pipe-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
