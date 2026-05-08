@@ -664,8 +664,8 @@ const TextMySeatsButton = ({ token, apiBase }) => {
 
 // ── Home tab ──────────────────────────────────────────────────────────
 
-const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, onManageTickets, token, apiBase }) => {
-  const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl, seatMath } = data;
+const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovieDetail, onManageTickets, token, apiBase }) => {
+  const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl, seatMath, isDelegation } = data;
   const { isLight } = useTheme();
   const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
   const assignedCount = tickets
@@ -680,6 +680,10 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
   const personalQuota = Math.max(0, blockSize - delegatedAway);
   const openCount = Math.max(0, personalQuota - placed);
   const firstUnassigned = tickets.find((t) => !t.guestName && !t.localGuestId);
+  // Invite path is only available to top-level sponsors with seats left to
+  // give. Sub-delegations (isDelegation=true) can't sub-delegate further;
+  // GroupTab is hidden for them in TabBar, mirror that policy on home.
+  const canInviteGuest = !isDelegation && (seatMath?.available ?? 0) > 0 && typeof onInvite === 'function';
 
   return (
     <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
@@ -759,6 +763,66 @@ const HomeTab = ({ data, onPlaceSeats, onOpenTicket, onAssign, onMovieDetail, on
           </button>
         </div>
       </div>
+
+      {/* "Invite a guest" — second home action. Sponsors can hand a portion
+          of their block to a guest who'll then pick their own seats via a
+          personal portal. Mirrors the GROUP tab's invite path so the
+          sponsor doesn't have to find the tab to start the flow. Hidden
+          for sub-delegations and when there are no seats left to give. */}
+      {canInviteGuest && (
+        <div
+          style={{
+            margin: '10px 18px 0',
+            padding: '12px 14px',
+            borderRadius: 14,
+            background: 'var(--surface)',
+            border: `1px solid var(--rule)`,
+            boxShadow:
+              '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              background:
+                'linear-gradient(135deg, rgba(168,177,255,0.95), rgba(127,124,222,0.95))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              flexShrink: 0,
+              boxShadow: '0 4px 12px rgba(127,124,222,0.32)',
+            }}
+          >
+            <Icon name="users" size={18} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
+              Invite a guest
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
+              {(seatMath?.available ?? 0)} of your seats can go to a guest
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              onClick={() => {
+                // HAPTIC: light — opens the same InviteSheet the GROUP tab uses.
+                onInvite();
+              }}
+              data-testid="cta-invite-guest"
+              style={miniBtn('primary', isLight)}
+            >
+              Invite
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* "Text my seats to me" — sponsor-only quick action. Sends the
           seats summary as SMS to the phone on file. Uses the existing
@@ -1462,7 +1526,7 @@ export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
   return (
     <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
       <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 0 22px' }}>
-        <SectionEyebrow>Group</SectionEyebrow>
+        <SectionEyebrow>Guests</SectionEyebrow>
         <h1
           style={{
             fontFamily: FONT_DISPLAY,
@@ -1473,12 +1537,12 @@ export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
             lineHeight: 1,
           }}
         >
-          Your <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>assignments.</i>
+          Your <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>guests.</i>
         </h1>
         <div style={{ fontSize: 13, color: 'var(--mute)' }}>
-          {delegations.length} invited · {totalPlaced} of {totalAllocated} assigned seats placed
+          {delegations.length} invited · {totalPlaced} of {totalAllocated} seats placed
           {available > 0 && (
-            <span style={{ color: 'var(--accent-italic)' }}> · {available} still yours to assign</span>
+            <span style={{ color: 'var(--accent-italic)' }}> · {available} still yours to give</span>
           )}
         </div>
       </div>
@@ -1504,7 +1568,7 @@ export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
           }}
         >
           <Icon name="plus" size={16} />{' '}
-          {available > 0 ? 'Invite someone to seats' : 'No seats left to assign'}
+          {available > 0 ? 'Invite a guest' : 'No seats left to give'}
         </button>
       </div>
 
@@ -1609,7 +1673,7 @@ export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
               lineHeight: 1.55,
             }}
           >
-            No one invited yet. Tap "Invite someone to seats" above and we'll text + email them
+            No guests invited yet. Tap "Invite a guest" above and we'll text + email them
             their own link to select seats.
           </div>
         )}
@@ -1925,7 +1989,7 @@ export const NightTab = () => (
 const ALL_TABS = [
   { id: 'home', label: 'Home', icon: 'home' },
   { id: 'tickets', label: 'Tickets', icon: 'ticket' },
-  { id: 'group', label: 'Group', icon: 'users' },
+  { id: 'group', label: 'Guests', icon: 'users' },
   { id: 'night', label: 'Night', icon: 'moon' },
 ];
 
@@ -3217,6 +3281,7 @@ export default function Mobile({
         <HomeTab
           data={{ ...data, tickets: ticketsWithLocalGuests }}
           onPlaceSeats={goSeats}
+          onInvite={openInvite}
           onOpenTicket={openTicket}
           onAssign={openTicket}
           onMovieDetail={setMovieDetail}
@@ -3294,7 +3359,7 @@ export default function Mobile({
       <Sheet
         open={!!inviteOpen}
         onClose={() => setInviteOpen(false)}
-        title={typeof inviteOpen === 'object' ? `Invite for seat ${inviteOpen.seat.replace('-', '')}` : 'Invite to seats'}
+        title={typeof inviteOpen === 'object' ? `Invite for seat ${inviteOpen.seat.replace('-', '')}` : 'Invite a guest'}
       >
         <DelegateForm
           token={token}

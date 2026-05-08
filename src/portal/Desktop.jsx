@@ -584,7 +584,7 @@ export default function Desktop({
       <DesktopModal
         open={!!inviteOpen}
         onClose={() => setInviteOpen(false)}
-        title={typeof inviteOpen === 'object' ? `Invite for seat ${inviteOpen.seat.replace('-', '')}` : 'Invite to seats'}
+        title={typeof inviteOpen === 'object' ? `Invite for seat ${inviteOpen.seat.replace('-', '')}` : 'Invite a guest'}
       >
         <DelegateForm
           token={token}

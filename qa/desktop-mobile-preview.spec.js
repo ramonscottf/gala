@@ -56,7 +56,7 @@ test.describe('sponsor shell preview', () => {
 
     await page.getByTestId('desktop-open-guests').click();
     await expect(page.getByRole('dialog', { name: 'Guests invited' })).toBeVisible();
-    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Your assignments/i);
+    await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Your guests/i);
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/pending/i);
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/Megan Foster/i);
     await expect(page.getByTestId('desktop-tab-modal')).toContainText(/G4/i);
