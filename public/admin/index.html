@@ -1014,171 +1014,8 @@ body {
   width: 100%;
 }
 
-/* ─── Tickets table — sponsor cells with logos + click-to-edit rows ─── */
-.tickets-cell-sponsor { display: flex; align-items: center; gap: 12px; }
-.tickets-logo {
-  flex-shrink: 0;
-  width: 38px; height: 38px;
-  border-radius: 8px;
-  background: #eef0f5 center/contain no-repeat;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700;
-  font-size: 0.78rem;
-  color: var(--navy);
-  letter-spacing: 0.04em;
-  border: 1px solid var(--border);
-}
-.tickets-row { cursor: pointer; transition: background .12s; }
-.tickets-row:hover { background: rgba(13,27,61,0.025); }
-.tickets-row:focus-visible { outline: 2px solid var(--pink, #cb262c); outline-offset: -2px; }
-.tickets-edit-col { text-align: right; }
-.tickets-edit-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted, #6a7180);
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: background .12s, color .12s, border-color .12s;
-}
-.tickets-row:hover .tickets-edit-btn,
-.tickets-edit-btn:hover {
-  background: rgba(203,38,44,0.08);
-  color: var(--pink, #cb262c);
-  border-color: rgba(203,38,44,0.2);
-}
+/* Tickets CSS removed — Tickets tab gone (May 2026) */
 
-/* ─── Ticket editor modal ─── */
-.ticket-editor {
-  position: fixed; inset: 0;
-  background: rgba(13, 27, 61, 0.78);
-  backdrop-filter: blur(6px);
-  display: none;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 28px 16px;
-  z-index: 5000;
-  overflow-y: auto;
-}
-.ticket-editor.is-open { display: flex; }
-.ticket-editor__card {
-  background: #fff;
-  width: 100%;
-  max-width: 540px;
-  border-radius: 16px;
-  padding: 24px 26px 22px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
-  margin-bottom: 40px;
-}
-.ticket-editor__head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 4px;
-}
-.ticket-editor__head h3 {
-  margin: 0;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1.25rem;
-  color: var(--navy);
-  font-weight: 700;
-}
-.ticket-editor__close {
-  background: rgba(13,27,61,0.08);
-  border: 0;
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  color: var(--navy);
-}
-.ticket-editor__close:hover { background: rgba(13,27,61,0.15); }
-.ticket-editor__sub {
-  font-size: 0.82rem;
-  color: var(--muted);
-  margin-bottom: 18px;
-  padding: 8px 12px;
-  background: rgba(34,197,94,0.08);
-  border-left: 3px solid #22c55e;
-  border-radius: 6px;
-}
-.ticket-editor__logo-row {
-  display: flex; gap: 14px;
-  align-items: flex-start;
-  padding: 14px;
-  background: #f7f8fb;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  margin-bottom: 18px;
-}
-.ticket-editor__preview {
-  flex-shrink: 0;
-  width: 64px; height: 64px;
-  border-radius: 10px;
-  background: #fff;
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--navy);
-}
-.ticket-editor__preview img {
-  max-width: 100%; max-height: 100%;
-  object-fit: contain;
-}
-.ticket-editor__label {
-  display: block;
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 5px;
-}
-.ticket-editor__hint { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); }
-.ticket-editor input,
-.ticket-editor select {
-  width: 100%;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.92rem;
-  background: #fff;
-  font-family: inherit;
-  margin-bottom: 12px;
-}
-.ticket-editor input:focus,
-.ticket-editor select:focus {
-  outline: none;
-  border-color: var(--pink, #cb262c);
-  box-shadow: 0 0 0 3px rgba(203,38,44,0.12);
-}
-.ticket-editor__row { display: flex; gap: 12px; }
-.ticket-editor__row > div { flex: 1; }
-.ticket-editor__actions {
-  display: flex; gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: 14px;
-  flex-wrap: wrap;
-}
-.ticket-editor__status {
-  flex: 1;
-  text-align: left;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-.ticket-editor .btn-primary,
-.ticket-editor .btn-secondary {
-  padding: 9px 16px;
-  font-size: 0.85rem;
-}
-
-@media (max-width: 560px) {
-  .ticket-editor__card { padding: 20px; }
-  .ticket-editor__row { flex-direction: column; gap: 0; }
-}
 </style>
 
 <!-- Marketing pipeline rich-text editor (TipTap, IIFE bundle).
@@ -1220,7 +1057,6 @@ body {
     <nav class="nav-tabs">
       <button class="nav-tab active" data-tab="overview">Overview</button>
       <button class="nav-tab" data-tab="sponsors">Sponsors</button>
-      <button class="nav-tab" data-tab="tickets">Tickets</button>
       <button class="nav-tab" data-tab="movies">Movies</button>
       <button class="nav-tab" data-tab="volunteers">Volunteers</button>
       <button class="nav-tab" data-tab="marketing">Marketing</button>
@@ -1300,7 +1136,7 @@ body {
     </div>
 
     <div style="display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-      <button class="btn btn-secondary" id="export-sponsors-btn">Export CSV</button>
+      <button class="btn btn-secondary" id="export-sponsors-btn" title="Download a snapshot CSV of all sponsors. Opens cleanly in Excel.">Download snapshot</button>
     </div>
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
@@ -1310,39 +1146,7 @@ body {
     <script src="/admin/assets/sponsors.js" defer></script>
   </div>
 
-  <!-- ── Tickets Tab ── -->
-  <div class="tab-panel" id="panel-tickets">
-    <div class="summary-bar" id="tickets-summary">
-      <div class="shimmer" style="width: 100%; height: 40px;"></div>
-    </div>
-    <div class="search-bar" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-      <input type="text" class="search-input" id="ticket-search" placeholder="Search by name or email...">
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="btn btn-secondary" id="autofill-logos-btn" title="Look up missing logos from email domains via Clearbit">🪄 Auto-fill logos</button>
-        <button class="btn btn-secondary" id="export-tickets-btn">Export CSV</button>
-      </div>
-    </div>
-    <div class="data-table-wrap">
-      <table class="data-table" id="tickets-table">
-        <thead>
-          <tr>
-            <th>Sponsor</th>
-            <th>Contact</th>
-            <th>Seats</th>
-            <th>Tier</th>
-            <th>Payment</th>
-            <th>Email</th>
-            <th style="width:48px;"></th>
-          </tr>
-        </thead>
-        <tbody id="tickets-tbody">
-          <tr><td colspan="7"><div class="shimmer" style="height: 20px; margin: 8px 0;"></div></td></tr>
-          <tr><td colspan="7"><div class="shimmer" style="height: 20px; margin: 8px 0;"></div></td></tr>
-          <tr><td colspan="7"><div class="shimmer" style="height: 20px; margin: 8px 0;"></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->
 
   <!-- ── Auction tab removed — Qgiv is source of truth ── -->
 
@@ -1748,7 +1552,6 @@ body {
 <script>
 /* ── State ── */
 let sponsorsData = [];
-let ticketsData = [];
 
 /* ── Tab Switching ── */
 document.querySelectorAll('.nav-tab').forEach(tab => {
@@ -1815,33 +1618,17 @@ async function loadSponsors() {
   }
 }
 
-async function loadTickets() {
-  try {
-    const data = await fetchJSON('/api/gala/tickets');
-    ticketsData = data.tickets || [];
-    renderTickets();
-    return {
-      tickets: ticketsData,
-      totalTickets: data.totalTickets || 0,
-      totalAmount: data.totalAmount || 0,
-    };
-  } catch (e) {
-    showError('tickets-tbody', 'Could not load tickets');
-    return { tickets: [], totalTickets: 0, totalAmount: 0 };
-  }
-}
-
 async function loadAllData() {
-  const [sponsors, ticketInfo] = await Promise.all([
-    loadSponsors(),
-    loadTickets(),
-  ]);
+  const sponsors = await loadSponsors();
 
-  // KPIs — single source of truth: D1 sponsors table (synced from Sherry's xlsx).
+  // KPIs — single source of truth: D1 sponsors table.
+  // As of May 2026, the dashboard is canonical; the xlsx is no longer synced.
   // totalAmount = sum of amount_paid across all active sponsors.
   // totalTickets = sum of seats_purchased across all active sponsors.
-  document.getElementById('kpi-revenue').textContent = formatCurrency(ticketInfo.totalAmount);
-  document.getElementById('kpi-tickets').textContent = ticketInfo.totalTickets.toLocaleString();
+  const totalAmount = sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+  const totalTickets = sponsors.reduce((sum, s) => sum + (parseInt(s.quantity, 10) || 0), 0);
+  document.getElementById('kpi-revenue').textContent = formatCurrency(totalAmount);
+  document.getElementById('kpi-tickets').textContent = totalTickets.toLocaleString();
   document.getElementById('kpi-sponsors').textContent = sponsors.length.toString();
 
   // Tier breakdown
@@ -2383,330 +2170,7 @@ if (_sponsorFilters) {
   });
 }
 
-/* ── Render Tickets ── */
-function renderTickets(search) {
-  const tbody = document.getElementById('tickets-tbody');
-  let items = ticketsData;
-  if (search) {
-    const q = search.toLowerCase();
-    items = items.filter(t => t.name.toLowerCase().includes(q) || (t.email || '').toLowerCase().includes(q));
-  }
-
-  // Summary
-  const totalQty = items.reduce((s, t) => s + t.quantity, 0);
-  const totalAmt = items.reduce((s, t) => s + (t.amount || 0), 0);
-  const summary = document.getElementById('tickets-summary');
-  summary.innerHTML = `
-    <div class="summary-item"><div class="summary-item__value">${items.length}</div><div class="summary-item__label">Buyers</div></div>
-    <div class="summary-item"><div class="summary-item__value">${totalQty}</div><div class="summary-item__label">Total Seats</div></div>
-    <div class="summary-item"><div class="summary-item__value">${formatCurrency(totalAmt)}</div><div class="summary-item__label">Committed Revenue</div></div>
-  `;
-
-  if (!items.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="empty-state__text">No tickets found</div></td></tr>';
-    return;
-  }
-  tbody.innerHTML = items.map(t => `
-    <tr class="tickets-row" data-id="${t.id || ''}" tabindex="0" role="button" aria-label="Edit ${escapeAttr(t.name)}">
-      <td>
-        <div class="tickets-cell-sponsor">
-          <div class="tickets-logo" ${t.logoUrl ? `style="background-image:url('${escapeAttr(t.logoUrl)}');"` : ''}>${t.logoUrl ? '' : initialsOf(t.name)}</div>
-          <div>
-            <div style="font-weight:600;">${escapeHtmlD(t.name)}</div>
-            ${t.websiteUrl ? `<a href="${escapeAttr(t.websiteUrl)}" target="_blank" rel="noopener" style="font-size:0.74rem; color:var(--text-muted); text-decoration:none;" onclick="event.stopPropagation()">${escapeHtmlD(displayHost(t.websiteUrl))} ↗</a>` : ''}
-          </div>
-        </div>
-      </td>
-      <td>${escapeHtmlD(t.contact || '—')}</td>
-      <td><span style="font-family: 'JetBrains Mono', monospace;">${t.quantity}</span></td>
-      <td>${tierBadge(t.tier)}</td>
-      <td>${statusDot(t.paymentStatus)}</td>
-      <td style="color: var(--text-muted);">${escapeHtmlD(t.email || '—')}</td>
-      <td class="tickets-edit-col"><button class="tickets-edit-btn" data-id="${t.id || ''}" type="button" title="Edit">✎</button></td>
-    </tr>
-  `).join('');
-
-  // Wire row click → open editor (skip when clicking the website link)
-  tbody.querySelectorAll('.tickets-row').forEach(row => {
-    row.addEventListener('click', () => {
-      if (!row.dataset.id) return;
-      openTicketEditor(row.dataset.id);
-    });
-    row.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && row.dataset.id) openTicketEditor(row.dataset.id);
-    });
-  });
-}
-
-function initialsOf(name) {
-  return String(name || '?').trim().split(/\s+/).slice(0, 2).map(s => s[0] || '').join('').toUpperCase() || '?';
-}
-function displayHost(url) {
-  try { return new URL(url.startsWith('http') ? url : 'https://' + url).hostname.replace(/^www\./, ''); }
-  catch { return url; }
-}
-function escapeHtmlD(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-/* ─── Ticket editor modal — writes back to Monday.com on save ─── */
-function openTicketEditor(id) {
-  const t = ticketsData.find(x => String(x.id) === String(id));
-  if (!t) return;
-  const overlay = ensureTicketEditor();
-  overlay.querySelector('[data-field="name"]').value = t.name || '';
-  overlay.querySelector('[data-field="contactFirst"]').value = t.contactFirst || '';
-  overlay.querySelector('[data-field="contactLast"]').value = t.contactLast || '';
-  overlay.querySelector('[data-field="email"]').value = t.email || '';
-  overlay.querySelector('[data-field="seats"]').value = t.quantity || 0;
-  overlay.querySelector('[data-field="amount"]').value = t.amount || 0;
-  overlay.querySelector('[data-field="tier"]').value = t.tier || '';
-  overlay.querySelector('[data-field="payment"]').value = t.paymentStatus || '';
-  overlay.querySelector('[data-field="logoUrl"]').value = t.logoUrl || '';
-  overlay.querySelector('[data-field="websiteUrl"]').value = t.websiteUrl || '';
-  overlay.querySelector('[data-id]').dataset.id = id;
-  overlay.querySelector('[data-preview]').src = t.logoUrl || '';
-  overlay.querySelector('[data-preview]').style.display = t.logoUrl ? '' : 'none';
-  overlay.querySelector('[data-preview-fallback]').textContent = initialsOf(t.name);
-  overlay.querySelector('[data-preview-fallback]').style.display = t.logoUrl ? 'none' : '';
-  overlay.classList.add('is-open');
-  setTimeout(() => overlay.querySelector('[data-field="name"]').focus(), 50);
-}
-
-function ensureTicketEditor() {
-  let overlay = document.getElementById('ticket-editor');
-  if (overlay) return overlay;
-  overlay = document.createElement('div');
-  overlay.id = 'ticket-editor';
-  overlay.className = 'ticket-editor';
-  overlay.innerHTML = `
-    <div class="ticket-editor__card" data-id="">
-      <div class="ticket-editor__head">
-        <h3>Edit ticket / sponsor</h3>
-        <button class="ticket-editor__close" type="button" aria-label="Close">×</button>
-      </div>
-      <div class="ticket-editor__sub">Changes save to the gala database. Note: Sherry's spreadsheet is the source of truth — fields synced from her sheet (company, seats, tier, payment, contact) will be overwritten on the next 2-hour sync. Logo URL and Website URL are dashboard-only and won't be touched.</div>
-
-      <div class="ticket-editor__logo-row">
-        <div class="ticket-editor__preview">
-          <img data-preview alt="" />
-          <span data-preview-fallback>?</span>
-        </div>
-        <div style="flex:1;">
-          <label class="ticket-editor__label">Logo URL <span class="ticket-editor__hint">(direct link to a PNG/JPG/SVG)</span></label>
-          <input data-field="logoUrl" type="url" placeholder="https://example.com/logo.png" />
-          <label class="ticket-editor__label" style="margin-top:8px;">Website</label>
-          <input data-field="websiteUrl" type="url" placeholder="https://example.com" />
-        </div>
-      </div>
-
-      <label class="ticket-editor__label">Sponsor / company name</label>
-      <input data-field="name" type="text" />
-
-      <div class="ticket-editor__row">
-        <div style="flex:1;">
-          <label class="ticket-editor__label">Contact first name</label>
-          <input data-field="contactFirst" type="text" />
-        </div>
-        <div style="flex:1;">
-          <label class="ticket-editor__label">Contact last name</label>
-          <input data-field="contactLast" type="text" />
-        </div>
-      </div>
-
-      <label class="ticket-editor__label">Email</label>
-      <input data-field="email" type="email" />
-
-      <div class="ticket-editor__row">
-        <div style="flex:1;">
-          <label class="ticket-editor__label">Seats</label>
-          <input data-field="seats" type="number" min="0" step="1" />
-        </div>
-        <div style="flex:1;">
-          <label class="ticket-editor__label">Amount ($)</label>
-          <input data-field="amount" type="number" min="0" step="50" />
-        </div>
-      </div>
-
-      <div class="ticket-editor__row">
-        <div style="flex:1;">
-          <label class="ticket-editor__label">Tier</label>
-          <select data-field="tier">
-            <option value="">—</option>
-            <option>Platinum</option>
-            <option>Gold</option>
-            <option>Silver</option>
-            <option>Bronze</option>
-            <option>Cell Phone</option>
-            <option>Friends and Family</option>
-            <option>Split Friends &amp; Family</option>
-            <option>Individual Seats</option>
-            <option>Trade</option>
-            <option>Donation</option>
-          </select>
-        </div>
-        <div style="flex:1;">
-          <label class="ticket-editor__label">Payment status</label>
-          <select data-field="payment">
-            <option value="">—</option>
-            <option>Paid</option>
-            <option>Not Paid</option>
-            <option>Invoiced</option>
-            <option>Pending</option>
-            <option>Confirmed</option>
-            <option>Trade</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="ticket-editor__actions">
-        <span class="ticket-editor__status" data-status></span>
-        <button class="btn btn-secondary ticket-editor__cancel" type="button">Cancel</button>
-        <button class="btn btn-primary ticket-editor__save" type="button">Save to Monday</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  // Live logo preview
-  const logoInput = overlay.querySelector('[data-field="logoUrl"]');
-  logoInput.addEventListener('input', () => {
-    const img = overlay.querySelector('[data-preview]');
-    const fb = overlay.querySelector('[data-preview-fallback]');
-    if (logoInput.value.trim()) {
-      img.src = logoInput.value.trim();
-      img.style.display = '';
-      fb.style.display = 'none';
-    } else {
-      img.style.display = 'none';
-      fb.style.display = '';
-    }
-  });
-
-  overlay.addEventListener('click', (e) => {
-    if (e.target.id === 'ticket-editor') overlay.classList.remove('is-open');
-  });
-  overlay.querySelector('.ticket-editor__close').addEventListener('click', () => overlay.classList.remove('is-open'));
-  overlay.querySelector('.ticket-editor__cancel').addEventListener('click', () => overlay.classList.remove('is-open'));
-  overlay.querySelector('.ticket-editor__save').addEventListener('click', () => saveTicketEditor(overlay));
-  return overlay;
-}
-
-async function saveTicketEditor(overlay) {
-  const id = overlay.querySelector('[data-id]').dataset.id;
-  if (!id) return;
-  const status = overlay.querySelector('[data-status]');
-  const saveBtn = overlay.querySelector('.ticket-editor__save');
-  const fields = {};
-  overlay.querySelectorAll('[data-field]').forEach(el => {
-    fields[el.dataset.field] = el.value;
-  });
-
-  saveBtn.disabled = true;
-  status.textContent = 'Saving…';
-  status.style.color = 'var(--text-muted)';
-
-  try {
-    const res = await fetch('/api/gala/tickets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, fields }),
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
-
-    status.textContent = '✓ Saved';
-    status.style.color = 'var(--green, #166534)';
-    // Update local cache so the UI reflects immediately
-    const t = ticketsData.find(x => String(x.id) === String(id));
-    if (t) {
-      if (fields.name !== undefined) t.name = fields.name;
-      if (fields.contactFirst !== undefined) t.contactFirst = fields.contactFirst;
-      if (fields.contactLast !== undefined) t.contactLast = fields.contactLast;
-      t.contact = [t.contactFirst, t.contactLast].filter(Boolean).join(' ');
-      if (fields.email !== undefined) t.email = fields.email;
-      if (fields.seats !== undefined) t.quantity = parseInt(fields.seats, 10) || 0;
-      if (fields.amount !== undefined) t.amount = parseFloat(fields.amount) || 0;
-      if (fields.tier !== undefined) t.tier = fields.tier;
-      if (fields.payment !== undefined) t.paymentStatus = fields.payment;
-      if (fields.logoUrl !== undefined) t.logoUrl = fields.logoUrl;
-      if (fields.websiteUrl !== undefined) t.websiteUrl = fields.websiteUrl;
-    }
-    renderTickets(document.getElementById('ticket-search')?.value || '');
-    setTimeout(() => overlay.classList.remove('is-open'), 600);
-  } catch (err) {
-    status.textContent = '⚠ ' + err.message;
-    status.style.color = 'var(--red, #a01f24)';
-  } finally {
-    saveBtn.disabled = false;
-  }
-}
-
-document.getElementById('ticket-search').addEventListener('input', e => {
-  renderTickets(e.target.value);
-});
-
-/* ─── Auto-fill logos from email domains (Clearbit) ─── */
-document.getElementById('autofill-logos-btn')?.addEventListener('click', async () => {
-  const btn = document.getElementById('autofill-logos-btn');
-  const candidates = (ticketsData || []).filter(t =>
-    t.id && t.email && !t.logoUrl && /@/.test(t.email)
-  );
-  if (!candidates.length) {
-    alert('No candidates — every ticket either already has a logo, has no email, or has no Monday ID.');
-    return;
-  }
-  const generic = new Set(['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'me.com', 'aol.com', 'live.com', 'comcast.net', 'msn.com', 'protonmail.com']);
-  const eligible = candidates.filter(t => {
-    const domain = (t.email.split('@')[1] || '').toLowerCase().trim();
-    return domain && !generic.has(domain);
-  });
-  if (!eligible.length) {
-    alert(`Found ${candidates.length} buyers without logos but all use personal email domains (Gmail, Yahoo, etc.). Logos can\'t be inferred from those — add them manually.`);
-    return;
-  }
-  const ok = confirm(
-    `Found ${eligible.length} sponsor${eligible.length === 1 ? '' : 's'} missing a logo.\n\n` +
-    `This will look each one up via Clearbit's free Logo API based on the email domain, ` +
-    `set the logo URL and website, and save back to Monday.com.\n\n` +
-    `(Skips personal emails like Gmail/Yahoo. Each save takes ~1 second.)\n\nProceed?`
-  );
-  if (!ok) return;
-
-  btn.disabled = true;
-  const origLabel = btn.textContent;
-  let done = 0, failed = 0;
-  for (const t of eligible) {
-    btn.textContent = `🪄 ${done + 1}/${eligible.length}…`;
-    const domain = t.email.split('@')[1].toLowerCase().trim();
-    const logoUrl = `https://logo.clearbit.com/${domain}`;
-    const websiteUrl = `https://${domain}`;
-    try {
-      // Probe logo first to avoid storing 404s
-      const probe = await fetch(logoUrl, { method: 'HEAD', mode: 'no-cors' }).catch(() => null);
-      // no-cors gives opaque response; we can't read status. Optimistic save.
-      const res = await fetch('/api/gala/tickets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: t.id, fields: { logoUrl, websiteUrl } }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
-      t.logoUrl = logoUrl;
-      t.websiteUrl = websiteUrl;
-      done++;
-    } catch {
-      failed++;
-    }
-    // Small pause to be nice to Monday rate limits
-    await new Promise(r => setTimeout(r, 350));
-  }
-  btn.disabled = false;
-  btn.textContent = origLabel;
-  renderTickets(document.getElementById('ticket-search')?.value || '');
-  alert(`Done. Saved ${done} logo${done === 1 ? '' : 's'}.${failed ? ' (' + failed + ' failed.)' : ''}\n\nClearbit returns a generic placeholder if it can\'t find a logo — review the table and clear/replace any that don\'t look right.`);
-});
+/* ── Tickets rendering + ticket-editor + autofill-logos removed — superseded by Sponsors React island (May 2026, D1 canonical) ── */
 
 /* ── Auction rendering removed — Qgiv owns auction items ── */
 
@@ -2720,11 +2184,32 @@ function downloadCSV(filename, csvContent) {
 }
 
 document.getElementById('export-sponsors-btn').addEventListener('click', () => {
-  let csv = 'Name,Tier,Amount,Seats,Payment Status,Contact,Email\n';
-  sponsorsData.forEach(s => {
-    csv += `"${(s.name||'').replace(/"/g,'""')}","${s.tier||''}","${s.amount||''}","${s.seats||''}","${s.paymentStatus||''}","${(s.contact||'').replace(/"/g,'""')}","${s.email||''}"\n`;
-  });
-  downloadCSV('gala-sponsors.csv', csv);
+  // Snapshot export — replaces Sherry's working xlsx as of May 2026.
+  // UTF-8 BOM so Excel opens it correctly with accents/ampersands.
+  const headers = [
+    'Company', 'First Name', 'Last Name', 'Email', 'Phone',
+    'Sponsorship Tier', 'Seats', 'Amount', 'Payment Status',
+    'Street Address', 'City', 'State', 'Zip',
+  ];
+  const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = sponsorsData.map(s => [
+    s.company || s.name || '',
+    s.firstName || '',
+    s.lastName || '',
+    s.email || '',
+    s.phone || '',
+    s.sponsorshipTier || s.tier || '',
+    s.seatsPurchased ?? s.seats ?? '',
+    s.amountPaid ?? s.amount ?? '',
+    s.paymentStatus || '',
+    s.streetAddress || '',
+    s.city || '',
+    s.state || '',
+    s.zip || '',
+  ].map(esc).join(','));
+  const csv = '\ufeff' + headers.map(esc).join(',') + '\n' + rows.join('\n');
+  const date = new Date().toISOString().slice(0, 10);
+  downloadCSV(`gala-sponsors-${date}.csv`, csv);
 });
 
 /* ── Invite dispatcher ── */
@@ -2835,14 +2320,6 @@ function openInvitePreviewModal(data) {
 function escapeHtmlDash(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
-
-document.getElementById('export-tickets-btn').addEventListener('click', () => {
-  let csv = 'Name,Contact,Tickets,Tier,Payment Status,Email\n';
-  ticketsData.forEach(t => {
-    csv += `"${(t.name||'').replace(/"/g,'""')}","${(t.contact||'').replace(/"/g,'""')}","${t.quantity}","${t.tier||''}","${t.paymentStatus||''}","${t.email||''}"\n`;
-  });
-  downloadCSV('gala-tickets.csv', csv);
-});
 
 /* ── CRM Sync (panel removed; APIs preserved for future use) ── */
 document.getElementById('crm-sync-btn')?.addEventListener('click', async () => {

@@ -195,6 +195,18 @@ function EditPanel({ sponsor, onSave, portalUrl }) {
   return (
     <div>
       <div className="gs-section-h">Edit details</div>
+      <div style={{
+        background: '#f0fdf4',
+        border: '1px solid #bbf7d0',
+        borderRadius: 6,
+        padding: '8px 10px',
+        marginBottom: 10,
+        fontSize: 12,
+        color: '#166534',
+        lineHeight: 1.4,
+      }}>
+        Saved to the gala database. As of May 2026, this dashboard is the canonical source — Sherry's spreadsheet is no longer kept in sync. Use <strong>Download Excel</strong> on the Sponsors tab when you need a snapshot for board reports.
+      </div>
       <div className="gs-form-grid">
         <div className="gs-field gs-field--wide">
           <label className="gs-label">Company</label>

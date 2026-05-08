@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { SponsorRow } from './SponsorRow.jsx';
 import { Composer } from './Composer.jsx';
+import { AddSponsor } from './AddSponsor.jsx';
 import { KpiStrip } from './components.jsx';
 import { deriveStatus, statusOrder, lastActivityAt } from './status.js';
-import { loadSponsorsWithTracking, updateSponsor, sendMessage, resendInvite } from './api.js';
+import { loadSponsorsWithTracking, updateSponsor, createSponsor, sendMessage, resendInvite } from './api.js';
 
 export function SponsorsView() {
   const [sponsors, setSponsors] = useState([]);
@@ -15,6 +16,7 @@ export function SponsorsView() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('status'); // 'status' | 'company' | 'contact' | 'activity' | 'amount'
   const [composer, setComposer] = useState(null); // { sponsor, channel }
+  const [addOpen, setAddOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
   const refresh = useCallback(async () => {
@@ -147,6 +149,16 @@ export function SponsorsView() {
     }
   };
 
+  const handleCreate = async (data) => {
+    // Throws on failure so AddSponsor can show inline error.
+    const result = await createSponsor(data);
+    setAddOpen(false);
+    setToast({ kind: 'success', text: `Added ${data.company}` });
+    // Refresh, then auto-expand the newly-created row so the user sees it.
+    await refresh();
+    if (result?.id) setOpenId(result.id);
+  };
+
   const handleSend = async (channel, body, subject) => {
     if (!composer) return;
     try {
@@ -211,6 +223,15 @@ export function SponsorsView() {
         <div className="gs-searchbar-count">
           {visible.length} of {sponsors.length}
         </div>
+        <button
+          type="button"
+          className="gs-btn gs-btn-primary"
+          onClick={() => setAddOpen(true)}
+          style={{ marginLeft: 8, whiteSpace: 'nowrap' }}
+          title="Add a new sponsor or ticket purchase"
+        >
+          + Add sponsor
+        </button>
       </div>
 
       {/* Filter + sort row */}
@@ -278,6 +299,13 @@ export function SponsorsView() {
           channel={composer.channel}
           onClose={() => setComposer(null)}
           onSend={handleSend}
+        />
+      )}
+
+      {addOpen && (
+        <AddSponsor
+          onClose={() => setAddOpen(false)}
+          onCreate={handleCreate}
         />
       )}
 
