@@ -23,7 +23,7 @@ const POSITIONS = {
 
   adult_check_in:       { cap: 2,  role: 'event',     shift: '3:45–7:30 PM',        label: 'Volunteer Check-In',    shiftLabel: 'Shift 1 · 3:45–7:30 PM',   type: 'adult' },
 
-  adult_ambassador:     { cap: 28, role: 'event',     shift: '3:45–8:30 PM',        label: 'Auditorium Ambassador', shiftLabel: 'Shift 1 · 3:45–~8:30 PM',  type: 'adult' },
+  adult_ambassador:     { cap: 50, role: 'event',     shift: '3:45–8:30 PM',        label: 'Auditorium Ambassador', shiftLabel: 'Shift 1 · 3:45–~8:30 PM',  type: 'adult' },
   student_ambassador:   { cap: 60, role: 'event',     shift: '3:45–8:30 PM',        label: 'Auditorium Ambassador', shiftLabel: 'Shift 1 · 3:45–~8:30 PM',  type: 'student' },
 
   // ── Event Night shift 2 (8:45–10:00 PM) ──
