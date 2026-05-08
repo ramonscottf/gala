@@ -5,7 +5,7 @@ import React, { useState } from 'react';
  * logo centered. Falls back to a monogram (initials of company name) when
  * no logo is available. Used in SponsorRow headers.
  */
-export function SponsorAvatar({ sponsor, size = 44 }) {
+export function SponsorAvatar({ sponsor }) {
   const [errored, setErrored] = useState(false);
   const url = sponsor.logo_url;
   const name = sponsor.company || '';
@@ -14,11 +14,7 @@ export function SponsorAvatar({ sponsor, size = 44 }) {
   const showImg = url && !errored;
 
   return (
-    <div
-      className="gs-avatar"
-      style={{ width: size, height: size }}
-      aria-label={name ? `${name} logo` : 'Sponsor logo'}
-    >
+    <div className="gs-avatar" aria-label={name ? `${name} logo` : 'Sponsor logo'}>
       {showImg ? (
         <img
           src={url}
@@ -27,7 +23,7 @@ export function SponsorAvatar({ sponsor, size = 44 }) {
           loading="lazy"
         />
       ) : (
-        <span className="gs-avatar-mono" style={{ fontSize: size * 0.36 }}>
+        <span className="gs-avatar-mono">
           {monogram}
         </span>
       )}

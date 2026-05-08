@@ -223,29 +223,33 @@
   box-shadow: 0 0 0 3px var(--event-accent-soft);
 }
 
-/* ── Sponsor avatar (circular logo / monogram) ───────────────────────── */
+/* ── Sponsor avatar (square logo / monogram) ─────────────────────────── */
 .gs-avatar {
   flex-shrink: 0;
-  border-radius: 50%;
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
   background: var(--def-navy);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(13, 27, 61, 0.15);
+  margin-right: 6px;
 }
 .gs-avatar img {
-  width: 70%;
-  height: 70%;
+  width: 78%;
+  height: 78%;
   object-fit: contain;
   /* white logos already on transparent bg — preserve aspect, center */
 }
 .gs-avatar-mono {
   color: #fff;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   user-select: none;
   font-family: var(--def-font);
+  font-size: 30px;
 }
 
 /* ── Sponsor row ─────────────────────────────────────────────────────── */
@@ -263,7 +267,7 @@
   box-shadow: 0 0 0 1px rgba(13, 27, 61, 0.05);
 }
 .gs-row-head {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 16px;
   padding: 14px 18px;
   cursor: pointer;
   user-select: none;
