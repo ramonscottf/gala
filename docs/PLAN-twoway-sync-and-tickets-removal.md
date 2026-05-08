@@ -43,15 +43,15 @@ xlsx (SharePoint) ⇄ MS Graph ⇄ Worker: gala-xlsx-sync ⇄ D1: gala-seating
 - `functions/api/gala/sponsors.js` — add fields to EDITABLE + type coercion + ctx.waitUntil call
 - `public/admin/index.html` — strip tickets markup, refactor KPI
 
-## Phase 1 — today (~4.5 hr)
+## Phase 1 — today (~2.5 hr remaining; ~1.5 hr already shipped)
 
-The bleeding-stop phase. After this: Sponsors EditPanel saves correctly, has feature parity with the legacy Tickets modal, Tickets tab is gone, and xlsx outbound sync is live. Power Automate inbound STILL RUNS (safety net).
+The bleeding-stop phase. Steps 1.1–1.3 already shipped to prod and verified (commit `f3c3a8c`). After this phase: Sponsors EditPanel saves correctly, has feature parity with the legacy Tickets modal, Tickets tab is gone, and xlsx outbound sync is live via Power Automate.
 
-**Revised sequencing (2026-05-08, mid-execution):** Initial plan was to remove Tickets tab first. Discovered two issues during code audit:
-1. Sponsors React island PATCH route is broken — calls `PATCH /api/gala/sponsors/:id` but the actual route is `PATCH /api/gala/sponsors` with id in body. Saves from Sponsors edit panel currently fail silently. (curl-confirmed.)
-2. Sponsors EditPanel doesn't have seats / amount / logoUrl / websiteUrl fields. The legacy Tickets modal is the only place to edit those. Removing Tickets tab without first adding these fields = losing that capability entirely.
+**Mid-execution pivots (2026-05-08):**
 
-New sequence: fix routing, add missing fields to EditPanel, verify parity, THEN remove Tickets tab, THEN build xlsx sync.
+1. **Sequencing change.** Initial plan was tickets-tab-removal first. Code audit revealed (a) Sponsors React island PATCH route was broken — calls `PATCH /api/gala/sponsors/:id` but the actual route is `PATCH /api/gala/sponsors` with id in body, saves were failing silently, curl-confirmed; (b) Sponsors EditPanel was missing seats/amount/logo/website fields. Removing Tickets tab without first adding these fields = losing edit capability. Reordered to fix routing + add fields first, then remove tab.
+
+2. **Architecture pivot.** Initial plan was a Cloudflare Worker calling Microsoft Graph directly. Davis School District tenant has Azure App Registrations locked down for `sfoster@dsdmail.net` (401 on the App Registrations blade). Pivoted to Power Automate webhook for outbound write-back. Same architectural shape, PA replaces direct Graph. No Azure ceremony required. Worker plan shelved (may revive in Phase 2 if PA proves insufficient).
 
 ### Step 1.1 — Fix EDITABLE allowlist (5 min)
 
@@ -122,165 +122,93 @@ Layout: keep existing fields where they are. Add a row with Seats + Amount side-
 
 Rebuild Sponsors island, deploy, verify all four fields persist on save.
 
-### Step 1.4 — Provision Azure app (30 min)
+### Step 1.4 — Plan B: Power Automate write-back flow (Scott: 10 min, Skippy: 5 min)
 
-Decision tree:
-- Try Child Spree app (`ddf5d2a5-...`, tenant `3d9cf274-...`) first.
-- portal.azure.com → App registrations → find Child Spree app → API permissions
-- If `Files.ReadWrite.All` (Application, admin-consented) is listed → reuse. Generate new client secret in Certificates & secrets, 24-month expiry.
-- If not listed → register new app `gala-xlsx-sync`, add `Files.ReadWrite.All` Application permission, click "Grant admin consent."
-- Store credentials:
-  ```
-  wrangler secret put MS_CLIENT_ID
-  wrangler secret put MS_CLIENT_SECRET
-  wrangler secret put MS_TENANT_ID
-  ```
+**Mid-execution pivot, 2026-05-08.** Azure App Registrations are locked down for `sfoster@dsdmail.net` in the Davis School District tenant. 401 on `portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade`. Going Plan B — Power Automate webhook for outbound write-back. Same architectural shape as the worker plan, just with PA as the Graph proxy instead of direct Graph calls.
 
-### Step 1.5 — Build worker (~90 min)
+**Why this is fine:** the original concern about Power Automate fragility was about the *inbound* flow, which broke because the table GUID went stale. The write-back flow is much simpler — it uses **column-key matching on Company name**, not table GUIDs. Survives Sherry rebuilding the table. Failure modes are PA-uptime (very high) and Sherry-renaming-the-Company-column (rare and easy to fix).
 
-Skeleton at `workers/xlsx-sync/`:
+**Scott creates new Power Automate flow** (10 min):
 
-```
-workers/xlsx-sync/
-├── wrangler.toml
-├── src/
-│   ├── index.js          # router
-│   ├── graph.js          # MS Graph token + PATCH helpers
-│   ├── outbound.js       # /sync-from-d1 handler
-│   └── (inbound.js Phase 2)
-└── package.json
-```
+1. make.powerautomate.com → Create → Automated cloud flow → Skip → "Manually trigger a flow" — actually no, wrong choice. Use **"When an HTTP request is received"** as the trigger.
+2. Trigger: **When an HTTP request is received**
+   - Request Body JSON Schema (paste this):
+     ```json
+     {
+       "type": "object",
+       "properties": {
+         "company": { "type": "string" },
+         "first_name": { "type": "string" },
+         "last_name": { "type": "string" },
+         "email": { "type": "string" },
+         "phone": { "type": "string" },
+         "sponsorship_tier": { "type": "string" },
+         "seats_purchased": { "type": "integer" },
+         "amount_paid": { "type": "number" },
+         "payment_status": { "type": "string" },
+         "street_address": { "type": "string" },
+         "city": { "type": "string" },
+         "state": { "type": "string" },
+         "zip": { "type": "string" }
+       }
+     }
+     ```
+   - Method: POST
+3. Action: **Update a row** (Excel Online (Business))
+   - Location: Group - Foundation
+   - Document Library: Documents
+   - File: `/Shared Drive/Gala/Gala 2026/Sherry/2026 Gala Sales.xlsx`
+   - Table: select from dropdown (whatever the current real table name is — NOT the GUID we have in memory)
+   - Key Column: **Company**
+   - Key Value: `@triggerBody()?['company']`
+   - Then map each xlsx column to the corresponding `@triggerBody()?['field_name']` expression
+4. Save the flow as **"Gala Sponsor Write-Back"**
+5. Click into the trigger card → copy the **HTTP POST URL** (long URL with `?api-version=...&sp=...&sv=...&sig=...`)
+6. Paste that URL to Skippy in chat. **This URL contains a built-in shared key — treat it like a secret.**
 
-`wrangler.toml`:
-```toml
-name = "gala-xlsx-sync"
-main = "src/index.js"
-compatibility_date = "2025-01-01"
+**Skippy wires Pages function** (5 min):
 
-[[d1_databases]]
-binding = "GALA_DB"
-database_name = "gala-seating"
-database_id = "1468a0b3-cc6c-49a6-ad89-421e9fb00a86"
+1. CF dashboard → Pages → gala → Settings → Environment variables → add:
+   - `XLSX_WEBHOOK_URL` = (the long PA URL, treat as secret)
+2. Patch `functions/api/gala/sponsors.js` to fire `ctx.waitUntil(fetch(env.XLSX_WEBHOOK_URL, {method: 'POST', body: JSON.stringify(sponsor)}))` after successful UPDATE.
+3. Deploy. Smoke test on Wicko (sponsor 80).
 
-[[kv_namespaces]]
-binding = "KV_GRAPH_TOKEN"
-id = "TBD"  # create with: wrangler kv namespace create GRAPH_TOKEN
+**That's it.** No worker. No Azure. No client secrets. The original "in-repo worker at `workers/xlsx-sync/`" plan is shelved — we may revive it for Phase 2 (replacing inbound PA), but not today.
 
-[vars]
-XLSX_DRIVE_PATH = "Shared Drive/Gala/Gala 2026/Sherry/2026 Gala Sales.xlsx"
-```
+### Step 1.5 — Wire Pages PATCH to PA webhook (5 min)
 
-Token caching pattern (Cloudflare Workers MS Graph idiom):
-
-```js
-async function getGraphToken(env) {
-  const cached = await env.KV_GRAPH_TOKEN.get('token');
-  if (cached) return cached;
-
-  const params = new URLSearchParams({
-    client_id: env.MS_CLIENT_ID,
-    client_secret: env.MS_CLIENT_SECRET,
-    scope: 'https://graph.microsoft.com/.default',
-    grant_type: 'client_credentials',
-  });
-  const res = await fetch(
-    `https://login.microsoftonline.com/${env.MS_TENANT_ID}/oauth2/v2.0/token`,
-    { method: 'POST', body: params }
-  );
-  const data = await res.json();
-  if (!data.access_token) throw new Error(`Graph auth failed: ${JSON.stringify(data)}`);
-
-  // Cache for 50 min (tokens are 60 min, leave 10 min buffer)
-  await env.KV_GRAPH_TOKEN.put('token', data.access_token, { expirationTtl: 3000 });
-  return data.access_token;
-}
-```
-
-Outbound handler:
+In `functions/api/gala/sponsors.js`, after the successful UPDATE and the `fresh` row read:
 
 ```js
-// POST /sync-from-d1  body: { sponsor_id }
-async function handleSyncFromD1(request, env) {
-  const { sponsor_id } = await request.json();
-  const sponsor = await env.GALA_DB.prepare(
-    'SELECT * FROM sponsors WHERE id = ?'
-  ).bind(sponsor_id).first();
-  if (!sponsor) return new Response('not found', { status: 404 });
-
-  const token = await getGraphToken(env);
-  const driveItemUrl = await resolveXlsxDriveItem(token, env); // GET /drives/{id}/root:/{path}:
-  const tableName = await resolveTableName(token, driveItemUrl, env); // GET /tables, cached in KV
-
-  // Find row by Company column
-  const rowsRes = await fetch(
-    `https://graph.microsoft.com/v1.0/${driveItemUrl}/workbook/tables/${tableName}/rows`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  const { value: rows } = await rowsRes.json();
-
-  // Need column index for "Company" — pull from /columns
-  const colsRes = await fetch(
-    `https://graph.microsoft.com/v1.0/${driveItemUrl}/workbook/tables/${tableName}/columns`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  const cols = (await colsRes.json()).value;
-  const companyColIdx = cols.findIndex(c => c.name.toLowerCase() === 'company');
-
-  const matchIdx = rows.findIndex(r => 
-    String(r.values[0][companyColIdx]).trim().toLowerCase() === 
-    String(sponsor.company).trim().toLowerCase()
-  );
-
-  if (matchIdx === -1) {
-    await logSync(env, 'outbound', 'sponsor', 'skipped_no_match', { sponsor_id, company: sponsor.company });
-    return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
-  }
-
-  // Build new row values in column order
-  const newRow = cols.map(col => {
-    const name = col.name.toLowerCase().replace(/\s+/g, '_');
-    return mapSponsorToColumn(sponsor, name);
-  });
-
-  await fetch(
-    `https://graph.microsoft.com/v1.0/${driveItemUrl}/workbook/tables/${tableName}/rows/itemAt(index=${matchIdx})`,
-    {
-      method: 'PATCH',
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ values: [newRow] }),
-    }
-  );
-
-  await logSync(env, 'outbound', 'sponsor', 'success', { sponsor_id, row_index: matchIdx });
-  return new Response(JSON.stringify({ ok: true }), { status: 200 });
-}
-```
-
-`mapSponsorToColumn(sponsor, columnName)` is the inverse of the existing `rowToSponsor()` in sheet-webhook.js. Same column names, opposite direction.
-
-### Step 1.6 — Wire Pages PATCH to worker (10 min)
-
-In `functions/api/gala/sponsors.js`, after the successful UPDATE:
-
-```js
-// Outbound xlsx sync — fire and forget, don't block response
-if (env.XLSX_SYNC_WORKER_URL) {
+// Outbound xlsx sync — fire and forget via Power Automate webhook
+if (env.XLSX_WEBHOOK_URL && fresh) {
   context.waitUntil(
-    fetch(`${env.XLSX_SYNC_WORKER_URL}/sync-from-d1`, {
+    fetch(env.XLSX_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sponsor_id: id }),
-    }).catch(() => {}) // failures logged in worker, don't surface to user
+      body: JSON.stringify({
+        company: fresh.company,
+        first_name: fresh.first_name,
+        last_name: fresh.last_name,
+        email: fresh.email,
+        phone: fresh.phone,
+        sponsorship_tier: fresh.sponsorship_tier,
+        seats_purchased: fresh.seats_purchased,
+        amount_paid: fresh.amount_paid,
+        payment_status: fresh.payment_status,
+        street_address: fresh.street_address,
+        city: fresh.city,
+        state: fresh.state,
+        zip: fresh.zip,
+      }),
+    }).catch(() => {})
   );
 }
 ```
 
-Add `XLSX_SYNC_WORKER_URL` to Pages env vars in CF dashboard.
+`XLSX_WEBHOOK_URL` lives in CF Pages env vars (set as encrypted/secret) — added in Step 1.4.
 
-### Step 1.7 — Remove Tickets tab (45 min)
+### Step 1.6 — Remove Tickets tab (45 min)
 
 `public/admin/index.html`:
 
@@ -292,7 +220,7 @@ Add `XLSX_SYNC_WORKER_URL` to Pages env vars in CF dashboard.
 6. Delete CSV export builder around line 2840 (for tickets specifically)
 7. **Refactor KPI line 1244-1249 ("Tickets Sold")** — currently reads from `ticketInfo.totalTickets`. Change to compute from sponsors data: `sponsors.reduce((sum, s) => sum + (s.seats_purchased || 0), 0)`. Keep the KPI tile, kill the data dependency.
 
-### Step 1.8 — Add the sync-status copy to the React EditPanel (5 min)
+### Step 1.7 — Add the sync-status copy to the React EditPanel (5 min)
 
 The legacy modal copy ("source of truth", "Save to Monday") is gone with the Tickets tab. Add a small status note to `EditPanel` so users understand what saving does:
 
@@ -300,7 +228,7 @@ The legacy modal copy ("source of truth", "Save to Monday") is gone with the Tic
 
 Place it as a subtle green callout above the form fields, similar to the legacy modal's `.ticket-editor__sub` styling. Use `var(--text-muted)` color, small font, no border.
 
-### Step 1.9 — Smoke test + deploy
+### Step 1.8 — Smoke test + deploy
 
 1. Deploy worker: `cd workers/xlsx-sync && wrangler deploy`
 2. Deploy Pages: `git push origin main` (CF Pages auto-deploys)
