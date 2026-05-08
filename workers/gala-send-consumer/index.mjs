@@ -52,6 +52,7 @@ async function processOne(body, env) {
 
   let status = 'sent';
   let errorMessage = null;
+  let resendId = null;
 
   try {
     const res = await fetch(MAIL_ENDPOINT, {
@@ -59,11 +60,11 @@ async function processOne(body, env) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${env.MAIL_TOKEN}`,
-        'User-Agent': 'gala-send-consumer/1.0',
+        'User-Agent': 'gala-send-consumer/1.1',
       },
       body: JSON.stringify({
         from: 'Davis Education Foundation Gala <gala@daviskids.org>',
-        replyTo: 'gala@daviskids.org',
+        replyTo: 'smiggin@dsdmail.net, sfoster@dsdmail.net',
         to: recipient.email,
         subject: sendRow.subject,
         html,
@@ -77,6 +78,11 @@ async function processOne(body, env) {
       }
       status = 'failed';
       errorMessage = `SkippyMail ${res.status}: ${errText.slice(0, 200)}`;
+    } else {
+      // SkippyMail returns { ok: true, resend_id: '...' } — capture it for tracking.
+      // Cross-reference with marketing_email_events (Resend webhook landings).
+      const data = await res.json().catch(() => ({}));
+      resendId = data.resend_id || data.id || null;
     }
   } catch (e) {
     // Network errors → retry
@@ -89,12 +95,12 @@ async function processOne(body, env) {
     INSERT INTO marketing_send_log (
       send_id, send_run_id, channel, recipient_email, recipient_name,
       sponsor_id, audience_label, status, error_message, subject,
-      body_preview, sent_by
-    ) VALUES (?, ?, 'email', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      body_preview, sent_by, resend_id
+    ) VALUES (?, ?, 'email', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     sendId, runId, recipient.email, displayName(recipient), recipient.id,
     sendRow.audience, status, errorMessage, sendRow.subject,
-    bodyPreview, 'queue-consumer'
+    bodyPreview, 'queue-consumer', resendId
   ).run();
 }
 
