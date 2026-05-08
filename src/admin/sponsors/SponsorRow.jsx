@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TierBadge, StatusBadge, PipelinePills, Timeline } from './components.jsx';
+import { SponsorAvatar } from './SponsorAvatar.jsx';
 import { deriveStatus, pipelineState } from './status.js';
 
 function fmtCurrency(n) {
@@ -25,6 +26,7 @@ export function SponsorRow({ sponsor, isOpen, onToggle, onAction, onSave }) {
   return (
     <div className={`gs-row ${isOpen ? 'is-open' : ''}`}>
       <div className="gs-row-head" onClick={onToggle}>
+        <SponsorAvatar sponsor={sponsor} />
         <div className="gs-row-main">
           <div className="gs-row-titleline">
             <span className="gs-row-name">{sponsor.company || contactName || '(no company)'}</span>
