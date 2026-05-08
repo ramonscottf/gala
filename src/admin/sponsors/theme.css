@@ -223,6 +223,31 @@
   box-shadow: 0 0 0 3px var(--event-accent-soft);
 }
 
+/* ── Sponsor avatar (circular logo / monogram) ───────────────────────── */
+.gs-avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--def-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(13, 27, 61, 0.15);
+}
+.gs-avatar img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+  /* white logos already on transparent bg — preserve aspect, center */
+}
+.gs-avatar-mono {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  user-select: none;
+  font-family: var(--def-font);
+}
+
 /* ── Sponsor row ─────────────────────────────────────────────────────── */
 .gs-list { display: flex; flex-direction: column; gap: 8px; }
 .gs-row {
