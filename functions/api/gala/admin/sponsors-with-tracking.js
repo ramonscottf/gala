@@ -42,6 +42,7 @@ export async function onRequestGet(context) {
            s.street_address, s.city, s.state, s.zip,
            s.rsvp_status, s.rsvp_token, s.rsvp_completed_at,
            s.seats_priority_order, s.notes,
+           s.logo_url, s.website_url,
            s.created_at, s.updated_at,
            COALESCE(sa.assigned, 0) AS seats_assigned,
            sa.last_assigned_at
