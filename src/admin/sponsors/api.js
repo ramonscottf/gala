@@ -37,6 +37,13 @@ export async function updateSponsor(id, patch) {
   });
 }
 
+export async function createSponsor(data) {
+  return fetchJson('/api/gala/sponsors', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function sendMessage(sponsorId, channel, body, subject) {
   // Uses the existing per-sponsor message endpoint that the legacy
   // drawer wires up (functions/api/gala/admin/sponsor-message.js).

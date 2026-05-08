@@ -224,3 +224,127 @@ export async function onRequestPatch(context) {
 
   return jsonOk({ sponsor: fresh });
 }
+
+/**
+ * POST /api/gala/sponsors
+ * Body: { company (required), first_name?, last_name?, email?, phone?,
+ *         sponsorship_tier?, seats_purchased?, amount_paid?, payment_status?,
+ *         street_address?, city?, state?, zip?, notes?,
+ *         logo_url?, website_url? }
+ *
+ * Admin-only. Creates a new sponsor row in D1.
+ *
+ * As of May 2026, the dashboard is the canonical source of sponsor data.
+ * This endpoint replaces the inbound xlsx sync as the primary write path
+ * for new sponsors and ticket purchases.
+ *
+ * Returns the freshly-created row.
+ */
+export async function onRequestPost(context) {
+  const { request, env } = context;
+
+  if (!env.GALA_DB) return jsonError('Database not configured', 503);
+
+  const authed = await verifyGalaAuth(request, env.GALA_DASH_SECRET);
+  if (!authed) return jsonError('Unauthorized', 401);
+
+  let body;
+  try { body = await request.json(); }
+  catch { return jsonError('Invalid JSON body', 400); }
+
+  const company = String(body.company || '').trim();
+  if (!company) return jsonError('company is required', 400);
+
+  // Normalize tier
+  const tier = body.sponsorship_tier
+    ? (normalizeSponsorTier(body.sponsorship_tier) || null)
+    : null;
+
+  // Type-coerce numerics
+  let seats = null;
+  if (body.seats_purchased !== undefined && body.seats_purchased !== '' && body.seats_purchased !== null) {
+    const n = parseInt(body.seats_purchased, 10);
+    seats = isNaN(n) ? null : n;
+  }
+  let amount = null;
+  if (body.amount_paid !== undefined && body.amount_paid !== '' && body.amount_paid !== null) {
+    const cleaned = String(body.amount_paid).replace(/[$,\s]/g, '');
+    const n = parseFloat(cleaned);
+    amount = isNaN(n) ? null : n;
+  }
+
+  const norm = v => {
+    if (v === undefined || v === null) return null;
+    const s = String(v).trim();
+    return s === '' ? null : s;
+  };
+
+  // Email lowercased to match existing convention
+  const email = norm(body.email);
+  const emailLower = email ? email.toLowerCase() : null;
+
+  // Check for duplicate (by email or company) before insert
+  if (emailLower) {
+    const existing = await env.GALA_DB.prepare(
+      `SELECT id, company FROM sponsors WHERE LOWER(email) = ? LIMIT 1`
+    ).bind(emailLower).first();
+    if (existing) {
+      return jsonError(
+        `A sponsor with email ${emailLower} already exists (id ${existing.id}, "${existing.company}"). Edit that record instead.`,
+        409
+      );
+    }
+  }
+
+  const dupeCompany = await env.GALA_DB.prepare(
+    `SELECT id FROM sponsors WHERE LOWER(company) = LOWER(?) LIMIT 1`
+  ).bind(company).first();
+  if (dupeCompany) {
+    return jsonError(
+      `A sponsor named "${company}" already exists (id ${dupeCompany.id}). Edit that record instead.`,
+      409
+    );
+  }
+
+  // Insert
+  let result;
+  try {
+    result = await env.GALA_DB.prepare(
+      `INSERT INTO sponsors (
+         company, first_name, last_name, email, phone,
+         sponsorship_tier, seats_purchased, amount_paid, payment_status,
+         street_address, city, state, zip,
+         logo_url, website_url, notes,
+         created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+    ).bind(
+      company,
+      norm(body.first_name),
+      norm(body.last_name),
+      emailLower,
+      norm(body.phone),
+      tier,
+      seats,
+      amount,
+      norm(body.payment_status),
+      norm(body.street_address),
+      norm(body.city),
+      norm(body.state),
+      norm(body.zip),
+      norm(body.logo_url),
+      norm(body.website_url),
+      norm(body.notes),
+    ).run();
+  } catch (e) {
+    return jsonError(`Insert failed: ${e.message}`, 500);
+  }
+
+  const newId = result?.meta?.last_row_id;
+  if (!newId) return jsonError('Insert succeeded but no id returned', 500);
+
+  const fresh = await env.GALA_DB.prepare(
+    `SELECT * FROM sponsors WHERE id = ?`
+  ).bind(newId).first();
+
+  return jsonOk({ sponsor: fresh, id: newId });
+}
