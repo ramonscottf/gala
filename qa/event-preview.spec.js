@@ -33,9 +33,9 @@ test.describe('event preview landing page', () => {
       await expect(page.getByRole('heading', { name: title })).toBeVisible();
     }
 
-    await expect(page.getByText(/RT 99% · Audience 91%/i)).toBeVisible();
-    await expect(page.getByText(/RT 95% · Audience 88%/i)).toBeVisible();
-    await expect(page.getByText(/RT pending/i)).toBeVisible();
+    await expect(page.getByText(/99% · Audience 91%/i)).toBeVisible();
+    await expect(page.getByText(/95% · Audience 88%/i)).toBeVisible();
+    await expect(page.getByText(/Pending/i)).toBeVisible();
 
     await expect(page.locator('iframe[src*="cloudflarestream.com"]')).toHaveCount(4);
     await expect(page.locator('a[href*="youtube"], iframe[src*="youtube"]')).toHaveCount(0);

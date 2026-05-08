@@ -61,8 +61,8 @@ export function enrichMovieScores(movie) {
 export function formatRottenBadge(movie, { audience = false } = {}) {
   const score = movie?.rottenTomatoes || rottenScoreFor(movie);
   if (!score) return '';
-  if (score.pending) return 'RT pending';
-  const critics = score.critics != null ? `RT ${score.critics}%` : '';
+  if (score.pending) return 'Pending';
+  const critics = score.critics != null ? `${score.critics}%` : '';
   if (!audience) return critics;
   const audienceText = score.audience != null ? `Audience ${score.audience}%` : '';
   return [critics, audienceText].filter(Boolean).join(' · ');

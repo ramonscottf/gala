@@ -174,21 +174,63 @@ export default function MovieDetailSheet({
           boxShadow: isModal ? '0 24px 64px rgba(0,0,0,0.55)' : 'none',
         }}
       >
-        {/* Hero backdrop with darkening gradient overlay + close X.
-            Smaller on mobile sheet (180px) so more content fits above
-            the fold; full 240px on desktop modal. */}
+        {/* Hero backdrop. The image is its own absolutely-positioned layer
+            so we can apply soft top + bottom fade masks that blend cleanly
+            into the navy sheet instead of cutting off with a hard edge.
+            Mobile is 220px (up from 180) to give the cinematic image room
+            to breathe; desktop modal stays at 260px. */}
         <div
           style={{
             position: 'relative',
-            height: isModal ? 240 : 180,
-            background: backdrop
-              ? `linear-gradient(to bottom, rgba(13,27,61,0.4), rgba(13,27,61,0.95)), url(${backdrop}) center/cover no-repeat`
-              : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+            height: isModal ? 260 : 220,
+            background: BRAND.navyDeep,
+            overflow: 'hidden',
             display: 'flex',
             alignItems: 'flex-end',
             padding: '14px',
           }}
         >
+          {backdrop ? (
+            <>
+              {/* Backdrop image layer with WebKit + standard mask for a
+                  feathered fade at top (into the sheet edge) and bottom
+                  (into the poster row), so the photo never cuts off
+                  with a hard horizontal line. */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: `url(${backdrop}) center/cover no-repeat`,
+                  WebkitMaskImage:
+                    'linear-gradient(to bottom, transparent 0%, #000 18%, #000 70%, transparent 100%)',
+                  maskImage:
+                    'linear-gradient(to bottom, transparent 0%, #000 18%, #000 70%, transparent 100%)',
+                }}
+              />
+              {/* Color wash on top of the image — left-to-right navy tint
+                  so titles stay legible, plus a stronger bottom-edge
+                  darken that meets the sheet body seamlessly. */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background:
+                    'linear-gradient(180deg, rgba(15,22,57,0.55) 0%, rgba(15,22,57,0.25) 35%, rgba(15,22,57,0.55) 75%, rgba(15,22,57,0.98) 100%)',
+                }}
+              />
+            </>
+          ) : (
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+              }}
+            />
+          )}
           <button
             onClick={onClose}
             aria-label="Close"
@@ -196,6 +238,7 @@ export default function MovieDetailSheet({
               position: 'absolute',
               top: 'max(14px, env(safe-area-inset-top))',
               right: 14,
+              zIndex: 2,
               width: 36,
               height: 36,
               borderRadius: 99,
@@ -216,27 +259,30 @@ export default function MovieDetailSheet({
           </button>
         </div>
 
-        <div style={{ padding: '18px 22px 22px' }}>
+        <div style={{ padding: '18px 22px 22px', position: 'relative' }}>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: displayMovie.posterUrl ? '92px minmax(0, 1fr)' : '1fr',
-              gap: 14,
+              gridTemplateColumns: displayMovie.posterUrl ? '100px minmax(0, 1fr)' : '1fr',
+              gap: 16,
               alignItems: 'start',
-              marginTop: isModal ? -56 : -42,
-              marginBottom: 14,
+              marginTop: isModal ? -84 : -72,
+              marginBottom: 16,
+              position: 'relative',
+              zIndex: 1,
             }}
           >
             {displayMovie.posterUrl && (
               <div
                 data-testid="movie-detail-poster"
                 style={{
-                  width: 92,
+                  width: 100,
                   aspectRatio: '2 / 3',
-                  borderRadius: 8,
+                  borderRadius: 10,
                   background: 'rgba(0,0,0,0.26)',
-                  boxShadow: '0 12px 28px rgba(0,0,0,0.55)',
-                  border: `1px solid var(--rule)`,
+                  boxShadow:
+                    '0 18px 40px rgba(0,0,0,0.65), 0 4px 12px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset',
+                  border: `1px solid rgba(255,255,255,0.10)`,
                   overflow: 'hidden',
                 }}
               >
@@ -248,12 +294,12 @@ export default function MovieDetailSheet({
                     display: 'block',
                     width: '100%',
                     height: '100%',
-                    objectFit: 'contain',
+                    objectFit: 'cover',
                   }}
                 />
               </div>
             )}
-            <div style={{ minWidth: 0, paddingTop: isModal ? 66 : 52 }}>
+            <div style={{ minWidth: 0, paddingTop: isModal ? 96 : 84 }}>
               <h2
                 data-testid="movie-detail-title"
                 style={{
@@ -307,17 +353,18 @@ export default function MovieDetailSheet({
                     style={{
                       padding: '3px 8px',
                       borderRadius: 4,
-                      background: 'rgba(244,185,66,0.18)',
-                      color: '#f4b942',
+                      background: 'rgba(220,68,52,0.18)',
+                      color: '#ff8a78',
                       fontSize: 10,
                       fontWeight: 700,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 3,
+                      gap: 4,
                       fontVariantNumeric: 'tabular-nums',
                     }}
                     title={displayMovie.rtPending ? 'Rotten Tomatoes score pending' : 'Rotten Tomatoes critics and audience scores'}
                   >
+                    <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>🍅</span>
                     {formatRottenBadge(displayMovie, { audience: true })}
                   </span>
                 )}
