@@ -1299,21 +1299,15 @@ body {
       <button class="btn btn-primary" id="send-invites-btn">Send invites</button>
     </div>
 
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-      <div class="filter-bar" id="sponsor-filters" style="margin-bottom:0;">
-        <button class="filter-pill active" data-tier="all">All</button>
-        <button class="filter-pill" data-tier="Platinum">Platinum</button>
-        <button class="filter-pill" data-tier="Gold">Gold</button>
-        <button class="filter-pill" data-tier="Silver">Silver</button>
-        <button class="filter-pill" data-tier="Bronze">Bronze</button>
-      </div>
+    <div style="display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
       <button class="btn btn-secondary" id="export-sponsors-btn">Export CSV</button>
     </div>
-    <div class="cards-grid" id="sponsors-grid">
-      <div class="shimmer" style="height: 180px;"></div>
-      <div class="shimmer" style="height: 180px;"></div>
-      <div class="shimmer" style="height: 180px;"></div>
-    </div>
+    <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
+         All filtering, sorting, KPI strip, status pills happen inside the island.
+         Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
+    <link rel="stylesheet" href="/admin/assets/sponsors.css">
+    <div id="sponsors-mount"></div>
+    <script src="/admin/assets/sponsors.js" defer></script>
   </div>
 
   <!-- ── Tickets Tab ── -->
@@ -1902,6 +1896,8 @@ async function loadAllData() {
 /* ── Render Sponsors ── */
 function renderSponsors(filterTier) {
   const grid = document.getElementById('sponsors-grid');
+  // Sponsors React island has replaced this grid — legacy renderer is a no-op.
+  if (!grid) return;
   let items = sponsorsData;
   if (filterTier && filterTier !== 'all') {
     items = items.filter(s => (s.tier || '').toLowerCase() === filterTier.toLowerCase());
@@ -2403,13 +2399,17 @@ function escapeAttr(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-document.getElementById('sponsor-filters').addEventListener('click', e => {
-  const pill = e.target.closest('.filter-pill');
-  if (!pill) return;
-  document.querySelectorAll('#sponsor-filters .filter-pill').forEach(p => p.classList.remove('active'));
-  pill.classList.add('active');
-  renderSponsors(pill.dataset.tier);
-});
+// Legacy sponsor-filters bar removed when React island took over the panel.
+const _sponsorFilters = document.getElementById('sponsor-filters');
+if (_sponsorFilters) {
+  _sponsorFilters.addEventListener('click', e => {
+    const pill = e.target.closest('.filter-pill');
+    if (!pill) return;
+    document.querySelectorAll('#sponsor-filters .filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    renderSponsors(pill.dataset.tier);
+  });
+}
 
 /* ── Render Tickets ── */
 function renderTickets(search) {
