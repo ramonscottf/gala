@@ -2,19 +2,21 @@
 //
 // Three responsibilities:
 //   1. Thread/cookie management (anonymous-but-gated session via name+email)
-//   2. AI Gateway → Claude Haiku call with FAQ context
+//   2. Anthropic API call via anthropic-proxy worker (Claude Haiku)
 //   3. Slack outbound (post message) and Slack inbound verification
 //
 // Env vars expected (set in Cloudflare dashboard, not committed):
-//   ANTHROPIC_API_KEY            - for AI Gateway (Claude Haiku)
 //   SLACK_BOT_TOKEN              - xoxb-... for posting and threading
 //   SLACK_HELPLINE_CHANNEL       - channel ID like C09XXXX (gala-helpline)
 //   SLACK_SIGNING_SECRET         - for verifying inbound Events API webhooks
 //   CHAT_COOKIE_SECRET           - HMAC secret for thread cookie
+//
+// AI calls go through anthropic-proxy.ramonscottf.workers.dev which holds
+// the Anthropic key. No key needed in this Pages project.
 
 const COOKIE_NAME = 'gala_chat_thread';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
-const AI_GATEWAY_URL = 'https://gateway.ai.cloudflare.com/v1/77f3d6611f5ceab7651744268d434342/skippy/anthropic/v1/messages';
+const ANTHROPIC_PROXY_URL = 'https://anthropic-proxy.ramonscottf.workers.dev/v1/messages';
 
 // ---------- crypto helpers ----------
 
@@ -174,11 +176,10 @@ export async function callHaiku(env, systemPrompt, history) {
   // Ensure conversation starts with user
   while (messages.length && messages[0].role !== 'user') messages.shift();
 
-  const resp = await fetch(AI_GATEWAY_URL, {
+  const resp = await fetch(ANTHROPIC_PROXY_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_API_KEY,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({

@@ -106,15 +106,17 @@ Cloudflare Pages Functions
 
 ### 2. Set Cloudflare Pages env vars (Production env)
 
-Cloudflare dashboard → Pages → gala → Settings → Environment Variables:
+Cloudflare dashboard → Pages → gala → Settings → Environment Variables.
+
+`CHAT_COOKIE_SECRET` is already set via API (2026-05-09 deploy). The remaining vars to add:
 
 ```
-ANTHROPIC_API_KEY        = (Skippy's existing Anthropic key)
 SLACK_BOT_TOKEN          = xoxb-... (from step 1 #4)
 SLACK_SIGNING_SECRET     = ... (from step 1 #4)
 SLACK_HELPLINE_CHANNEL   = C09XXXXXX (from step 1 #5)
-CHAT_COOKIE_SECRET       = (any 32+ random chars; openssl rand -hex 32)
 ```
+
+(No `ANTHROPIC_API_KEY` needed — chat routes through `anthropic-proxy.ramonscottf.workers.dev`.)
 
 ### 3. Deploy
 
