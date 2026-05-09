@@ -141,9 +141,7 @@ export default function TicketCardV2({
               marginTop: 3,
               fontSize: 11,
               color: 'var(--mute)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              lineHeight: 1.35,
             }}
           >
             {subline}
