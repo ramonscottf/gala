@@ -132,14 +132,15 @@ const SeatTypeGuide = ({ types, activeType, onSelectType }) => (
     className="no-scrollbar"
     style={{
       display: 'flex',
-      gap: 8,
+      gap: 6,
       overflowX: 'auto',
-      paddingBottom: 2,
+      paddingBottom: 4,
       scrollSnapType: 'x proximity',
     }}
   >
     {types.map((type) => {
-      const detail = SEAT_TYPE_DETAILS[type] || { name: SEAT_TYPES[type]?.label || type, copy: '' };
+      const detail = SEAT_TYPE_DETAILS[type] || { name: SEAT_TYPES[type]?.label || type };
+      const color = SEAT_TYPES[type]?.color || '#6f75d8';
       const active = activeType === type;
       return (
         <button
@@ -149,31 +150,43 @@ const SeatTypeGuide = ({ types, activeType, onSelectType }) => (
           aria-pressed={active}
           onClick={() => onSelectType?.(active ? null : type)}
           style={{
-            all: 'unset',
-            boxSizing: 'border-box',
-            minWidth: 158,
-            flex: '1 0 158px',
+            flexShrink: 0,
             scrollSnapAlign: 'start',
-            display: 'flex',
-            gap: 10,
-            alignItems: 'center',
-            padding: 9,
-            borderRadius: 10,
-            border: active ? `1.5px solid ${BRAND.gold}` : `1px solid ${BRAND.rule}`,
-            background: active ? 'rgba(244,185,66,0.12)' : 'rgba(255,255,255,0.045)',
+            // Same shape as the movie pills above: 99-radius capsule,
+            // small circle marker, name only. Compact so the seat map +
+            // sticky CTA below fit in the viewport without clipping.
+            padding: '4px 12px 4px 4px',
+            borderRadius: 99,
+            border: 0,
             cursor: 'pointer',
-            boxShadow: active ? '0 0 0 2px rgba(244,185,66,0.08)' : 'none',
+            background: active ? 'rgba(244,185,66,0.14)' : 'rgba(255,255,255,0.05)',
+            boxShadow: active
+              ? `inset 0 0 0 1.5px ${BRAND.gold}`
+              : `inset 0 0 0 1px ${BRAND.rule}`,
+            color: '#fff',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            fontSize: 12,
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
           }}
         >
-          <SeatTypeVisual type={type} />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ color: '#fff', fontSize: 11, fontWeight: 800, lineHeight: 1.15 }}>
-              {detail.name}
-            </div>
-            <div style={{ marginTop: 3, color: BRAND.mute, fontSize: 10, lineHeight: 1.25 }}>
-              {active ? 'Highlighted' : detail.note}
-            </div>
-          </div>
+          {/* Color dot — matches the seat color in the map. Loveseat
+              uses a wider pill-shaped marker for the visual cue, all
+              other types use a circle. */}
+          <span
+            aria-hidden="true"
+            style={{
+              width: type === 'loveseat' ? 28 : 18,
+              height: 18,
+              borderRadius: type === 'loveseat' ? 6 : 99,
+              background: color,
+              flexShrink: 0,
+              boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.18)',
+            }}
+          />
+          {detail.name}
         </button>
       );
     })}
