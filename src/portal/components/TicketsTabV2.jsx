@@ -24,7 +24,8 @@
 
 import { useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
-import { Avatar, TicketCard, TicketQrCard } from '../Mobile.jsx';
+import { Avatar, TicketQrCard } from '../Mobile.jsx';
+import TicketCardV2 from './TicketCardV2.jsx';
 import { DINNER_LOCK_DAYS } from './SeatDetailSheet.jsx';
 
 function LockBanner({ daysOut, missingDinnerCount, onRemindAll, onPickForAll }) {
@@ -216,6 +217,9 @@ export default function TicketsTabV2({
   onOpenDelegation,
   onPlaceSeats,
   onInviteGuest,
+  // V2 R3 — per-seat callbacks (TicketCardV2)
+  onPickDinner, // (seat) => void
+  onInviteSeat, // (seat) => void  — sponsor-self → SeatInviteSheet
 }) {
   const { tickets = [], guestTickets = [], delegations = [], blockSize = 0, seatMath } = data || {};
 
@@ -307,13 +311,14 @@ export default function TicketsTabV2({
 
       <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {tickets.map((ticket) => (
-          <TicketCard
+          <TicketCardV2
             key={ticket.id}
             ticket={ticket}
-            onOpenTicket={onOpenTicket}
-            token={token}
-            apiBase={apiBase}
-            onRefresh={onRefresh}
+            delegationsById={delegationById}
+            daysOut={daysOut}
+            onPickDinner={onPickDinner}
+            onInviteSeat={onInviteSeat}
+            onManageGuest={onOpenDelegation}
           />
         ))}
         {tickets.length === 0 && (
@@ -370,14 +375,14 @@ export default function TicketsTabV2({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {guestTickets.map((ticket) => (
-              <TicketCard
+              <TicketCardV2
                 key={ticket.id}
                 ticket={ticket}
+                delegationsById={delegationById}
+                daysOut={daysOut}
                 guest
-                token={token}
-                apiBase={apiBase}
-                onRefresh={onRefresh}
-                onOpenGuest={() => onOpenDelegation?.(delegationById[ticket.delegationId])}
+                onPickDinner={onPickDinner}
+                onManageGuest={() => onOpenDelegation?.(delegationById[ticket.delegationId])}
               />
             ))}
           </div>

@@ -39,6 +39,8 @@ import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import TicketsTabV2 from './components/TicketsTabV2.jsx';
 import HomeTabV2 from './components/HomeTabV2.jsx';
 import HandBlockSheet from './components/HandBlockSheet.jsx';
+import SeatInviteSheet from './components/SeatInviteSheet.jsx';
+import DinnerSheet from './components/DinnerSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
@@ -46,7 +48,7 @@ const SheetFrameContext = createContext(false);
 
 // ── shared mini-components ─────────────────────────────────────────────
 
-const PosterMini = ({ poster, color, label, size = 44, showLabel = true }) => (
+export const PosterMini = ({ poster, color, label, size = 44, showLabel = true }) => (
   <div
     style={{
       width: size,
@@ -1218,9 +1220,9 @@ const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovie
 
 // ── Tickets tab ───────────────────────────────────────────────────────
 
-const seatLabel = (seat) => String(seat || '').replace('-', '');
+export const seatLabel = (seat) => String(seat || '').replace('-', '');
 
-const assignmentOwner = (row, fallback) => (
+export const assignmentOwner = (row, fallback) => (
   row?.ownerName ||
   row?.delegationName ||
   row?.guest_name ||
@@ -3285,6 +3287,9 @@ export default function Mobile({
   // /assign post-create just like AssignTheseSheet's "Invite a new
   // guest" affordance.
   const [handBlock, setHandBlock] = useState(null);
+  // V2 R3 — per-seat sheets driven by TicketCardV2 row buttons
+  const [seatInvite, setSeatInvite] = useState(null); // seat object | null
+  const [dinnerSheet, setDinnerSheet] = useState(null); // seat object | null
 
   // F4 / Phase 1.15.x — MovieDetailSheet open state. Wired on May 5
   // 2026 — previously SeatPickSheet was passed an inert onMovieDetail
@@ -3468,6 +3473,8 @@ export default function Mobile({
             onOpenTicket={openTicket}
             onOpenDelegation={(d) => setDelegationSheet(d)}
             onInviteGuest={openInvite}
+            onPickDinner={(seat) => setDinnerSheet(seat)}
+            onInviteSeat={(seat) => setSeatInvite(seat)}
           />
         ) : (
           <TicketsTab
@@ -3596,6 +3603,61 @@ export default function Mobile({
           The V2 R1 SeatDetailSheet and BulkAssignSheet experiments
           live on disk but are no longer wired in. They can be removed
           in a cleanup pass once V2 R2 is verified live. */}
+
+      {/* V2 R3 — per-seat sheets driven by TicketCardV2 row buttons.
+          DinnerSheet opens when the user taps a row's dinner pill;
+          SeatInviteSheet opens when they tap "+ Invite" on a sponsor-
+          self row (to hand it to a guest). Guest rows route through
+          DelegateManage via setDelegationSheet (already wired). */}
+      <Sheet
+        open={!!dinnerSheet}
+        onClose={() => setDinnerSheet(null)}
+        title="Pick dinner"
+      >
+        {dinnerSheet && (
+          <DinnerSheet
+            seat={dinnerSheet}
+            token={token}
+            apiBase={config.apiBase}
+            onSaved={async () => {
+              if (onRefresh) await onRefresh();
+              setDinnerSheet(null);
+            }}
+            onClose={() => setDinnerSheet(null)}
+          />
+        )}
+      </Sheet>
+
+      <Sheet
+        open={!!seatInvite}
+        onClose={() => setSeatInvite(null)}
+        title="Invite to seat"
+      >
+        {seatInvite && (
+          <SeatInviteSheet
+            seat={seatInvite}
+            delegations={data.delegations || []}
+            token={token}
+            apiBase={config.apiBase}
+            onSaved={async () => {
+              if (onRefresh) await onRefresh();
+              setSeatInvite(null);
+            }}
+            onClose={() => setSeatInvite(null)}
+            onInviteNew={({ seat }) => {
+              // Bind the single seat so DelegateForm's onCreated chain
+              // assigns it to the new delegation. inviteOpen carries
+              // { seat: 'D-15', theaterId } — the legacy single-seat
+              // shape that onDelegationCreated already understands.
+              setSeatInvite(null);
+              setInviteOpen({
+                theaterId: seat.theaterId,
+                seat: `${seat.row_label}-${seat.seat_num}`,
+              });
+            }}
+          />
+        )}
+      </Sheet>
 
       <Sheet
         open={settingsOpen}
