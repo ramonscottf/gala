@@ -116,11 +116,11 @@
     }
     .gx-bubble-btn:hover { filter: drop-shadow(0 8px 18px rgba(13,27,61,0.35)); }
     .gx-bubble-btn:focus-visible { outline: 3px solid ${BLUE}; outline-offset: 4px; border-radius: 8px; }
-    /* Booker is a stack of 9 expression PNGs (neutral, big-smile, excited,
-       surprised, curious, confused, sad, determined, laughing). Only one
-       layer has .gx-active at a time — others are opacity:0. Crossfade
-       gives Booker real personality without the file size of video.
-       The wrapper handles motion (bob/wave/jump); the layers handle face. */
+    /* Booker is a stack of 3 expression PNGs (neutral, big-smile, curious).
+       Only one is visible (.gx-active = opacity:1) at a time; switching is
+       a 350ms opacity crossfade between layers. Same body across all three
+       so the crossfade reads cleanly without per-frame body drift. The
+       wrapper handles motion (bob/wave/jump); the layers handle face. */
     .gx-booker {
       width: 100%; height: 100%; position: relative;
       transform-origin: center bottom; pointer-events: none;
@@ -131,15 +131,13 @@
       opacity: 0; transition: opacity 350ms ease-in-out;
     }
     .gx-expr.gx-active { opacity: 1; }
+    /* Three Booker faces — same body, just different facial expressions.
+       Neutral is the default idle, big-smile fires on chat open and replies,
+       curious shows while the user is mid-conversation. Same body across all
+       three so crossfade-on-opacity reads cleanly. */
     .gx-expr.gx-neutral    { background-image: url('https://assets.daviskids.org/mascot/expressions/neutral.png'); }
     .gx-expr.gx-big-smile  { background-image: url('https://assets.daviskids.org/mascot/expressions/big-smile.png'); }
-    .gx-expr.gx-excited    { background-image: url('https://assets.daviskids.org/mascot/expressions/excited.png'); }
-    .gx-expr.gx-surprised  { background-image: url('https://assets.daviskids.org/mascot/expressions/surprised.png'); }
     .gx-expr.gx-curious    { background-image: url('https://assets.daviskids.org/mascot/expressions/curious.png'); }
-    .gx-expr.gx-confused   { background-image: url('https://assets.daviskids.org/mascot/expressions/confused.png'); }
-    .gx-expr.gx-sad        { background-image: url('https://assets.daviskids.org/mascot/expressions/sad.png'); }
-    .gx-expr.gx-determined { background-image: url('https://assets.daviskids.org/mascot/expressions/determined.png'); }
-    .gx-expr.gx-laughing   { background-image: url('https://assets.daviskids.org/mascot/expressions/laughing.png'); }
 
 
     /* Motion is on the wrapper, so all expressions move together. */
@@ -244,10 +242,10 @@
   btn.setAttribute('aria-label', 'Chat with Booker');
   // 9-layer expression stack. Default active = neutral. Switching is
   // a CSS opacity crossfade driven by setBookerExpression() below.
-  const EXPRESSIONS = [
-    'neutral', 'big-smile', 'excited', 'surprised', 'curious',
-    'confused', 'sad', 'determined', 'laughing'
-  ];
+  // Three faces only — neutral idle, big-smile for greetings/replies,
+  // curious while the user is actively chatting. Anything more was overkill
+  // and prone to crossfade jitter from per-image body drift.
+  const EXPRESSIONS = ['neutral', 'big-smile', 'curious'];
   const exprLayers = EXPRESSIONS.map(function (name) {
     return '<div class="gx-expr gx-' + name + (name === 'neutral' ? ' gx-active' : '') + '"></div>';
   }).join('');
@@ -308,8 +306,9 @@
     }
   }
   function jumpThenBob() {
-    // Celebrate with the laughing face mid-jump, then fade back to neutral
-    setBookerExpression('laughing');
+    // Celebrate path — used on the rare success-y action. With three faces
+    // only, big-smile stands in for the bigger 'laughing' face we used to use.
+    setBookerExpression('big-smile');
     setBookerState('jump');
     setTimeout(() => {
       setBookerState('bob');
@@ -435,10 +434,22 @@
 
   // No mode toggle anymore — AI Helper is the only mode
 
+  let typingExpressionTimer = null;
   input.addEventListener('input', () => {
     sendBtn.disabled = !input.value.trim();
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+    // While the user is mid-thought, Booker leans curious. Reset the timer
+    // every keystroke; once the user stops typing for 1500ms (or sends), the
+    // send/reply flow takes over the expression.
+    if (input.value.trim()) {
+      setBookerExpression('curious');
+      clearTimeout(typingExpressionTimer);
+      typingExpressionTimer = setTimeout(() => {
+        // If the user trailed off without sending, fall back to neutral.
+        if (input.value.trim()) setBookerExpression('neutral');
+      }, 1500);
+    }
   });
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
@@ -455,8 +466,9 @@
     input.style.height = 'auto';
     sendBtn.disabled = true;
     appendMsg('user', text);
-    // Booker acknowledges the message with a quick smile, then back to thinking
-    setBookerExpression('big-smile');
+    // User sent a message — Booker stays curious while waiting for the reply.
+    // The reply handler flips to big-smile when it arrives.
+    setBookerExpression('curious');
     setTimeout(() => showTyping(), 250);
     try {
       const r = await fetch('/api/gala/chat/message', {
@@ -468,8 +480,10 @@
       hideTyping();
       if (data.reply) {
         appendMsg(data.reply.sender, data.reply.content);
-        // Booker delivered the answer — flash "determined" face briefly
-        setBookerExpression('determined');
+        // Booker delivered the answer — quick big-smile flash, then back
+        // to neutral idle. (User is no longer mid-typing, so we don't
+        // hold curious here.)
+        setBookerExpression('big-smile');
         setTimeout(() => setBookerExpression('neutral'), 1400);
       }
       state.lastSeen = new Date().toISOString();
