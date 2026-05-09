@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1b3d">
+<title>FAQ · DEF Gala 2026</title>
+
+<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="DEF Gala 2026 — Frequently Asked Questions">
+<meta property="og:description" content="Davis Education Foundation · June 10, 2026 · Megaplex Centerville">
+<meta property="og:url" content="https://gala.daviskids.org/faq">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --navy: #0d1b3d;
+    --navy-700: #182a55;
+    --navy-300: #5a6a8c;
+    --blue: #1e88e5;
+    --red: #e53935;
+    --grey-50: #f8fafc;
+    --grey-100: #f1f5f9;
+    --grey-200: #e2e8f0;
+    --grey-500: #64748b;
+    --grey-900: #0f172a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--grey-900);
+    background: white;
+    line-height: 1.55;
+  }
+  .masthead {
+    background: var(--navy);
+    color: white;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .masthead a {
+    color: white;
+    text-decoration: none;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .5px;
+  }
+  .masthead .nav { display: flex; gap: 20px; font-size: 14px; }
+  .masthead .nav a { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; opacity: .9; }
+  .masthead .nav a:hover { opacity: 1; }
+  .strip { height: 3px; background: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%); }
+
+  .hero {
+    background: var(--grey-50);
+    padding: 56px 24px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--grey-200);
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 0 0 12px;
+    letter-spacing: -0.5px;
+  }
+  .hero p {
+    font-size: 17px;
+    color: var(--grey-500);
+    max-width: 640px;
+    margin: 0 auto 20px;
+  }
+  .hero .meta {
+    display: inline-flex;
+    gap: 18px;
+    font-size: 14px;
+    color: var(--navy-300);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .hero .meta strong { color: var(--navy); font-weight: 600; }
+
+  .search-row {
+    max-width: 720px;
+    margin: 24px auto 0;
+    display: flex;
+    gap: 8px;
+  }
+  .search-row input {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 1px solid var(--grey-200);
+    border-radius: 10px;
+    font-family: inherit;
+    outline: none;
+    background: white;
+  }
+  .search-row input:focus { border-color: var(--blue); }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  .category {
+    margin-bottom: 36px;
+  }
+  .category h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--navy);
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--grey-100);
+  }
+  details {
+    border: 1px solid var(--grey-200);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background: white;
+    transition: box-shadow .12s, border-color .12s;
+  }
+  details[open] {
+    border-color: var(--blue);
+    box-shadow: 0 2px 8px rgba(30,136,229,0.08);
+  }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 18px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--navy-700);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: "+";
+    font-size: 22px;
+    color: var(--grey-500);
+    font-weight: 400;
+    transition: transform .15s;
+  }
+  details[open] summary::after { content: "−"; }
+  details .answer {
+    padding: 0 18px 18px;
+    color: var(--grey-900);
+    font-size: 15px;
+    line-height: 1.65;
+    border-top: 1px solid var(--grey-100);
+    padding-top: 14px;
+    margin-top: 0;
+  }
+  details .answer a { color: var(--blue); }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--grey-500);
+  }
+  .empty button {
+    margin-top: 12px;
+    background: var(--navy);
+    color: white;
+    border: 0;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .cta {
+    background: var(--grey-50);
+    border-radius: 14px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-top: 28px;
+    border: 1px solid var(--grey-200);
+  }
+  .cta h3 {
+    font-family: 'Playfair Display', serif;
+    margin: 0 0 8px;
+    font-size: 22px;
+    color: var(--navy);
+  }
+  .cta p {
+    color: var(--grey-500);
+    font-size: 15px;
+    margin: 0 0 14px;
+  }
+  .cta button {
+    background: var(--navy);
+    color: white;
+    border: 0;
+    padding: 12px 26px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    .hero { padding: 36px 18px 28px; }
+    .hero h1 { font-size: 32px; }
+    main { padding: 28px 16px 60px; }
+    .category h2 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+  <header class="masthead">
+    <a href="/">DEF Gala 2026</a>
+    <nav class="nav">
+      <a href="/">Home</a>
+      <a href="/faq">FAQ</a>
+    </nav>
+  </header>
+  <div class="strip"></div>
+
+  <section class="hero">
+    <h1>Frequently Asked Questions</h1>
+    <p>Everything you need to know about the Davis Education Foundation Gala 2026 — and if you don't see it here, the chat bubble in the corner can help.</p>
+    <div class="meta">
+      <span><strong>Wednesday, June 10, 2026</strong></span>
+      <span>Megaplex Theatres at The Junction · Centerville, UT</span>
+    </div>
+    <div class="search-row">
+      <input id="faq-search" type="search" placeholder="Search FAQs… (try 'parking' or 'kids')" autocomplete="off" />
+    </div>
+  </section>
+
+  <main id="faq-main">
+    <div id="faq-container">
+      <div class="empty"><p>Loading…</p></div>
+    </div>
+
+    <div class="cta">
+      <h3>Still have a question?</h3>
+      <p>Tap the chat bubble in the corner — get instant answers from the AI, or switch to "Live Help" to message Scott directly.</p>
+      <button onclick="document.querySelector('.gx-bubble-btn')?.click()">Open chat</button>
+    </div>
+  </main>
+
+<script>
+const CATEGORY_LABELS = {
+  'tickets': 'Tickets & Pricing',
+  'night-of': 'The Night Of',
+  'movies': 'Movies & Showings',
+  'seating': 'Seat Selection',
+  'donations': 'Donations & Auction',
+  'logistics': 'Logistics & Accessibility',
+};
+const CATEGORY_ORDER = ['tickets', 'night-of', 'movies', 'seating', 'donations', 'logistics'];
+
+let allFaqs = [];
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function render(filter = '') {
+  const container = document.getElementById('faq-container');
+  const q = filter.trim().toLowerCase();
+  const filtered = q
+    ? allFaqs.filter(f => {
+        const hay = (f.question + ' ' + f.answer + ' ' + (f.keywords || '')).toLowerCase();
+        return hay.includes(q);
+      })
+    : allFaqs;
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty"><p>No matches. Try the chat bubble for help.</p><button onclick="document.querySelector(\'.gx-bubble-btn\')?.click()">Open chat</button></div>';
+    return;
+  }
+
+  const grouped = {};
+  for (const f of filtered) {
+    if (!grouped[f.category]) grouped[f.category] = [];
+    grouped[f.category].push(f);
+  }
+  const order = CATEGORY_ORDER.filter(c => grouped[c]).concat(
+    Object.keys(grouped).filter(c => !CATEGORY_ORDER.includes(c))
+  );
+  container.innerHTML = order.map(cat => {
+    const items = grouped[cat].map(f => `
+      <details ${q ? 'open' : ''}>
+        <summary>${escapeHtml(f.question)}</summary>
+        <div class="answer">${escapeHtml(f.answer).replace(/\n/g, '<br>')}</div>
+      </details>
+    `).join('');
+    return `<section class="category"><h2>${CATEGORY_LABELS[cat] || cat}</h2>${items}</section>`;
+  }).join('');
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/gala/chat/faq');
+    const data = await r.json();
+    allFaqs = data.faq || [];
+    render();
+  } catch (err) {
+    document.getElementById('faq-container').innerHTML = '<div class="empty"><p>Couldn\'t load FAQs. Try the chat bubble for help.</p></div>';
+  }
+}
+
+document.getElementById('faq-search').addEventListener('input', e => render(e.target.value));
+load();
+</script>
+</body>
+</html>

@@ -18,10 +18,47 @@
 //   /volunteer — volunteer signup form
 //   /api/auth/*— auth endpoints (request, verify, signout)
 //   /api/gala/*— individual functions handle their own auth where needed
+//
+// Chat widget injection: HTML responses on public-facing pages get the
+// /assets/chat-widget.js script tag injected before </body>. Pages can
+// opt out by adding `data-no-chat-widget` to <body>. Admin and review
+// pages skip injection entirely (CHAT_WIDGET_SKIP_PREFIXES).
 
 const PROTECTED_PREFIXES = ['/admin'];
+const CHAT_WIDGET_SKIP_PREFIXES = ['/admin', '/review', '/api'];
+const CHAT_WIDGET_TAG = '<script src="/assets/chat-widget.js" defer></script>';
 const COOKIE_NAME = 'gala_session';
 const MAX_AGE_SEC = 2592000; // 30 days — admin convenience, password-protected
+
+async function injectChatWidget(response, url) {
+  // Skip non-HTML, redirects, errors
+  if (!response || response.status >= 300) return response;
+  const ct = response.headers.get('Content-Type') || '';
+  if (!ct.includes('text/html')) return response;
+
+  // Skip path-based opt-outs
+  if (CHAT_WIDGET_SKIP_PREFIXES.some((p) => url.pathname.startsWith(p))) {
+    return response;
+  }
+
+  const html = await response.text();
+  // Skip page-level opt-out
+  if (/<body[^>]*data-no-chat-widget/i.test(html)) {
+    return new Response(html, response);
+  }
+  // Idempotent — don't double-inject
+  if (html.includes('/assets/chat-widget.js')) {
+    return new Response(html, response);
+  }
+  const injected = html.replace(/<\/body>/i, `${CHAT_WIDGET_TAG}\n</body>`);
+  // If no </body> tag, append at end (defensive)
+  const finalHtml = injected === html ? html + '\n' + CHAT_WIDGET_TAG : injected;
+  return new Response(finalHtml, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
 
 async function verifySession(cookie, secret) {
   if (!cookie) return false;
@@ -79,7 +116,7 @@ export async function onRequest(context) {
       (pathToken && pathToken.length >= 10) ||
       (queryToken && queryToken.length >= 10);
     if (hasToken) {
-      return next();
+      return injectChatWidget(await next(), url);
     }
     // Bare /checkin → require cookie
     const cookie = getCookie(request, COOKIE_NAME);
@@ -87,13 +124,13 @@ export async function onRequest(context) {
     if (!valid) {
       return Response.redirect(new URL('/?from=checkin', request.url).toString(), 302);
     }
-    return next();
+    return injectChatWidget(await next(), url);
   }
 
   // Listed protected prefixes: /admin
   const protectedMatch = PROTECTED_PREFIXES.some((p) => url.pathname.startsWith(p));
   if (!protectedMatch) {
-    return next();
+    return injectChatWidget(await next(), url);
   }
 
   const cookie = getCookie(request, COOKIE_NAME);
@@ -103,5 +140,5 @@ export async function onRequest(context) {
     return Response.redirect(new URL('/?from=admin', request.url).toString(), 302);
   }
 
-  return next();
+  return injectChatWidget(await next(), url);
 }
