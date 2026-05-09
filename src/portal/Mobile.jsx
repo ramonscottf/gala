@@ -34,6 +34,9 @@ import NightOfContent from './components/NightOfContent.jsx';
 // internally for back-compat with email deep links.
 import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
+import PostPickOverview from './components/PostPickOverview.jsx';
+import WhichSeatsPicker from './components/WhichSeatsPicker.jsx';
+import CompletionCelebration from './components/CompletionCelebration.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import TicketsTabV2 from './components/TicketsTabV2.jsx';
@@ -3328,6 +3331,17 @@ export default function Mobile({
   const [postPick, setPostPick] = useState(null);
   const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);
+  // V2 R11 — post-pick state machine. The user lands on
+  // PostPickOverview after seat selection, taps Invite or Pick meals,
+  // does the inner action, returns here. Done unlocks when both
+  // counters hit 0 → CompletionCelebration. The sub-states:
+  //   'overview'   — the persistent screen with counters (default)
+  //   'whichSeats' — picking which seats to invite for
+  //   'celebrate'  — post-Done celebration screen with the ticket
+  // Pick meals tap sets dinnerOpen (existing surface); when it closes
+  // we return to overview automatically.
+  const [postPickStep, setPostPickStep] = useState('overview');
+  const [postPickInviteSeats, setPostPickInviteSeats] = useState(null); // string[] | null
   // V2 IA — HandBlockSheet state. Mirrors postPick (same shape: the
   // just-placed seats payload) and only opens when V2 is enabled. The
   // sheet itself does the bulk /assign fan-out and routes "+ New guest"
@@ -3804,10 +3818,20 @@ export default function Mobile({
 
       <Sheet
         open={!!postPick}
-        onClose={() => setPostPick(null)}
-        title="Seats placed"
+        onClose={() => {
+          setPostPick(null);
+          setPostPickStep('overview');
+          setPostPickInviteSeats(null);
+        }}
+        title={
+          postPickStep === 'celebrate'
+            ? "You're all set"
+            : postPickStep === 'whichSeats'
+              ? 'Invite a guest'
+              : 'Seats placed'
+        }
       >
-        {postPick && (
+        {postPick && !v2Enabled && (
           <PostPickSheet
             placed={postPick}
             missingDinnerCount={
@@ -3839,8 +3863,105 @@ export default function Mobile({
             finalizing={finalizing}
             error={finalizeError}
             onClearError={clearFinalizeError}
-            onHandBlock={v2Enabled ? () => setHandBlock(postPick) : null}
+            onHandBlock={null}
           />
+        )}
+        {postPick && v2Enabled && postPickStep === 'overview' && (
+          <PostPickOverview
+            placed={postPick}
+            assignmentRows={(portal?.myAssignments || []).map((a) => ({
+              ...a,
+              seat_id: a.seat_id || `${a.row_label}-${a.seat_num}`,
+            }))}
+            onInvite={() => setPostPickStep('whichSeats')}
+            onPickMeals={() => setDinnerOpen(true)}
+            onDone={async () => {
+              try {
+                await finalize();
+                // Move to celebration step instead of dismissing
+                setPostPickStep('celebrate');
+              } catch {
+                // finalizeError surface stays; user retries
+              }
+            }}
+            finalizing={finalizing}
+            error={finalizeError}
+            onClearError={clearFinalizeError}
+          />
+        )}
+        {postPick && v2Enabled && postPickStep === 'whichSeats' && (
+          <WhichSeatsPicker
+            placed={postPick}
+            assignmentRows={(portal?.myAssignments || []).map((a) => ({
+              ...a,
+              seat_id: a.seat_id || `${a.row_label}-${a.seat_num}`,
+            }))}
+            onContinue={(selectedSeatIds) => {
+              // Stash selection so onDelegationCreated knows which
+              // seats to bind. Open the canonical DelegateForm via
+              // setInviteOpen with the multi-seat shape.
+              setPostPickInviteSeats(selectedSeatIds);
+              setInviteOpen({
+                theaterId: postPick.theaterId,
+                seatIds: selectedSeatIds,
+              });
+              // After the invite is sent and onDelegationCreated runs,
+              // we'll come back to the overview (handled in the
+              // onDelegationCreated chain below — when post-pick is
+              // active, route back to overview).
+              setPostPickStep('overview');
+            }}
+            onBack={() => setPostPickStep('overview')}
+          />
+        )}
+        {postPick && v2Enabled && postPickStep === 'celebrate' && (
+          (() => {
+            // Build a synthetic ticket from the just-placed block so
+            // CompletionCelebration can render it via TicketDetailSheet.
+            // The just-placed seats are now in portal.myAssignments
+            // with their delegation_id and dinner_choice set, so just
+            // filter to those rows.
+            const rows = (portal?.myAssignments || [])
+              .filter((a) => postPick.seatIds.includes(a.seat_id || `${a.row_label}-${a.seat_num}`))
+              .map((a) => ({
+                ...a,
+                seat_id: a.seat_id || `${a.row_label}-${a.seat_num}`,
+              }));
+            const ticket = {
+              id: `done-${postPick.theaterId}-${postPick.seatIds.join(',')}`,
+              theaterId: postPick.theaterId,
+              movieTitle: postPick.movieTitle,
+              showLabel: postPick.showLabel,
+              showTime: postPick.showTime,
+              dinnerTime: postPick.dinnerTime,
+              theaterName: postPick.theaterName,
+              posterUrl: postPick.posterUrl,
+              assignmentRows: rows,
+            };
+            return (
+              <CompletionCelebration
+                ticket={ticket}
+                daysOut={data.daysOut}
+                token={token}
+                apiBase={config.apiBase}
+                onPickDinner={(seat) => setDinnerSheet(seat)}
+                onInviteSeat={(seat) => {
+                  setInviteOpen({
+                    theaterId: seat.theaterId,
+                    seat: `${seat.row_label}-${seat.seat_num}`,
+                  });
+                }}
+                onManageGuest={(d) => setDelegationSheet(d)}
+                onClose={() => {
+                  setPostPick(null);
+                  setPostPickStep('overview');
+                  setPostPickInviteSeats(null);
+                  setAssignThese(null);
+                  setDinnerOpen(false);
+                }}
+              />
+            );
+          })()
         )}
       </Sheet>
 
