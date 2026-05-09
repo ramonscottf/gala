@@ -187,7 +187,7 @@ const miniBtn = (kind, isLight = false) => ({
 // perforation circles cut at calc(100%-78px), dashed border between
 // body and stub, MEGAPLEX wordmark, "YOUR GALA / N days out" eyebrow.
 
-const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut }) => {
+const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut, isDelegation = false, inviterCompany = '' }) => {
   const firstName = (name || '').split(' ')[0];
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
@@ -320,9 +320,14 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
                   color: '#fff',
                   marginTop: 1,
                   whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxWidth: 200,
                 }}
               >
-                Sponsor portal
+                {isDelegation
+                  ? `Guest of ${inviterCompany || 'a sponsor'}`
+                  : 'Sponsor portal'}
               </div>
             </div>
           </div>
@@ -449,12 +454,14 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           {restName && (
             <i
               style={{
-                color: BRAND.gold,
+                color: isDelegation ? BRAND.indigoLight : BRAND.gold,
                 fontWeight: 500,
-                // Slight text-shadow gives the gold italic a bit of pop on
-                // the navy gradient, especially on small phone screens
-                // where the iOS sample-bottom-bar dims everything above.
-                textShadow: '0 0 18px rgba(244,185,66,0.25)',
+                // Slight text-shadow gives the italic a bit of pop on the
+                // navy gradient, especially on small phone screens where
+                // the iOS sample-bottom-bar dims everything above.
+                textShadow: isDelegation
+                  ? '0 0 18px rgba(168,177,255,0.30)'
+                  : '0 0 18px rgba(244,185,66,0.25)',
               }}
             >
               {restName}.
@@ -471,22 +478,34 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
           style={{
             marginTop: 18,
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateColumns: isDelegation ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)',
             borderTop: `1px solid var(--rule)`,
             paddingTop: 14,
           }}
         >
-          {[
-            { label: 'TOTAL', value: blockSize, sub: 'Your block', color: '#fff' },
-            { label: 'PLACED', value: placed, sub: 'In seats', color: '#fff' },
-            { label: 'ASSIGNED', value: assigned, sub: 'To guests', color: '#fff' },
-            {
-              label: 'OPEN',
-              value: openCount,
-              sub: 'To place',
-              color: openCount > 0 ? BRAND.indigoLight : 'rgba(255,255,255,0.6)',
-            },
-          ].map((s, i) => (
+          {(isDelegation
+            ? [
+                { label: 'TOTAL', value: blockSize, sub: 'Your seats', color: '#fff' },
+                { label: 'PLACED', value: placed, sub: 'In seats', color: '#fff' },
+                {
+                  label: 'OPEN',
+                  value: openCount,
+                  sub: 'To place',
+                  color: openCount > 0 ? BRAND.indigoLight : 'rgba(255,255,255,0.6)',
+                },
+              ]
+            : [
+                { label: 'TOTAL', value: blockSize, sub: 'Your block', color: '#fff' },
+                { label: 'PLACED', value: placed, sub: 'In seats', color: '#fff' },
+                { label: 'ASSIGNED', value: assigned, sub: 'To guests', color: '#fff' },
+                {
+                  label: 'OPEN',
+                  value: openCount,
+                  sub: 'To place',
+                  color: openCount > 0 ? BRAND.indigoLight : 'rgba(255,255,255,0.6)',
+                },
+              ]
+          ).map((s, i) => (
             <div
               key={i}
               style={{
@@ -592,7 +611,7 @@ const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCoun
 // Inline state machine: idle → sending → sent (3s) → idle. Errors render
 // inline with retry. No phone input — uses the sponsor's phone on file.
 
-const TextMySeatsButton = ({ token, apiBase }) => {
+const TextMySeatsButton = ({ token, apiBase, sponsorPhone }) => {
   const [state, setState] = useState('idle'); // idle | sending | sent | error
   const [error, setError] = useState('');
 
@@ -620,10 +639,21 @@ const TextMySeatsButton = ({ token, apiBase }) => {
     }
   };
 
+  // Mask the sponsor phone so the destination is visible without
+  // exposing the full number to anyone who happens to load the portal.
+  // Format: (•••) •••-1234 — last 4 digits of the on-file number.
+  const maskedPhone = (() => {
+    if (!sponsorPhone) return '';
+    const digits = String(sponsorPhone).replace(/\D/g, '');
+    if (digits.length < 4) return '';
+    return `(•••) •••-${digits.slice(-4)}`;
+  })();
+
   const label =
     state === 'sending' ? 'Sending…'
     : state === 'sent' ? '✓ Texted'
     : state === 'error' ? 'Try again'
+    : maskedPhone ? `Text my seats to ${maskedPhone}`
     : 'Text my seats to me';
 
   return (
@@ -697,6 +727,8 @@ const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovie
         openCount={openCount}
         logoUrl={logoUrl}
         daysOut={daysOut}
+        isDelegation={isDelegation}
+        inviterCompany={data.company}
       />
 
       <div
@@ -827,9 +859,11 @@ const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovie
       {/* "Text my seats to me" — sponsor-only quick action. Sends the
           seats summary as SMS to the phone on file. Uses the existing
           /api/gala/portal/[token]/sms endpoint. Hidden if no seats
-          are placed yet (nothing to send). */}
-      {placed > 0 && token && (
-        <TextMySeatsButton token={token} apiBase={apiBase} />
+          are placed yet (nothing to send) AND hidden for delegation
+          portals — the server returns 403 for non-sponsors but the UI
+          shouldn't even surface a button that can't fire. */}
+      {placed > 0 && token && !isDelegation && (
+        <TextMySeatsButton token={token} apiBase={apiBase} sponsorPhone={data.sponsorPhone} />
       )}
 
       {/* Phase 1.16 — Manage tickets. Surfaces the Tickets tab on Home
@@ -2416,6 +2450,13 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
     lineup,
     daysOut: daysUntilGala(),
     seatMath: portal.seatMath || { total: 0, placed: 0, delegated: 0, available: 0 },
+    // Phone on file for the underlying sponsor record. Used by the
+    // "Text my seats to me" button to display a masked destination
+    // ("Text my seats to (•••) •••-6642") so anyone tapping the
+    // button can see whose phone the SMS will hit before pressing.
+    // For delegations this is the delegate's own phone, but the button
+    // is hidden for delegations anyway (server returns 403).
+    sponsorPhone: id.phone || null,
   };
 }
 
