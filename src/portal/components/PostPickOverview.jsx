@@ -1,48 +1,44 @@
-// PostPickOverview — V2 R11 (the post-pick state machine)
+// PostPickOverview — V2 R12 (counters folded into the showing card)
 //
-// Replaces the old 4-button PostPickSheet ("Assign / Hand block /
-// Pick dinners / Done"). User feedback: too many options, too many
-// half-states, no clear path to completion.
+// User feedback: "It should just be 3/3 then the two buttons. The
+// 3/3 2/3 etc should be in the movie pill on the left side in
+// yellow then the two buttons."
 //
-// New flow: a persistent overview screen the user keeps coming back
-// to until BOTH counters hit zero. Two action buttons (Invite a
-// guest / Pick meals) and a Done button that's outline-only +
-// disabled until everything's done. Tap Invite → WhichSeatsPicker
-// → DelegateForm → back here. Tap Pick meals → DinnerSheet → back
-// here. Done unlocks → CompletionCelebration.
+// Changes from R11:
+//   - The two big counter tiles are GONE. Counter info now lives
+//     inside the showing card on the left (yellow gold pills below
+//     the seat count).
+//   - The Invite/Pick meals buttons get the room. They're the
+//     primary visual, not the counters.
+//   - Done button still appears below, still greyed out until both
+//     counters hit zero.
 //
-// "Hand the block to one guest" is folded into Invite (you select
-// all seats in WhichSeatsPicker, which is the default state). No
-// separate hand-block flow.
-//
-// All assignments + dinners can be changed later from the Tickets
-// tab. The footnote on this screen says so explicitly.
+// The counter pills inside the showing card are tiny gold tracked
+// "3/3 ASSIGN" / "3/3 MEAL" badges. They tick down as the user
+// completes each action and turn green ✓ when zero.
 
 import { useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { PosterMini } from '../Mobile.jsx';
 
 export default function PostPickOverview({
-  placed,           // { theaterId, seatIds, movieTitle, showLabel, showTime, theaterName, posterUrl }
-  assignmentRows,   // current rows for the just-placed seats — drives counters
-  onInvite,         // () => void — opens WhichSeatsPicker
-  onPickMeals,      // () => void — opens DinnerSheet (or batch picker)
-  onDone,           // () => void — fires CompletionCelebration
+  placed,
+  assignmentRows,
+  onInvite,
+  onPickMeals,
+  onDone,
   finalizing,
   error,
   onClearError,
 }) {
-  // Just-placed seat ids
   const seatIds = placed?.seatIds || [];
 
-  // Filter assignmentRows to only the seats we just placed
   const justPlacedRows = useMemo(() => {
     return (assignmentRows || []).filter((r) =>
       seatIds.includes(r.seat_id || `${r.row_label}-${r.seat_num}`),
     );
   }, [assignmentRows, seatIds]);
 
-  // Counters
   const stillToAssign = useMemo(
     () => justPlacedRows.filter((r) => !r.delegation_id).length,
     [justPlacedRows],
@@ -52,11 +48,16 @@ export default function PostPickOverview({
     [justPlacedRows],
   );
 
+  const total = seatIds.length;
+  const assigned = total - stillToAssign;
+  const mealed = total - stillNeedMeal;
   const allDone = stillToAssign === 0 && stillNeedMeal === 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      {/* Header tile: poster + showing summary */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Showing card with counter pills inside — left column has the
+          poster, right column has the showing details + 2 small
+          counter pills stacked at the bottom. */}
       <div
         style={{
           display: 'grid',
@@ -73,7 +74,7 @@ export default function PostPickOverview({
           poster={placed?.posterUrl}
           color={placed?.color}
           label={placed?.movieTitle?.split(' ')[0]}
-          size={48}
+          size={56}
           showLabel={false}
         />
         <div style={{ minWidth: 0 }}>
@@ -102,27 +103,32 @@ export default function PostPickOverview({
           >
             {placed?.movieTitle}
           </div>
-          <div style={{ marginTop: 3, fontSize: 11, color: 'var(--mute)' }}>
-            {seatIds.length} seat{seatIds.length === 1 ? '' : 's'} · {placed?.theaterName}
+          <div
+            style={{
+              marginTop: 3,
+              fontSize: 11,
+              color: 'var(--mute)',
+            }}
+          >
+            {total} seat{total === 1 ? '' : 's'} · {placed?.theaterName}
+          </div>
+          {/* Counter pills inline below the meta row */}
+          <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+            <CounterPill
+              label="ASSIGN"
+              done={assigned}
+              total={total}
+            />
+            <CounterPill
+              label="MEAL"
+              done={mealed}
+              total={total}
+            />
           </div>
         </div>
       </div>
 
-      {/* Counters */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <CounterTile
-          label="still to assign"
-          n={stillToAssign}
-          tone="indigo"
-        />
-        <CounterTile
-          label="still need a meal"
-          n={stillNeedMeal}
-          tone="amber"
-        />
-      </div>
-
-      {/* Action buttons */}
+      {/* The two action buttons — primary visual now */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <ActionButton
           label="Invite a guest"
@@ -148,15 +154,12 @@ export default function PostPickOverview({
         />
       </div>
 
-      {/* Done — outline only + greyed when not allDone, solid celebration
-          when ready */}
       <DoneButton
         ready={allDone}
         finalizing={finalizing}
         onClick={onDone}
       />
 
-      {/* Footnote */}
       <div
         style={{
           fontSize: 11,
@@ -190,56 +193,30 @@ export default function PostPickOverview({
   );
 }
 
-function CounterTile({ label, n, tone }) {
-  const done = n === 0;
-  const map = {
-    indigo: {
-      bg: done ? 'rgba(99,201,118,0.10)' : 'rgba(168,177,255,0.10)',
-      fg: done ? '#63c976' : BRAND.indigoLight,
-      br: done ? 'rgba(99,201,118,0.3)' : 'rgba(168,177,255,0.30)',
-    },
-    amber: {
-      bg: done ? 'rgba(99,201,118,0.10)' : 'rgba(244,185,66,0.12)',
-      fg: done ? '#63c976' : BRAND.gold,
-      br: done ? 'rgba(99,201,118,0.3)' : 'rgba(244,185,66,0.32)',
-    },
-  };
-  const s = map[tone] || map.indigo;
+function CounterPill({ label, done, total }) {
+  const complete = done >= total;
   return (
-    <div
+    <span
       style={{
-        display: 'flex',
+        display: 'inline-flex',
         alignItems: 'center',
-        gap: 14,
-        padding: '12px 16px',
-        borderRadius: 12,
-        background: s.bg,
-        border: `1px solid ${s.br}`,
+        gap: 5,
+        padding: '3px 9px',
+        borderRadius: 99,
+        background: complete
+          ? 'rgba(99,201,118,0.12)'
+          : 'rgba(244,185,66,0.12)',
+        border: `1px solid ${complete ? 'rgba(99,201,118,0.30)' : 'rgba(244,185,66,0.32)'}`,
+        fontSize: 9,
+        fontWeight: 800,
+        letterSpacing: 1.2,
+        color: complete ? '#7fcfa0' : BRAND.gold,
+        fontVariantNumeric: 'tabular-nums',
       }}
     >
-      <span
-        style={{
-          fontFamily: FONT_DISPLAY,
-          fontSize: 28,
-          fontWeight: 700,
-          color: s.fg,
-          fontVariantNumeric: 'tabular-nums',
-          minWidth: 32,
-        }}
-      >
-        {done ? '✓' : n}
-      </span>
-      <span
-        style={{
-          fontSize: 13,
-          fontWeight: 600,
-          color: 'rgba(255,255,255,0.85)',
-          flex: 1,
-        }}
-      >
-        {done ? `No seats ${label.replace(/^still /, '')}` : label}
-      </span>
-    </div>
+      <span>{complete ? '✓' : `${done}/${total}`}</span>
+      <span>{label}</span>
+    </span>
   );
 }
 
@@ -279,13 +256,7 @@ function ActionButton({ label, subtext, tone, disabled, onClick }) {
       }}
     >
       <div>
-        <div
-          style={{
-            fontSize: 15,
-            fontWeight: 800,
-            letterSpacing: -0.1,
-          }}
-        >
+        <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: -0.1 }}>
           {label}
         </div>
         <div
@@ -299,9 +270,7 @@ function ActionButton({ label, subtext, tone, disabled, onClick }) {
           {subtext}
         </div>
       </div>
-      {!disabled && (
-        <span style={{ fontSize: 18, fontWeight: 800 }}>→</span>
-      )}
+      {!disabled && <span style={{ fontSize: 18, fontWeight: 800 }}>→</span>}
     </button>
   );
 }

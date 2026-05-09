@@ -3827,8 +3827,10 @@ export default function Mobile({
           postPickStep === 'celebrate'
             ? "You're all set"
             : postPickStep === 'whichSeats'
-              ? 'Invite a guest'
-              : 'Seats placed'
+              ? 'Invite — which seats?'
+              : postPickStep === 'inviteForm'
+                ? `Invite for ${postPickInviteSeats?.length || 0} seat${(postPickInviteSeats?.length || 0) === 1 ? '' : 's'}`
+                : 'Seats placed'
         }
       >
         {postPick && !v2Enabled && (
@@ -3897,21 +3899,58 @@ export default function Mobile({
               seat_id: a.seat_id || `${a.row_label}-${a.seat_num}`,
             }))}
             onContinue={(selectedSeatIds) => {
-              // Stash selection so onDelegationCreated knows which
-              // seats to bind. Open the canonical DelegateForm via
-              // setInviteOpen with the multi-seat shape.
+              // R12 — instead of opening the global DelegateForm sheet
+              // on top of this one (causes the visual stacking bug
+              // where both sheets render at once), advance the
+              // post-pick step to 'inviteForm' and render DelegateForm
+              // INSIDE the post-pick sheet at that step. State stays
+              // self-contained: form completes → /assign chains to
+              // the selected seats → step returns to 'overview' with
+              // counters refreshed.
               setPostPickInviteSeats(selectedSeatIds);
-              setInviteOpen({
-                theaterId: postPick.theaterId,
-                seatIds: selectedSeatIds,
-              });
-              // After the invite is sent and onDelegationCreated runs,
-              // we'll come back to the overview (handled in the
-              // onDelegationCreated chain below — when post-pick is
-              // active, route back to overview).
-              setPostPickStep('overview');
+              setPostPickStep('inviteForm');
             }}
             onBack={() => setPostPickStep('overview')}
+          />
+        )}
+        {postPick && v2Enabled && postPickStep === 'inviteForm' && (
+          <DelegateForm
+            token={token}
+            apiBase={config.apiBase}
+            // available count drives the form's "SEATS TO ASSIGN"
+            // pre-fill (capped to selection length below). Pass the
+            // selected count so the user can't allocate more than the
+            // batch they just chose.
+            available={postPickInviteSeats?.length || 0}
+            lockSeats={postPickInviteSeats?.length || 0}
+            onClose={() => setPostPickStep('whichSeats')}
+            onCreated={async (newDeleg) => {
+              // After DelegateForm POSTs /delegations and gets back
+              // the new delegation id, chain a /assign call to bind
+              // the just-selected seats to that delegation. Then
+              // refresh portal data and bounce back to overview so
+              // counters re-render with the new state.
+              try {
+                if (postPickInviteSeats?.length && newDeleg?.id) {
+                  await fetch(`${config.apiBase}/api/gala/portal/${token}/assign`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      theater_id: postPick.theaterId,
+                      seat_ids: postPickInviteSeats,
+                      delegation_id: newDeleg.id,
+                    }),
+                  });
+                }
+              } catch {
+                // Soft-fail: delegation was created (Twilio fired);
+                // assign chain is best-effort. User can still pick
+                // delegation manually from per-seat invite later.
+              }
+              if (onRefresh) await onRefresh();
+              setPostPickInviteSeats(null);
+              setPostPickStep('overview');
+            }}
           />
         )}
         {postPick && v2Enabled && postPickStep === 'celebrate' && (
