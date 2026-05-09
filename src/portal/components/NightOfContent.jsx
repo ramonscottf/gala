@@ -1,222 +1,304 @@
-// NightOfContent — Phase 1.9 M1.
+// NightOfContent — V2 R6 (FAQ port)
 //
-// 8-row timeline schedule + 4-tile "Good to know" grid. Verbatim port of
-// v1 gala-portal-app.html:2078-2167 with the audit-doc corrections:
-// dinner is served IN auditoriums (not "Foyer · plated"), Sherry not
-// Sasha, Apple Maps deep link on parking. Mirrors v1 exactly so
-// returning sponsors see what they remember.
+// Replaces the old timeline + 4-tile component. The previous copy
+// had wrong times, formal voice, and pointed help to Sherry's email
+// (which is why people were calling/texting Scott directly instead).
 //
-// Shared between Mobile.jsx NightTab and Desktop.jsx Night modal per
-// the Phase 1.9 hard rule (every feature ships to both shells from
-// the same import). Layout adapts: 2-column tile grid below 600px,
-// 4-column above.
+// This is the same FAQ content that powers gala.daviskids.org/faq —
+// pulled from /api/gala/chat/faq (34 entries across 7 categories,
+// canonical source of truth, also feeds Booker the chatbot). Same
+// UX as the public page (search + accordion + category groups) but
+// styled for the dark portal shell.
+//
+// Design decisions:
+//   - Search at the top, sticky-ish (in the natural scroll flow)
+//   - Categories rendered in the same canonical order as /faq
+//   - <details> / <summary> for native accordion semantics — no
+//     custom open/close state needed
+//   - When the user types a search query, all matching items
+//     auto-expand so the answer is visible immediately
+//   - "Still have a question?" CTA at the bottom that opens Booker
+//     by clicking the global chat bubble (same trigger the public
+//     FAQ uses)
+//   - Compact mode for the desktop modal context — drops outer
+//     padding (the modal already has 24px container padding)
 
+import { useEffect, useState } from 'react';
 import { BRAND, FONT_DISPLAY, FONT_UI } from '../../brand/tokens.js';
 
-const TIMELINE = [
-  {
-    time: '3:15 PM',
-    title: 'Doors open',
-    sub: "Check in, red carpet, hors d'oeuvres in the lobby",
-  },
-  {
-    time: '3:18–3:52',
-    title: 'Take your seats · Showing 1',
-    sub: 'Dinner served in your auditorium · staggered by film',
-  },
-  {
-    time: '4:03–4:37',
-    title: 'Showing 1 begins',
-    sub: 'Mandalorian · Breadwinner · Paddington 2 · Dragon',
-  },
-  {
-    time: '6:15 PM',
-    title: 'Showing 1 ends',
-    sub: 'All four films release at the same moment · lobby fills',
-  },
-  {
-    time: '6:30 PM',
-    title: 'Auction closes',
-    sub: 'Final bids · 49ers drawing winner announced',
-  },
-  {
-    time: '6:45 PM',
-    title: 'Showing 2 dinner',
-    sub: 'Take your seats · dinner served in your auditorium',
-  },
-  {
-    time: '7:30 PM',
-    title: 'Showing 2 begins',
-    sub: 'All four films roll in unison',
-  },
-  {
-    time: '9:08–9:42',
-    title: 'Showing 2 ends',
-    sub: 'Goodnight · safe travels',
-  },
-];
-
-// Apple Maps deep link — opens Apple Maps app on iOS / iPadOS / macOS,
-// falls back to maps.apple.com web view elsewhere. Cleaner sponsor
-// experience than a Google Maps link on iOS.
-const PARKING_HREF =
-  'https://maps.apple.com/?q=Megaplex+Theatres+at+Legacy+Crossing+Centerville+UT';
-
-const TILES = [
-  {
-    icon: '📍',
-    title: 'Parking',
-    sub: 'Free in the Legacy Crossing lot',
-    href: PARKING_HREF,
-  },
-  {
-    icon: '👔',
-    title: 'Dress code',
-    sub: 'Cocktail · come as you are',
-  },
-  {
-    icon: '🍽️',
-    title: 'Dinner',
-    sub: "Hors d'oeuvres in lobby pre-show",
-  },
-  {
-    icon: '📞',
-    title: 'Help',
-    sub: 'Sherry · smiggin@dsdmail.net',
-    href: 'mailto:smiggin@dsdmail.net',
-  },
+const CATEGORY_LABELS = {
+  vibe: 'What to expect',
+  auction: 'Silent auction',
+  tickets: 'Tickets & pricing',
+  movies: 'Movies & showings',
+  schedule: 'Schedule & arrival',
+  seating: 'Seat selection',
+  logistics: 'Venue & logistics',
+};
+const CATEGORY_ORDER = [
+  'vibe',
+  'auction',
+  'schedule',
+  'tickets',
+  'movies',
+  'seating',
+  'logistics',
 ];
 
 export default function NightOfContent({ compact = false }) {
-  // compact mode: tighter padding for use inside the desktop modal
-  // which already has its own 24px container padding.
-  const outerPadding = compact ? 0 : '0 22px';
+  const [faqs, setFaqs] = useState(null); // null = loading, [] = loaded empty, [...] = loaded
+  const [error, setError] = useState(null);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/gala/chat/faq')
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        setFaqs(Array.isArray(d?.faq) ? d.faq : []);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(e?.message || 'Could not load FAQs');
+        setFaqs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const outerPadding = compact ? 0 : '0 22px 24px';
+
+  if (faqs === null) {
+    return (
+      <div style={{ padding: outerPadding, fontFamily: FONT_UI }}>
+        <div style={loadingStyle}>Loading…</div>
+      </div>
+    );
+  }
+
+  if (error || faqs.length === 0) {
+    return (
+      <div style={{ padding: outerPadding, fontFamily: FONT_UI }}>
+        <div style={loadingStyle}>
+          {error
+            ? "Couldn't load. Tap the chat bubble for help."
+            : 'No questions to show yet.'}
+        </div>
+      </div>
+    );
+  }
+
+  // Filter by search query (matches question, answer, keywords)
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? faqs.filter((f) => {
+        const hay = `${f.question || ''} ${f.answer || ''} ${f.keywords || ''}`.toLowerCase();
+        return hay.includes(q);
+      })
+    : faqs;
+
+  // Group by category, then order categories
+  const grouped = {};
+  for (const f of filtered) {
+    const cat = f.category || 'logistics';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(f);
+  }
+  const orderedCats = [
+    ...CATEGORY_ORDER.filter((c) => grouped[c]),
+    ...Object.keys(grouped).filter((c) => !CATEGORY_ORDER.includes(c)),
+  ];
 
   return (
     <div style={{ padding: outerPadding, fontFamily: FONT_UI }}>
-      {/* Timeline */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 0,
-          borderTop: `1px solid var(--rule)`,
-        }}
-      >
-        {TIMELINE.map((row) => (
-          <div
-            key={row.title}
+      {/* Search */}
+      <div style={{ marginTop: 8, marginBottom: 14 }}>
+        <input
+          type="search"
+          placeholder="Search… try 'parking' or 'kids'"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoComplete="off"
+          style={{
+            width: '100%',
+            boxSizing: 'border-box',
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: 'rgba(255,255,255,0.04)',
+            border: `1px solid var(--rule)`,
+            color: 'var(--ink-on-ground)',
+            fontSize: 14,
+            fontFamily: FONT_UI,
+            outline: 'none',
+          }}
+        />
+      </div>
+
+      {filtered.length === 0 && (
+        <div style={loadingStyle}>
+          No matches. Tap the chat bubble for help.
+        </div>
+      )}
+
+      {orderedCats.map((cat) => (
+        <section key={cat} style={{ marginBottom: 24 }}>
+          <h2
             style={{
-              display: 'grid',
-              gridTemplateColumns: '92px 1fr',
-              gap: 14,
-              padding: '14px 0',
-              borderBottom: `1px solid var(--rule)`,
-              alignItems: 'baseline',
+              fontFamily: FONT_DISPLAY,
+              fontSize: 18,
+              fontWeight: 700,
+              color: 'var(--accent-text)',
+              margin: '0 0 8px',
+              letterSpacing: -0.2,
             }}
           >
-            <div
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontSize: 16,
-                fontWeight: 600,
-                color: 'var(--accent-text)',
-                fontVariantNumeric: 'tabular-nums',
-                letterSpacing: -0.2,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {row.time}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink-on-ground)', lineHeight: 1.3 }}>
-                {row.title}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 3, lineHeight: 1.5 }}>
-                {row.sub}
-              </div>
-            </div>
+            {CATEGORY_LABELS[cat] || cat}
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {grouped[cat].map((f) => (
+              <FaqItem key={f.id} item={f} forceOpen={!!q} />
+            ))}
           </div>
-        ))}
-      </div>
+        </section>
+      ))}
 
-      {/* Good to know tile grid — 2-col on mobile, 4-col when the
-          container is wide enough (auto-fit handles both). */}
-      <div
-        style={{
-          marginTop: 22,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: 10,
-        }}
-      >
-        {TILES.map((t) => {
-          const inner = (
-            <>
-              <div style={{ fontSize: 24, lineHeight: 1, marginBottom: 8 }} aria-hidden>
-                {t.icon}
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: 'var(--ink-on-ground)',
-                  marginBottom: 4,
-                  letterSpacing: 0.1,
-                }}
-              >
-                {t.title}
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--mute)', lineHeight: 1.45 }}>{t.sub}</div>
-            </>
-          );
-          const baseStyle = {
-            padding: '14px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'var(--surface)',
-            display: 'flex',
-            flexDirection: 'column',
-            textDecoration: 'none',
-            color: 'inherit',
-            cursor: t.href ? 'pointer' : 'default',
-            transition: 'border-color 0.15s, background 0.15s',
-          };
-          if (t.href) {
-            return (
-              <a
-                key={t.title}
-                href={t.href}
-                style={baseStyle}
-                target={t.href.startsWith('http') ? '_blank' : undefined}
-                rel={t.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-              >
-                {inner}
-              </a>
-            );
-          }
-          return (
-            <div key={t.title} style={baseStyle}>
-              {inner}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Footer caveat — the schedule is what we're targeting, but
-          the Foundation may shift slots in the final week. Better to
-          surface that than have a sponsor catch a 5-min delta day-of. */}
-      <div
-        style={{
-          marginTop: 20,
-          fontSize: 11,
-          color: 'var(--mute)',
-          textAlign: 'center',
-          fontStyle: 'italic',
-        }}
-      >
-        Schedule subject to change · last updated June 2026
-      </div>
+      {/* CTA — points at Booker (global chat bubble) instead of email
+          Sherry. The bubble's class is .gx-bubble-btn (matches the
+          public FAQ page) and is mounted on every portal page via
+          chat-widget.js. */}
+      <BookerCta />
     </div>
   );
 }
+
+function FaqItem({ item, forceOpen }) {
+  // <details> manages its own open/close state, but when the user
+  // searches we want every match to expand automatically. React
+  // syncs the `open` attribute when forceOpen flips.
+  return (
+    <details
+      open={forceOpen || undefined}
+      style={{
+        background: 'var(--surface)',
+        border: `1px solid var(--rule)`,
+        borderRadius: 12,
+        overflow: 'hidden',
+      }}
+    >
+      <summary
+        style={{
+          listStyle: 'none',
+          cursor: 'pointer',
+          padding: '14px 16px',
+          fontSize: 14,
+          fontWeight: 600,
+          color: 'var(--ink-on-ground)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 10,
+        }}
+      >
+        <span style={{ flex: 1, lineHeight: 1.35 }}>{item.question}</span>
+        <span
+          aria-hidden
+          style={{
+            fontSize: 18,
+            color: 'var(--mute)',
+            flexShrink: 0,
+            transition: 'transform 0.15s',
+          }}
+          className="faq-chevron"
+        >
+          +
+        </span>
+      </summary>
+      <div
+        style={{
+          padding: '0 16px 14px',
+          fontSize: 13,
+          color: 'rgba(255,255,255,0.78)',
+          lineHeight: 1.55,
+          whiteSpace: 'pre-line', // FAQ answers contain \n line breaks
+        }}
+      >
+        {item.answer}
+      </div>
+    </details>
+  );
+}
+
+function BookerCta() {
+  const openBooker = () => {
+    // Same hook as the public FAQ page — find the global chat
+    // bubble and click it. The chat widget is mounted on every
+    // gala.daviskids.org page so this works in both portals and
+    // public pages without extra wiring.
+    const btn = document.querySelector('.gx-bubble-btn');
+    if (btn) btn.click();
+  };
+
+  return (
+    <div
+      style={{
+        marginTop: 16,
+        padding: '20px 18px',
+        borderRadius: 14,
+        background: 'rgba(168,177,255,0.06)',
+        border: `1px solid rgba(168,177,255,0.18)`,
+        textAlign: 'center',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: FONT_DISPLAY,
+          fontSize: 18,
+          fontWeight: 700,
+          color: 'var(--ink-on-ground)',
+          marginBottom: 6,
+          letterSpacing: -0.2,
+        }}
+      >
+        Still have a question?
+      </div>
+      <div
+        style={{
+          fontSize: 12,
+          color: 'var(--mute)',
+          lineHeight: 1.45,
+          marginBottom: 12,
+        }}
+      >
+        Booker is the chat bubble in the corner. He has every answer in here
+        plus a lot more — and if he can't help, he'll get Scott on it.
+      </div>
+      <button
+        type="button"
+        onClick={openBooker}
+        style={{
+          all: 'unset',
+          cursor: 'pointer',
+          boxSizing: 'border-box',
+          padding: '11px 22px',
+          borderRadius: 99,
+          background: 'linear-gradient(135deg,#a8b1ff,#6f75d8)',
+          color: BRAND.navyDeep,
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: 0.3,
+        }}
+      >
+        Ask Booker →
+      </button>
+    </div>
+  );
+}
+
+const loadingStyle = {
+  textAlign: 'center',
+  padding: '32px 16px',
+  fontSize: 13,
+  color: 'var(--mute)',
+};

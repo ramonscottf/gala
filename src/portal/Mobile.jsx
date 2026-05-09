@@ -2077,10 +2077,10 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 
 // ── Night tab ─────────────────────────────────────────────────────────
 
-// M1 — NightTab now wraps the shared NightOfContent component (timeline
-// + good-to-know tiles, with the audit-doc corrections: dinner is
-// served IN auditoriums, Sherry not Sasha, Apple Maps deep link on
-// parking).
+// V2 R6 — NightTab is now the FAQ surface (replaces the old timeline
+// + good-to-know tiles, which had wrong times and pointed help to
+// Sherry's email). Pulls from /api/gala/chat/faq — the same source
+// of truth as gala.daviskids.org/faq and the Booker chatbot.
 export const NightTab = () => (
   <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
     <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 14px 22px' }}>
@@ -2095,10 +2095,11 @@ export const NightTab = () => (
           lineHeight: 1,
         }}
       >
-        What to <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>expect.</i>
+        How it all <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>works.</i>
       </h1>
-      <div style={{ fontSize: 13, color: 'var(--mute)' }}>
-        Wednesday, June 10 · doors 3:15 PM
+      <div style={{ fontSize: 13, color: 'var(--mute)', lineHeight: 1.5 }}>
+        Everything for Wednesday June 10. Search if you're looking for something
+        specific — or ask Booker.
       </div>
     </div>
     <NightOfContent />
