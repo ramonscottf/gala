@@ -273,7 +273,10 @@
         for (const m of data.messages) {
           if (m.sender === 'agent' || m.sender === 'system') {
             appendMsg(m.sender, m.content);
-            if (!state.open && m.sender === 'agent') dot.classList.add('gx-show');
+            if (!state.open && m.sender === 'agent') {
+              dot.classList.add('gx-show');
+              jumpThenBob();
+            }
           }
           state.lastSeen = m.created_at;
         }
