@@ -196,15 +196,30 @@ Add a new section to the gala system prompt:
 
 ## Status
 
-- [ ] Plan committed (this file + project repo mirror)
-- [ ] Token resolution wired in `_helpers.js`
-- [ ] Tool dispatcher in `_tools.js`
-- [ ] Message handler converted to tool-use loop
-- [ ] Chat widget passes token from URL
-- [ ] System prompt updated
-- [ ] Aaron + Ali delegations created in admin portal
-- [ ] Smoke test: Scott URL → personalized answer
-- [ ] Smoke test: Aaron URL → only his seat
-- [ ] Smoke test: anonymous (`/event/`) → FAQ-only fallback
-- [ ] Smoke test: regression — old FAQ questions still answered
+- [x] Plan committed (this file + project repo mirror)
+- [x] Token resolution wired in `_helpers.js` (via `getTokenContext` in `_tools.js`)
+- [x] Tool dispatcher in `_tools.js` (4 tools: get_my_booking, list_movies, check_showing_availability, get_portal_link)
+- [x] Message handler converted to tool-use loop (`callSonnet` runs the loop)
+- [x] Chat widget passes token from URL (X-Gala-Sponsor-Token header)
+- [x] System prompt updated (WHO YOU'RE TALKING TO block when token resolves)
+- [x] **Model split:** Haiku for FAQ-only (anonymous), Sonnet 4.5 for concierge (token)
+- [x] Smoke test: Scott URL → real attendees, theaters, seats, dinner choices
+- [x] Smoke test: Logan URL → only his 2 booked seats (Kara Toone)
+- [x] Smoke test: Kara URL → only her 5 seats in Row D 10-14
+- [x] Smoke test: anonymous → FAQ-only Haiku, no tool calls
+- [x] Smoke test: regression — auction-close question still answered
+- [ ] Aaron + Ali delegations created in admin portal (Scott to do via existing portal flow)
+- [ ] Smoke test: Aaron URL → only his single seat (after delegation created)
 - [ ] Push to all 5 testers Saturday for weekend trial
+
+## Live as of 2026-05-09 morning session
+
+Concierge mode is fully wired and verified end-to-end. Three sponsor URLs
+tested, each correctly scoped to their own data with no cross-contamination.
+Tool calls verified: `get_my_booking` and `get_portal_link` both fire and
+return real D1 data through Sonnet 4.5.
+
+Cost note: Sonnet calls observed at ~1500 input + 250 output tokens per
+two-turn conversation (system prompt + history + tools + booking result +
+response). At Sonnet 4.5 pricing that's about \$0.008/conversation. Haiku
+fallback for anonymous chat keeps that path at ~\$0.0005/conversation.
