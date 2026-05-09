@@ -21,7 +21,7 @@ import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
-import { formatRottenBadge } from './movieScores.js';
+import { formatRottenBadge, highestRottenScore } from './movieScores.js';
 
 const plural = (count, one, many = `${one}s`) => `${count} ${count === 1 ? one : many}`;
 
@@ -70,7 +70,7 @@ const DesktopModal = ({ open, onClose, title, children, wide = false, forceDark 
 };
 
 const LineupCard = ({ movie, onOpen }) => {
-  const rtBadge = formatRottenBadge(movie);
+  const rtBadge = highestRottenScore(movie);
   return (
     <button
       className="desktop-lineup-card"
@@ -86,7 +86,11 @@ const LineupCard = ({ movie, onOpen }) => {
             : `linear-gradient(160deg, ${BRAND.indigo}, ${BRAND.navyDeep})`,
         }}
       >
-        {rtBadge && <span className="desktop-lineup-score">{rtBadge}</span>}
+        {rtBadge && (
+          <span className="desktop-lineup-score">
+            <span aria-hidden="true">🍅</span> {rtBadge}
+          </span>
+        )}
         {!movie.posterUrl && <span>{movie.short || movie.title}</span>}
       </div>
       <div className="desktop-lineup-copy">

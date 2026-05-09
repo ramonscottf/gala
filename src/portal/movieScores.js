@@ -67,3 +67,19 @@ export function formatRottenBadge(movie, { audience = false } = {}) {
   const audienceText = score.audience != null ? `Audience ${score.audience}%` : '';
   return [critics, audienceText].filter(Boolean).join(' · ');
 }
+
+// Compact badge for the lineup grid: returns the higher of critics/audience
+// as a single percentage, or 'Pending' for unreleased films. Designed to
+// pair with a 🍅 emoji prefix in the rendering layer.
+export function highestRottenScore(movie) {
+  const score = movie?.rottenTomatoes || rottenScoreFor(movie);
+  if (!score) return '';
+  if (score.pending) return 'Pending';
+  const critics = score.critics != null ? Number(score.critics) : null;
+  const audience = score.audience != null ? Number(score.audience) : null;
+  const best = [critics, audience].filter((v) => v != null).reduce(
+    (a, b) => (a == null || b > a ? b : a),
+    null,
+  );
+  return best != null ? `${best}%` : '';
+}

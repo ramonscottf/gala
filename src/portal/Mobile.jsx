@@ -37,7 +37,7 @@ import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
-import { enrichMovieScores, formatRottenBadge } from './movieScores.js';
+import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
 const SheetFrameContext = createContext(false);
 
@@ -1075,7 +1075,7 @@ const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovie
         }}
       >
         {lineup.map((m) => {
-          const rtBadge = formatRottenBadge(m);
+          const rtBadge = highestRottenScore(m);
           return (
             <button
               key={m.id}
@@ -1131,7 +1131,7 @@ const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovie
                       background: 'rgba(13,15,36,0.85)',
                       backdropFilter: 'blur(6px)',
                       WebkitBackdropFilter: 'blur(6px)',
-                      color: '#f4b942',
+                      color: '#ff8a78',
                       fontSize: 10,
                       fontWeight: 800,
                       padding: '3px 8px',
@@ -1139,8 +1139,12 @@ const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovie
                       fontVariantNumeric: 'tabular-nums',
                       letterSpacing: 0.2,
                       border: '1px solid rgba(255,255,255,0.14)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
                     }}
                   >
+                    <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>🍅</span>
                     {rtBadge}
                   </div>
                 )}
