@@ -221,7 +221,13 @@ export async function callHaiku(env, systemPrompt, history) {
   };
 }
 
-export function buildSystemPrompt(faqText, showtimesText) {
+export function buildSystemPrompt(faqText, showtimesText, tokenContext = null) {
+  // Build the optional "WHO YOU'RE TALKING TO" identity block when the user
+  // is on a sponsor portal page (token resolved). When this is present, the
+  // model is also given function-calling tools and should use them to look
+  // up real booking data instead of inventing answers.
+  const identityBlock = buildIdentityBlock(tokenContext);
+
   return `You are Booker, the friendly mascot-assistant for the Davis Education Foundation Gala 2026 — a fundraising event on Wednesday, June 10, 2026 at Megaplex Theatres at Legacy Crossing in Centerville, Utah.
 
 Your job: answer attendee questions clearly and warmly using the FAQ knowledge base below. Stay concise (2-4 sentences usually).
@@ -242,7 +248,7 @@ Rules:
 - The only names you should use are: Sherry Miggin (Executive Director, smiggin@dsdmail.net) and Scott (handles tech/seating questions).
 - The Davis Education Foundation supports Davis School District in Utah — unrelated to similarly named foundations elsewhere.
 - Don't mention "Live Help" or a live agent toggle — that feature isn't active right now.
-
+${identityBlock}
 # FAQ KNOWLEDGE BASE
 
 ${faqText}
@@ -252,6 +258,41 @@ ${faqText}
 ${showtimesText}
 
 When in doubt, point people to Sherry's email or just answer what you can and let them know to reach out for the rest.`;
+}
+
+// Builds the identity + tool-use guidance block that gets injected into the
+// system prompt when the user has a valid sponsor/delegation token. Returns
+// an empty string when there's no token (FAQ-only mode).
+function buildIdentityBlock(tokenContext) {
+  if (!tokenContext) return '';
+
+  let identity;
+  if (tokenContext.kind === 'sponsor') {
+    const r = tokenContext.record;
+    const name = [r.first_name, r.last_name].filter(Boolean).join(' ').trim() || r.company;
+    identity = `**${name}** from **${r.company}** — ${r.sponsorship_tier} sponsor with ${r.seats_purchased} seats.`;
+  } else if (tokenContext.kind === 'delegation') {
+    const r = tokenContext.record;
+    identity = `**${r.delegate_name || 'A delegate'}** — invited by ${r.parent_company} (${r.parent_tier} sponsor), allocated ${r.seats_allocated} seat${r.seats_allocated === 1 ? '' : 's'}.`;
+  } else {
+    return '';
+  }
+
+  return `
+# WHO YOU'RE TALKING TO
+
+You're chatting with ${identity}
+
+You have function-calling tools available. USE THEM when the user asks about THEIR specific booking — what they reserved, where their seats are, who's in their group, what movie they picked. Do NOT guess or use the FAQ for personalized questions; call \`get_my_booking\` and report what's actually in the database.
+
+Tool usage guidance:
+- "What did I book?" / "Where are my seats?" / "Who's in my group?" → \`get_my_booking\`
+- "What movies are playing?" / "What are the options?" → \`list_movies\`
+- "Are there seats left in the late showing?" → \`check_showing_availability\`
+- "I want to change something" / "Can you switch me to..." → call \`get_portal_link\` and tell them they can make changes themselves on their booking page (Booker is read-only — writes go through the portal)
+
+Do not invent attendee names, theater numbers, or seat assignments. If a tool returns no data or an error, say you couldn't find their booking and suggest they double-check the link from their email.
+`;
 }
 
 // ---------- Slack ----------

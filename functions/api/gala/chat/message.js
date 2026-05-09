@@ -1,15 +1,20 @@
 // POST /api/gala/chat/message
 // Body: { content }
 // Routes message based on thread.mode ('ai' or 'live'):
-//   - 'ai':   call Claude Haiku via AI Gateway with FAQ + showtimes context
+//   - 'ai':   call Claude (Haiku for FAQ-only, Sonnet for token-bearing
+//             concierge mode with tools) via the AI Gateway
 //   - 'live': post to #gala-helpline Slack (creates thread on first message,
 //             reply-to-thread thereafter), Scott replies in Slack and the
 //             Slack Events API webhook routes replies back via /slack-event.
+//
+// Concierge mode is triggered by an X-Gala-Sponsor-Token request header,
+// set by the chat widget when it's loaded on a /sponsor/{token} page.
 
 import {
   getOrCreateThread, recordMessage, loadFaqContext, loadShowtimes,
-  loadHistory, callHaiku, buildSystemPrompt, postToSlack, jsonResponse,
+  loadHistory, callHaiku, callSonnet, buildSystemPrompt, postToSlack, jsonResponse,
 } from './_helpers.js';
+import { TOOL_DEFINITIONS, getTokenContext, dispatchTool } from './_tools.js';
 
 export async function onRequestPost({ request, env }) {
   let body;
@@ -31,6 +36,10 @@ export async function onRequestPost({ request, env }) {
   // Record the user's message immediately
   await recordMessage(env, thread.id, 'user', content);
 
+  // Resolve the token context (null if no token or unrecognized). This is
+  // what flips the model from FAQ-Haiku to concierge-Sonnet.
+  const tokenContext = await getTokenContext(request, env);
+
   // ----- AI MODE -----
   if (thread.mode === 'ai') {
     try {
@@ -39,8 +48,17 @@ export async function onRequestPost({ request, env }) {
         loadShowtimes(env),
         loadHistory(env, thread.id, 10),
       ]);
-      const systemPrompt = buildSystemPrompt(faq, showtimes);
-      const reply = await callHaiku(env, systemPrompt, history);
+      const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext);
+
+      let reply;
+      if (tokenContext) {
+        // Concierge mode: Sonnet + tools.
+        reply = await callSonnet(env, systemPrompt, history, TOOL_DEFINITIONS, dispatchTool, tokenContext);
+      } else {
+        // FAQ-only mode: Haiku, no tools.
+        reply = await callHaiku(env, systemPrompt, history);
+      }
+
       await recordMessage(env, thread.id, 'ai', reply.text, {
         ai_model: reply.model,
         ai_tokens_in: reply.usage.input_tokens,
@@ -50,10 +68,13 @@ export async function onRequestPost({ request, env }) {
         ok: true,
         mode: 'ai',
         reply: { sender: 'ai', content: reply.text },
+        // tool_calls is included for clients that want to display "Booker
+        // looked up your booking" affordances. Omitted when no tools used.
+        ...(reply.tool_calls && reply.tool_calls.length ? { tool_calls: reply.tool_calls } : {}),
       });
     } catch (err) {
-      console.error('Haiku call failed:', err);
-      const fallback = "I'm having a little trouble thinking right now. Tap \"Live Help\" at the top to reach Scott directly, or try again in a moment.";
+      console.error('AI call failed:', err);
+      const fallback = "I'm having a little trouble thinking right now — try again in a moment, or email Sherry at smiggin@dsdmail.net if it's urgent.";
       await recordMessage(env, thread.id, 'ai', fallback);
       return jsonResponse({
         ok: true,
