@@ -221,6 +221,110 @@ export async function callHaiku(env, systemPrompt, history) {
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// callSonnet — concierge mode (token-bearing user, tool-calling enabled)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Used when the chat widget is loaded on a sponsor portal page (i.e. the
+// request carries a valid X-Gala-Sponsor-Token). The model can call tools
+// to look up the user's actual booking, list movies, check availability,
+// and hand back a portal link. Read-only tools — Booker can SEE everything
+// but writes still go through /sponsor/[token]/pick.
+//
+// Why Sonnet (not Haiku): tool selection, context-juggling, and the kind
+// of "find 4 contiguous seats in a Platinum theater for the late showing"
+// reasoning needs more horsepower than Haiku reliably delivers. Booking
+// context is the moment to spend the tokens.
+//
+// Returns: { text, usage, model, tool_calls: [string, ...] }
+//   tool_calls is the names of tools the model invoked, for logging.
+const MAX_TOOL_ITERATIONS = 5;
+
+export async function callSonnet(env, systemPrompt, history, tools, dispatchTool, tokenContext) {
+  const messages = history.map(m => ({
+    role: m.sender === 'user' ? 'user' : 'assistant',
+    content: m.content,
+  }));
+  while (messages.length && messages[0].role !== 'user') messages.shift();
+
+  const toolNamesUsed = [];
+  let totalIn = 0;
+  let totalOut = 0;
+  let lastModel = 'claude-sonnet-4-5';
+
+  for (let iter = 0; iter < MAX_TOOL_ITERATIONS; iter++) {
+    const resp = await fetch(ANTHROPIC_PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages,
+        tools,
+      }),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`Sonnet error ${resp.status}: ${errText}`);
+    }
+    const data = await resp.json();
+    if (data.usage) {
+      totalIn += (data.usage.input_tokens || 0);
+      totalOut += (data.usage.output_tokens || 0);
+    }
+    if (data.model) lastModel = data.model;
+
+    const blocks = data.content || [];
+    const toolUseBlocks = blocks.filter(b => b.type === 'tool_use');
+
+    // No tool calls in this response — model is done answering.
+    if (toolUseBlocks.length === 0 || data.stop_reason === 'end_turn') {
+      const text = blocks.filter(b => b.type === 'text').map(b => b.text).join('\n');
+      return {
+        text,
+        usage: { input_tokens: totalIn, output_tokens: totalOut },
+        model: lastModel,
+        tool_calls: toolNamesUsed,
+      };
+    }
+
+    // Append the assistant turn (text + tool_use blocks) verbatim
+    messages.push({ role: 'assistant', content: blocks });
+
+    // Execute every tool the model asked for, returning their results
+    // as a single user turn with tool_result blocks.
+    const toolResults = [];
+    for (const tu of toolUseBlocks) {
+      toolNamesUsed.push(tu.name);
+      let result;
+      try {
+        result = await dispatchTool(env, tokenContext, tu.name, tu.input || {});
+      } catch (err) {
+        result = { error: 'tool_exec_failed', message: String(err && err.message || err) };
+      }
+      toolResults.push({
+        type: 'tool_result',
+        tool_use_id: tu.id,
+        content: JSON.stringify(result),
+      });
+    }
+    messages.push({ role: 'user', content: toolResults });
+  }
+
+  // Iteration cap hit — shouldn't happen in practice, but bail gracefully.
+  return {
+    text: "I got tangled up looking that up. Try asking me a slightly different way?",
+    usage: { input_tokens: totalIn, output_tokens: totalOut },
+    model: lastModel,
+    tool_calls: toolNamesUsed,
+    iteration_cap_hit: true,
+  };
+}
+
 export function buildSystemPrompt(faqText, showtimesText, tokenContext = null) {
   // Build the optional "WHO YOU'RE TALKING TO" identity block when the user
   // is on a sponsor portal page (token resolved). When this is present, the
