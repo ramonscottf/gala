@@ -37,8 +37,6 @@ import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import TicketsTabV2 from './components/TicketsTabV2.jsx';
-import SeatDetailSheet from './components/SeatDetailSheet.jsx';
-import BulkAssignSheet from './components/BulkAssignSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
@@ -80,7 +78,7 @@ const PosterMini = ({ poster, color, label, size = 44, showLabel = true }) => (
   </div>
 );
 
-const Avatar = ({ name, size = 36, color }) => {
+export const Avatar = ({ name, size = 36, color }) => {
   const initials = initialsFor(name);
   return (
     <div
@@ -1228,7 +1226,7 @@ const assignmentOwner = (row, fallback) => (
   'Guest'
 );
 
-const TicketQrCard = ({ token, apiBase = '' }) => {
+export const TicketQrCard = ({ token, apiBase = '' }) => {
   const checkInUrl = `https://gala.daviskids.org/checkin?t=${encodeURIComponent(token || '')}`;
   const qrSrc = `${apiBase}/api/gala/qr?t=${encodeURIComponent(token || '')}&size=220`;
   return (
@@ -1286,7 +1284,7 @@ const TicketQrCard = ({ token, apiBase = '' }) => {
   );
 };
 
-const TicketCard = ({ ticket, onOpenTicket, token, apiBase, onRefresh, guest = false, onOpenGuest }) => {
+export const TicketCard = ({ ticket, onOpenTicket, token, apiBase, onRefresh, guest = false, onOpenGuest }) => {
   const [open, setOpen] = useState(false);
   const { isLight } = useTheme();
   const actionButtonStyle = {
@@ -3251,15 +3249,12 @@ export default function Mobile({
 
   // V2 IA — opt-in via ?v2=1 URL param. When enabled:
   //   - Bottom nav drops the GUESTS tab (4 → 3 tabs)
-  //   - Tickets tab uses TicketsTabV2 (lock-aware, seat-row list, multi-select)
-  //   - Tap any seat → SeatDetailSheet (replaces TicketManage + DelegateManage)
-  //   - Multi-select → BulkAssignSheet (send N seats to one guest)
-  // V1 surfaces stay mounted in parallel so we can A/B compare without
-  // breaking live sponsors. Removing V1 happens after V2 is verified
-  // against real data.
+  //   - Tickets tab uses TicketsTabV2 (lock banner + V1 cards + folded
+  //     Guests section with delegation cards)
+  // V1 surfaces stay mounted in parallel so we can flip back instantly
+  // by removing ?v2=1 from the URL. Removing V1 happens after V2 is
+  // verified against real data.
   const v2Enabled = searchParams.get('v2') === '1';
-  const [seatDetail, setSeatDetail] = useState(null); // seat object | null
-  const [bulkAssign, setBulkAssign] = useState(null); // seats[] | null
 
   // Phase 1.15 — adopted PR #56 architecture. The four states below
   // drive the SeatPick → PostPick → AssignThese → DinnerPicker chain.
@@ -3441,19 +3436,9 @@ export default function Mobile({
             apiBase={config.apiBase}
             onRefresh={onRefresh}
             onPlaceSeats={goSeats}
-            onOpenSeat={(seat) => setSeatDetail(seat)}
-            onMultiSelectAssign={(seats) => setBulkAssign(seats)}
-            onTextMyseats={() => {
-              // V1's text-my-seats button → reuse the existing /sms POST
-              // path. Fire and forget — the inline TextMySeatsButton has
-              // its own UI; here we just trigger and let the user check
-              // their phone. Future: extract a tiny toast.
-              fetch(`${config.apiBase || ''}/api/gala/portal/${token}/sms`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ kind: 'self' }),
-              }).catch(() => {});
-            }}
+            onOpenTicket={openTicket}
+            onOpenDelegation={(d) => setDelegationSheet(d)}
+            onInviteGuest={openInvite}
           />
         ) : (
           <TicketsTab
@@ -3559,76 +3544,13 @@ export default function Mobile({
         )}
       </Sheet>
 
-      {/* V2 IA — SeatDetailSheet (one sheet for all per-seat actions).
-          Opened from any seat-row tap in TicketsTabV2. Shows assignee,
-          dinner chips, send reminder, copy link, make seat open. Replaces
-          the older TicketManage + DelegateManage + DinnerPicker dropdown. */}
-      <Sheet
-        open={!!seatDetail}
-        onClose={() => setSeatDetail(null)}
-        title="Seat detail"
-      >
-        {seatDetail && (
-          <SeatDetailSheet
-            seat={seatDetail}
-            showing={seatDetail.showing}
-            daysOut={data.daysOut}
-            token={token}
-            apiBase={config.apiBase}
-            onClose={() => setSeatDetail(null)}
-            onRefresh={async () => {
-              if (onRefresh) await onRefresh();
-              // After refresh, repaint the sheet from the new portal data
-              // so dinner edits are reflected immediately. We re-derive
-              // the seat by key from the fresh data.tickets/guestTickets.
-              // For now we just close — V2.1 can do in-place repaint.
-            }}
-            onChangeAssignee={(seat) => {
-              // Bridge to V1's seat-picker for now. The picker takes a
-              // (seat, theaterId) shape. This lets V2 reuse the existing
-              // assignment path until we build a dedicated single-seat
-              // assign sheet.
-              setSeatDetail(null);
-              setSeatPicker({
-                seat: { row_label: seat.row_label, seat_num: String(seat.seat_num) },
-                ticket: {
-                  theaterId: seat.theater_id,
-                  delegationId: seat.delegation_id || null,
-                },
-              });
-            }}
-            onUnplace={
-              seatDetail.ownerKind === 'yours'
-                ? async (seat) => {
-                    // Reuse V1's unplace path — unplaces by theater + seat ids
-                    if (typeof seats?.unplace === 'function') {
-                      await seats.unplace(seat.theater_id, [`${seat.row_label}-${seat.seat_num}`]);
-                      if (onRefresh) await onRefresh();
-                    }
-                  }
-                : null
-            }
-          />
-        )}
-      </Sheet>
-
-      {/* V2 IA — BulkAssignSheet (multi-select → send N seats to one guest). */}
-      <Sheet
-        open={!!bulkAssign}
-        onClose={() => setBulkAssign(null)}
-        title="Send seats"
-      >
-        {bulkAssign && (
-          <BulkAssignSheet
-            seats={bulkAssign}
-            delegations={data.delegations}
-            token={token}
-            apiBase={config.apiBase}
-            onClose={() => setBulkAssign(null)}
-            onRefresh={onRefresh}
-          />
-        )}
-      </Sheet>
+      {/* V2 R2 reverted to V1's existing sheets (TicketManage,
+          DelegateManage, DelegateForm) — they handle every per-card
+          and per-guest action correctly and the user explicitly asked
+          for the original card-with-dropdown + Manage-invite UX back.
+          The V2 R1 SeatDetailSheet and BulkAssignSheet experiments
+          live on disk but are no longer wired in. They can be removed
+          in a cleanup pass once V2 R2 is verified live. */}
 
       <Sheet
         open={settingsOpen}
