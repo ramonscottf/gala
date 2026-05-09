@@ -19,11 +19,80 @@
   window.__galaChatLoaded = true;
   if (document.body && document.body.hasAttribute('data-no-chat-widget')) return;
 
-  const NAVY = '#0a2540';
+  // Page-aware theming. The widget detects which gala page it's on and
+  // picks a palette that matches. The teaser page (/event/) uses a midnight
+  // navy + indigo with cyan/red accents; the sponsor portal (/sponsor/*)
+  // uses the same family but lighter, more functional. Other pages keep
+  // a neutral default.
+  //
+  // Theme determines: header background, mode banner, bubble dot color,
+  // user message bubble background. The PNG mascot is always the same.
+  const PAGE_THEMES = {
+    teaser: {
+      headerBg: 'linear-gradient(135deg, #11194a 0%, #1c2760 100%)',
+      headerText: '#ffffff',
+      headerSub: 'rgba(255,255,255,0.72)',
+      panelBg: '#fbf8f3',           // paper
+      bodyBg: 'linear-gradient(180deg, #ffffff 0%, #f6f4ee 100%)',
+      userBg: '#11194a',
+      userText: '#ffffff',
+      aiBg: '#ffffff',
+      aiText: '#1a1f2e',
+      aiBorder: '#e8e2d5',
+      sendBtn: '#11194a',
+      sendBtnHover: '#1c2760',
+      banner: '#fff5e1',
+      bannerText: '#7a5a12',
+      gateAccent: '#11194a',
+    },
+    sponsor: {
+      headerBg: 'linear-gradient(135deg, #11194a 0%, #242f68 100%)',
+      headerText: '#ffffff',
+      headerSub: 'rgba(255,255,255,0.78)',
+      panelBg: '#ffffff',
+      bodyBg: '#f7f8fb',
+      userBg: '#11194a',
+      userText: '#ffffff',
+      aiBg: '#ffffff',
+      aiText: '#1a1f2e',
+      aiBorder: '#e5e9f0',
+      sendBtn: '#11194a',
+      sendBtnHover: '#1c2760',
+      banner: '#eef1ff',
+      bannerText: '#1c2760',
+      gateAccent: '#11194a',
+    },
+    neutral: {
+      headerBg: '#0a2540',
+      headerText: '#ffffff',
+      headerSub: 'rgba(255,255,255,0.7)',
+      panelBg: '#ffffff',
+      bodyBg: '#f5f7fa',
+      userBg: '#0a2540',
+      userText: '#ffffff',
+      aiBg: '#ffffff',
+      aiText: '#1a1f2e',
+      aiBorder: '#e5e9f0',
+      sendBtn: '#0a2540',
+      sendBtnHover: '#11194a',
+      banner: '#eef2f7',
+      bannerText: '#1a1f2e',
+      gateAccent: '#0a2540',
+    },
+  };
+  function pickTheme() {
+    const path = window.location.pathname || '';
+    if (/^\/event(\/|$)/.test(path)) return PAGE_THEMES.teaser;
+    if (/^\/sponsor(\/|$)/.test(path)) return PAGE_THEMES.sponsor;
+    return PAGE_THEMES.neutral;
+  }
+  const T = pickTheme();
+  // Legacy aliases so existing CSS template strings still work.
+  const NAVY = T.userBg;
   const BLUE = '#1e88e5';
   const RED = '#e53935';
-  const GREY = '#f5f7fa';
-  const TEXT = '#1a1f2e';
+  const GREY = T.bodyBg.includes('linear') ? '#f5f7fa' : T.bodyBg;
+  const TEXT = T.aiText;
 
   const css = `
     .gx-bubble-btn {
@@ -113,7 +182,7 @@
       position: fixed; right: 16px; bottom: 118px; z-index: 999999;
       width: 380px; max-width: calc(100vw - 24px);
       height: 540px; max-height: calc(100vh - 140px);
-      background: white; border-radius: 16px; overflow: hidden;
+      background: ${T.panelBg}; border-radius: 16px; overflow: hidden;
       box-shadow: 0 16px 48px rgba(10,37,64,0.28);
       display: flex; flex-direction: column;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -128,9 +197,6 @@
     .gx-header h3 { margin: 0; font-size: 15px; font-weight: 600; }
     .gx-header .gx-sub { font-size: 12px; opacity: .85; margin-top: 2px; }
     .gx-close { background: transparent; border: 0; color: white; cursor: pointer; font-size: 22px; line-height: 1; padding: 4px 8px; }
-    .gx-toggle { display: flex; padding: 10px 12px; gap: 6px; background: ${GREY}; border-bottom: 1px solid #e5e9f0; }
-    .gx-toggle button { flex: 1; padding: 8px 10px; border: 0; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; background: transparent; color: #6b7280; }
-    .gx-toggle button.gx-active { background: white; color: ${NAVY}; box-shadow: 0 1px 3px rgba(10,37,64,0.12); }
     .gx-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: white; }
     .gx-msg { max-width: 85%; padding: 10px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; word-wrap: break-word; }
     .gx-msg.gx-user { align-self: flex-end; background: ${BLUE}; color: white; border-bottom-right-radius: 4px; }
@@ -144,7 +210,7 @@
     .gx-typing span:nth-child(3) { animation-delay: .3s; }
     @keyframes gxBounce { 0%,80%,100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-4px); } }
     .gx-input-row { padding: 10px 12px; border-top: 1px solid #e5e9f0; display: flex; gap: 8px; background: white; }
-    .gx-input-row textarea { flex: 1; resize: none; border: 1px solid #d1d5db; border-radius: 18px; padding: 9px 12px; font-size: 14px; font-family: inherit; outline: none; max-height: 100px; min-height: 38px; line-height: 1.4; }
+    .gx-input-row textarea { flex: 1; resize: none; border: 1px solid #d1d5db; border-radius: 18px; padding: 9px 12px; font-size: 16px; font-family: inherit; outline: none; max-height: 100px; min-height: 38px; line-height: 1.4; }
     .gx-input-row textarea:focus { border-color: ${BLUE}; }
     .gx-input-row button { border: 0; background: ${NAVY}; color: white; width: 38px; height: 38px; border-radius: 19px; cursor: pointer; align-self: flex-end; display: flex; align-items: center; justify-content: center; }
     .gx-input-row button:disabled { opacity: .4; cursor: default; }
@@ -152,9 +218,9 @@
     .gx-gate { padding: 18px 16px; }
     .gx-gate p { margin: 0 0 12px; font-size: 14px; color: ${TEXT}; line-height: 1.5; }
     .gx-gate label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin: 10px 0 4px; }
-    .gx-gate input { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; }
+    .gx-gate input { width: 100%; box-sizing: border-box; padding: 10px 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; outline: none; font-family: inherit; }
     .gx-gate input:focus { border-color: ${BLUE}; }
-    .gx-gate button { margin-top: 14px; width: 100%; background: ${NAVY}; color: white; border: 0; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .gx-gate button { margin-top: 14px; width: 100%; background: ${T.gateAccent}; color: white; border: 0; padding: 11px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .12s; }
     .gx-gate .gx-error { color: ${RED}; font-size: 12px; margin-top: 6px; min-height: 16px; }
     .gx-mode-banner { font-size: 12px; padding: 6px 14px; text-align: center; background: ${GREY}; color: #4b5563; border-bottom: 1px solid #e5e9f0; }
     .gx-mode-banner.gx-live { background: #fff4e5; color: #92400e; }
@@ -191,14 +257,10 @@
   panel.innerHTML = `
     <div class="gx-header">
       <div>
-        <h3>DEF Gala 2026 Help</h3>
-        <div class="gx-sub">June 10 · Megaplex Centerville</div>
+        <h3>Ask Booker</h3>
+        <div class="gx-sub">DEF Gala · June 10 · Legacy Crossing</div>
       </div>
       <button class="gx-close" aria-label="Close">&times;</button>
-    </div>
-    <div class="gx-toggle" id="gx-toggle" style="display:none">
-      <button data-mode="ai" class="gx-active">🤖 AI Helper</button>
-      <button data-mode="live">👤 Live Help</button>
     </div>
     <div class="gx-mode-banner" id="gx-banner" style="display:none"></div>
     <div class="gx-body" id="gx-body">
@@ -226,7 +288,7 @@
   const inputRow = $('#gx-input-row');
   const input = $('#gx-input');
   const sendBtn = $('#gx-send');
-  const toggleEl = $('#gx-toggle');
+  // toggle was removed; AI-only mode
   const banner = $('#gx-banner');
   const dot = btn.querySelector('#gx-dot');
   const booker = btn.querySelector('#gx-booker');
@@ -319,21 +381,12 @@
   }
 
   function setMode(mode) {
-    state.mode = mode;
-    toggleEl.querySelectorAll('button').forEach(b => {
-      b.classList.toggle('gx-active', b.dataset.mode === mode);
-    });
-    if (mode === 'live') {
-      banner.textContent = 'Live Help — your messages go to Scott directly';
-      banner.className = 'gx-mode-banner gx-live';
-      banner.style.display = 'block';
-      startPolling();
-    } else {
-      banner.textContent = 'AI Helper — answers are based on the gala FAQ';
-      banner.className = 'gx-mode-banner';
-      banner.style.display = 'block';
-      stopPolling();
-    }
+    // AI-only mode while Slack live-help is offline. Banner is hidden — the
+    // chat panel header already says "DEF Gala 2026 Help · Booker" which is
+    // signal enough.
+    state.mode = 'ai';
+    banner.style.display = 'none';
+    stopPolling();
   }
 
   function startPolling() {
@@ -381,9 +434,7 @@
   $('#gx-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#gx-email').focus(); });
   $('#gx-email').addEventListener('keydown', e => { if (e.key === 'Enter') startSession(); });
 
-  toggleEl.querySelectorAll('button').forEach(b => {
-    b.addEventListener('click', () => switchMode(b.dataset.mode));
-  });
+  // No mode toggle anymore — AI Helper is the only mode
 
   input.addEventListener('input', () => {
     sendBtn.disabled = !input.value.trim();
@@ -413,8 +464,6 @@
       if (!r.ok) { errEl.textContent = data.error || 'Could not start chat.'; $('#gx-start').disabled = false; return; }
       state.threadId = data.thread_id;
       $('#gx-gate').remove();
-      // Slack live-help disabled tonight (AI-only mode). Toggle stays hidden.
-      // toggleEl.style.display = 'flex';
       inputRow.style.display = 'flex';
       setMode(data.mode || 'ai');
       appendMsg('ai', `Hey ${name.split(' ')[0]}! Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, dinner, parking. I'll answer what I can and point you to Sherry if it's outside my lane. What's on your mind?`);
@@ -425,17 +474,6 @@
     }
   }
 
-  async function switchMode(mode) {
-    if (mode === state.mode) return;
-    try {
-      const r = await fetch('/api/gala/chat/toggle', {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode }),
-      });
-      if (r.ok) setMode(mode);
-    } catch (e) { /* ignore */ }
-  }
 
   async function send() {
     const text = input.value.trim();
@@ -477,8 +515,6 @@
       state.threadId = data.thread_id;
       const gate = $('#gx-gate');
       if (gate) gate.remove();
-      // Slack live-help disabled tonight (AI-only mode). Toggle stays hidden.
-      // toggleEl.style.display = 'flex';
       inputRow.style.display = 'flex';
       setMode(data.mode || 'ai');
       pollOnce();
