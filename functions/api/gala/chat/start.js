@@ -1,21 +1,31 @@
 // POST /api/gala/chat/start
-// Body: { name, email }
-// Creates a new chat thread and sets a session cookie. Returns thread metadata.
-// If a valid cookie already exists, returns the existing thread (no new row).
+// Body: { name?, email? }
+//
+// Anonymous-friendly: name and email are now OPTIONAL. Booker is openable
+// without an identity gate so visitors can ask FAQ questions immediately.
+// Identity will be requested at the moment of live escalation (when we
+// turn Slack handoff back on), not as an entry barrier.
+//
+// If a valid cookie already exists, the existing thread is returned.
 
 import { getOrCreateThread, jsonResponse } from './_helpers.js';
 
 export async function onRequestPost({ request, env }) {
-  let body;
+  let body = {};
   try {
     body = await request.json();
   } catch {
-    return jsonResponse({ error: 'invalid_json' }, { status: 400 });
+    // Empty body is fine for anonymous start
   }
-  const name = (body.name || '').toString().trim().slice(0, 80);
-  const email = (body.email || '').toString().trim().toLowerCase().slice(0, 200);
+  const name = body.name ? body.name.toString().trim().slice(0, 80) : null;
+  const email = body.email ? body.email.toString().trim().toLowerCase().slice(0, 200) : null;
 
-  // Check existing cookie first; if valid, no need for name/email
+  // Validate email format only if provided
+  if (email && (!email.includes('@') || !email.includes('.'))) {
+    return jsonResponse({ error: 'invalid_email' }, { status: 400 });
+  }
+
+  // Existing cookie → return existing thread
   const existing = await getOrCreateThread(request, env, null, null);
   if (existing.thread) {
     return jsonResponse({
@@ -27,15 +37,8 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  // New session — require both
-  if (!name || !email) {
-    return jsonResponse({ error: 'name_and_email_required' }, { status: 400 });
-  }
-  if (!email.includes('@') || !email.includes('.')) {
-    return jsonResponse({ error: 'invalid_email' }, { status: 400 });
-  }
-
-  const created = await getOrCreateThread(request, env, name, email);
+  // New session — create with whatever identity we have (or none)
+  const created = await getOrCreateThread(request, env, name, email, { allowAnonymous: true });
   if (!created.thread) {
     return jsonResponse({ error: 'thread_creation_failed' }, { status: 500 });
   }

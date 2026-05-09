@@ -19,6 +19,18 @@
   window.__galaChatLoaded = true;
   if (document.body && document.body.hasAttribute('data-no-chat-widget')) return;
 
+  // Extract sponsor/delegation token from the page URL so Booker can
+  // personalize answers when the user is on their booking portal.
+  // Pattern: /sponsor/{token} or /sponsor/{token}/anything-else.
+  // The token is opaque; the server validates it via resolveToken().
+  // If the page isn't a sponsor portal page (e.g. /event/, /faq/),
+  // returns empty and chat falls back to FAQ-only mode.
+  function getSponsorToken() {
+    const m = (window.location.pathname || '').match(/^\/sponsor\/([A-Za-z0-9_-]{10,})/);
+    return m ? m[1] : '';
+  }
+  const SPONSOR_TOKEN = getSponsorToken();
+
   // Page-aware theming. The widget detects which gala page it's on and
   // picks a palette that matches. The teaser page (/event/) uses a midnight
   // navy + indigo with cyan/red accents; the sponsor portal (/sponsor/*)
@@ -423,7 +435,10 @@
   }
 
   btn.addEventListener('click', () => {
-    if (!state.open) setBookerExpression('big-smile');  // greet on open
+    if (!state.open) {
+      setBookerExpression('big-smile');  // greet on open
+      autoStart();                        // open or resume the chat session
+    }
     state.open = !state.open;
     panel.style.display = state.open ? 'flex' : 'none';
     if (state.open) dot.classList.remove('gx-show');
@@ -432,9 +447,7 @@
     state.open = false; panel.style.display = 'none';
   });
 
-  $('#gx-start').addEventListener('click', startSession);
-  $('#gx-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#gx-email').focus(); });
-  $('#gx-email').addEventListener('keydown', e => { if (e.key === 'Enter') startSession(); });
+  // Gate removed — chat starts automatically when panel opens (autoStart below)
 
   // No mode toggle anymore — AI Helper is the only mode
 
@@ -448,33 +461,7 @@
   });
   sendBtn.addEventListener('click', send);
 
-  async function startSession() {
-    const name = $('#gx-name').value.trim();
-    const email = $('#gx-email').value.trim();
-    const errEl = $('#gx-gate-err');
-    errEl.textContent = '';
-    if (!name) return errEl.textContent = 'Please enter your name.';
-    if (!/^\S+@\S+\.\S+$/.test(email)) return errEl.textContent = 'Please enter a valid email.';
-    $('#gx-start').disabled = true;
-    try {
-      const r = await fetch('/api/gala/chat/start', {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email }),
-      });
-      const data = await r.json();
-      if (!r.ok) { errEl.textContent = data.error || 'Could not start chat.'; $('#gx-start').disabled = false; return; }
-      state.threadId = data.thread_id;
-      $('#gx-gate').remove();
-      inputRow.style.display = 'flex';
-      setMode(data.mode || 'ai');
-      appendMsg('ai', `Hey ${name.split(' ')[0]}! Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, dinner, parking. I'll answer what I can and point you to Sherry if it's outside my lane. What's on your mind?`);
-      input.focus();
-    } catch (err) {
-      errEl.textContent = 'Network error — please try again.';
-      $('#gx-start').disabled = false;
-    }
-  }
+
 
 
   async function send() {
@@ -490,7 +477,7 @@
     try {
       const r = await fetch('/api/gala/chat/message', {
         method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: SPONSOR_TOKEN ? { 'Content-Type': 'application/json', 'X-Gala-Sponsor-Token': SPONSOR_TOKEN } : { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text }),
       });
       const data = await r.json();
@@ -508,18 +495,52 @@
     }
   }
 
-  fetch('/api/gala/chat/start', {
-    method: 'POST', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
-  }).then(r => r.json()).then(data => {
-    if (data.thread_id) {
+  // Auto-start: now that the server allows anonymous chat threads
+  // (migration 008), we don't need to gate on name/email. Just start
+  // a thread and remove the gate. The gate UI is kept in the DOM for
+  // potential reuse (e.g. when we re-enable Slack live escalation,
+  // we'll show a name/email prompt at THAT moment, not as an entry
+  // barrier here).
+  //
+  // The X-Gala-Sponsor-Token header (when present) tells the server
+  // who this person is — they're on their booking portal, so we have
+  // their identity from there.
+  // autoStart: silently create or resume an anonymous thread when the
+  // chat panel first opens. No identity gate — Booker's FAQ chat is open
+  // to everyone. Identity collection happens later if we re-enable Slack
+  // live-help (which would need a name/email to address the human-side
+  // handoff). For now this is fire-and-forget on chat open.
+  let autoStarted = false;
+  async function autoStart() {
+    if (autoStarted) return;
+    autoStarted = true;
+    try {
+      const r = await fetch('/api/gala/chat/start', {
+        method: 'POST', credentials: 'include',
+        headers: SPONSOR_TOKEN ? { 'Content-Type': 'application/json', 'X-Gala-Sponsor-Token': SPONSOR_TOKEN } : { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await r.json();
+      if (!r.ok || !data.thread_id) {
+        appendMsg('system', "Couldn't start chat. Try refreshing the page.");
+        autoStarted = false;
+        return;
+      }
       state.threadId = data.thread_id;
-      const gate = $('#gx-gate');
-      if (gate) gate.remove();
-      inputRow.style.display = 'flex';
       setMode(data.mode || 'ai');
-      pollOnce();
+      // Greet only on the first start of a session. Resumed threads
+      // already have message history rendered (or about to be polled).
+      if (!data.resumed) {
+        appendMsg('ai', "Hey! I'm Booker. Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, parking. What's on your mind?");
+      } else {
+        // Could pollOnce() here to fetch any messages we missed, but the
+        // existing poll logic will catch it on the next tick.
+        if (typeof pollOnce === 'function') pollOnce();
+      }
+      input.focus();
+    } catch (err) {
+      appendMsg('system', "Network error — please try again.");
+      autoStarted = false;
     }
-  }).catch(() => {});
+  }
 })();

@@ -81,7 +81,9 @@ export async function onRequestPost({ request, env }) {
     if (!parentTs) {
       // First live message in this thread → post a parent message that opens
       // a Slack thread. Subsequent messages reply to that thread.
-      const headerText = `:wave: New gala question from *${thread.attendee_name}* (${thread.attendee_email})`;
+      const displayName = thread.attendee_name || 'Anonymous visitor';
+      const displayEmail = thread.attendee_email || 'no email provided';
+      const headerText = `:wave: New gala question from *${displayName}* (${displayEmail})`;
       const headerResp = await postToSlack(env, channelId, headerText, null, [
         {
           type: 'section',

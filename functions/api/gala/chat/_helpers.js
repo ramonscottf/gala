@@ -73,32 +73,51 @@ export function makeCookieHeader(threadId) {
   ].join('; ');
 }
 
-export async function getOrCreateThread(request, env, name, email) {
+export async function getOrCreateThread(request, env, name, email, opts = {}) {
   const existingId = getCookie(request, COOKIE_NAME);
   if (existingId) {
     const row = await env.GALA_DB.prepare(
       'SELECT id, mode, slack_thread_ts, attendee_name, attendee_email FROM chat_threads WHERE id = ?'
     ).bind(existingId).first();
     if (row) {
-      // Update last_activity, return existing
-      await env.GALA_DB.prepare(
-        "UPDATE chat_threads SET last_activity = datetime('now') WHERE id = ?"
-      ).bind(existingId).run();
+      // If caller is supplying a name/email and the thread doesn't have one
+      // yet (anonymous → identified upgrade path, e.g. before a live escalation),
+      // patch it onto the existing thread.
+      if ((name || email) && (!row.attendee_name || !row.attendee_email)) {
+        await env.GALA_DB.prepare(
+          `UPDATE chat_threads
+              SET attendee_name = COALESCE(?, attendee_name),
+                  attendee_email = COALESCE(?, attendee_email),
+                  last_activity = datetime('now')
+            WHERE id = ?`
+        ).bind(name || null, email || null, existingId).run();
+        row.attendee_name = name || row.attendee_name;
+        row.attendee_email = email || row.attendee_email;
+      } else {
+        await env.GALA_DB.prepare(
+          "UPDATE chat_threads SET last_activity = datetime('now') WHERE id = ?"
+        ).bind(existingId).run();
+      }
       return { thread: row, isNew: false, cookieHeader: null };
     }
   }
-  if (!name || !email) {
+
+  // No existing thread. Anonymous threads are now allowed (Booker FAQ chat
+  // is open to everyone). Identity is required only when escalating to a
+  // live human, which is gated by a separate /upgrade endpoint.
+  if (!name && !email && !opts.allowAnonymous) {
     return { thread: null, isNew: false, cookieHeader: null, needsIdentity: true };
   }
+
   const id = uuid();
   const ipH = await ipHash(request, env.CHAT_COOKIE_SECRET || 'fallback');
   const ua = (request.headers.get('User-Agent') || '').slice(0, 200);
   await env.GALA_DB.prepare(
     `INSERT INTO chat_threads (id, attendee_name, attendee_email, mode, user_agent, ip_hash)
      VALUES (?, ?, ?, 'ai', ?, ?)`
-  ).bind(id, name, email, ua, ipH).run();
+  ).bind(id, name || null, email || null, ua, ipH).run();
   return {
-    thread: { id, mode: 'ai', slack_thread_ts: null, attendee_name: name, attendee_email: email },
+    thread: { id, mode: 'ai', slack_thread_ts: null, attendee_name: name || null, attendee_email: email || null },
     isNew: true,
     cookieHeader: makeCookieHeader(id),
   };
