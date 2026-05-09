@@ -36,6 +36,9 @@ import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
+import TicketsTabV2 from './components/TicketsTabV2.jsx';
+import SeatDetailSheet from './components/SeatDetailSheet.jsx';
+import BulkAssignSheet from './components/BulkAssignSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
@@ -2437,7 +2440,6 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       movieShort: st?.movie_title?.split(' ')[0] || '',
       posterUrl: st?.poster_url,
       theaterName: theater?.name || `Theater ${row.theater_id}`,
-      status: 'claimed',
     };
   };
 
@@ -3247,6 +3249,18 @@ export default function Mobile({
   // seatPicker: { seat, ticket } | null — opens SeatAssignSheet.
   const [seatPicker, setSeatPicker] = useState(null);
 
+  // V2 IA — opt-in via ?v2=1 URL param. When enabled:
+  //   - Bottom nav drops the GUESTS tab (4 → 3 tabs)
+  //   - Tickets tab uses TicketsTabV2 (lock-aware, seat-row list, multi-select)
+  //   - Tap any seat → SeatDetailSheet (replaces TicketManage + DelegateManage)
+  //   - Multi-select → BulkAssignSheet (send N seats to one guest)
+  // V1 surfaces stay mounted in parallel so we can A/B compare without
+  // breaking live sponsors. Removing V1 happens after V2 is verified
+  // against real data.
+  const v2Enabled = searchParams.get('v2') === '1';
+  const [seatDetail, setSeatDetail] = useState(null); // seat object | null
+  const [bulkAssign, setBulkAssign] = useState(null); // seats[] | null
+
   // Phase 1.15 — adopted PR #56 architecture. The four states below
   // drive the SeatPick → PostPick → AssignThese → DinnerPicker chain.
   // SeatPickSheet (single source of truth for seat picking) replaces
@@ -3419,17 +3433,41 @@ export default function Mobile({
         />
       )}
       {tab === 'tickets' && (
-        <TicketsTab
-          data={{ ...data, tickets: ticketsWithLocalGuests }}
-          onOpenTicket={openTicket}
-          onPlaceSeats={goSeats}
-          token={token}
-          apiBase={config.apiBase}
-          onRefresh={onRefresh}
-          onOpenDelegation={(d) => setDelegationSheet(d)}
-        />
+        v2Enabled ? (
+          <TicketsTabV2
+            data={{ ...data, tickets: ticketsWithLocalGuests }}
+            daysOut={data.daysOut}
+            token={token}
+            apiBase={config.apiBase}
+            onRefresh={onRefresh}
+            onPlaceSeats={goSeats}
+            onOpenSeat={(seat) => setSeatDetail(seat)}
+            onMultiSelectAssign={(seats) => setBulkAssign(seats)}
+            onTextMyseats={() => {
+              // V1's text-my-seats button → reuse the existing /sms POST
+              // path. Fire and forget — the inline TextMySeatsButton has
+              // its own UI; here we just trigger and let the user check
+              // their phone. Future: extract a tiny toast.
+              fetch(`${config.apiBase || ''}/api/gala/portal/${token}/sms`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ kind: 'self' }),
+              }).catch(() => {});
+            }}
+          />
+        ) : (
+          <TicketsTab
+            data={{ ...data, tickets: ticketsWithLocalGuests }}
+            onOpenTicket={openTicket}
+            onPlaceSeats={goSeats}
+            token={token}
+            apiBase={config.apiBase}
+            onRefresh={onRefresh}
+            onOpenDelegation={(d) => setDelegationSheet(d)}
+          />
+        )
       )}
-      {tab === 'group' && (
+      {tab === 'group' && !v2Enabled && (
         <GroupTab
           data={data}
           onInvite={openInvite}
@@ -3442,9 +3480,11 @@ export default function Mobile({
         active={tab}
         onChange={setTab}
         tabs={
-          data.isDelegation
+          v2Enabled
             ? ALL_TABS.filter((t) => t.id !== 'group')
-            : ALL_TABS
+            : data.isDelegation
+              ? ALL_TABS.filter((t) => t.id !== 'group')
+              : ALL_TABS
         }
       />
 
@@ -3515,6 +3555,77 @@ export default function Mobile({
             apiBase={config.apiBase}
             onRefresh={onRefresh || (() => Promise.resolve())}
             onClose={() => setDelegationSheet(null)}
+          />
+        )}
+      </Sheet>
+
+      {/* V2 IA — SeatDetailSheet (one sheet for all per-seat actions).
+          Opened from any seat-row tap in TicketsTabV2. Shows assignee,
+          dinner chips, send reminder, copy link, make seat open. Replaces
+          the older TicketManage + DelegateManage + DinnerPicker dropdown. */}
+      <Sheet
+        open={!!seatDetail}
+        onClose={() => setSeatDetail(null)}
+        title="Seat detail"
+      >
+        {seatDetail && (
+          <SeatDetailSheet
+            seat={seatDetail}
+            showing={seatDetail.showing}
+            daysOut={data.daysOut}
+            token={token}
+            apiBase={config.apiBase}
+            onClose={() => setSeatDetail(null)}
+            onRefresh={async () => {
+              if (onRefresh) await onRefresh();
+              // After refresh, repaint the sheet from the new portal data
+              // so dinner edits are reflected immediately. We re-derive
+              // the seat by key from the fresh data.tickets/guestTickets.
+              // For now we just close — V2.1 can do in-place repaint.
+            }}
+            onChangeAssignee={(seat) => {
+              // Bridge to V1's seat-picker for now. The picker takes a
+              // (seat, theaterId) shape. This lets V2 reuse the existing
+              // assignment path until we build a dedicated single-seat
+              // assign sheet.
+              setSeatDetail(null);
+              setSeatPicker({
+                seat: { row_label: seat.row_label, seat_num: String(seat.seat_num) },
+                ticket: {
+                  theaterId: seat.theater_id,
+                  delegationId: seat.delegation_id || null,
+                },
+              });
+            }}
+            onUnplace={
+              seatDetail.ownerKind === 'yours'
+                ? async (seat) => {
+                    // Reuse V1's unplace path — unplaces by theater + seat ids
+                    if (typeof seats?.unplace === 'function') {
+                      await seats.unplace(seat.theater_id, [`${seat.row_label}-${seat.seat_num}`]);
+                      if (onRefresh) await onRefresh();
+                    }
+                  }
+                : null
+            }
+          />
+        )}
+      </Sheet>
+
+      {/* V2 IA — BulkAssignSheet (multi-select → send N seats to one guest). */}
+      <Sheet
+        open={!!bulkAssign}
+        onClose={() => setBulkAssign(null)}
+        title="Send seats"
+      >
+        {bulkAssign && (
+          <BulkAssignSheet
+            seats={bulkAssign}
+            delegations={data.delegations}
+            token={token}
+            apiBase={config.apiBase}
+            onClose={() => setBulkAssign(null)}
+            onRefresh={onRefresh}
           />
         )}
       </Sheet>
