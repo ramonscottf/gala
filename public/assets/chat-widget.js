@@ -35,12 +35,32 @@
     }
     .gx-bubble-btn:hover { filter: drop-shadow(0 8px 18px rgba(13,27,61,0.35)); }
     .gx-bubble-btn:focus-visible { outline: 3px solid ${BLUE}; outline-offset: 4px; border-radius: 8px; }
+    /* Booker is a stack of 9 expression PNGs (neutral, big-smile, excited,
+       surprised, curious, confused, sad, determined, laughing). Only one
+       layer has .gx-active at a time — others are opacity:0. Crossfade
+       gives Booker real personality without the file size of video.
+       The wrapper handles motion (bob/wave/jump); the layers handle face. */
     .gx-booker {
-      width: 100%; height: 100%;
-      background-image: url('https://assets.daviskids.org/mascot/booker-512.png');
-      background-size: contain; background-repeat: no-repeat; background-position: center;
+      width: 100%; height: 100%; position: relative;
       transform-origin: center bottom; pointer-events: none;
     }
+    .gx-expr {
+      position: absolute; inset: 0;
+      background-size: contain; background-repeat: no-repeat; background-position: center;
+      opacity: 0; transition: opacity 350ms ease-in-out;
+    }
+    .gx-expr.gx-active { opacity: 1; }
+    .gx-expr.gx-neutral    { background-image: url('https://assets.daviskids.org/mascot/expressions/neutral.png'); }
+    .gx-expr.gx-big-smile  { background-image: url('https://assets.daviskids.org/mascot/expressions/big-smile.png'); }
+    .gx-expr.gx-excited    { background-image: url('https://assets.daviskids.org/mascot/expressions/excited.png'); }
+    .gx-expr.gx-surprised  { background-image: url('https://assets.daviskids.org/mascot/expressions/surprised.png'); }
+    .gx-expr.gx-curious    { background-image: url('https://assets.daviskids.org/mascot/expressions/curious.png'); }
+    .gx-expr.gx-confused   { background-image: url('https://assets.daviskids.org/mascot/expressions/confused.png'); }
+    .gx-expr.gx-sad        { background-image: url('https://assets.daviskids.org/mascot/expressions/sad.png'); }
+    .gx-expr.gx-determined { background-image: url('https://assets.daviskids.org/mascot/expressions/determined.png'); }
+    .gx-expr.gx-laughing   { background-image: url('https://assets.daviskids.org/mascot/expressions/laughing.png'); }
+
+    /* Motion is on the wrapper, so all expressions move together. */
     .gx-booker.gx-bob { animation: gxBob 3.5s ease-in-out infinite; }
     @keyframes gxBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
     .gx-booker.gx-wave { animation: gxWave 2.4s ease-in-out 1 forwards; }
@@ -51,12 +71,6 @@
       40% { transform: rotate(-6deg) translateY(-2px); }
       55% { transform: rotate(6deg) translateY(-2px); }
       70% { transform: rotate(0) translateY(0); }
-    }
-    .gx-booker.gx-think { animation: gxThink 2.2s ease-in-out infinite; }
-    @keyframes gxThink {
-      0%, 100% { transform: translateY(0) rotate(0); }
-      25% { transform: translateY(-4px) rotate(-3deg); }
-      75% { transform: translateY(-4px) rotate(3deg); }
     }
     .gx-booker.gx-jump { animation: gxJump 0.8s ease-in-out 3; }
     @keyframes gxJump {
@@ -91,7 +105,8 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .gx-booker, .gx-booker.gx-bob, .gx-booker.gx-wave,
-      .gx-booker.gx-think, .gx-booker.gx-jump { animation: none !important; }
+      .gx-booker.gx-jump { animation: none !important; }
+      .gx-expr { transition: opacity 0s !important; }
     }
 
     .gx-panel {
@@ -155,8 +170,17 @@
   const btn = document.createElement('button');
   btn.className = 'gx-bubble-btn';
   btn.setAttribute('aria-label', 'Chat with Booker');
+  // 9-layer expression stack. Default active = neutral. Switching is
+  // a CSS opacity crossfade driven by setBookerExpression() below.
+  const EXPRESSIONS = [
+    'neutral', 'big-smile', 'excited', 'surprised', 'curious',
+    'confused', 'sad', 'determined', 'laughing'
+  ];
+  const exprLayers = EXPRESSIONS.map(function (name) {
+    return '<div class="gx-expr gx-' + name + (name === 'neutral' ? ' gx-active' : '') + '"></div>';
+  }).join('');
   btn.innerHTML =
-    '<div class="gx-booker gx-bob" id="gx-booker"></div>' +
+    '<div class="gx-booker gx-bob" id="gx-booker">' + exprLayers + '</div>' +
     '<span class="gx-dot" id="gx-dot"></span>' +
     '<span class="gx-think-dots" id="gx-think-dots"><span></span><span></span><span></span></span>';
   document.body.appendChild(btn);
@@ -208,16 +232,43 @@
   const booker = btn.querySelector('#gx-booker');
   const thinkDots = btn.querySelector('#gx-think-dots');
 
+  // Motion controller: bob (idle), wave (greeting), jump (celebration).
+  // Note: 'think' was previously a wrapper-rotation hack; now it's an
+  // expression swap (curious face + thinking dots) instead of body motion.
   function setBookerState(s) {
-    booker.classList.remove('gx-bob', 'gx-wave', 'gx-think', 'gx-jump');
+    booker.classList.remove('gx-bob', 'gx-wave', 'gx-jump');
     void booker.offsetWidth;
-    booker.classList.add('gx-' + s);
-    thinkDots.classList.toggle('gx-show', s === 'think');
+    if (s === 'think') {
+      // Stay bobbing, but swap face and show dots
+      booker.classList.add('gx-bob');
+      setBookerExpression('curious');
+      thinkDots.classList.add('gx-show');
+    } else {
+      booker.classList.add('gx-' + s);
+      thinkDots.classList.remove('gx-show');
+    }
   }
   function jumpThenBob() {
+    // Celebrate with the laughing face mid-jump, then fade back to neutral
+    setBookerExpression('laughing');
     setBookerState('jump');
-    setTimeout(() => setBookerState('bob'), 2400);
+    setTimeout(() => {
+      setBookerState('bob');
+      setBookerExpression('neutral');
+    }, 2400);
   }
+  // Crossfade to a different expression. The 9 layers are pre-rendered;
+  // we just toggle which has .gx-active. Layer transitions are 350ms.
+  function setBookerExpression(name) {
+    if (!EXPRESSIONS.includes(name)) name = 'neutral';
+    const layers = booker.querySelectorAll('.gx-expr');
+    layers.forEach(function (el) {
+      el.classList.toggle('gx-active', el.classList.contains('gx-' + name));
+    });
+  }
+  // Public API for pages to drive Booker per their own state
+  window.galaBookerSetExpression = setBookerExpression;
+  window.galaBookerSetState = setBookerState;
 
   let state = {
     open: false, threadId: null, mode: 'ai',
@@ -262,7 +313,9 @@
   }
   function hideTyping() {
     bodyEl.querySelectorAll('.gx-typing').forEach(t => t.remove());
-    if (booker.classList.contains('gx-think')) setBookerState('bob');
+    // Settle from think → bob with neutral face. The think dots hide too.
+    setBookerState('bob');
+    setBookerExpression('neutral');
   }
 
   function setMode(mode) {
@@ -315,6 +368,7 @@
   }
 
   btn.addEventListener('click', () => {
+    if (!state.open) setBookerExpression('big-smile');  // greet on open
     state.open = !state.open;
     panel.style.display = state.open ? 'flex' : 'none';
     if (state.open) dot.classList.remove('gx-show');
@@ -359,7 +413,8 @@
       if (!r.ok) { errEl.textContent = data.error || 'Could not start chat.'; $('#gx-start').disabled = false; return; }
       state.threadId = data.thread_id;
       $('#gx-gate').remove();
-      toggleEl.style.display = 'flex';
+      // Slack live-help disabled tonight (AI-only mode). Toggle stays hidden.
+      // toggleEl.style.display = 'flex';
       inputRow.style.display = 'flex';
       setMode(data.mode || 'ai');
       appendMsg('ai', `Hi ${name.split(' ')[0]}! I can answer questions about tickets, showtimes, the four movies, seating, parking, dietary needs — anything gala. What would you like to know?`);
@@ -389,7 +444,9 @@
     input.style.height = 'auto';
     sendBtn.disabled = true;
     appendMsg('user', text);
-    showTyping();
+    // Booker acknowledges the message with a quick smile, then back to thinking
+    setBookerExpression('big-smile');
+    setTimeout(() => showTyping(), 250);
     try {
       const r = await fetch('/api/gala/chat/message', {
         method: 'POST', credentials: 'include',
@@ -400,6 +457,9 @@
       hideTyping();
       if (data.reply) {
         appendMsg(data.reply.sender, data.reply.content);
+        // Booker delivered the answer — flash "determined" face briefly
+        setBookerExpression('determined');
+        setTimeout(() => setBookerExpression('neutral'), 1400);
       }
       state.lastSeen = new Date().toISOString();
     } catch (err) {
@@ -417,7 +477,8 @@
       state.threadId = data.thread_id;
       const gate = $('#gx-gate');
       if (gate) gate.remove();
-      toggleEl.style.display = 'flex';
+      // Slack live-help disabled tonight (AI-only mode). Toggle stays hidden.
+      // toggleEl.style.display = 'flex';
       inputRow.style.display = 'flex';
       setMode(data.mode || 'ai');
       pollOnce();
