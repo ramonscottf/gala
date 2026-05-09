@@ -226,9 +226,17 @@ async function sendDelegationInvite(env, opts) {
 </div>
 </body></html>`;
 
+  const inviteSmsBody = [
+    `🎬 DEF Gala 2026 · June 10`,
+    ``,
+    `${inviterName} reserved ${seats} seat${seats===1?'':'s'} for you${parentCompany && parentCompany !== 'the gala' ? ` (${parentCompany})` : ''}.`,
+    `Pick your seats:`,
+    portalUrl,
+  ].join('\n');
+
   const results = await Promise.allSettled([
     email ? sendEmail(env, { to: email, subject, html, replyTo: env.GALA_ADMIN_EMAIL }) : Promise.resolve(null),
-    phone ? sendSMS(env, phone, `${inviterName} reserved ${seats} gala seat${seats===1?'':'s'} for you at the DEF Gala on June 10. Select your seats: ${portalUrl}`) : Promise.resolve(null),
+    phone ? sendSMS(env, phone, inviteSmsBody) : Promise.resolve(null),
   ]);
 
   // Log to sponsor_invites

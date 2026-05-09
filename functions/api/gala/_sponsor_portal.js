@@ -2,13 +2,18 @@
 
 import { hasSponsorArchiveSupport } from './_gala_data.js';
 
-/** Generate a secure random token (22 chars, URL-safe). */
+/** Generate a secure random token (12 chars, URL-safe).
+ *  62^12 ≈ 3.2e21 combinations — overkill for ~100 sponsors and a few
+ *  hundred delegations, but more than enough collision resistance.
+ *  Was 22 chars; shortened May 2026 because 22-char tokens forced
+ *  ugly 5-line URL wrapping in invite SMS messages. Existing 22-char
+ *  tokens remain valid — `resolveToken()` accepts any length >= 10. */
 export function generateToken() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const bytes = new Uint8Array(22);
+  const bytes = new Uint8Array(12);
   crypto.getRandomValues(bytes);
   let t = '';
-  for (let i = 0; i < 22; i++) t += chars[bytes[i] % chars.length];
+  for (let i = 0; i < 12; i++) t += chars[bytes[i] % chars.length];
   return t;
 }
 
