@@ -166,14 +166,13 @@ function SeatRow({
   onInviteSeat,
   onManageGuest,
 }) {
-  // Decide who's in the seat.
-  // - 'self'  — sponsor placed for themselves (no delegation_id, no guest_name)
-  // - 'guest' — assigned to a delegation
-  const isGuestRow =
-    row.ownerKind === 'guest' ||
-    !!row.delegation_id ||
-    !!row.delegationName ||
-    !!row.guest_name;
+  // Decide who's in the seat using V1's pre-computed ownerKind.
+  // 'sponsor' = sponsor placed for themselves (no delegation, no
+  // distinct guest_name); 'guest' = assigned to a delegation or has
+  // a directGuestName that differs from the sponsor's own name.
+  // V1 builds this in addRow at Mobile.jsx:2403; trust it as the
+  // single source of truth so V2 doesn't drift.
+  const isGuestRow = row.ownerKind === 'guest';
   const ownerName = isGuestRow
     ? assignmentOwner(row, ticket.delegationName || ticket.guestName)
     : 'You';
