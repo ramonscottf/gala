@@ -1414,7 +1414,18 @@ const TicketCard = ({ ticket, onOpenTicket, token, apiBase, onRefresh, guest = f
                   </span>
                 </div>
                 <div style={{ marginTop: 7 }}>
-                  {!guest && row.status === 'claimed' && row.managedBySponsor !== false ? (
+                  {/* Dinner picker visible whenever:
+                      - the seat is finalized (status === 'claimed')
+                      - AND either the row is the sponsor's own
+                        (managedBySponsor !== false) OR this card is
+                        the "Guest seats" section (guest === true) where
+                        the host is overriding on the delegate's behalf.
+                      Server allows sponsor to set_dinner on any seat in
+                      their block (pick.js:115); this surfaces the
+                      picker UI to match. Delegates see the picker only
+                      on their own seats — they don't have a guest seats
+                      section in their portal. */}
+                  {row.status === 'claimed' && (row.managedBySponsor !== false || guest) ? (
                     <DinnerPicker
                       assignment={row}
                       token={token}
@@ -1496,6 +1507,7 @@ export const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, o
                 guest
                 token={token}
                 apiBase={apiBase}
+                onRefresh={onRefresh}
                 onOpenGuest={() => onOpenDelegation?.(delegationById[ticket.delegationId])}
               />
             ))}
@@ -1732,10 +1744,11 @@ export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
 // delegations from the API, then closes the sheet.
 
 export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase }) => {
-  const [pending, setPending] = useState(null); // 'resend' | 'reclaim' | null
+  const [pending, setPending] = useState(null); // 'resend' | 'reclaim' | 'remind_dinners' | null
   const [error, setError] = useState(null);
   const [confirmReclaim, setConfirmReclaim] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [reminded, setReminded] = useState(false);
 
   if (!delegation) return null;
 
@@ -1759,6 +1772,33 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       }
       await onRefresh();
       onClose();
+    } catch (e) {
+      setError(e);
+    } finally {
+      setPending(null);
+    }
+  };
+
+  // Sponsor-only nudge to a delegation that has placed seats but missing
+  // dinner choices. Sends a focused SMS+email asking them to pick meals.
+  // Distinct from `resend` so we can show a friendlier confirmation
+  // ("Reminder sent") and stay in the sheet — no need to close + refresh
+  // since the delegation row itself is unchanged by this action.
+  const remindDinners = async () => {
+    setPending('remind_dinners');
+    setError(null);
+    try {
+      const res = await fetch(`${apiBase}/api/gala/portal/${token}/delegate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'remind_dinners', delegation_id: delegation.id }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `HTTP ${res.status}`);
+      }
+      setReminded(true);
+      setTimeout(() => setReminded(false), 3500);
     } catch (e) {
       setError(e);
     } finally {
@@ -1863,6 +1903,44 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Remind dinners — only when the delegate has placed seats but
+            some have no meal choice yet. Distinct from "Resend invite"
+            (which goes back to picking seats from scratch). Stays in
+            the sheet on success and shows a transient confirmation
+            because the delegation row itself doesn't change. */}
+        {(delegation.seatsMissingDinner ?? 0) > 0 && (
+          <button
+            onClick={remindDinners}
+            disabled={pending !== null || reminded}
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: 12,
+              border: `1px solid ${reminded ? 'rgba(99,201,118,0.5)' : 'rgba(168,177,255,0.4)'}`,
+              background: reminded
+                ? 'rgba(99,201,118,0.10)'
+                : 'rgba(168,177,255,0.08)',
+              color: reminded ? '#63c976' : BRAND.indigoLight,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: pending || reminded ? 'default' : 'pointer',
+              opacity: pending && pending !== 'remind_dinners' ? 0.5 : 1,
+              transition: 'all .2s',
+            }}
+          >
+            <Icon name={reminded ? 'check' : 'msg'} size={16} />{' '}
+            {reminded
+              ? 'Reminder sent'
+              : pending === 'remind_dinners'
+                ? 'Sending…'
+                : `Remind to pick dinner${delegation.seatsMissingDinner === 1 ? '' : 's'} (${delegation.seatsMissingDinner})`}
+          </button>
+        )}
+
         <button
           onClick={resend}
           disabled={pending !== null}
@@ -2347,6 +2425,11 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       ownerName: row.delegate_name || delegationsById[row.delegation_id]?.delegateName || row.guest_name || null,
       ownerKind: 'guest',
       managedBySponsor: false,
+      // Always 'claimed' — childDelegationAssignments comes from
+      // seat_assignments (only finalized seats live there). Pre-pick
+      // holds aren't included. Setting this lets the host-side dinner
+      // picker condition (status === 'claimed') match for guest cards.
+      status: 'claimed',
       showLabel: st?.showing_number === 1 ? 'Early' : st?.showing_number === 2 ? 'Late' : '',
       showTime: formatShowTime(st?.show_start),
       movieId: st?.movie_id,

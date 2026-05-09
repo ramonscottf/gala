@@ -63,17 +63,31 @@ export async function onRequestGet(context) {
   ).all();
 
   // Child delegations
+  // Includes per-delegation counts for: seats_placed (any assignment) and
+  // seats_missing_dinner (assignments without a dinner_choice). The latter
+  // drives the host-facing "Remind dinners" CTA — we only show it when
+  // the delegation has placed seats AND any of them lack a meal choice.
   const childDelegsQ = resolved.kind === 'sponsor'
-    ? `SELECT d.*, COALESCE(sa.placed, 0) AS seats_placed
+    ? `SELECT d.*, COALESCE(sa.placed, 0) AS seats_placed,
+              COALESCE(sa.missing_dinner, 0) AS seats_missing_dinner
          FROM sponsor_delegations d
-         LEFT JOIN (SELECT delegation_id, COUNT(*) AS placed FROM seat_assignments GROUP BY delegation_id) sa
-                ON sa.delegation_id = d.id
+         LEFT JOIN (
+           SELECT delegation_id,
+                  COUNT(*) AS placed,
+                  SUM(CASE WHEN dinner_choice IS NULL OR dinner_choice = '' THEN 1 ELSE 0 END) AS missing_dinner
+             FROM seat_assignments GROUP BY delegation_id
+         ) sa ON sa.delegation_id = d.id
         WHERE d.parent_sponsor_id = ? AND d.parent_delegation_id IS NULL AND d.status != 'reclaimed'
         ORDER BY d.created_at`
-    : `SELECT d.*, COALESCE(sa.placed, 0) AS seats_placed
+    : `SELECT d.*, COALESCE(sa.placed, 0) AS seats_placed,
+              COALESCE(sa.missing_dinner, 0) AS seats_missing_dinner
          FROM sponsor_delegations d
-         LEFT JOIN (SELECT delegation_id, COUNT(*) AS placed FROM seat_assignments GROUP BY delegation_id) sa
-                ON sa.delegation_id = d.id
+         LEFT JOIN (
+           SELECT delegation_id,
+                  COUNT(*) AS placed,
+                  SUM(CASE WHEN dinner_choice IS NULL OR dinner_choice = '' THEN 1 ELSE 0 END) AS missing_dinner
+             FROM seat_assignments GROUP BY delegation_id
+         ) sa ON sa.delegation_id = d.id
         WHERE d.parent_delegation_id = ? AND d.status != 'reclaimed'
         ORDER BY d.created_at`;
   const childDelegs = await env.GALA_DB.prepare(childDelegsQ).bind(resolved.record.id).all();
@@ -144,6 +158,7 @@ export async function onRequestGet(context) {
       phone: d.delegate_phone,
       seatsAllocated: d.seats_allocated,
       seatsPlaced: d.seats_placed,
+      seatsMissingDinner: d.seats_missing_dinner,
       status: d.status,
       invitedAt: d.invited_at,
       accessedAt: d.accessed_at,

@@ -104,7 +104,11 @@ export async function onRequestPost(context) {
     ).bind(resolved.record.id).run();
   }
 
-  // ───── SET_DINNER (update dinner_choice on a seat owned by this token) ─────
+  // ───── SET_DINNER (update dinner_choice on a seat in this token's block) ─────
+  // Sponsors can set dinner on ANY seat in their block — direct (delegation_id IS
+  // NULL) or any sub-delegation's seats. This lets a host fill in dinner choices
+  // for guests who haven't done it themselves (e.g. Aaron picked seats but never
+  // chose meals). Delegates remain scoped to their own seats only.
   if (action === 'set_dinner') {
     const VALID = new Set(['brisket','turkey','veggie','kids','glutenfree']);
     const raw = body.dinner_choice;
@@ -113,7 +117,7 @@ export async function onRequestPost(context) {
       return jsonError(`Invalid dinner_choice: ${dinner}`, 400);
     }
     const cond = resolved.kind === 'sponsor'
-      ? `sponsor_id = ? AND delegation_id IS NULL`
+      ? `sponsor_id = ?`  // any seat in this sponsor's block, owned or delegated
       : `delegation_id = ?`;
     const val = resolved.record.id;
     const result = await env.GALA_DB.prepare(
@@ -124,7 +128,7 @@ export async function onRequestPost(context) {
     ).bind(dinner, theater_id, row_label, seat_num, val).run();
 
     if ((result.meta?.changes || 0) === 0) {
-      return jsonError('Seat is not assigned to this token', 404);
+      return jsonError('Seat is not in this token\'s block', 404);
     }
     return jsonOk({ ok: true, action: 'set_dinner', dinner_choice: dinner });
   }
