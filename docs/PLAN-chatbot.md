@@ -1,11 +1,11 @@
 ---
 title: Gala FAQ + Help Bubble Chatbot
-status: code shipped — awaiting Slack app setup + deploy verification
+status: ✅ AI mode live and verified — Live Help mode awaiting Slack app setup
 project: gala
 phase: 1 (MVP)
 source_chat: 2026-05-08 sync gala chatbot
 created: 2026-05-08
-last_updated: 2026-05-08
+last_updated: 2026-05-09
 ---
 
 # Gala FAQ + Help Bubble Chatbot
@@ -13,8 +13,18 @@ last_updated: 2026-05-08
 ## Goal
 
 Give attendees a single corner-bubble UI on every gala.daviskids.org page that
-answers questions automatically (Claude Haiku via AI Gateway, grounded in a live
-FAQ + showtime data) and escalates to Scott via Slack when the AI can't help.
+answers questions automatically (Claude Haiku via the anthropic-proxy worker,
+grounded in a live FAQ + showtime data) and escalates to Scott via Slack when
+the AI can't help.
+
+## Status (2026-05-09)
+
+- ✅ **AI mode**: live, verified end-to-end. Smoke tests passing.
+- ✅ **Bubble visible** on `/`, `/faq`, `/event`, `/sponsor`, `/volunteer`, `/schedule.html`
+- ✅ **D1 schema** + 25 FAQ entries seeded
+- ✅ **CHAT_COOKIE_SECRET** set in Pages env (via API)
+- ⏳ **Live Help mode**: code shipped, awaiting Slack app + 3 env vars
+- ⚠️ **Note**: parallel V1/V2 commits arrived during this build — no conflicts but worth flagging
 
 ## Decisions (locked 2026-05-08)
 
