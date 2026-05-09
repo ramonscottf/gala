@@ -129,61 +129,6 @@
     .gx-expr.gx-determined { background-image: url('https://assets.daviskids.org/mascot/expressions/determined.png'); }
     .gx-expr.gx-laughing   { background-image: url('https://assets.daviskids.org/mascot/expressions/laughing.png'); }
 
-    /* Wave video sprite — 24-frame cel animation captured from a Gemini
-       video render. 6 columns x 4 rows, each cell is 1/6 wide x 1/4 tall
-       of the sheet. We animate background-position via steps() to flip
-       through the cells. Plays once when chat opens (greeting), then
-       opacity-fades back to neutral.
-
-       Sprite image is loaded eagerly via background-image. ~282 KB hit
-       once per page load, cached forever after. Acceptable since the
-       widget is on pages where users will engage with chat. */
-    .gx-expr.gx-wave-sprite {
-      background-image: url('https://assets.daviskids.org/mascot/animations/wave-sprite.png');
-      background-size: 600% 400%;       /* 6 cols, 4 rows */
-      background-position: 0% 0%;
-      background-repeat: no-repeat;
-      transition: opacity 200ms ease-in-out;
-    }
-    .gx-expr.gx-wave-sprite.gx-playing {
-      animation: gxWaveSprite 1.6s steps(24) 1 forwards;
-    }
-    /* The 24 background-position keyframes that walk through the grid.
-       Going row-major: (0,0), (1,0), ..., (5,0), (0,1), ..., (5,3).
-       For a steps() animation we just need start (0% 0%) and end
-       (final cell). steps() interpolates the rest at the cell stops.
-       Trick: steps(24) on a property that goes from 0% 0% to a value
-       that ends past the grid means we need the right end position.
-       For a single row: 0% to 100% with steps(N) = N stops at width-aware
-       multiples. Our grid is 2D, so we use a custom set of keyframes
-       instead — one per cell — to walk the grid row by row. */
-    @keyframes gxWaveSprite {
-      0%      { background-position: 0%   0%; }
-      4.16%   { background-position: 20%  0%; }
-      8.33%   { background-position: 40%  0%; }
-      12.5%   { background-position: 60%  0%; }
-      16.66%  { background-position: 80%  0%; }
-      20.83%  { background-position: 100% 0%; }
-      25%     { background-position: 0%   33.33%; }
-      29.16%  { background-position: 20%  33.33%; }
-      33.33%  { background-position: 40%  33.33%; }
-      37.5%   { background-position: 60%  33.33%; }
-      41.66%  { background-position: 80%  33.33%; }
-      45.83%  { background-position: 100% 33.33%; }
-      50%     { background-position: 0%   66.66%; }
-      54.16%  { background-position: 20%  66.66%; }
-      58.33%  { background-position: 40%  66.66%; }
-      62.5%   { background-position: 60%  66.66%; }
-      66.66%  { background-position: 80%  66.66%; }
-      70.83%  { background-position: 100% 66.66%; }
-      75%     { background-position: 0%   100%; }
-      79.16%  { background-position: 20%  100%; }
-      83.33%  { background-position: 40%  100%; }
-      87.5%   { background-position: 60%  100%; }
-      91.66%  { background-position: 80%  100%; }
-      95.83%  { background-position: 100% 100%; }
-      100%    { background-position: 100% 100%; }
-    }
 
     /* Motion is on the wrapper, so all expressions move together. */
     .gx-booker.gx-bob { animation: gxBob 3.5s ease-in-out infinite; }
@@ -292,12 +237,8 @@
   const btn = document.createElement('button');
   btn.className = 'gx-bubble-btn';
   btn.setAttribute('aria-label', 'Chat with Booker');
-  // 9-layer expression stack + 1 wave-sprite layer for the greeting
-  // animation. Default active = neutral. Switching is a CSS opacity
-  // crossfade driven by setBookerExpression() below. The wave sprite
-  // is a separate layer so we can stack it ABOVE expressions during
-  // the wave (covering the static face) and fade back to neutral
-  // when done.
+  // 9-layer expression stack. Default active = neutral. Switching is
+  // a CSS opacity crossfade driven by setBookerExpression() below.
   const EXPRESSIONS = [
     'neutral', 'big-smile', 'excited', 'surprised', 'curious',
     'confused', 'sad', 'determined', 'laughing'
@@ -305,12 +246,8 @@
   const exprLayers = EXPRESSIONS.map(function (name) {
     return '<div class="gx-expr gx-' + name + (name === 'neutral' ? ' gx-active' : '') + '"></div>';
   }).join('');
-  // Wave sprite layer — sits on top, only visible during the greeting.
-  // Background-image is in the CSS so it loads with the widget. The
-  // layer stays opacity:0 until startWaveSprite() flips .gx-active.
-  const waveSpriteLayer = '<div class="gx-expr gx-wave-sprite" id="gx-wave-sprite"></div>';
   btn.innerHTML =
-    '<div class="gx-booker gx-bob" id="gx-booker">' + exprLayers + waveSpriteLayer + '</div>' +
+    '<div class="gx-booker gx-bob" id="gx-booker">' + exprLayers + '</div>' +
     '<span class="gx-dot" id="gx-dot"></span>' +
     '<span class="gx-think-dots" id="gx-think-dots"><span></span><span></span><span></span></span>';
   document.body.appendChild(btn);
@@ -396,33 +333,6 @@
   window.galaBookerSetExpression = setBookerExpression;
   window.galaBookerSetState = setBookerState;
 
-  // Greeting wave: plays the 24-frame sprite-sheet animation once,
-  // then fades back to whatever expression is currently active.
-  // Idempotent — calling while the wave is already playing is a no-op.
-  // Idempotent across sessions too — only fires the first time the
-  // user opens the chat panel in this browser session (sessionStorage).
-  let waveIsPlaying = false;
-  function startWaveSprite() {
-    if (waveIsPlaying) return;
-    const sprite = document.getElementById('gx-wave-sprite');
-    if (!sprite) return;
-    waveIsPlaying = true;
-    // Show the sprite layer above the expression stack
-    sprite.classList.add('gx-active');
-    // Force reflow so re-applying gx-playing restarts the animation cleanly
-    void sprite.offsetWidth;
-    sprite.classList.add('gx-playing');
-    // After the 1.6s animation, fade back to the current expression layer
-    setTimeout(function () {
-      sprite.classList.remove('gx-active');
-      // Wait for the opacity fade-out before removing the playing class
-      setTimeout(function () {
-        sprite.classList.remove('gx-playing');
-        waveIsPlaying = false;
-      }, 220);
-    }, 1600);
-  }
-  window.galaBookerWave = startWaveSprite;
 
   let state = {
     open: false, threadId: null, mode: 'ai',
@@ -513,22 +423,7 @@
   }
 
   btn.addEventListener('click', () => {
-    if (!state.open) {
-      // First chat-open of this session: play the wave video sprite
-      // greeting. Subsequent opens just smile (already-greeted users
-      // don't need the wave every time).
-      try {
-        if (!sessionStorage.getItem('gx_waved_this_session')) {
-          startWaveSprite();
-          sessionStorage.setItem('gx_waved_this_session', '1');
-        } else {
-          setBookerExpression('big-smile');
-        }
-      } catch (e) {
-        // sessionStorage unavailable (private mode) — just smile
-        setBookerExpression('big-smile');
-      }
-    }
+    if (!state.open) setBookerExpression('big-smile');  // greet on open
     state.open = !state.open;
     panel.style.display = state.open ? 'flex' : 'none';
     if (state.open) dot.classList.remove('gx-show');
