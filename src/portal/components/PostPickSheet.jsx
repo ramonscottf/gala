@@ -47,6 +47,11 @@ export default function PostPickSheet({
   finalizing = false,
   error = null,
   onClearError = null,
+  // V2 IA — when provided, an extra "Hand block to a guest" card
+  // appears between Assign and Pick dinners. Opens HandBlockSheet so
+  // the user can bulk-assign all just-placed seats to a single guest
+  // in one tap (vs. AssignTheseSheet's per-seat dropdown).
+  onHandBlock = null,
 }) {
   if (!placed) return null;
   const N = placed.seatIds?.length || 0;
@@ -175,6 +180,15 @@ export default function PostPickSheet({
         onClick={onAssign}
         disabled={finalizing}
       />
+      {onHandBlock && (
+        <ActionCard
+          icon="users"
+          title="Hand the block to one guest"
+          sub={`Send all ${N} seat${N === 1 ? '' : 's'} to one person — they pick dinners`}
+          onClick={onHandBlock}
+          disabled={finalizing}
+        />
+      )}
       <ActionCard
         icon="ticket"
         title="Pick dinners"

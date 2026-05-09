@@ -37,6 +37,8 @@ import PostPickSheet from './components/PostPickSheet.jsx';
 import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import TicketsTabV2 from './components/TicketsTabV2.jsx';
+import HomeTabV2 from './components/HomeTabV2.jsx';
+import HandBlockSheet from './components/HandBlockSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
@@ -188,7 +190,7 @@ const miniBtn = (kind, isLight = false) => ({
 // perforation circles cut at calc(100%-78px), dashed border between
 // body and stub, MEGAPLEX wordmark, "YOUR GALA / N days out" eyebrow.
 
-const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut, isDelegation = false, inviterCompany = '' }) => {
+export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut, isDelegation = false, inviterCompany = '' }) => {
   const firstName = (name || '').split(' ')[0];
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
@@ -3276,6 +3278,13 @@ export default function Mobile({
   const [postPick, setPostPick] = useState(null);
   const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);
+  // V2 IA — HandBlockSheet state. Mirrors postPick (same shape: the
+  // just-placed seats payload) and only opens when V2 is enabled. The
+  // sheet itself does the bulk /assign fan-out and routes "+ New guest"
+  // back through setInviteOpen with seat-binding so DelegateForm chains
+  // /assign post-create just like AssignTheseSheet's "Invite a new
+  // guest" affordance.
+  const [handBlock, setHandBlock] = useState(null);
 
   // F4 / Phase 1.15.x — MovieDetailSheet open state. Wired on May 5
   // 2026 — previously SeatPickSheet was passed an inert onMovieDetail
@@ -3352,15 +3361,22 @@ export default function Mobile({
   // the new delegate. inviteOpen carries { seat, theaterId } when the
   // invite was launched from SeatAssignSheet's "Invite someone new" CTA.
   const onDelegationCreated = async (newDeleg) => {
+    // seatBinding can be:
+    //   { seat, theaterId }            — single-seat from SeatAssignSheet
+    //   { seatIds: [...], theaterId }  — multi-seat from HandBlockSheet (V2)
+    //   null                            — no chain, just refresh
     const seatBinding = typeof inviteOpen === 'object' ? inviteOpen : null;
-    if (seatBinding && newDeleg?.id) {
+    const ids = seatBinding
+      ? (seatBinding.seatIds || (seatBinding.seat ? [seatBinding.seat] : []))
+      : [];
+    if (ids.length > 0 && newDeleg?.id) {
       try {
         await fetch(`${config.apiBase}/api/gala/portal/${token}/assign`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             theater_id: seatBinding.theaterId,
-            seat_ids: [seatBinding.seat],
+            seat_ids: ids,
             delegation_id: newDeleg.id,
           }),
         });
@@ -3415,17 +3431,30 @@ export default function Mobile({
       <FloatingAvatar name={data.name} onTap={() => setSettingsOpen(true)} />
 
       {tab === 'home' && (
-        <HomeTab
-          data={{ ...data, tickets: ticketsWithLocalGuests }}
-          onPlaceSeats={goSeats}
-          onInvite={openInvite}
-          onOpenTicket={openTicket}
-          onAssign={openTicket}
-          onMovieDetail={setMovieDetail}
-          onManageTickets={() => setTab('tickets')}
-          token={token}
-          apiBase={config.apiBase}
-        />
+        v2Enabled ? (
+          <HomeTabV2
+            data={{ ...data, tickets: ticketsWithLocalGuests }}
+            onPlaceSeats={goSeats}
+            onInvite={openInvite}
+            onAssign={openTicket}
+            onMovieDetail={setMovieDetail}
+            onManageTickets={() => setTab('tickets')}
+            token={token}
+            apiBase={config.apiBase}
+          />
+        ) : (
+          <HomeTab
+            data={{ ...data, tickets: ticketsWithLocalGuests }}
+            onPlaceSeats={goSeats}
+            onInvite={openInvite}
+            onOpenTicket={openTicket}
+            onAssign={openTicket}
+            onMovieDetail={setMovieDetail}
+            onManageTickets={() => setTab('tickets')}
+            token={token}
+            apiBase={config.apiBase}
+          />
+        )
       )}
       {tab === 'tickets' && (
         v2Enabled ? (
@@ -3512,17 +3541,33 @@ export default function Mobile({
       <Sheet
         open={!!inviteOpen}
         onClose={() => setInviteOpen(false)}
-        title={typeof inviteOpen === 'object' ? `Invite for seat ${inviteOpen.seat.replace('-', '')}` : 'Invite a guest'}
+        title={(() => {
+          if (typeof inviteOpen !== 'object' || !inviteOpen) return 'Invite a guest';
+          // Multi-seat binding from HandBlockSheet
+          if (inviteOpen.seatIds?.length > 1) {
+            return `Invite for ${inviteOpen.seatIds.length} seats`;
+          }
+          // Single-seat binding from SeatAssignSheet (legacy: { seat, theaterId })
+          const single = inviteOpen.seat || inviteOpen.seatIds?.[0];
+          return single ? `Invite for seat ${single.replace('-', '')}` : 'Invite a guest';
+        })()}
       >
         <DelegateForm
           token={token}
           apiBase={config.apiBase}
           available={
-            typeof inviteOpen === 'object'
-              ? Math.max(1, data.seatMath?.available ?? 1)
+            typeof inviteOpen === 'object' && inviteOpen
+              ? Math.max(
+                  inviteOpen.seatIds?.length || 1,
+                  data.seatMath?.available ?? 1
+                )
               : (data.seatMath?.available ?? 0)
           }
-          lockSeats={typeof inviteOpen === 'object' ? 1 : null}
+          lockSeats={
+            typeof inviteOpen === 'object' && inviteOpen
+              ? (inviteOpen.seatIds?.length || 1)
+              : null
+          }
           onCreated={onDelegationCreated}
           onClose={() => setInviteOpen(false)}
         />
@@ -3634,6 +3679,41 @@ export default function Mobile({
             finalizing={finalizing}
             error={finalizeError}
             onClearError={clearFinalizeError}
+            onHandBlock={v2Enabled ? () => setHandBlock(postPick) : null}
+          />
+        )}
+      </Sheet>
+
+      {/* V2 IA — HandBlockSheet. Bulk-assigns all just-placed seats to
+          a single guest. The "+ New guest" path routes through the
+          existing DelegateForm with multi-seat binding so the new
+          delegation gets all the seats in one shot. */}
+      <Sheet
+        open={!!handBlock}
+        onClose={() => setHandBlock(null)}
+        title="Hand to a guest"
+      >
+        {handBlock && (
+          <HandBlockSheet
+            placed={handBlock}
+            delegations={data.delegations || []}
+            token={token}
+            apiBase={config.apiBase}
+            onSaved={async () => {
+              if (onRefresh) await onRefresh();
+              setHandBlock(null);
+              setPostPick(null);
+            }}
+            onClose={() => setHandBlock(null)}
+            onInviteNew={(placed) => {
+              // Bind all just-placed seat ids so DelegateForm's
+              // onCreated chain assigns them to the new delegation
+              setHandBlock(null);
+              setInviteOpen({
+                theaterId: placed.theaterId,
+                seatIds: placed.seatIds || [],
+              });
+            }}
           />
         )}
       </Sheet>
