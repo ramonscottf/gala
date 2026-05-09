@@ -417,7 +417,7 @@
       // toggleEl.style.display = 'flex';
       inputRow.style.display = 'flex';
       setMode(data.mode || 'ai');
-      appendMsg('ai', `Hi ${name.split(' ')[0]}! I can answer questions about tickets, showtimes, the four movies, seating, parking, dietary needs — anything gala. What would you like to know?`);
+      appendMsg('ai', `Hey ${name.split(' ')[0]}! Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, dinner, parking. I'll answer what I can and point you to Sherry if it's outside my lane. What's on your mind?`);
       input.focus();
     } catch (err) {
       errEl.textContent = 'Network error — please try again.';
