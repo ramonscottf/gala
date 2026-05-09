@@ -2438,6 +2438,7 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       status: 'claimed',
       showLabel: st?.showing_number === 1 ? 'Early' : st?.showing_number === 2 ? 'Late' : '',
       showTime: formatShowTime(st?.show_start),
+      dinnerTime: formatShowTime(st?.dinner_time),
       movieId: st?.movie_id,
       movieTitle: st?.movie_title,
       movieShort: st?.movie_title?.split(' ')[0] || '',
@@ -2465,6 +2466,7 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
         delegationName: row.delegationName,
         showLabel: row.showLabel,
         showTime: row.showTime,
+        dinnerTime: row.dinnerTime,
         movieId: row.movieId,
         movieTitle: row.movieTitle,
         movieShort: row.movieShort,
@@ -3502,6 +3504,16 @@ export default function Mobile({
                 showTime: ticket.showTime,
                 theaterName: ticket.theaterName,
                 posterUrl: ticket.posterUrl,
+              });
+            }}
+            // V2 R8 — per-row callbacks restored. Dinner pill on a
+            // SeatRow opens DinnerSheet; "+ Invite" on a sponsor-self
+            // SeatRow opens DelegateForm with seat-level binding.
+            onPickDinner={(seat) => setDinnerSheet(seat)}
+            onInviteSeat={(seat) => {
+              setInviteOpen({
+                theaterId: seat.theaterId,
+                seat: `${seat.row_label}-${seat.seat_num}`,
               });
             }}
           />

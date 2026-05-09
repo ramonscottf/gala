@@ -217,9 +217,14 @@ export default function TicketsTabV2({
   onOpenDelegation,
   onPlaceSeats,
   onInviteGuest,
-  // V2 R5 — per-group callbacks (TicketCardV2 collapsed view)
-  onViewTicket, // (ticket) => void  — opens TicketDetailSheet
-  onInviteGroup, // (ticket) => void — opens HandBlockSheet for the group's seats
+  // V2 R5 — per-group callbacks
+  onViewTicket,    // (ticket) => void  — opens TicketDetailSheet
+  onInviteGroup,   // (ticket) => void  — opens HandBlockSheet
+  // V2 R8 — per-row callbacks (back from R5; TicketCardV2 expanded
+  // body again has inline seat rows for sponsor cards + chevron-
+  // expand for guest cards)
+  onPickDinner,    // (seat) => void  — opens DinnerSheet
+  onInviteSeat,    // (seat) => void  — opens DelegateForm w/ single-seat lock
 }) {
   const { tickets = [], guestTickets = [], delegations = [], blockSize = 0, seatMath } = data || {};
 
@@ -319,6 +324,8 @@ export default function TicketsTabV2({
             ticket={ticket}
             onViewTicket={onViewTicket}
             onInviteGroup={onInviteGroup}
+            onPickDinner={onPickDinner}
+            onInviteSeat={onInviteSeat}
           />
         ))}
         {tickets.length === 0 && (
@@ -379,7 +386,15 @@ export default function TicketsTabV2({
                 key={ticket.id}
                 ticket={ticket}
                 guest
-                onViewTicket={onViewTicket}
+                onManageGuest={(t) => {
+                  // R8 — guest "View" button opens DelegateManage (the
+                  // KT card with Remind / Resend / Copy link / Reclaim).
+                  // Look up the delegation by id and hand it to the
+                  // existing onOpenDelegation prop.
+                  const d = delegationById[t.delegationId];
+                  if (d && onOpenDelegation) onOpenDelegation(d);
+                }}
+                onPickDinner={onPickDinner}
               />
             ))}
           </div>
