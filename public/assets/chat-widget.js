@@ -228,13 +228,6 @@
     .gx-input-row button { border: 0; background: ${NAVY}; color: white; width: 38px; height: 38px; border-radius: 19px; cursor: pointer; align-self: flex-end; display: flex; align-items: center; justify-content: center; }
     .gx-input-row button:disabled { opacity: .4; cursor: default; }
     .gx-input-row button svg { width: 18px; height: 18px; fill: white; }
-    .gx-gate { padding: 18px 16px; }
-    .gx-gate p { margin: 0 0 12px; font-size: 14px; color: ${TEXT}; line-height: 1.5; }
-    .gx-gate label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin: 10px 0 4px; }
-    .gx-gate input { width: 100%; box-sizing: border-box; padding: 10px 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; outline: none; font-family: inherit; }
-    .gx-gate input:focus { border-color: ${BLUE}; }
-    .gx-gate button { margin-top: 14px; width: 100%; background: ${T.gateAccent}; color: white; border: 0; padding: 11px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .12s; }
-    .gx-gate .gx-error { color: ${RED}; font-size: 12px; margin-top: 6px; min-height: 16px; }
     .gx-mode-banner { font-size: 12px; padding: 6px 14px; text-align: center; background: ${GREY}; color: #4b5563; border-bottom: 1px solid #e5e9f0; }
     .gx-mode-banner.gx-live { background: #fff4e5; color: #92400e; }
     @media (max-width: 480px) {
@@ -277,17 +270,8 @@
     </div>
     <div class="gx-mode-banner" id="gx-banner" style="display:none"></div>
     <div class="gx-body" id="gx-body">
-      <div class="gx-gate" id="gx-gate">
-        <p>Hi! I'm Booker. Tell me a bit about you and I can help you with anything gala-related.</p>
-        <label>Your name</label>
-        <input id="gx-name" type="text" autocomplete="name" placeholder="Jane Smith" />
-        <label>Email</label>
-        <input id="gx-email" type="email" autocomplete="email" placeholder="jane@example.com" />
-        <button id="gx-start">Start chat</button>
-        <div class="gx-error" id="gx-gate-err"></div>
-      </div>
     </div>
-    <div class="gx-input-row" id="gx-input-row" style="display:none">
+    <div class="gx-input-row" id="gx-input-row">
       <textarea id="gx-input" rows="1" placeholder="Type your question…"></textarea>
       <button id="gx-send" disabled aria-label="Send">
         <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
