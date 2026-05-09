@@ -464,7 +464,26 @@ export default function SeatPickSheet({
       }
       setSel(new Set());
     } catch (e) {
-      setError(e?.message || 'Could not place seats');
+      const msg = e?.message || 'Could not place seats';
+      // Common cause of commit failure: the user's seat-map data is
+      // stale and one or more selected seats were finalized by someone
+      // else between page-load and Commit. Detect that case, refresh
+      // the portal so taken seats render as such, drop the now-invalid
+      // selection, and show a friendlier message than 'Seat already
+      // taken.' (Aaron's first try at D-BOX hit exactly this — D15/D16
+      // were grabbed ~60s before he tapped Commit.)
+      const wasTakenRace = /already taken|already finalized|already placed/i.test(msg);
+      if (wasTakenRace) {
+        setError(
+          'One or more of those seats was just taken by someone else. Refreshing the seat map — pick again from the open seats.'
+        );
+        setSel(new Set());
+        if (onRefresh) {
+          try { await onRefresh(); } catch { /* swallow — error already shown */ }
+        }
+      } else {
+        setError(msg);
+      }
     } finally {
       setCommitting(false);
     }
@@ -1001,6 +1020,33 @@ export default function SeatPickSheet({
 
       <div aria-hidden="true" style={{ height: 54, flex: '0 0 auto' }} />
 
+      {/* Error from commit/place — must render ABOVE the sticky CTA, not
+          after it. Previously this was below the sticky button which on
+          mobile means it sits BELOW the viewport edge (hidden by the
+          pinned button itself) — users tapped Commit, got a 'Seat already
+          taken' from a stale seat map, and never saw the explanation. */}
+      {error && (
+        <div
+          role="alert"
+          style={{
+            padding: '10px 12px',
+            marginBottom: 8,
+            borderRadius: 10,
+            background: 'rgba(215,40,70,0.14)',
+            color: '#ff8da4',
+            fontSize: 13,
+            lineHeight: 1.45,
+            border: `1px solid rgba(215,40,70,0.35)`,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: 14, lineHeight: 1.2, flexShrink: 0 }}>⚠️</span>
+          <div style={{ minWidth: 0, flex: 1 }}>{error}</div>
+        </div>
+      )}
+
       {/* Sticky CTA — bottom of sheet body */}
       <div
         style={{
@@ -1035,21 +1081,6 @@ export default function SeatPickSheet({
                 : 'Pick seats to commit'}
         </Btn>
       </div>
-
-      {error && (
-        <div
-          style={{
-            padding: '8px 12px',
-            borderRadius: 8,
-            background: 'rgba(215,40,70,0.12)',
-            color: '#ff8da4',
-            fontSize: 12,
-            border: `1px solid rgba(215,40,70,0.3)`,
-          }}
-        >
-          {error}
-        </div>
-      )}
     </div>
   );
 }
