@@ -3,6 +3,16 @@
  * chrome, no callout menus, no tap highlight, scroll-lock on the shell. */
 
 :root {
+  /* V2 R7 — DARK MODE ONLY (May 9 2026, Scott). Light-mode logic
+   * below is preserved as source for future revival but neutralized
+   * via @media not all (never matches). The reason: the cascade
+   * between light-mode CSS variable flips, inline style={{color:'#fff'}}
+   * elements throughout Desktop/Mobile, and Safari's own light-bias
+   * was producing inconsistent renders that weren't worth the cost
+   * to chase down. Forcing dark on the SPA + meta theme-color +
+   * body color-scheme makes iOS render every chrome element dark too
+   * (caret color, scrollbars, form widgets). */
+  color-scheme: dark;
   --ground: #0f1639;
   --ink-on-ground: #fff;
   --rule: rgba(255, 255, 255, 0.10);
@@ -10,13 +20,16 @@
   --mute: rgba(255, 255, 255, 0.65);
   --accent-italic: #a8b1ff;  /* indigoLight — italic accent in headlines */
 
-  /* Theme-adaptive "highlight text" — replaces the old habit of using
-   * BRAND.gold for emphasized/eyebrow text. On dark grounds the gold
-   * reads fine; on light grounds it's unreadable. This token flips to
-   * navy in light mode (see media query below). Use --accent-text for
-   * any text that was previously gold but isn't a tiny ornament. */
+  /* Theme-adaptive "highlight text" — kept as a CSS var so call sites
+   * stay theme-aware in case we resurrect light mode later. Currently
+   * always reads gold on dark. */
   --accent-text: #f4b942;     /* gold on dark ground */
   --accent-text-strong: #ffffff;  /* hi-contrast variant for callouts */
+}
+
+html, body {
+  background: var(--ground);
+  color: var(--ink-on-ground);
 }
 
 .force-dark-vars {
@@ -31,7 +44,7 @@
   color: #fff;
 }
 
-@media (prefers-color-scheme: light) {
+@media not all { /* V2 R7 — light mode disabled */
   :root {
     /* Light mode redesigned May 5 2026 (Scott) — moved from "warm paper
      * + faded text" to "pure white + sharp navy." The paper aesthetic
@@ -1243,7 +1256,7 @@ img,
 .dinner-select {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffffaa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
 }
-@media (prefers-color-scheme: light) {
+@media not all { /* V2 R7 — light mode disabled */
   .dinner-select {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231f2a5e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
   }
