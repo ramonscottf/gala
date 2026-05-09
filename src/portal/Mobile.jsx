@@ -40,6 +40,7 @@ import TicketsTabV2 from './components/TicketsTabV2.jsx';
 import HomeTabV2 from './components/HomeTabV2.jsx';
 import HandBlockSheet from './components/HandBlockSheet.jsx';
 import DinnerSheet from './components/DinnerSheet.jsx';
+import TicketDetailSheet from './components/TicketDetailSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
@@ -3291,6 +3292,9 @@ export default function Mobile({
   // setInviteOpen({theaterId, seat}); only the dinner sheet remains
   // as a dedicated V2 surface here.
   const [dinnerSheet, setDinnerSheet] = useState(null); // seat object | null
+  // V2 R5 — TicketDetailSheet (per-group ticket view with QR + save-
+  // to-phone). Opened from TicketCardV2's "View ticket" button.
+  const [ticketDetail, setTicketDetail] = useState(null); // ticket | null
 
   // F4 / Phase 1.15.x — MovieDetailSheet open state. Wired on May 5
   // 2026 — previously SeatPickSheet was passed an inert onMovieDetail
@@ -3474,17 +3478,29 @@ export default function Mobile({
             onOpenTicket={openTicket}
             onOpenDelegation={(d) => setDelegationSheet(d)}
             onInviteGuest={openInvite}
-            onPickDinner={(seat) => setDinnerSheet(seat)}
-            onInviteSeat={(seat) => {
-              // V2 R4 — every "Invite" path opens the canonical
-              // DelegateForm card (the original blue one with NAME /
-              // PHONE / EMAIL / SEATS TO ASSIGN). Single-seat binding
-              // via inviteOpen={ theaterId, seat } locks the form's
-              // seats counter to 1 and chains an /assign call after
-              // the delegation is created (see onDelegationCreated).
-              setInviteOpen({
-                theaterId: seat.theaterId,
-                seat: `${seat.row_label}-${seat.seat_num}`,
+            // V2 R5 — per-group callbacks
+            onViewTicket={(ticket) => setTicketDetail(ticket)}
+            onInviteGroup={(ticket) => {
+              // Hand the whole showing-group to one guest. HandBlockSheet
+              // takes a "placed" payload shape ({theaterId, seatIds[],
+              // movieTitle, showLabel, theaterName}) — derive that from
+              // the ticket's assignmentRows so the sheet's "+ New guest"
+              // path binds all seats to the new delegation in one shot.
+              const seatIds = (ticket.assignmentRows || [])
+                // Only hand off seats the sponsor actually owns; never
+                // re-route a seat already assigned to a different
+                // delegation through this path.
+                .filter((r) => !r.delegation_id)
+                .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+              if (seatIds.length === 0) return;
+              setHandBlock({
+                theaterId: ticket.theaterId,
+                seatIds,
+                movieTitle: ticket.movieTitle,
+                showLabel: ticket.showLabel,
+                showTime: ticket.showTime,
+                theaterName: ticket.theaterName,
+                posterUrl: ticket.posterUrl,
               });
             }}
           />
@@ -3639,6 +3655,46 @@ export default function Mobile({
               setDinnerSheet(null);
             }}
             onClose={() => setDinnerSheet(null)}
+          />
+        )}
+      </Sheet>
+
+      {/* V2 R5 — TicketDetailSheet (per-group ticket view).
+          Opened from TicketCardV2's "View ticket" button. The QR is
+          per sponsor token (single QR per portal — same one V1 had on
+          the page-level card, just relocated into each ticket).
+          Inside the sheet, dinner pills and per-row Invite/Manage
+          buttons reuse the same callbacks (DinnerSheet via
+          setDinnerSheet, single-seat Invite via setInviteOpen with
+          {theaterId, seat} binding, guest Manage via setDelegationSheet). */}
+      <Sheet
+        open={!!ticketDetail}
+        onClose={() => setTicketDetail(null)}
+        title="Your ticket"
+      >
+        {ticketDetail && (
+          <TicketDetailSheet
+            ticket={ticketDetail}
+            daysOut={data.daysOut}
+            token={token}
+            apiBase={config.apiBase}
+            // Guest-section ticket detail uses the same component but
+            // without per-row Invite (the seats belong to a delegation
+            // already; the sponsor manages via DelegateManage).
+            guest={!!ticketDetail.delegationId}
+            onPickDinner={(seat) => setDinnerSheet(seat)}
+            onInviteSeat={(seat) => {
+              setTicketDetail(null);
+              setInviteOpen({
+                theaterId: seat.theaterId,
+                seat: `${seat.row_label}-${seat.seat_num}`,
+              });
+            }}
+            onManageGuest={(d) => {
+              setTicketDetail(null);
+              setDelegationSheet(d);
+            }}
+            onClose={() => setTicketDetail(null)}
           />
         )}
       </Sheet>

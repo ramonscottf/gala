@@ -24,7 +24,7 @@
 
 import { useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
-import { Avatar, TicketQrCard } from '../Mobile.jsx';
+import { Avatar } from '../Mobile.jsx';
 import TicketCardV2 from './TicketCardV2.jsx';
 import { DINNER_LOCK_DAYS } from './SeatDetailSheet.jsx';
 
@@ -217,9 +217,9 @@ export default function TicketsTabV2({
   onOpenDelegation,
   onPlaceSeats,
   onInviteGuest,
-  // V2 R3 — per-seat callbacks (TicketCardV2)
-  onPickDinner, // (seat) => void
-  onInviteSeat, // (seat) => void  — sponsor-self → SeatInviteSheet
+  // V2 R5 — per-group callbacks (TicketCardV2 collapsed view)
+  onViewTicket, // (ticket) => void  — opens TicketDetailSheet
+  onInviteGroup, // (ticket) => void — opens HandBlockSheet for the group's seats
 }) {
   const { tickets = [], guestTickets = [], delegations = [], blockSize = 0, seatMath } = data || {};
 
@@ -307,18 +307,18 @@ export default function TicketsTabV2({
         />
       </div>
 
-      <TicketQrCard token={token} apiBase={apiBase} />
+      {/* V2 R5 — page-level QR card removed. The QR now lives inside
+          TicketDetailSheet, one per showing ticket (same QR data —
+          one per sponsor token — but visually attached to each
+          ticket so it reads as part of the ticket artifact). */}
 
       <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {tickets.map((ticket) => (
           <TicketCardV2
             key={ticket.id}
             ticket={ticket}
-            delegationsById={delegationById}
-            daysOut={daysOut}
-            onPickDinner={onPickDinner}
-            onInviteSeat={onInviteSeat}
-            onManageGuest={onOpenDelegation}
+            onViewTicket={onViewTicket}
+            onInviteGroup={onInviteGroup}
           />
         ))}
         {tickets.length === 0 && (
@@ -378,11 +378,8 @@ export default function TicketsTabV2({
               <TicketCardV2
                 key={ticket.id}
                 ticket={ticket}
-                delegationsById={delegationById}
-                daysOut={daysOut}
                 guest
-                onPickDinner={onPickDinner}
-                onManageGuest={() => onOpenDelegation?.(delegationById[ticket.delegationId])}
+                onViewTicket={onViewTicket}
               />
             ))}
           </div>
