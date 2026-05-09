@@ -1,27 +1,16 @@
-// useTheme — detect prefers-color-scheme so JS-controlled surfaces (the
-// portal background gradient on mobile + desktop, the FullScreenMessage
-// states) can swap to the light token set. CSS variables in styles.css
-// already handle html/body and the simple cases; this hook is for the
-// stylistic gradients that aren't expressible as a single CSS var.
+// useTheme — V2 R7 (May 9 2026, Scott): light mode globally
+// disabled. The hook now always returns dark. The matchMedia listener
+// is left in source as a no-op so callers don't need to change their
+// imports; revival is a one-line edit. The CSS variables in
+// styles.css are also pinned to dark, and the meta theme-color is
+// unconditional navy. Together these prevent every layer of the
+// light/dark thrash we'd been seeing.
 //
-// Does NOT swap the boarding-pass card (TicketHero) — that stays dark
-// navy in both modes by design (it's an Apple Wallet-style ticket, not
-// a chrome surface).
-
-import { useEffect, useState } from 'react';
-
-function readIsLight() {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(prefers-color-scheme: light)').matches;
-}
+// Original behavior: detected prefers-color-scheme so JS-controlled
+// surfaces (portal background gradient, FullScreenMessage states)
+// could swap to the light token set. Restoration just means returning
+// readIsLight() from the hook again.
 
 export function useTheme() {
-  const [isLight, setIsLight] = useState(readIsLight);
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: light)');
-    const onChange = () => setIsLight(mq.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-  return { isLight, isDark: !isLight };
+  return { isLight: false, isDark: true };
 }
