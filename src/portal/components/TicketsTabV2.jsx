@@ -174,16 +174,23 @@ function LockBanner({ daysOut, missingDinnerCount, onRemindAll, onPickForAll }) 
   );
 }
 
-function DelegationStatusPill({ status, hasMissingDinner }) {
-  const kind =
-    status === 'finalized' && !hasMissingDinner
-      ? 'confirmed'
-      : status === 'finalized' || status === 'active'
-        ? 'accessed'
-        : 'invited';
+// R10 — derives the real lifecycle from seat math, not from the
+// delegation row's status field which lags behind seat finalization.
+// Charles can have placed===allocated and dinner_choice set on every
+// seat, but sponsor_delegations.status often still reads 'pending'.
+// Use seatsPlaced/seatsAllocated as the truth source.
+function DelegationStatusPill({ delegation, hasMissingDinner }) {
+  const placed = delegation?.seatsPlaced || 0;
+  const allocated = delegation?.seatsAllocated || 0;
+  const fullyPlaced = allocated > 0 && placed >= allocated;
+  const kind = fullyPlaced && !hasMissingDinner
+    ? 'confirmed'
+    : placed > 0 || delegation?.status === 'active'
+      ? 'accessed'
+      : 'invited';
   const map = {
     confirmed: { bg: 'rgba(99,201,118,0.14)', fg: '#63c976', br: 'rgba(99,201,118,0.4)', label: 'CONFIRMED', dashed: false },
-    accessed: { bg: 'rgba(168,177,255,0.15)', fg: BRAND.indigoLight, br: 'rgba(168,177,255,0.4)', label: 'ACCESSED', dashed: false },
+    accessed: { bg: 'rgba(168,177,255,0.15)', fg: BRAND.indigoLight, br: 'rgba(168,177,255,0.4)', label: placed > 0 && !fullyPlaced ? 'IN PROGRESS' : 'ACCESSED', dashed: false },
     invited: { bg: 'rgba(168,177,255,0.08)', fg: BRAND.indigoLight, br: 'rgba(168,177,255,0.4)', label: 'INVITED', dashed: true },
   };
   const s = map[kind];
@@ -562,7 +569,7 @@ export default function TicketsTabV2({
                       )}
                     </div>
                   </div>
-                  <DelegationStatusPill status={d.status} hasMissingDinner={hasMissingDinner} />
+                  <DelegationStatusPill delegation={d} hasMissingDinner={hasMissingDinner} />
                 </button>
               );
             })}

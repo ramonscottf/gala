@@ -1543,18 +1543,56 @@ export const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, o
 // Each delegation is a sub-token record with its own SMS/email invite
 // history and three-state status. Tap a row → DelegateManage sheet.
 
-// status → { color, bg, label } — uses existing palette but maps the
-// real delegation statuses (pending/active/finalized/reclaimed) into the
-// design's pill vocabulary. 'active' is the API name for what the spec
-// doc calls "accessed" (delegate has opened the link but not finalized).
+// status → { color, bg, label }. R10 — the actual lifecycle the
+// host cares about. The DB still uses 'pending'/'active'/'finalized'
+// at the delegation level, but those don't fully reflect what's
+// happened with the seats. A delegation can read 'pending' on the
+// row even though every seat under it has been assigned and dinner-
+// picked (the seat-finalize endpoint doesn't sync upward to the
+// delegation row's status field). Real states the sponsor cares
+// about, in order:
+//
+//   INVITED        — sent the link, no seats placed, never accessed
+//                    → red (sponsor may want to nudge)
+//   OPENED         — link clicked, no seats placed yet
+//                    → gold (warming up)
+//   IN PROGRESS    — some seats placed, not all
+//                    → gold (still working)
+//   CONFIRMED      — every allocated seat is placed and dinner-picked
+//                    → green (done — sponsor can stop watching)
+//
+// resolveDelegationStatus(delegation) returns one of the above keys.
+// Reads delegation.seatsPlaced / seatsAllocated for the seats math
+// and falls back to delegation.status when seat math isn't available.
 const DELEGATION_STATUS = {
-  pending: { c: BRAND.red, bg: 'rgba(212,38,74,0.14)', t: 'PENDING' },
-  active: { c: BRAND.gold, bg: 'rgba(244,185,66,0.16)', t: 'ACCESSED' },
-  finalized: { c: BRAND.indigoLight, bg: 'rgba(168,177,255,0.16)', t: 'FINALIZED' },
+  invited: { c: BRAND.red, bg: 'rgba(212,38,74,0.14)', t: 'INVITED' },
+  opened: { c: BRAND.gold, bg: 'rgba(244,185,66,0.16)', t: 'OPENED' },
+  inProgress: { c: BRAND.gold, bg: 'rgba(244,185,66,0.16)', t: 'IN PROGRESS' },
+  confirmed: { c: '#63c976', bg: 'rgba(99,201,118,0.14)', t: 'CONFIRMED' },
 };
 
-export const DelegationStatusPill = ({ status }) => {
-  const s = DELEGATION_STATUS[status] || DELEGATION_STATUS.pending;
+function resolveDelegationStatus(d) {
+  if (!d) return 'invited';
+  const placed = d.seatsPlaced || 0;
+  const allocated = d.seatsAllocated || 0;
+  if (allocated > 0 && placed >= allocated) return 'confirmed';
+  if (placed > 0) return 'inProgress';
+  // No seats placed yet — distinguish "they clicked the link" from
+  // "they haven't touched it" using the raw delegation status.
+  // 'active' = accessed_at filled. 'pending' = invited but no access.
+  if (d.status === 'active') return 'opened';
+  return 'invited';
+}
+
+export const DelegationStatusPill = ({ delegation, status }) => {
+  // Backwards-compat: callers can pass a full delegation object OR a
+  // raw status string. Prefer the object so we can derive the smart
+  // state. Old call sites that only have a status string still work
+  // and will fall back to the old buckets via the legacy map below.
+  const key = delegation ? resolveDelegationStatus(delegation) : null;
+  const s = key
+    ? DELEGATION_STATUS[key]
+    : LEGACY_STATUS_MAP[status] || DELEGATION_STATUS.invited;
   return (
     <span
       style={{
@@ -1570,6 +1608,13 @@ export const DelegationStatusPill = ({ status }) => {
       {s.t}
     </span>
   );
+};
+
+// Legacy map for any caller still passing a plain status string.
+const LEGACY_STATUS_MAP = {
+  pending: DELEGATION_STATUS.invited,
+  active: DELEGATION_STATUS.opened,
+  finalized: DELEGATION_STATUS.confirmed,
 };
 
 export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
@@ -1712,7 +1757,7 @@ export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
                 </div>
               )}
             </div>
-            <DelegationStatusPill status={d.status} />
+            <DelegationStatusPill delegation={d} />
           </button>
         ))}
         {delegations.length === 0 && (
@@ -1888,7 +1933,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
             {delegation.seatsPlaced} of {delegation.seatsAllocated} placed
           </div>
         </div>
-        <DelegationStatusPill status={delegation.status} />
+        <DelegationStatusPill delegation={delegation} />
       </div>
 
       {error && (
