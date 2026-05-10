@@ -57,10 +57,17 @@ export async function onRequestPost(context) {
   });
   if (parsed.some((p) => !p)) return jsonError('Invalid seat_id format (expected ROW-NUM)', 400);
 
-  // Validate delegation_id belongs to caller scope (if provided)
+  // Validate delegation_id belongs to caller scope (if provided),
+  // AND fetch the delegate identity so we can recompose guest_name
+  // to match the seat's new owner. (When delegation_id is null we'll
+  // recompose to the caller's identity instead — see below.)
+  let delegRecord = null;
   if (delegation_id !== null) {
     const deleg = await env.GALA_DB.prepare(
-      `SELECT * FROM sponsor_delegations WHERE id = ?`
+      `SELECT d.*, s.company AS parent_company
+         FROM sponsor_delegations d
+         JOIN sponsors s ON s.id = d.parent_sponsor_id
+        WHERE d.id = ?`
     ).bind(delegation_id).first();
     if (!deleg) return jsonError('Delegation not found', 404);
 
@@ -80,6 +87,33 @@ export async function onRequestPost(context) {
     if (!allowed) {
       return jsonError('Delegation does not belong to this token', 403);
     }
+    delegRecord = deleg;
+  }
+
+  // Recompose guest_name to match the seat's NEW owner. This keeps
+  // the seat_assignments.guest_name column truthful for downstream
+  // consumers (check-in iPad, CSV export, chat tools) which read it
+  // directly without joining to delegation/sponsor tables.
+  //
+  // Format mirrors pick.js exactly:
+  //   sponsor placement   → "Company (First Last)"
+  //   delegation placement → "Parent Company / Delegate Name"
+  //
+  // delegation_id null + sponsor caller   → recompose to sponsor identity
+  // delegation_id null + delegation caller → recompose to caller's parent + delegate name
+  //   (this case shouldn't happen — delegations don't un-assign their own seats —
+  //    but covered for symmetry.)
+  let recomposedGuestName;
+  if (delegRecord) {
+    recomposedGuestName = `${delegRecord.parent_company} / ${delegRecord.delegate_name}`;
+  } else if (resolved.kind === 'sponsor') {
+    const s = resolved.record;
+    recomposedGuestName = `${s.company}${s.first_name ? ' (' + s.first_name + ' ' + (s.last_name || '') + ')' : ''}`;
+  } else {
+    // Delegation caller un-assigning to null. Falls back to the
+    // delegation's own identity since their seats remain under their
+    // own delegation umbrella regardless of delegation_id changes.
+    recomposedGuestName = `${resolved.record.parent_company} / ${resolved.record.delegate_name}`;
   }
 
   // Build the WHERE for "seats this caller may modify"
@@ -106,13 +140,15 @@ export async function onRequestPost(context) {
   for (const p of parsed) {
     const result = await env.GALA_DB.prepare(
       `UPDATE seat_assignments
-          SET delegation_id = ?, updated_at = datetime('now')
+          SET delegation_id = ?,
+              guest_name = ?,
+              updated_at = datetime('now')
         WHERE theater_id = ?
           AND row_label = ?
           AND seat_num = ?
           AND ${scopeSql}`
     )
-      .bind(delegation_id, theater_id, p.row_label, p.seat_num, ...scopeBinds)
+      .bind(delegation_id, recomposedGuestName, theater_id, p.row_label, p.seat_num, ...scopeBinds)
       .run();
     const changes = result.meta?.changes || 0;
     if (changes > 0) updated += changes;
