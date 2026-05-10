@@ -79,7 +79,7 @@ export default function CompletionCelebration({
             lineHeight: 1.5,
           }}
         >
-          Doors open at 3:15&nbsp;PM. Dinner at 4:00, movie at 4:30.
+          Doors open at 4:00&nbsp;PM. Dinner at 4:00, movie at 4:30.
           <br />
           Your ticket is below — save it to your phone or just open this
           page when you arrive.

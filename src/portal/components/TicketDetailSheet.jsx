@@ -120,7 +120,7 @@ export default function TicketDetailSheet({
         <div>
           <div style={metaLabel}>DATE</div>
           <div style={metaValue}>Wednesday · June 10, 2026</div>
-          <div style={metaSub}>Doors 3:15 PM</div>
+          <div style={metaSub}>Doors 4:00 PM</div>
         </div>
         <div>
           <div style={metaLabel}>THEATER</div>

@@ -577,7 +577,7 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            Doors 3:15 PM
+            Doors 4:00 PM
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -1194,7 +1194,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
 export const NightTab = () => (
   <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
     <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 14px 22px' }}>
-      <SectionEyebrow>The night</SectionEyebrow>
+      <SectionEyebrow>Frequently asked</SectionEyebrow>
       <h1
         style={{
           fontFamily: FONT_DISPLAY,
@@ -1205,7 +1205,7 @@ export const NightTab = () => (
           lineHeight: 1,
         }}
       >
-        How it all <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>works.</i>
+        Questions & <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>answers.</i>
       </h1>
       <div style={{ fontSize: 13, color: 'var(--mute)', lineHeight: 1.5 }}>
         Everything for Wednesday June 10. Search if you're looking for something
@@ -1222,7 +1222,7 @@ const ALL_TABS = [
   { id: 'home', label: 'Home', icon: 'home' },
   { id: 'tickets', label: 'Tickets', icon: 'ticket' },
   { id: 'group', label: 'Guests', icon: 'users' },
-  { id: 'night', label: 'Night', icon: 'moon' },
+  { id: 'night', label: 'FAQ', icon: 'info' },
 ];
 
 const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
