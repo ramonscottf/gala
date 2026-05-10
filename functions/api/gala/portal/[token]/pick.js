@@ -15,6 +15,7 @@ import {
   jsonError,
   jsonOk,
 } from '../../_sponsor_portal.js';
+import { getLoveseatPartner } from '../../_loveseat_pairs.js';
 
 const HOLD_MINUTES = 15;
 
@@ -135,12 +136,22 @@ export async function onRequestPost(context) {
 
   // ───── RELEASE hold ─────
   if (action === 'release') {
+    // Phase 5.2 — atomic pair release. If this is one half of a paired
+    // loveseat, drop the partner's hold too. Idempotent.
+    const partnerSeat = await getLoveseatPartner(env, request, theater_id, row_label, seat_num);
     await env.GALA_DB.prepare(
       `DELETE FROM seat_holds
         WHERE theater_id = ? AND row_label = ? AND seat_num = ?
           AND held_by_token = ?`
     ).bind(theater_id, row_label, seat_num, token).run();
-    return jsonOk({ ok: true, action: 'released' });
+    if (partnerSeat) {
+      await env.GALA_DB.prepare(
+        `DELETE FROM seat_holds
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?
+            AND held_by_token = ?`
+      ).bind(theater_id, row_label, partnerSeat, token).run();
+    }
+    return jsonOk({ ok: true, action: 'released', paired: !!partnerSeat });
   }
 
   // ───── UNFINALIZE (un-claim a previously-assigned seat) ─────
@@ -151,13 +162,28 @@ export async function onRequestPost(context) {
       : `delegation_id = ?`;
     const val = resolved.kind === 'sponsor' ? resolved.record.id : resolved.record.id;
 
-    const result = await env.GALA_DB.prepare(
-      `DELETE FROM seat_assignments
-        WHERE theater_id = ? AND row_label = ? AND seat_num = ?
-          AND ${cond}`
-    ).bind(theater_id, row_label, seat_num, val).run();
+    // Phase 5.2 — atomic pair unfinalize. Same partner-aware logic.
+    const partnerSeat = await getLoveseatPartner(env, request, theater_id, row_label, seat_num);
+    const seatsToUnfinalize = partnerSeat
+      ? [seat_num, partnerSeat]
+      : [seat_num];
 
-    return jsonOk({ ok: true, action: 'unfinalized', removed: result.meta.changes });
+    let totalRemoved = 0;
+    for (const s of seatsToUnfinalize) {
+      const result = await env.GALA_DB.prepare(
+        `DELETE FROM seat_assignments
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?
+            AND ${cond}`
+      ).bind(theater_id, row_label, s, val).run();
+      totalRemoved += result.meta.changes || 0;
+    }
+
+    return jsonOk({
+      ok: true,
+      action: 'unfinalized',
+      removed: totalRemoved,
+      paired: !!partnerSeat,
+    });
   }
 
   // For HOLD and FINALIZE, seat must not already be assigned
@@ -181,115 +207,220 @@ export async function onRequestPost(context) {
 
   // ───── HOLD ─────
   if (action === 'hold') {
-    // Enforce no-orphan rule: this hold must not create a single empty seat
-    // wedged between two occupied seats elsewhere in the row.
-    const orphanCheck = await checkOrphanCreation(env, theater_id, row_label, seat_num);
-    if (!orphanCheck.ok) {
-      return jsonError(
-        `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
-        409,
-      );
+    // Phase 5.2 — paired-loveseat atomic hold. Look up the partner half
+    // (null for non-loveseats / standalone loveseats). When present,
+    // both halves get the same hold in a single atomic write — so
+    // whether the client tapped the LEFT or RIGHT cushion, the result
+    // is the pair held together. The client also fires two /pick calls
+    // in parallel (it expanded the tap to both halves before sending),
+    // which collapse via ON CONFLICT — but the server side enforces
+    // the rule independently so a misbehaving caller still can't split
+    // the pair.
+    const partnerSeat = await getLoveseatPartner(env, request, theater_id, row_label, seat_num);
+    const seatsToHold = partnerSeat
+      ? [{ row: row_label, num: seat_num }, { row: row_label, num: partnerSeat }]
+      : [{ row: row_label, num: seat_num }];
+
+    // Enforce no-orphan rule on every seat we're about to claim. The
+    // partner half is already adjacent so it can't itself create an
+    // orphan, but we still pass it through the same check for safety
+    // against future layouts where loveseat-pairs land at row edges.
+    for (const s of seatsToHold) {
+      const orphanCheck = await checkOrphanCreation(env, theater_id, row_label, s.num);
+      if (!orphanCheck.ok) {
+        return jsonError(
+          `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
+          409,
+        );
+      }
     }
 
-    // Enforce seat budget. The user is allowed to hold up to their quota
-    // (total - delegated). Holding exactly N seats when quota is N is the
-    // GOAL state, not an error — error only when adding THIS hold would
-    // push the total OVER quota. Off-by-one fix May 5 2026: was using
-    // '>=' on the BEFORE-this-hold count, which wrongly rejected the
-    // user's last legitimate seat (e.g. quota 2: pick seat 1 succeeds,
-    // then pick seat 2 saw myHoldCount=1, math.placed=0 and 1+0 >= 2
-    // fired despite this hold being legal).
+    // Verify the partner half (if any) isn't held by someone else.
+    // Skipping our own holds — re-holding is fine. The earlier check
+    // (line ~173) already vetted the primary seat.
+    if (partnerSeat) {
+      const partnerExisting = await env.GALA_DB.prepare(
+        `SELECT sponsor_id, delegation_id FROM seat_assignments
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?`
+      ).bind(theater_id, row_label, partnerSeat).first();
+      if (partnerExisting) {
+        return jsonError('Partner half of this loveseat is already taken', 409);
+      }
+      const partnerHeldByOther = await env.GALA_DB.prepare(
+        `SELECT held_by_token FROM seat_holds
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?
+            AND expires_at > datetime('now') AND held_by_token != ?`
+      ).bind(theater_id, row_label, partnerSeat, token).first();
+      if (partnerHeldByOther) {
+        return jsonError('Partner half of this loveseat is held by another sponsor', 409);
+      }
+    }
+
+    // Enforce seat budget. Each row we're about to write counts as 1
+    // against quota; for a loveseat-pair that's 2. Off-by-one fix May 5
+    // 2026 still applies: count *after* adding these holds must not
+    // exceed quota.
+    //
+    // Edge case: if the user already holds the partner (this is a
+    // re-hold via the client's parallel-fire), the partner row will
+    // ON CONFLICT into the same hold — we'd be over-counting. Resolve
+    // by counting only NEW holds (seats we don't already hold).
     const math = await getSeatsAvailableToPlace(env, resolved);
     const myHolds = await env.GALA_DB.prepare(
       `SELECT COUNT(*) AS n FROM seat_holds
         WHERE held_by_token = ? AND expires_at > datetime('now')`
     ).bind(token).first();
     const myHoldCount = myHolds.n || 0;
+    let newHoldCount = 0;
+    for (const s of seatsToHold) {
+      const exists = await env.GALA_DB.prepare(
+        `SELECT 1 FROM seat_holds
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?
+            AND held_by_token = ? AND expires_at > datetime('now')`
+      ).bind(theater_id, row_label, s.num, token).first();
+      if (!exists) newHoldCount += 1;
+    }
     const quota = math.total - math.delegated;
-    // Count *after* adding this hold = myHoldCount + 1 + placed.
-    if (myHoldCount + 1 + math.placed > quota) {
+    if (myHoldCount + newHoldCount + math.placed > quota) {
       return jsonError(`You've already selected your full ${quota} seats`, 400);
     }
 
     const expiresAt = new Date(Date.now() + HOLD_MINUTES * 60 * 1000).toISOString();
-    await env.GALA_DB.prepare(
-      `INSERT INTO seat_holds (theater_id, row_label, seat_num, sponsor_id, delegation_id, held_by_token, expires_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(theater_id, row_label, seat_num)
-       DO UPDATE SET held_by_token = excluded.held_by_token,
-                     sponsor_id = excluded.sponsor_id,
-                     delegation_id = excluded.delegation_id,
-                     expires_at = excluded.expires_at,
-                     held_at = datetime('now')`
-    ).bind(theater_id, row_label, seat_num, sponsorId, delegationId, token, expiresAt).run();
+    for (const s of seatsToHold) {
+      await env.GALA_DB.prepare(
+        `INSERT INTO seat_holds (theater_id, row_label, seat_num, sponsor_id, delegation_id, held_by_token, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(theater_id, row_label, seat_num)
+         DO UPDATE SET held_by_token = excluded.held_by_token,
+                       sponsor_id = excluded.sponsor_id,
+                       delegation_id = excluded.delegation_id,
+                       expires_at = excluded.expires_at,
+                       held_at = datetime('now')`
+      ).bind(theater_id, s.row, s.num, sponsorId, delegationId, token, expiresAt).run();
+    }
 
-    return jsonOk({ ok: true, action: 'held', expires_at: expiresAt });
+    return jsonOk({
+      ok: true,
+      action: 'held',
+      expires_at: expiresAt,
+      paired: !!partnerSeat,
+      partner_seat: partnerSeat || undefined,
+    });
   }
 
   // ───── FINALIZE ─────
   if (action === 'finalize') {
-    // Re-check the orphan rule at finalize time. The row state can change
-    // between hold and finalize (other sponsors hold/release/finalize seats
-    // in this row), so the hold-time check isn't sufficient on its own.
-    const orphanCheck = await checkOrphanCreation(env, theater_id, row_label, seat_num);
-    if (!orphanCheck.ok) {
-      return jsonError(
-        `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
-        409,
-      );
+    // Phase 5.2 — paired-loveseat atomic finalize. Same pattern as
+    // HOLD: both halves move together. The client may also send two
+    // /pick finalize calls in parallel (one per half), which collapse
+    // here via the already_finalized short-circuit.
+    const partnerSeat = await getLoveseatPartner(env, request, theater_id, row_label, seat_num);
+    const seatsToFinalize = partnerSeat
+      ? [{ row: row_label, num: seat_num }, { row: row_label, num: partnerSeat }]
+      : [{ row: row_label, num: seat_num }];
+
+    // If there's a partner, also pre-check it for already-taken state
+    // (the primary seat was checked at line ~163 already).
+    if (partnerSeat) {
+      const partnerExisting = await env.GALA_DB.prepare(
+        `SELECT sponsor_id, delegation_id FROM seat_assignments
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?`
+      ).bind(theater_id, row_label, partnerSeat).first();
+      if (partnerExisting) {
+        const sameSponsor = Number(partnerExisting.sponsor_id) === Number(sponsorId);
+        const sameDelegation =
+          (partnerExisting.delegation_id == null && delegationId == null) ||
+          Number(partnerExisting.delegation_id) === Number(delegationId);
+        if (!(sameSponsor && sameDelegation)) {
+          return jsonError('Partner half of this loveseat is already taken', 409);
+        }
+      }
     }
 
+    // Re-check orphan rule for every seat (state can shift between
+    // hold and finalize as other sponsors move).
+    for (const s of seatsToFinalize) {
+      const orphanCheck = await checkOrphanCreation(env, theater_id, row_label, s.num);
+      if (!orphanCheck.ok) {
+        return jsonError(
+          `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
+          409,
+        );
+      }
+    }
+
+    // Quota check — count NEW finalizations only. If the partner is
+    // already finalized to this same caller (parallel client fire),
+    // we'd double-count without this filter.
     const math = await getSeatsAvailableToPlace(env, resolved);
     const myPlaced = math.placed;
     const myQuota = math.total - math.delegated;
-    // After-this-finalize count = myPlaced + 1. Reject only when adding
-    // this seat would push us OVER quota. (Same off-by-one fix as the
-    // hold path above; protects against over-finalize when the SPA
-    // races multiple parallel finalize calls or a stale SPA sends an
-    // out-of-quota request.)
-    if (myPlaced + 1 > myQuota) {
+    let newFinalCount = 0;
+    for (const s of seatsToFinalize) {
+      const exists = await env.GALA_DB.prepare(
+        `SELECT 1 FROM seat_assignments
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?
+            AND sponsor_id = ?
+            AND ((delegation_id IS NULL AND ? IS NULL) OR delegation_id = ?)`
+      ).bind(theater_id, row_label, s.num, sponsorId, delegationId, delegationId).first();
+      if (!exists) newFinalCount += 1;
+    }
+    if (myPlaced + newFinalCount > myQuota) {
       return jsonError(`You've already placed your full ${myQuota} seats`, 400);
     }
 
-    // Compose guest_name (for the chart display)
+    // Compose guest_name (matches pick.js's existing format and the
+    // recompose contract used by /assign).
     const guestName = resolved.kind === 'sponsor'
       ? `${resolved.record.company}${resolved.record.first_name ? ' (' + resolved.record.first_name + ' ' + (resolved.record.last_name || '') + ')' : ''}`
       : `${resolved.record.parent_company} / ${resolved.record.delegate_name}`;
 
-    try {
-      await env.GALA_DB.prepare(
-        `INSERT INTO seat_assignments
-           (theater_id, row_label, seat_num, guest_name, sponsor_id, delegation_id, finalized_at, assigned_by)
-         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 'portal')`
-      ).bind(theater_id, row_label, seat_num, guestName, sponsorId, delegationId).run();
-    } catch (err) {
-      // A true two-client race can pass the pre-insert availability check in
-      // both requests, then lose at the DB unique constraint. Convert that
-      // expected race into a stable response instead of leaking a 500.
-      const raced = await env.GALA_DB.prepare(
-        `SELECT sponsor_id, delegation_id FROM seat_assignments
-          WHERE theater_id = ? AND row_label = ? AND seat_num = ?`
-      ).bind(theater_id, row_label, seat_num).first();
-      if (raced) {
-        const sameSponsor = Number(raced.sponsor_id) === Number(sponsorId);
-        const sameDelegation =
-          (raced.delegation_id == null && delegationId == null) ||
-          Number(raced.delegation_id) === Number(delegationId);
-        if (sameSponsor && sameDelegation) {
-          return jsonOk({ ok: true, action: 'finalized', already_finalized: true });
+    let alreadyFinalized = true;
+    for (const s of seatsToFinalize) {
+      try {
+        const result = await env.GALA_DB.prepare(
+          `INSERT INTO seat_assignments
+             (theater_id, row_label, seat_num, guest_name, sponsor_id, delegation_id, finalized_at, assigned_by)
+           VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 'portal')`
+        ).bind(theater_id, s.row, s.num, guestName, sponsorId, delegationId).run();
+        if ((result.meta?.changes || 0) > 0) alreadyFinalized = false;
+      } catch (err) {
+        // Race-resilient: a partner row pre-existing AND owned by THIS
+        // caller is fine (parallel client fire); other-owner is a real
+        // collision the primary-seat check would have already caught.
+        const raced = await env.GALA_DB.prepare(
+          `SELECT sponsor_id, delegation_id FROM seat_assignments
+            WHERE theater_id = ? AND row_label = ? AND seat_num = ?`
+        ).bind(theater_id, s.row, s.num).first();
+        if (raced) {
+          const sameSponsor = Number(raced.sponsor_id) === Number(sponsorId);
+          const sameDelegation =
+            (raced.delegation_id == null && delegationId == null) ||
+            Number(raced.delegation_id) === Number(delegationId);
+          if (!(sameSponsor && sameDelegation)) {
+            return jsonError('Seat already taken', 409);
+          }
+        } else {
+          throw err;
         }
-        return jsonError('Seat already taken', 409);
       }
-      throw err;
     }
 
-    // Clear hold if it exists
-    await env.GALA_DB.prepare(
-      `DELETE FROM seat_holds
-        WHERE theater_id = ? AND row_label = ? AND seat_num = ?`
-    ).bind(theater_id, row_label, seat_num).run();
+    // Clear holds for every finalized seat — including the partner.
+    for (const s of seatsToFinalize) {
+      await env.GALA_DB.prepare(
+        `DELETE FROM seat_holds
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?`
+      ).bind(theater_id, s.row, s.num).run();
+    }
 
-    return jsonOk({ ok: true, action: 'finalized' });
+    return jsonOk({
+      ok: true,
+      action: 'finalized',
+      paired: !!partnerSeat,
+      partner_seat: partnerSeat || undefined,
+      ...(alreadyFinalized ? { already_finalized: true } : {}),
+    });
   }
 
   return jsonError('Unhandled action', 400);

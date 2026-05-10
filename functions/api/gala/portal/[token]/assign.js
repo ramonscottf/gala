@@ -22,6 +22,7 @@
 //       delegation caller → delegation.parent_delegation_id matches caller.id
 
 import { resolveToken, jsonError, jsonOk } from '../../_sponsor_portal.js';
+import { getLoveseatPartner } from '../../_loveseat_pairs.js';
 
 export async function onRequestPost(context) {
   const { env, params, request } = context;
@@ -56,6 +57,24 @@ export async function onRequestPost(context) {
     return { row_label: String(id).slice(0, dash), seat_num: String(id).slice(dash + 1) };
   });
   if (parsed.some((p) => !p)) return jsonError('Invalid seat_id format (expected ROW-NUM)', 400);
+
+  // Phase 5.2 — paired-loveseat expansion. If the caller passes one
+  // half of a paired loveseat, pull the partner into the same /assign
+  // operation so the pair never splits across delegations. The client
+  // already sends both halves (SeatEngine.partnersFor in the picker),
+  // but we re-expand here to be defensive against direct API callers.
+  // Deduplicate via a Set of "ROW:NUM" keys.
+  const seen = new Set(parsed.map((p) => `${p.row_label}:${p.seat_num}`));
+  for (const p of [...parsed]) {
+    const partner = await getLoveseatPartner(env, request, theater_id, p.row_label, p.seat_num);
+    if (partner) {
+      const key = `${p.row_label}:${partner}`;
+      if (!seen.has(key)) {
+        parsed.push({ row_label: p.row_label, seat_num: partner });
+        seen.add(key);
+      }
+    }
+  }
 
   // Validate delegation_id belongs to caller scope (if provided),
   // AND fetch the delegate identity so we can recompose guest_name
