@@ -31,6 +31,7 @@ export default function HomeTab({
   onAssign,
   onMovieDetail,
   onManageTickets,
+  onViewTicket,
   token,
   apiBase,
 }) {
@@ -134,6 +135,22 @@ export default function HomeTab({
             onClick={onInvite}
             testId="cta-invite-guest"
           />
+        )}
+
+        {/* Your ticket(s) — hero entry to TicketDetailSheet (QR + per-seat
+            dinner + meta). Only renders when this caller has at least one
+            ticket of their own (i.e. seats they placed under their token).
+            For a sponsor who has fully delegated their entire block, the
+            tickets array is empty and we skip — their ticket lives on the
+            delegate's portal in that scenario. */}
+        {tickets.length > 0 && typeof onViewTicket === 'function' && (
+          tickets.map((t) => (
+            <TicketHeroCard
+              key={t.id}
+              ticket={t}
+              onViewTicket={onViewTicket}
+            />
+          ))
         )}
       </div>
 
@@ -365,6 +382,143 @@ function ActionCard({ icon, gradient, title, sub, cta, ctaPrimary, onClick, test
         }}
       >
         {cta}
+      </div>
+    </button>
+  );
+}
+
+// TicketHeroCard — fast-path entry on Home into TicketDetailSheet.
+//
+// Visual: poster thumbnail (left) + show label / movie title / showtime
+// stack (middle) + "View ticket" pill CTA (right). Same surface treatment
+// as ActionCard so the home column reads as one rhythmic stack of cards.
+//
+// One card per ticket — when a sponsor's block spans both early and late
+// showings, the home column shows two ticket cards stacked. Tapping
+// either opens the per-showing TicketDetailSheet (the same sheet you'd
+// reach from the Tickets tab).
+function TicketHeroCard({ ticket, onViewTicket }) {
+  const seatCount = (ticket.assignmentRows || ticket.seats || []).length;
+  const showLabel = ticket.showLabel || '';
+  const showTime = ticket.showTime || '';
+  const subParts = [];
+  if (showLabel) subParts.push(showLabel);
+  if (showTime) subParts.push(showTime);
+  if (seatCount) subParts.push(`${seatCount} seat${seatCount === 1 ? '' : 's'}`);
+  const sub = subParts.join(' · ');
+
+  return (
+    <button
+      onClick={() => onViewTicket(ticket)}
+      data-testid="cta-view-ticket"
+      style={{
+        all: 'unset',
+        cursor: 'pointer',
+        boxSizing: 'border-box',
+        background: 'var(--surface)',
+        border: `1px solid var(--rule)`,
+        borderRadius: 14,
+        padding: '12px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        boxShadow:
+          '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
+      }}
+    >
+      {/* Poster thumbnail — taller aspect than ActionCard's icon bubble
+          to read as a movie ticket rather than a generic action. */}
+      <div
+        style={{
+          width: 44,
+          height: 60,
+          borderRadius: 8,
+          background: ticket.posterUrl
+            ? `url(${ticket.posterUrl}) center/cover`
+            : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+          flexShrink: 0,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {!ticket.posterUrl && ticket.movieShort && (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 4,
+              padding: '0 4px',
+              fontFamily: FONT_DISPLAY,
+              fontStyle: 'italic',
+              fontSize: 11,
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.92)',
+              lineHeight: 1.05,
+            }}
+          >
+            {ticket.movieShort}
+          </div>
+        )}
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Caps overline mirrors the SEATS / DATE labels on the ticket
+            sheet itself — small visual rhyme so this reads as a
+            preview of that sheet. */}
+        <div
+          style={{
+            fontSize: 9,
+            fontWeight: 800,
+            letterSpacing: 1.2,
+            color: 'var(--mute)',
+            textTransform: 'uppercase',
+            marginBottom: 2,
+          }}
+        >
+          Your ticket
+        </div>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: 'var(--ink-on-ground)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {ticket.movieTitle || 'Showing TBD'}
+        </div>
+        {sub && (
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--mute)',
+              marginTop: 2,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {sub}
+          </div>
+        )}
+      </div>
+
+      <div
+        style={{
+          padding: '8px 14px',
+          borderRadius: 99,
+          background: 'rgba(168,177,255,0.18)',
+          color: BRAND.indigoLight,
+          fontSize: 12,
+          fontWeight: 700,
+          flexShrink: 0,
+        }}
+      >
+        View
       </div>
     </button>
   );
