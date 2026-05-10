@@ -1747,6 +1747,14 @@ export const DelegateForm = ({
   // R13 — Mode B: array of seat ids (strings like 'F-9'); when set,
   // the form renders seat pills instead of the quota counter.
   seatPills = null,
+  // Phase 5.4 — when supplied, defines which seats start CHECKED in
+  // the pill picker. Without it, every seat in seatPills is selected
+  // by default (the original group-invite contract). With it, the
+  // form shows the full giveable block as the visible pill universe
+  // but starts only the listed seats checked — the entry-from-a-row
+  // case where one seat triggered the invite but the user might want
+  // to add more. Pass either an array or a Set.
+  preselectedPills = null,
   // Legacy: locks the counter to a specific count. Kept for any
   // call sites still on the old contract; prefer seatPills.
   lockSeats = null,
@@ -1756,9 +1764,21 @@ export const DelegateForm = ({
   const [email, setEmail] = useState('');
   // Mode B uses selectedPills as the source of truth. Mode A uses
   // the seats counter.
-  const [selectedPills, setSelectedPills] = useState(() =>
-    new Set(seatPills || []),
-  );
+  //
+  // Initial-selection rule:
+  //   - if preselectedPills is supplied: start only those checked
+  //     (they MUST be a subset of seatPills; non-overlapping ids are
+  //     ignored)
+  //   - else: start every pill in seatPills checked (group-invite
+  //     legacy behavior)
+  const [selectedPills, setSelectedPills] = useState(() => {
+    if (preselectedPills) {
+      const universe = new Set(seatPills || []);
+      const initial = Array.from(preselectedPills).filter((id) => universe.has(id));
+      return new Set(initial);
+    }
+    return new Set(seatPills || []);
+  });
   const [seats, setSeats] = useState(
     seatPills?.length ?? lockSeats ?? (Math.min(available, 2) || 1),
   );
@@ -2728,10 +2748,39 @@ export default function Portal({
             });
           }}
           onPickDinner={(seat) => setDinnerSheet(seat)}
-          onInviteSeat={(seat) => {
+          onInviteSeat={(seat, ticket) => {
+            // Phase 5.4 — per-seat "+ Invite" on a Tickets-tab row
+            // now opens the same form the group-invite button does,
+            // but preselects ONLY the tapped seat. The other giveable
+            // seats in the same showing block render as unselected
+            // pills so the user can tap to add more without backing
+            // out and using the group-invite path. Same form, same
+            // submit, just a different starting selection.
+            const tappedId = `${seat.row_label}-${seat.seat_num}`;
+            // Block universe = every seat in this ticket the sponsor
+            // still owns (not yet delegated). Mirrors the giveable
+            // rule used by the group-invite button below. If we don't
+            // have ticket context (older callers), fall back to
+            // single-seat-only behavior.
+            if (ticket?.assignmentRows) {
+              const giveableIds = ticket.assignmentRows
+                .filter((r) => !r.delegation_id)
+                .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+              // If for some reason the tapped seat isn't in the
+              // giveable set, just show it solo. Shouldn't happen but
+              // keeps us defensive.
+              if (giveableIds.includes(tappedId) && giveableIds.length > 1) {
+                setInviteOpen({
+                  theaterId: seat.theaterId,
+                  seatIds: giveableIds,
+                  preselected: [tappedId],
+                });
+                return;
+              }
+            }
             setInviteOpen({
               theaterId: seat.theaterId,
-              seat: `${seat.row_label}-${seat.seat_num}`,
+              seat: tappedId,
             });
           }}
           onSelectMeals={(ticket) => {
@@ -2822,11 +2871,23 @@ export default function Portal({
           // R13 — title shows actual seat ids, comma-separated, no
           // counter-style "for N seats" framing. Both single-seat
           // and multi-seat callers land in the same Mode B form.
-          const ids = inviteOpen.seatIds?.length
-            ? inviteOpen.seatIds
-            : inviteOpen.seat
-              ? [inviteOpen.seat]
-              : [];
+          //
+          // Phase 5.4 — when the per-seat tap path fires (preselected
+          // is set), the visible pill universe is the WHOLE block but
+          // the title only reflects the tapped seat — that's the only
+          // one initially selected, and it matches the user's mental
+          // model: "I tapped Invite on F10, the title should say F10."
+          // The other pills are an affordance to expand selection if
+          // they want; the title updates to reflect what's actually
+          // about to be invited (selectedPills) once they tap more,
+          // but for static title display we anchor on preselected.
+          const ids = inviteOpen.preselected?.length
+            ? inviteOpen.preselected
+            : inviteOpen.seatIds?.length
+              ? inviteOpen.seatIds
+              : inviteOpen.seat
+                ? [inviteOpen.seat]
+                : [];
           if (ids.length === 0) return 'Invite a guest';
           return `Invite for ${ids.map((s) => s.replace('-', '')).join(', ')}`;
         })()}
@@ -2845,6 +2906,16 @@ export default function Portal({
             if (inviteOpen.seat) return [inviteOpen.seat];
             return null;
           })()}
+          // Phase 5.4 — preselectedPills is set ONLY by the per-seat
+          // tap path. When set, the form starts with just those pills
+          // checked while still showing the rest of the block. Group
+          // invite leaves it null so all pills start checked (legacy
+          // behavior).
+          preselectedPills={
+            typeof inviteOpen === 'object' && inviteOpen?.preselected?.length
+              ? inviteOpen.preselected
+              : null
+          }
           available={
             typeof inviteOpen === 'object' && inviteOpen
               ? Math.max(
