@@ -193,6 +193,13 @@ export default function HomeTab({
             paddingRight: 8,
             paddingBottom: 8,
             display: 'flex',
+            // Phase 5.7 — explicitly anchor cards to the top of the
+            // flex line. The default stretch behavior worked in
+            // theory but combined with button content stacking in
+            // block flow it left ambiguity about where the poster
+            // sat when titles wrapped to different line counts.
+            // flex-start guarantees poster tops align across cards.
+            alignItems: 'flex-start',
             gap: 12,
             overflowX: 'auto',
             overflowY: 'hidden',
@@ -287,6 +294,15 @@ export default function HomeTab({
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
+                    // Phase 5.7 — reserve space for two lines so a
+                    // one-line title ('Paddington 2') and a two-line
+                    // title ('How to Train Your Dragon') occupy the
+                    // same vertical block. Without this the rating
+                    // row below sits at different heights across
+                    // cards and the lineup looks ragged at the bottom
+                    // even though poster tops are aligned. Height =
+                    // fontSize × lineHeight × WebkitLineClamp.
+                    minHeight: `calc(12px * 1.25 * 2)`,
                   }}
                 >
                   {m.title}
