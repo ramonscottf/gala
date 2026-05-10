@@ -401,21 +401,13 @@ function SeatRow({
               {dinner ? 'Change dinner' : 'Pick dinner'}
             </button>
           )}
-          {isGuestRow ? (
-            <button
-              onClick={() => onManageGuest && row.delegation_id && onManageGuest({ id: row.delegation_id })}
-              style={pillBtn('soft')}
-            >
-              Manage {guestName?.split(' ')[0] || 'guest'}
-            </button>
-          ) : (
-            <button
-              onClick={() => onInviteSeat && onInviteSeat(seat)}
-              style={pillBtn('indigo')}
-            >
-              + Invite to {label}
-            </button>
-          )}
+          {/* Phase 5.3 — TicketDetailSheet is the "look at my ticket"
+              view. All invite/manage actions live on the Tickets-tab
+              card now. The dinner picker stays accessible here because
+              dinners remain editable until the 7-day lock and people
+              expect to pick dinner from a ticket they're already
+              looking at. (Q9 in the spec: sheet stays interactive for
+              dinners; only invite controls move out.) */}
         </div>
       )}
     </div>

@@ -1646,6 +1646,15 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
     lineup,
     daysOut: daysUntilGala(),
     seatMath: portal.seatMath || { total: 0, placed: 0, delegated: 0, available: 0 },
+    // Phase 5.3 — Tickets-tab CTA state machine. For sponsors,
+    // rsvpStatus === 'completed' means the sponsor has fired
+    // /finalize and the QR has been issued. For delegations, the
+    // 'finalized' status means the delegate has finalized their
+    // sub-block. The TicketCard uses this to switch its bottom CTA
+    // between 'Select meals', 'Finalize seats', and 'View'.
+    isFinalized: isDelegation
+      ? id.status === 'finalized'
+      : id.rsvpStatus === 'completed',
     // Phone on file for the underlying sponsor record. Used by the
     // "Text my seats to me" button to display a masked destination
     // ("Text my seats to (•••) •••-6642") so anyone tapping the
@@ -2642,7 +2651,12 @@ export default function Portal({
         isDev={isDev}
         logoUrl={data.logoUrl}
         onEdit={() => {
+          // Phase 5.3 — celebration dismiss returns user to Home tab,
+          // not back to wherever they triggered finalize from. The
+          // Home tab is the "you're done, here's everything" view;
+          // landing there post-celebration is the natural next beat.
           setConfirmationData(null);
+          setTab('home');
           // Strip the route state so a refresh doesn't re-show
           // confirmation. replace: true keeps the URL stable.
           navigate('', { replace: true });
@@ -2719,6 +2733,38 @@ export default function Portal({
               theaterId: seat.theaterId,
               seat: `${seat.row_label}-${seat.seat_num}`,
             });
+          }}
+          onSelectMeals={(ticket) => {
+            // Phase 5.3 — reuse the existing PostPickDinnerSheet flow,
+            // but scope it to this ticket's full seat list (not just
+            // post-pick subset). Seeds postPick with the ticket-scoped
+            // seat ids so the sheet picks them up unchanged.
+            const seatIds = (ticket.assignmentRows || [])
+              .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+            if (seatIds.length === 0) return;
+            setPostPick({
+              theaterId: ticket.theaterId,
+              seatIds,
+              movieTitle: ticket.movieTitle,
+              showLabel: ticket.showLabel,
+              showTime: ticket.showTime,
+              theaterName: ticket.theaterName,
+              posterUrl: ticket.posterUrl,
+            });
+            setDinnerOpen(true);
+          }}
+          onFinalizeFromCard={async () => {
+            // Phase 5.3 — fires /finalize directly. useFinalize stuffs
+            // the response into confirmationData; the parent shell's
+            // existing short-circuit then renders the celebration
+            // screen. Errors stay in finalizeError; the user retries.
+            try {
+              await finalize();
+            } catch {
+              // useFinalize captures error; we don't need to do
+              // anything else here. The TicketCard stays in its
+              // pre-finalize state until /finalize succeeds.
+            }
           }}
         />
       )}

@@ -279,11 +279,17 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
           full
           onClick={() => {
             // HAPTIC: light — return to portal home.
+            // Phase 5.3 — relabeled to "Confirm" (was "Edit my seats")
+            // because the celebration screen's role flipped: it's now
+            // a confirmation moment. Editing happens on the Tickets
+            // tab afterward, not from here. The handler still calls
+            // onEdit() which the parent uses to clear celebration
+            // state and navigate to Home.
             onEdit();
           }}
           icon={<Icon name="arrowR" size={16} />}
         >
-          Edit my seats
+          Confirm
         </Btn>
         <button
           disabled
