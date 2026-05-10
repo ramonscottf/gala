@@ -134,7 +134,14 @@
     /* Three Booker faces — same body, just different facial expressions.
        Neutral is the default idle, big-smile fires on chat open and replies,
        curious shows while the user is mid-conversation. Same body across all
-       three so crossfade-on-opacity reads cleanly. */
+       three so crossfade-on-opacity reads cleanly.
+
+       Source images (2026-05-10): Pixelmator-masked WebPs from Scott, with
+       proper RGBA transparency on the original — no chroma-keying needed.
+       Replaces an earlier black-bg JPEG-to-PNG pipeline that accidentally
+       made pupils transparent (because dark pupils are also "near black").
+       PNGs at ~170 KB each; WebP versions also uploaded to the same R2 path
+       (different extension) for future <picture>-element optimization. */
     .gx-expr.gx-neutral    { background-image: url('https://assets.daviskids.org/mascot/expressions/neutral.png'); }
     .gx-expr.gx-big-smile  { background-image: url('https://assets.daviskids.org/mascot/expressions/big-smile.png'); }
     .gx-expr.gx-curious    { background-image: url('https://assets.daviskids.org/mascot/expressions/curious.png'); }
