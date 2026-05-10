@@ -127,7 +127,7 @@ export async function onRequest({ request, env, params }) {
       `Hi ${guestName.split(' ')[0]} — ${sponsor.company} has reserved your seat${isPlural ? 's' : ''} for the Davis Education Foundation gala.`,
       ``,
       `Wed June 10 · Megaplex Legacy Crossing`,
-      `Doors 3:15 PM`,
+      `Doors 4:00 PM`,
       seatList ? `Your seat${isPlural ? 's' : ''}: ${seatList}` : '',
       showLabel ? `Showing: ${showLabel}` : '',
       dinnerChoice ? `Dinner: ${dinnerChoice}` : '',

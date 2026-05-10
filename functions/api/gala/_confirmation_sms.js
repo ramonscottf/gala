@@ -4,7 +4,7 @@
 //
 // Format:
 //   🎬 GALA · 2026 — {Company}
-//   Wed June 10 · Megaplex Legacy Crossing · Doors 3:15 PM
+//   Wed June 10 · Megaplex Legacy Crossing · Doors 4:00 PM
 //
 //   {Movie Title} (Aud {N})
 //   Seats: {row+seat list}
@@ -49,7 +49,7 @@ export async function buildConfirmationSms(env, { kind, recordId, company, token
 
   const parts = [
     masthead,
-    `Wed June 10 · Megaplex Legacy Crossing · Doors 3:15 PM`,
+    `Wed June 10 · Megaplex Legacy Crossing · Doors 4:00 PM`,
     '',
   ];
   if (byShow.size === 0) {
