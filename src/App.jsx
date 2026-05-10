@@ -110,7 +110,7 @@ function PortalContainer() {
   }
 
   return (
-    <Mobile
+    <Portal
       portal={portal.state}
       token={token}
       theaterLayouts={layouts}
