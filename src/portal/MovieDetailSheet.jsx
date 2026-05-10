@@ -110,6 +110,15 @@ export default function MovieDetailSheet({
   showTime,
   onClose,
   variant = 'sheet',
+  // Phase 5.5 — when 'selectSeats', sheet shows the
+  // "SELECT SEATS FOR THIS FILM" primary CTA at the bottom that calls
+  // onSelectSeatsForFilm with the chosen schedule entry. When
+  // 'viewTickets', shows "View your tickets" instead which calls
+  // onViewTickets. Defaults to 'none' (no CTA) for back-compat with
+  // any preview / unit-test callers.
+  ctaMode = 'none',
+  onSelectSeatsForFilm,
+  onViewTickets,
 }) {
   const displayMovie = enrichMovieScores(movie);
   if (!displayMovie) return null;
@@ -439,6 +448,137 @@ export default function MovieDetailSheet({
                 {displayMovie.synopsis}
               </p>
             </div>
+          )}
+
+          {/* Phase 5.5 — schedule block. Always rendered when the
+              movie carries a schedule array (which it does for every
+              lineup-derived movie). Lists every showtime + auditorium
+              this film plays in: 'Early · 4:30 PM   Auditorium 7'. */}
+          {Array.isArray(displayMovie.schedule) && displayMovie.schedule.length > 0 && (
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: 1.4,
+                  color: 'var(--accent-text)',
+                  marginBottom: 10,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Schedule
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {displayMovie.schedule.map((s, i) => (
+                  <div
+                    key={`${s.showingNumber}-${s.theaterId}-${i}`}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'auto 1fr auto',
+                      alignItems: 'center',
+                      gap: 14,
+                      padding: '12px 14px',
+                      borderRadius: 12,
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        letterSpacing: 1.4,
+                        color: 'var(--accent-text)',
+                        textTransform: 'uppercase',
+                        minWidth: 40,
+                      }}
+                    >
+                      {s.showLabel || `Show ${s.showingNumber}`}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: 'rgba(255,255,255,0.95)',
+                      }}
+                    >
+                      {s.showTime}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: 'rgba(255,255,255,0.65)',
+                        textAlign: 'right',
+                      }}
+                    >
+                      {s.theaterName}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Phase 5.5 — bottom CTA. 'selectSeats' opens SeatPickSheet
+              preselected on this film. 'viewTickets' shows when the
+              sponsor has zero seats left to place — same vertical real
+              estate, different verb. The handler picks the first
+              schedule entry as the showing context (most films have
+              one entry; for two-showing films the user can change
+              showing inside the picker). */}
+          {ctaMode === 'selectSeats' && onSelectSeatsForFilm && (
+            <button
+              onClick={() => {
+                const first = Array.isArray(displayMovie.schedule)
+                  ? displayMovie.schedule[0]
+                  : null;
+                onSelectSeatsForFilm(first || null);
+              }}
+              data-testid="movie-detail-select-seats"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                width: '100%',
+                marginTop: 4,
+                padding: '16px 18px',
+                borderRadius: 14,
+                background: 'linear-gradient(135deg,#d72846,#b32d4e)',
+                color: '#fff',
+                fontSize: 15,
+                fontWeight: 800,
+                letterSpacing: 0.4,
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                boxShadow: '0 8px 22px -10px rgba(215,40,70,0.6)',
+              }}
+            >
+              Select seats for this film
+            </button>
+          )}
+          {ctaMode === 'viewTickets' && onViewTickets && (
+            <button
+              onClick={() => onViewTickets()}
+              data-testid="movie-detail-view-tickets"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                width: '100%',
+                marginTop: 4,
+                padding: '14px 18px',
+                borderRadius: 99,
+                background: 'linear-gradient(135deg,#a8b1ff,#6f75d8)',
+                color: BRAND.navyDeep,
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: 0.4,
+                textAlign: 'center',
+                textTransform: 'uppercase',
+              }}
+            >
+              View your tickets
+            </button>
           )}
         </div>
       </div>
