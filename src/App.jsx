@@ -1,14 +1,17 @@
-// Router root — viewport-aware shell that dispatches to Mobile (<880px) or
-// Desktop (≥880px). Routes are relative to the /sponsor basename set by
-// main.jsx, so they read as ('/:token', '/:token/seats'). The previous
-// multi-prefix scheme (/gala-dev, /gala-seats, /gala) is gone after the
-// May 2026 migration to gala.daviskids.org.
+// Router root — renders the Portal shell (formerly the "Mobile" shell).
+// As of May 2026 the portal is one responsive web app, not two
+// viewport-split shells. Phones, tablets, laptops all hit the same
+// component tree; CSS handles the layout differences. The legacy
+// Desktop.jsx file stays on disk for reference but is no longer
+// routed to (will be deleted in a follow-up cleanup pass).
 //
-// `/seats` deep link routes through canonical Mobile/Desktop +
-// SeatPickSheet via `openSheetOnMount={onSeatsRoute}`. The legacy
-// MobileWizard 4-step wizard was deleted in May 2026 — the boarding-pass
-// shell + SeatPickSheet covers the deep-link case via the same canonical
-// flow that Welcome/Home uses.
+// Routes are relative to the /sponsor basename set by main.jsx, so
+// they read as ('/:token', '/:token/seats'). The previous multi-prefix
+// scheme (/gala-dev, /gala-seats, /gala) is gone after the May 2026
+// migration to gala.daviskids.org.
+//
+// `/seats` deep link routes through the canonical shell + SeatPickSheet
+// via `openSheetOnMount={onSeatsRoute}`.
 
 import { useEffect, useState } from 'react';
 import { Routes, Route, useParams, useLocation } from 'react-router-dom';
@@ -16,10 +19,8 @@ import { config } from './config.js';
 import { BRAND, FONT_DISPLAY, FONT_UI } from './brand/tokens.js';
 import { usePortal } from './hooks/usePortal.js';
 import { useSeats } from './hooks/useSeats.js';
-import { useViewport } from './hooks/useViewport.js';
 import { useTheme } from './hooks/useTheme.js';
 import Mobile from './portal/Mobile.jsx';
-import Desktop from './portal/Desktop.jsx';
 
 function isDevPrefix() {
   // No dev mirror in the gala repo — single /sponsor prefix only.
@@ -78,7 +79,6 @@ function FullScreenMessage({ children, accent = BRAND.gold }) {
 function PortalContainer() {
   const { token } = useParams();
   const location = useLocation();
-  const { isMobile } = useViewport();
   const portal = usePortal(token);
   const { layouts, error: layoutsError } = useTheaterLayouts();
   const seats = useSeats(portal.state, token, portal.refresh);
@@ -109,30 +109,15 @@ function PortalContainer() {
     );
   }
 
-  if (isMobile) {
-    return (
-      <Mobile
-        portal={portal.state}
-        token={token}
-        theaterLayouts={layouts}
-        seats={seats}
-        isDev={dev}
-        onRefresh={portal.refresh}
-        openSheetOnMount={onSeatsRoute}
-      />
-    );
-  }
-
   return (
-    <Desktop
+    <Mobile
       portal={portal.state}
       token={token}
       theaterLayouts={layouts}
       seats={seats}
       isDev={dev}
-      openSheetOnMount={onSeatsRoute}
-      apiBase={config.apiBase}
       onRefresh={portal.refresh}
+      openSheetOnMount={onSeatsRoute}
     />
   );
 }
