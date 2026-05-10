@@ -216,6 +216,48 @@ export const SeatMap = ({
     }
     return null;
   };
+
+  // Phase 5.2 — paired-loveseat atomic selection.
+  //
+  // Loveseats are physically two cushions on one fused frame (couple-curve).
+  // The pairLeft/pairRight flags on each cell mark "I have a loveseat
+  // neighbor on that side." A user tapping ONE half selects the WHOLE
+  // pair; releasing one half releases both. The same goes for lasso-
+  // select and shift-range select. The server enforces this too —
+  // /pick and /assign can't half-book a pair — but enforcing it here
+  // keeps the UI in sync with the server's reality so a user never sees
+  // "1 selected" and gets a 2-seat charge.
+  //
+  // partnersFor(id) returns [id] for non-paired seats and [leftHalfId,
+  // rightHalfId] for either half of a paired loveseat. Caller dedupes.
+  const partnersFor = (id) => {
+    const seat = find(id);
+    if (!seat || seat.t !== 'loveseat') return [id];
+    if (!seat.pairLeft && !seat.pairRight) return [id]; // standalone loveseat
+    // Locate the row + index, then walk neighbors.
+    for (const row of rows) {
+      const idx = row.seats.findIndex((s) => s && s.id === id);
+      if (idx < 0) continue;
+      const partnerIdx = seat.pairRight ? idx + 1 : idx - 1;
+      const partner = row.seats[partnerIdx];
+      if (partner && partner.t === 'loveseat') {
+        return seat.pairRight ? [id, partner.id] : [partner.id, id];
+      }
+      return [id];
+    }
+    return [id];
+  };
+  // expandPair takes an array of ids and returns the same array with
+  // every paired-loveseat half expanded to include its partner.
+  // Deduplicates so an explicit two-half tap doesn't double-fire.
+  const expandPair = (ids) => {
+    const out = new Set();
+    for (const id of ids) {
+      for (const p of partnersFor(id)) out.add(p);
+    }
+    return [...out];
+  };
+
   const status = (id) => {
     if (assignedSelf.has(id)) return 'self';
     if (assignedOther.has(id)) return 'other';
@@ -268,6 +310,16 @@ export const SeatMap = ({
 
   const handleSeatClick = (id, ev) => {
     if (status(id) === 'other') return;
+    // Expand this tap to include the loveseat partner if applicable.
+    // For a paired loveseat, BOTH halves go to onSelect together — the
+    // app's selection state (and the server's hold/finalize) will treat
+    // them as one transaction. For a non-paired tile this is a no-op.
+    const tapIds = expandPair([id]);
+    // If the partner is held by another sponsor, the partner is 'other'
+    // and the whole pair must be unselectable. Bail rather than fire a
+    // half-pair that the server would reject.
+    if (tapIds.some((tid) => status(tid) === 'other')) return;
+
     if (ev.shiftKey && lastClick.current) {
       const a = find(lastClick.current);
       const b = find(id);
@@ -285,14 +337,24 @@ export const SeatMap = ({
             const seat = row.seats[c];
             if (seat && status(seat.id) !== 'other') ids.push(seat.id);
           }
-          onSelect && onSelect(ids, 'add');
+          // Expand any paired-loveseat halves caught in the range to
+          // include their partners (in case the partner falls outside
+          // the shift-selected window).
+          onSelect && onSelect(expandPair(ids), 'add');
           lastClick.current = id;
           return;
         }
       }
     }
     // HAPTIC: light — Phase 2 wires Capacitor Haptics here.
-    onSelect && onSelect([id], selected.has(id) ? 'remove' : 'add');
+    // Selection check is on the tapped id; the partner follows. The
+    // contract: if EITHER half is currently selected, treat the tap
+    // as a remove for both. This avoids a quirk where the partner is
+    // unselected (e.g. just placed by the server) but the tapped half
+    // is selected — we'd flip-flop between half-states. partnersFor()
+    // is monotonic: same input → same pair every time.
+    const anyHalfSelected = tapIds.some((tid) => selected.has(tid));
+    onSelect && onSelect(tapIds, anyHalfSelected ? 'remove' : 'add');
     lastClick.current = id;
   };
 
@@ -341,7 +403,12 @@ export const SeatMap = ({
         }
       });
     });
-    if (ids.length) onSelect && onSelect(ids, 'add');
+    if (ids.length) {
+      // Phase 5.2 — if the lasso clipped one half of a paired loveseat,
+      // pull the partner in. Same atomic pairing rule as click.
+      const expanded = expandPair(ids).filter((id) => status(id) !== 'other');
+      if (expanded.length) onSelect && onSelect(expanded, 'add');
+    }
     dragging.current = null;
     setLasso(null);
   };
