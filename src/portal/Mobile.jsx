@@ -2169,15 +2169,11 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
   <div
     className="tab-bar tab-bar-glass"
     style={{
-      // Pill anchored flush to viewport bottom. No safe-area gap, no
-      // wrapper padding below the pill — those gaps left a strip of
-      // page background visible between the pill and the iOS Safari
-      // URL bar, reading as a docked band. iOS URL bar floats over
-      // the bottom of the pill; the pill IS the bottom of the page.
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
+      // Position lives in the .tab-bar CSS class now (was inline
+      // here) so a desktop media query can flip it from
+      // bottom-anchored pill to top-anchored nav on wider screens.
+      // Phone: bottom-anchored pill. Desktop (>=880px): docked top
+      // nav. See styles.css for the override.
       zIndex: 20,
       padding: '10px 18px 0',
       display: 'flex',
@@ -2971,6 +2967,7 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
   if (!open) return null;
   return (
     <div
+      className="sheet-backdrop"
       onClick={onClose}
       style={{
         position: withinFrame ? 'absolute' : 'fixed',
@@ -2978,17 +2975,23 @@ const Sheet = ({ open, onClose, title, children, forceDark = false }) => {
         background: 'rgba(0,0,0,0.55)',
         zIndex: 50,
         display: 'flex',
+        // Phone: bottom-anchored. On >=880px a CSS media query flips
+        // align-items to 'center' so the panel sits in the middle of
+        // the screen as a centered modal — web-native pattern.
         alignItems: 'flex-end',
       }}
     >
       <div
+        className={`sheet-panel ${isDark ? 'force-dark-vars' : ''}`.trim()}
         onClick={(e) => e.stopPropagation()}
-        className={isDark ? 'force-dark-vars' : undefined}
         style={{
           width: '100%',
           maxHeight: '88%',
           background: isDark ? BRAND.navyDeep : '#ffffff',
           color: isDark ? '#fff' : BRAND.ink,
+          // Phone: rounded top corners only (slides up from bottom).
+          // Desktop CSS overrides to round all corners for the
+          // centered-modal look.
           borderTopLeftRadius: 22,
           borderTopRightRadius: 22,
           padding: '8px 0 24px',

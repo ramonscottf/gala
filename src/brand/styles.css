@@ -1173,6 +1173,72 @@ img,
 .tab-bar {
   user-select: none;
   -webkit-user-select: none;
+  /* Phone: bottom-anchored floating pill. The position lived inline
+   * in Mobile.jsx historically; moved here so a desktop media query
+   * can override it without specificity-warring inline styles. */
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Desktop layout (>=880px). The portal is a website, not an app,
+ * so on wider screens the bottom-anchored pill becomes a top-anchored
+ * nav. The same React component renders, only the position flips. */
+@media (min-width: 880px) {
+  .tab-bar {
+    position: absolute;
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    padding: 18px 24px 12px !important;
+  }
+
+  /* Cap the readable column width and center it. The bottom tab bar
+   * sat naturally at the viewport bottom on mobile; on desktop it
+   * docks at the top, so the page content needs top breathing room
+   * to clear it. Scope: page-level scroll containers ONLY — not the
+   * one inside .sheet-panel which is already inside a centered modal. */
+  .mobile-shell-root > .scroll-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-top: 88px;
+  }
+
+  /* Sheets become centered modals at desktop width. The same Sheet
+   * component renders — backdrop changes its align-items to center,
+   * the panel gets a max-width and full corner rounding, and the
+   * slide-up animation swaps for a fade-in. */
+  .sheet-backdrop {
+    align-items: center !important;
+    justify-content: center;
+  }
+  .sheet-panel {
+    max-width: 560px;
+    width: 92% !important;
+    border-radius: 22px !important;
+    border-top: 1px solid var(--rule) !important;
+    animation: fadeInScale 0.18s ease-out !important;
+    padding-bottom: 24px !important;
+  }
+  /* The drag-handle pill at the top of the sheet looks weird on a
+   * centered modal — hide it on desktop. (It's the first child of
+   * .sheet-panel, a 36×4 div.) */
+  .sheet-panel > div:first-child {
+    display: none;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Glass tab bar — what makes a webview app stop looking like a webview.
