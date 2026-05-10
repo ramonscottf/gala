@@ -393,7 +393,7 @@ function SeatRow({ row, ticket, guest, onPickDinner, onInviteSeat }) {
         <span style={guestNameText}>{guestName}</span>
       ) : (
         <button
-          onClick={() => onInviteSeat && onInviteSeat(seat)}
+          onClick={() => onInviteSeat && onInviteSeat(seat, ticket)}
           data-testid="seat-row-invite"
           style={invitePill}
         >
