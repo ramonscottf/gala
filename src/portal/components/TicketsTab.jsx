@@ -232,8 +232,13 @@ export default function TicketsTab({
   // expand for guest cards)
   onPickDinner,    // (seat) => void  — opens DinnerSheet
   onInviteSeat,    // (seat) => void  — opens DelegateForm w/ single-seat lock
+  // Phase 5.3 — Tickets-tab CTA state machine. The TicketCard switches
+  // between Select meals / Finalize seats / View ticket based on
+  // dinner-pick state + sponsor.rsvpStatus. These wire the tap handlers.
+  onSelectMeals,        // (ticket) => void — opens batch dinner picker
+  onFinalizeFromCard,   // (ticket) => void — fires /finalize, triggers celebration
 }) {
-  const { tickets = [], guestTickets = [], delegations = [], blockSize = 0, seatMath } = data || {};
+  const { tickets = [], guestTickets = [], delegations = [], blockSize = 0, seatMath, isFinalized = false } = data || {};
 
   const placed = tickets.reduce((n, t) => n + (t.seats?.length || 0), 0);
   const guestPlaced = guestTickets.reduce((n, t) => n + (t.seats?.length || 0), 0);
@@ -329,10 +334,13 @@ export default function TicketsTab({
           <TicketCard
             key={ticket.id}
             ticket={ticket}
+            isFinalized={isFinalized}
             onViewTicket={onViewTicket}
             onInviteGroup={onInviteGroup}
             onPickDinner={onPickDinner}
             onInviteSeat={onInviteSeat}
+            onSelectMeals={onSelectMeals}
+            onFinalizeFromCard={onFinalizeFromCard}
           />
         ))}
         {tickets.length === 0 && (

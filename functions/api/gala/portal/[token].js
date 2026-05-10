@@ -36,6 +36,13 @@ export async function onRequestGet(context) {
       tier: normalizeSponsorTier(s.sponsorship_tier) || s.sponsorship_tier,
       seatsPurchased: s.seats_purchased,
       logoUrl: s.logo_url || null,
+      // Phase 5.3 — Tickets-tab CTA state machine. The sponsor's
+      // rsvp_status flips to 'completed' on /finalize. Surfacing it
+      // here lets the client decide which pill to render: 'Select
+      // meals' (indigo, missing dinners) → 'Finalize seats' (red, all
+      // dinners picked) → 'View' (indigo, finalized; read-only sheet).
+      rsvpStatus: s.rsvp_status || null,
+      rsvpCompletedAt: s.rsvp_completed_at || null,
     };
   } else {
     const d = resolved.record;

@@ -47,11 +47,14 @@ const DINNER_LABEL = {
 export default function TicketCard({
   ticket,
   guest = false,
+  isFinalized = false,    // Phase 5.3 — sponsor finalize state
   onViewTicket,    // sponsor cards: opens TicketDetailSheet
   onManageGuest,   // guest cards: opens DelegateManage
   onPickDinner,    // (seat) => void — opens DinnerSheet
   onInviteSeat,    // (seat) => void — opens DelegateForm w/ single-seat lock
   onInviteGroup,   // (ticket) => void — opens HandBlockSheet for the group
+  onSelectMeals,   // (ticket) => void — opens batch dinner picker
+  onFinalizeFromCard, // (ticket) => void — fires /finalize, triggers celebration
 }) {
   const rows = ticket.assignmentRows || [];
   // R9 — sponsor cards now collapse like guest cards. Default closed
@@ -77,6 +80,22 @@ export default function TicketCard({
   };
 
   const hasGiveable = !guest && rows.some((r) => !r.delegation_id);
+
+  // Phase 5.3 — state machine for the bottom CTA on sponsor cards.
+  //
+  //   missingMeals  → indigo "Select meals" pill (opens batch picker)
+  //   readyToFinalize → red "Finalize seats" + subtext (fires /finalize)
+  //   isFinalized → indigo "View ticket" pill (opens read-only sheet)
+  //
+  // Guest cards keep their header Manage pill — they don't have this
+  // state machine because guests don't fire /finalize themselves.
+  const missingMealCount = useMemo(
+    () => rows.filter((r) => !r.dinner_choice).length,
+    [rows]
+  );
+  const showSelectMealsCta = !guest && !isFinalized && missingMealCount > 0;
+  const showFinalizeCta = !guest && !isFinalized && missingMealCount === 0 && rows.length > 0;
+  const showViewCta = !guest && isFinalized;
 
   return (
     <article
@@ -142,13 +161,20 @@ export default function TicketCard({
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <button
-            onClick={handlePrimary}
-            data-testid={guest ? 'ticket-manage' : 'ticket-view'}
-            style={primaryPill}
-          >
-            {guest ? 'Manage' : 'View'}
-          </button>
+          {/* Phase 5.3 — the View/Manage pill that lived in the header
+              has moved into the bottom CTA region (see below). For guest
+              tickets we keep the Manage pill since guests don't have a
+              meal-pick → finalize → view flow; their entry point stays
+              header-level. */}
+          {guest && (
+            <button
+              onClick={handlePrimary}
+              data-testid="ticket-manage"
+              style={primaryPill}
+            >
+              Manage
+            </button>
+          )}
           <button
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
@@ -206,6 +232,110 @@ export default function TicketCard({
               }}
             >
               + Invite a guest to these seats
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Phase 5.3 — state-aware CTA always visible (whether the card
+          is collapsed or expanded). The user shouldn't have to crack
+          open the seat list to know what to do next. Three states:
+            missingMeals      → indigo "Select meals"
+            readyToFinalize   → red "Finalize seats" + QR subtext
+            isFinalized       → indigo "View ticket"
+          Each only appears for sponsor cards (guest cards keep their
+          header Manage pill). */}
+      {(showSelectMealsCta || showFinalizeCta || showViewCta) && (
+        <div
+          style={{
+            padding: '0 16px 14px',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {showSelectMealsCta && (
+            <button
+              onClick={() => onSelectMeals && onSelectMeals(ticket)}
+              data-testid="ticket-select-meals"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: 99,
+                background: 'linear-gradient(135deg,#a8b1ff,#6f75d8)',
+                color: BRAND.navyDeep,
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: 0.2,
+                textAlign: 'center',
+              }}
+            >
+              Select meals
+              {missingMealCount < rows.length && (
+                <span style={{ opacity: 0.7, fontWeight: 600, marginLeft: 6 }}>
+                  · {missingMealCount} left
+                </span>
+              )}
+            </button>
+          )}
+          {showFinalizeCta && (
+            <>
+              <button
+                onClick={() => onFinalizeFromCard && onFinalizeFromCard(ticket)}
+                data-testid="ticket-finalize"
+                style={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                  width: '100%',
+                  padding: '16px 18px',
+                  borderRadius: 14,
+                  background: 'linear-gradient(135deg,#d72846,#b32d4e)',
+                  color: '#fff',
+                  fontSize: 17,
+                  fontWeight: 800,
+                  letterSpacing: 0.2,
+                  textAlign: 'center',
+                  boxShadow: '0 8px 22px -10px rgba(215,40,70,0.6)',
+                }}
+              >
+                Finalize seats
+              </button>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontSize: 11,
+                  color: 'var(--mute)',
+                  textAlign: 'center',
+                  fontStyle: 'italic',
+                }}
+              >
+                Send me my QR code
+              </div>
+            </>
+          )}
+          {showViewCta && onViewTicket && (
+            <button
+              onClick={() => onViewTicket(ticket)}
+              data-testid="ticket-view"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: 99,
+                background: 'linear-gradient(135deg,#a8b1ff,#6f75d8)',
+                color: BRAND.navyDeep,
+                fontSize: 14,
+                fontWeight: 800,
+                letterSpacing: 0.2,
+                textAlign: 'center',
+              }}
+            >
+              View ticket
             </button>
           )}
         </div>
