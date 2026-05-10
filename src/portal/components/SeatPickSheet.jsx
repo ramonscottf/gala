@@ -619,7 +619,7 @@ export default function SeatPickSheet({
             letterSpacing: -0.2,
           }}
         >
-          Pick seats
+          Select your movie
         </div>
         <div
           style={{
@@ -789,8 +789,13 @@ export default function SeatPickSheet({
         </button>
       )}
 
-      {/* Early/Late + Auditorium on a single row — ⅔ + ⅓ per spec. */}
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Time + Auditorium row.
+          Phase 5.6 — times are the primary selectors; auditorium is
+          now a visually-demoted chip (single option) or a small select
+          (multiple options) inline to the right. The previous design
+          read like a third time-slot. Times are shorter to bring the
+          auditorium chip flush with their height. */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
         <div
           style={{
             flex: 2,
@@ -809,7 +814,7 @@ export default function SeatPickSheet({
                 onClick={() => setShowingNumber(s.number)}
                 style={{
                   flex: 1,
-                  padding: '8px 10px',
+                  padding: '6px 10px',
                   background: active ? BRAND.gradient : 'transparent',
                   border: 0,
                   borderRadius: 7,
@@ -838,32 +843,84 @@ export default function SeatPickSheet({
             );
           })}
         </div>
-        <select
-          aria-label="Auditorium"
-          value={theaterId || ''}
-          onChange={(e) => setTheaterId(Number(e.target.value))}
-          style={{
-            flex: 1,
-            padding: '8px 10px',
-            borderRadius: 10,
-            background: 'rgba(255,255,255,0.06)',
-            border: `1px solid ${BRAND.rule}`,
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: 600,
-            outline: 'none',
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            minWidth: 0,
-          }}
-        >
-          {theaterChoices.map((c) => (
-            <option key={c.theaterId} value={c.theaterId} style={{ color: BRAND.ink }}>
-              {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`} · {c.format}
-            </option>
-          ))}
-        </select>
+        {/* Auditorium slot — three-state render:
+              - 0 choices: hide (defensive; shouldn't happen)
+              - 1 choice: informational chip (non-tappable label)
+              - >1 choices: native select demoted with a small caret
+                indicator so it reads as a control, not a primary pill. */}
+        {theaterChoices.length === 1 ? (
+          <div
+            data-testid="auditorium-chip-static"
+            aria-label="Auditorium"
+            style={{
+              flex: 1,
+              padding: '6px 10px',
+              borderRadius: 10,
+              background: 'transparent',
+              border: `1px dashed ${BRAND.rule}`,
+              color: 'rgba(255,255,255,0.72)',
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: 0.4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              minWidth: 0,
+              textTransform: 'uppercase',
+              gap: 1,
+            }}
+          >
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>
+              Auditorium
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.85)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%',
+              }}
+            >
+              {(theatersById[theaterId]?.name || `Theater ${theaterId}`).replace(/^Auditorium\s+/i, '')}
+              {theaterMeta?.format ? ` · ${theaterMeta.format}` : ''}
+            </span>
+          </div>
+        ) : theaterChoices.length > 1 ? (
+          <select
+            aria-label="Auditorium"
+            value={theaterId || ''}
+            onChange={(e) => setTheaterId(Number(e.target.value))}
+            style={{
+              flex: 1,
+              padding: '6px 22px 6px 10px',
+              borderRadius: 10,
+              background:
+                'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+              border: `1px solid ${BRAND.rule}`,
+              color: 'rgba(255,255,255,0.85)',
+              cursor: 'pointer',
+              fontSize: 11,
+              fontWeight: 600,
+              outline: 'none',
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              minWidth: 0,
+              backgroundImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.55)' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 8px center',
+            }}
+          >
+            {theaterChoices.map((c) => (
+              <option key={c.theaterId} value={c.theaterId} style={{ color: BRAND.ink }}>
+                {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`} · {c.format}
+              </option>
+            ))}
+          </select>
+        ) : null}
       </div>
 
       {seatTypesPresent.length > 0 && (
