@@ -23,7 +23,6 @@ import { useFinalize } from '../hooks/useFinalize.js';
 import { useTheme } from '../hooks/useTheme.js';
 import ConfirmationScreen from './ConfirmationScreen.jsx';
 import SettingsSheet from './SettingsSheet.jsx';
-import DinnerPicker, { dinnerLabel } from './components/DinnerPicker.jsx';
 import NightOfContent from './components/NightOfContent.jsx';
 // Phase 1.15 — adopt PR #56 architecture. Three purpose-built sheets
 // replace the Phase 1.14 Step2Pick-export overlay:
@@ -33,15 +32,11 @@ import NightOfContent from './components/NightOfContent.jsx';
 // Step2Pick is no longer imported here; the wizard still uses it
 // internally for back-compat with email deep links.
 import SeatPickSheet from './components/SeatPickSheet.jsx';
-import PostPickSheet from './components/PostPickSheet.jsx';
 import PostPickOverview from './components/PostPickOverview.jsx';
-import WhichSeatsPicker from './components/WhichSeatsPicker.jsx';
 import CompletionCelebration from './components/CompletionCelebration.jsx';
-import AssignTheseSheet from './components/AssignTheseSheet.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
 import TicketsTabV2 from './components/TicketsTabV2.jsx';
 import HomeTabV2 from './components/HomeTabV2.jsx';
-import HandBlockSheet from './components/HandBlockSheet.jsx';
 import DinnerSheet from './components/DinnerSheet.jsx';
 import TicketDetailSheet from './components/TicketDetailSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
@@ -700,527 +695,6 @@ const TextMySeatsButton = ({ token, apiBase, sponsorPhone }) => {
   );
 };
 
-// ── Home tab ──────────────────────────────────────────────────────────
-
-const HomeTab = ({ data, onPlaceSeats, onInvite, onOpenTicket, onAssign, onMovieDetail, onManageTickets, token, apiBase }) => {
-  const { tier, name, subline, blockSize, tickets, lineup, daysOut, logoUrl, seatMath, isDelegation } = data;
-  const { isLight } = useTheme();
-  const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
-  const assignedCount = tickets
-    .filter((t) => t.guestName || t.localGuestId)
-    .reduce((n, t) => n + t.seats.length, 0);
-  // personalQuota — sponsor's directly-placeable cap (blockSize minus seats
-  // delegated to a sub-delegation). Server pick.js:240 enforces this; if the
-  // home shows "9 still to place" using blockSize while the sponsor has 5
-  // seats delegated away, they hit the seat picker's "you've already placed
-  // your full N" cap before reaching that promised number.
-  const delegatedAway = seatMath?.delegated ?? 0;
-  const personalQuota = Math.max(0, blockSize - delegatedAway);
-  const openCount = Math.max(0, personalQuota - placed);
-  const firstUnassigned = tickets.find((t) => !t.guestName && !t.localGuestId);
-  // Invite path is only available to top-level sponsors with seats left to
-  // give. Sub-delegations (isDelegation=true) can't sub-delegate further;
-  // GroupTab is hidden for them in TabBar, mirror that policy on home.
-  const canInviteGuest = !isDelegation && (seatMath?.available ?? 0) > 0 && typeof onInvite === 'function';
-
-  return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
-      <TicketHero
-        tier={tier}
-        name={name}
-        subline={subline}
-        blockSize={blockSize}
-        placed={placed}
-        assigned={assignedCount}
-        openCount={openCount}
-        logoUrl={logoUrl}
-        daysOut={daysOut}
-        isDelegation={isDelegation}
-        inviterCompany={data.company}
-      />
-
-      <div
-        style={{
-          margin: '14px 18px 0',
-          padding: '12px 14px',
-          borderRadius: 14,
-          background: 'var(--surface)',
-          border: `1px solid var(--rule)`,
-          boxShadow:
-            '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 10,
-            background: openCount > 0 ? BRAND.gradient : 'rgba(127,207,160,0.18)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: openCount > 0 ? '#fff' : '#7fcfa0',
-            flexShrink: 0,
-            boxShadow: openCount > 0 ? '0 4px 12px rgba(215,40,70,0.35)' : 'none',
-          }}
-        >
-          <Icon name={openCount > 0 ? 'seat' : 'check'} size={18} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
-            {openCount > 0 ? `${openCount} seats still to place` : `All ${personalQuota} seats placed`}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
-            {placed} placed · {assignedCount} with guests
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {firstUnassigned && (
-            <button
-              onClick={() => {
-                // HAPTIC: light — Assign opens TicketManage on the first
-                // un-assigned ticket so the user can pick a guest from the
-                // list (read-only API guests + local additions).
-                onAssign(firstUnassigned);
-              }}
-              style={miniBtn('ghost', isLight)}
-            >
-              Assign
-            </button>
-          )}
-          <button
-            onClick={() => {
-              // HAPTIC: light — Phase 2 wires Capacitor Haptics here.
-              onPlaceSeats();
-            }}
-            data-testid="cta-place-seats"
-            style={miniBtn('primary', isLight)}
-          >
-            {openCount > 0 ? 'Place' : 'Edit'}
-          </button>
-        </div>
-      </div>
-
-      {/* "Invite a guest" — second home action. Sponsors can hand a portion
-          of their block to a guest who'll then pick their own seats via a
-          personal portal. Mirrors the GROUP tab's invite path so the
-          sponsor doesn't have to find the tab to start the flow. Hidden
-          for sub-delegations and when there are no seats left to give. */}
-      {canInviteGuest && (
-        <div
-          style={{
-            margin: '10px 18px 0',
-            padding: '12px 14px',
-            borderRadius: 14,
-            background: 'var(--surface)',
-            border: `1px solid var(--rule)`,
-            boxShadow:
-              '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              background:
-                'linear-gradient(135deg, rgba(168,177,255,0.95), rgba(127,124,222,0.95))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(127,124,222,0.32)',
-            }}
-          >
-            <Icon name="users" size={18} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
-              Invite a guest
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
-              {(seatMath?.available ?? 0)} of your seats can go to a guest
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              onClick={() => {
-                // HAPTIC: light — opens the same InviteSheet the GROUP tab uses.
-                onInvite();
-              }}
-              data-testid="cta-invite-guest"
-              style={miniBtn('primary', isLight)}
-            >
-              Invite
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* "Text my seats to me" — sponsor-only quick action. Sends the
-          seats summary as SMS to the phone on file. Uses the existing
-          /api/gala/portal/[token]/sms endpoint. Hidden if no seats
-          are placed yet (nothing to send) AND hidden for delegation
-          portals — the server returns 403 for non-sponsors but the UI
-          shouldn't even surface a button that can't fire. */}
-      {placed > 0 && token && !isDelegation && (
-        <TextMySeatsButton token={token} apiBase={apiBase} sponsorPhone={data.sponsorPhone} />
-      )}
-
-      {/* Phase 1.16 — Manage tickets. Surfaces the Tickets tab on Home
-          so repeat visitors immediately see how to view per-seat details
-          (guest names, dinners, QR). The bottom tab bar already exposes
-          Tickets but it doesn't read as the action you take after
-          placing — this button bridges that. Hidden when nothing is
-          placed yet (Place CTA above is the right action then). */}
-      {placed > 0 && onManageTickets && (
-        <div style={{ margin: '12px 18px 0' }}>
-          <button
-            onClick={onManageTickets}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              boxSizing: 'border-box',
-              width: '100%',
-              padding: '12px 14px',
-              borderRadius: 14,
-              background: 'var(--surface)',
-              border: `1px solid var(--rule)`,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              boxShadow:
-                '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
-            }}
-          >
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                background: 'rgba(168,177,255,0.16)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: BRAND.indigoLight,
-                flexShrink: 0,
-              }}
-            >
-              <Icon name="ticket" size={18} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-on-ground)' }}>
-                Manage tickets
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 1 }}>
-                View seats, assign guests, choose dinners
-              </div>
-            </div>
-            <Icon name="chev" size={14} />
-          </button>
-        </div>
-      )}
-
-      <div
-        style={{
-          padding: '24px 22px 0',
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: 24,
-            fontWeight: 700,
-            margin: 0,
-            letterSpacing: -0.4,
-          }}
-        >
-          Your tickets
-        </h2>
-        <div
-          style={{
-            fontSize: 11,
-            color: 'var(--mute)',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {placed} <span style={{ opacity: 0.5 }}>/ {blockSize}</span>
-        </div>
-      </div>
-
-      <div style={{ margin: '12px 18px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {tickets.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => {
-              // HAPTIC: light — ticket card tap.
-              onOpenTicket(t);
-            }}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              padding: '12px 14px',
-              borderRadius: 14,
-              background: 'var(--surface)',
-              border: `1px solid ${
-                t.guestName ? 'var(--rule)' : 'rgba(244,185,66,0.22)'
-              }`,
-              boxShadow:
-                '0 4px 12px -8px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.02) inset',
-              display: 'grid',
-              gridTemplateColumns: 'auto 1fr auto',
-              gap: 14,
-              alignItems: 'center',
-            }}
-          >
-            {t.guestName ? (
-              <Avatar name={t.guestName} size={44} />
-            ) : (
-              <PosterMini
-                poster={t.posterUrl}
-                color={t.color}
-                label={t.movieShort}
-                size={36}
-                showLabel={false}
-              />
-            )}
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {t.guestName && <Icon name="users" size={12} stroke={2} />}
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: 'var(--ink-on-ground)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {t.guestName || t.movieShort}
-                </div>
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: 'var(--mute)',
-                  marginTop: 2,
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {t.showTime ? `${t.showTime} · ${t.theaterName}` : t.theaterName}
-              </div>
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
-                {t.seats.slice(0, 7).map((s) => (
-                  <span
-                    key={s}
-                    style={{
-                      padding: '2px 6px',
-                      borderRadius: 3,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      background: 'rgba(168,177,255,0.16)',
-                      color: 'var(--accent-italic)',
-                      fontVariantNumeric: 'tabular-nums',
-                      letterSpacing: 0.3,
-                    }}
-                  >
-                    {s.replace('-', '')}
-                  </span>
-                ))}
-                {t.seats.length > 7 && (
-                  <span style={{ fontSize: 10, color: 'var(--mute)', alignSelf: 'center' }}>
-                    +{t.seats.length - 7}
-                  </span>
-                )}
-              </div>
-            </div>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: 'var(--mute)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-              }}
-            >
-              {t.guestName ? 'View' : 'Edit'} <Icon name="chev" size={12} />
-            </span>
-          </button>
-        ))}
-
-        {openCount > 0 && (
-          <button
-            onClick={() => {
-              // HAPTIC: medium — primary "place seats" CTA.
-              onPlaceSeats();
-            }}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              marginTop: 4,
-              padding: '14px',
-              borderRadius: 14,
-              border: `1.5px dashed rgba(244,185,66,0.35)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              background: 'rgba(244,185,66,0.06)',
-              color: 'var(--accent-text)',
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            <Icon name="plus" size={14} /> Place {openCount} more seat
-            {openCount === 1 ? '' : 's'}
-          </button>
-        )}
-      </div>
-
-      <div style={{ padding: '28px 22px 0' }}>
-        <h2
-          style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: 24,
-            fontWeight: 700,
-            margin: 0,
-            letterSpacing: -0.4,
-          }}
-        >
-          The lineup
-        </h2>
-        <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>
-          {lineup.length} film{lineup.length === 1 ? '' : 's'} · two showtimes · select one or split
-          your block
-        </div>
-      </div>
-      <div
-        data-testid="mobile-lineup-grid"
-        style={{
-          marginTop: 16,
-          padding: '0 22px 8px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: '18px 14px',
-        }}
-      >
-        {lineup.map((m) => {
-          const rtBadge = highestRottenScore(m);
-          return (
-            <button
-              key={m.id}
-              data-testid="mobile-lineup-card"
-              onClick={() => onMovieDetail && onMovieDetail(m)}
-              style={{
-                all: 'unset',
-                boxSizing: 'border-box',
-                cursor: 'pointer',
-                minWidth: 0,
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              <div
-                data-testid="mobile-lineup-poster"
-                style={{
-                  width: '100%',
-                  aspectRatio: '2 / 3',
-                  borderRadius: 10,
-                  background: m.posterUrl
-                    ? `url(${m.posterUrl}) center/cover`
-                    : `linear-gradient(160deg, ${m.color || BRAND.navyMid}, ${BRAND.navyDeep})`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-end',
-                  padding: 10,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: '0 12px 28px rgba(0,0,0,0.24)',
-                }}
-              >
-                {!m.posterUrl && (
-                  <div
-                    style={{
-                      fontFamily: FONT_DISPLAY,
-                      fontStyle: 'italic',
-                      fontSize: 18,
-                      fontWeight: 600,
-                      color: '#fff',
-                      lineHeight: 1.05,
-                    }}
-                  >
-                    {m.short || m.title}
-                  </div>
-                )}
-                {rtBadge && (
-                  <div
-                    data-testid="mobile-lineup-score"
-                    style={{
-                      position: 'absolute',
-                      top: 8,
-                      left: 8,
-                      background: 'rgba(13,15,36,0.85)',
-                      backdropFilter: 'blur(6px)',
-                      WebkitBackdropFilter: 'blur(6px)',
-                      color: '#ff8a78',
-                      fontSize: 10,
-                      fontWeight: 800,
-                      padding: '3px 8px',
-                      borderRadius: 99,
-                      fontVariantNumeric: 'tabular-nums',
-                      letterSpacing: 0.2,
-                      border: '1px solid rgba(255,255,255,0.14)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <span aria-hidden="true" style={{ fontSize: 11, lineHeight: 1 }}>🍅</span>
-                    {rtBadge}
-                  </div>
-                )}
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: 'var(--ink-on-ground)',
-                  marginTop: 8,
-                  lineHeight: 1.2,
-                  minHeight: '2.4em',
-                }}
-              >
-                {m.title}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: 'var(--mute)',
-                  marginTop: 2,
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {m.rating} · {m.runtime}m
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 // ── Tickets tab ───────────────────────────────────────────────────────
 
 export const seatLabel = (seat) => String(seat || '').replace('-', '');
@@ -1288,253 +762,6 @@ export const TicketQrCard = ({ token, apiBase = '' }) => {
         <img src={qrSrc} alt="Check-in QR code" style={{ width: '100%', height: '100%', display: 'block' }} />
       </div>
     </section>
-  );
-};
-
-export const TicketCard = ({ ticket, onOpenTicket, token, apiBase, onRefresh, guest = false, onOpenGuest }) => {
-  const [open, setOpen] = useState(false);
-  const { isLight } = useTheme();
-  const actionButtonStyle = {
-    ...miniBtn('ghost', isLight),
-    border: `1px solid var(--rule)`,
-    background: 'rgba(168,177,255,0.14)',
-    color: 'var(--ink-on-ground)',
-  };
-  const rows = ticket.assignmentRows || [];
-  const ownerNames = [...new Set(rows.map((row) => assignmentOwner(row, ticket.delegationName || ticket.guestName)).filter(Boolean))];
-  const ownerLine = guest
-    ? `${ticket.delegationName || 'Guest'} guest seats`
-    : ownerNames.length
-      ? ownerNames.join(', ')
-      : ticket.guestName || ticket.delegationName || 'No guest assigned';
-
-  return (
-    <article
-      data-testid={guest ? 'guest-ticket-card' : 'ticket-card'}
-      style={{
-        borderRadius: 14,
-        background: 'var(--surface)',
-        border: `1px solid var(--rule)`,
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          padding: 14,
-          display: 'grid',
-          gridTemplateColumns: 'auto minmax(0, 1fr) auto',
-          gap: 12,
-          alignItems: 'center',
-        }}
-      >
-        <PosterMini poster={ticket.posterUrl} color={ticket.color} label={ticket.movieShort} size={42} showLabel={false} />
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.5, color: guest ? 'var(--accent-italic)' : 'var(--accent-text)', textTransform: 'uppercase' }}>
-            {guest ? 'Guest ticket' : ticket.showLabel || 'Showing'} · {ticket.showTime}
-          </div>
-          <div style={{ marginTop: 3, fontSize: 15, fontWeight: 800, color: 'var(--ink-on-ground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {ticket.movieTitle}
-          </div>
-          <div style={{ marginTop: 4, fontSize: 12, color: 'var(--mute)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {ownerLine}
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {!guest && (
-            <button onClick={() => onOpenTicket(ticket)} style={actionButtonStyle}>
-              Manage
-            </button>
-          )}
-          {guest && onOpenGuest && (
-            <button onClick={onOpenGuest} style={actionButtonStyle}>
-              View
-            </button>
-          )}
-          <button
-            data-testid="ticket-card-toggle"
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 99,
-              border: `1px solid var(--rule)`,
-              background: 'rgba(255,255,255,0.05)',
-              color: 'var(--ink-on-ground)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transform: open ? 'rotate(90deg)' : 'none',
-              transition: 'transform 160ms ease',
-            }}
-          >
-            <Icon name="chev" size={15} />
-          </button>
-        </div>
-      </div>
-
-      {open && (
-        <div
-          data-testid="ticket-card-details"
-          style={{
-            padding: '0 14px 14px',
-            display: 'grid',
-            gap: 8,
-          }}
-        >
-          {rows.map((row) => (
-            <div
-              key={row.seat_id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '48px minmax(0, 1fr)',
-                gap: 10,
-                alignItems: 'center',
-                padding: 10,
-                borderRadius: 10,
-                border: `1px solid var(--rule)`,
-                background: 'rgba(0,0,0,0.14)',
-              }}
-            >
-              <span
-                style={{
-                  padding: '6px 8px',
-                  borderRadius: 6,
-                  background: 'rgba(168,177,255,0.18)',
-                  color: 'var(--accent-italic)',
-                  fontSize: 11,
-                  fontWeight: 900,
-                  textAlign: 'center',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {seatLabel(row.seat_id)}
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-                  <strong style={{ minWidth: 0, color: 'var(--ink-on-ground)', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {row.ownerKind === 'guest' ? 'Guest: ' : 'Seat holder: '}
-                    {assignmentOwner(row, ticket.delegationName || ticket.guestName)}
-                  </strong>
-                  <span style={{ color: row.ownerKind === 'guest' ? 'var(--accent-italic)' : 'var(--mute)', fontSize: 10, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase' }}>
-                    {row.ownerKind === 'guest' ? 'Guest' : 'Yours'}
-                  </span>
-                </div>
-                <div style={{ marginTop: 7 }}>
-                  {/* Dinner picker visible whenever:
-                      - the seat is finalized (status === 'claimed')
-                      - AND either the row is the sponsor's own
-                        (managedBySponsor !== false) OR this card is
-                        the "Guest seats" section (guest === true) where
-                        the host is overriding on the delegate's behalf.
-                      Server allows sponsor to set_dinner on any seat in
-                      their block (pick.js:115); this surfaces the
-                      picker UI to match. Delegates see the picker only
-                      on their own seats — they don't have a guest seats
-                      section in their portal. */}
-                  {row.status === 'claimed' && (row.managedBySponsor !== false || guest) ? (
-                    <DinnerPicker
-                      assignment={row}
-                      token={token}
-                      apiBase={apiBase}
-                      size="sm"
-                      onChange={() => onRefresh && onRefresh()}
-                    />
-                  ) : (
-                    <span style={{ color: 'var(--mute)', fontSize: 12 }}>
-                      Dinner: {dinnerLabel(row.dinner_choice) || 'not selected yet'}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </article>
-  );
-};
-
-export const TicketsTab = ({ data, onOpenTicket, onPlaceSeats, token, apiBase, onRefresh, onOpenDelegation }) => {
-  const { tickets, guestTickets = [], delegations = [], blockSize, seatMath } = data;
-  const placed = tickets.reduce((n, t) => n + t.seats.length, 0);
-  const guestPlaced = guestTickets.reduce((n, t) => n + t.seats.length, 0);
-  // personalQuota — see HomeTab/Welcome notes. Sponsors with sub-delegations
-  // can only place (blockSize - delegated) themselves.
-  const personalQuota = Math.max(0, blockSize - (seatMath?.delegated ?? 0));
-
-  const delegationById = Object.fromEntries(delegations.map((d) => [d.id, d]));
-
-  return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
-      <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 0 22px' }}>
-        <SectionEyebrow>Tickets</SectionEyebrow>
-        <h1
-          style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: 36,
-            fontWeight: 700,
-            margin: '10px 0 6px',
-            letterSpacing: -0.6,
-            lineHeight: 1,
-          }}
-        >
-          All <i style={{ color: 'var(--accent-text)', fontWeight: 500 }}>{blockSize} seats.</i>
-        </h1>
-        <div style={{ fontSize: 13, color: 'var(--mute)' }}>
-          {placed} yours · {guestPlaced} guest seats · {Math.max(0, personalQuota - placed)} still open
-        </div>
-      </div>
-
-      <TicketQrCard token={token} apiBase={apiBase} />
-
-      <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {tickets.map((ticket) => (
-          <TicketCard
-            key={ticket.id}
-            ticket={ticket}
-            onOpenTicket={onOpenTicket}
-            token={token}
-            apiBase={apiBase}
-            onRefresh={onRefresh}
-          />
-        ))}
-      </div>
-
-      {guestTickets.length > 0 && (
-        <div style={{ padding: '18px 18px 0' }}>
-          <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.5, color: 'var(--accent-text)', textTransform: 'uppercase', marginBottom: 10 }}>
-            Guest seats
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {guestTickets.map((ticket) => (
-              <TicketCard
-                key={ticket.id}
-                ticket={ticket}
-                guest
-                token={token}
-                apiBase={apiBase}
-                onRefresh={onRefresh}
-                onOpenGuest={() => onOpenDelegation?.(delegationById[ticket.delegationId])}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div style={{ padding: '18px 18px 0' }}>
-        <Btn
-          kind="secondary"
-          size="md"
-          full
-          onClick={onPlaceSeats}
-          icon={<Icon name="plus" size={14} />}
-        >
-          Add another showing
-        </Btn>
-      </div>
-    </div>
   );
 };
 
@@ -1618,171 +845,6 @@ const LEGACY_STATUS_MAP = {
   pending: DELEGATION_STATUS.invited,
   active: DELEGATION_STATUS.opened,
   finalized: DELEGATION_STATUS.confirmed,
-};
-
-export const GroupTab = ({ data, onInvite, onOpenDelegation }) => {
-  const { delegations, seatMath, blockSize } = data;
-  const totalAllocated = delegations.reduce((n, d) => n + (d.seatsAllocated || 0), 0);
-  const totalPlaced = delegations.reduce((n, d) => n + (d.seatsPlaced || 0), 0);
-  const available = seatMath?.available ?? Math.max(0, blockSize - totalAllocated);
-
-  return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
-      <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 0 22px' }}>
-        <SectionEyebrow>Guests</SectionEyebrow>
-        <h1
-          style={{
-            fontFamily: FONT_DISPLAY,
-            fontSize: 36,
-            fontWeight: 700,
-            margin: '10px 0 6px',
-            letterSpacing: -0.6,
-            lineHeight: 1,
-          }}
-        >
-          Your <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>guests.</i>
-        </h1>
-        <div style={{ fontSize: 13, color: 'var(--mute)' }}>
-          {delegations.length} invited · {totalPlaced} of {totalAllocated} seats placed
-          {available > 0 && (
-            <span style={{ color: 'var(--accent-italic)' }}> · {available} still yours to give</span>
-          )}
-        </div>
-      </div>
-
-      <div style={{ padding: '18px 18px 0' }}>
-        <button
-          onClick={onInvite}
-          disabled={available <= 0}
-          style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: 14,
-            border: `1.5px dashed ${available > 0 ? 'rgba(168,177,255,0.4)' : BRAND.rule}`,
-            background: available > 0 ? 'rgba(168,177,255,0.06)' : 'transparent',
-            color: available > 0 ? BRAND.indigoLight : 'var(--mute)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: available > 0 ? 'pointer' : 'not-allowed',
-          }}
-        >
-          <Icon name="plus" size={16} />{' '}
-          {available > 0 ? 'Invite a guest' : 'No seats left to give'}
-        </button>
-      </div>
-
-      <div
-        style={{
-          padding: '14px 18px 0',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-        }}
-      >
-        {delegations.map((d) => (
-          <button
-            key={d.id}
-            onClick={() => onOpenDelegation(d)}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              padding: '14px',
-              borderRadius: 14,
-              background: 'var(--surface)',
-              border: `1px solid var(--rule)`,
-              display: 'grid',
-              gridTemplateColumns: 'auto 1fr auto',
-              gap: 14,
-              alignItems: 'center',
-            }}
-          >
-            <Avatar name={d.delegateName} size={44} />
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: 'var(--ink-on-ground)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {d.delegateName}
-              </div>
-              {(d.phone || d.email) && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: 'var(--mute)',
-                    marginTop: 2,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {d.phone || d.email}
-                </div>
-              )}
-              <div
-                style={{
-                  fontSize: 11,
-                  color: 'var(--accent-italic)',
-                  marginTop: 4,
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {d.seatsPlaced} of {d.seatsAllocated} placed
-              </div>
-              {d.assignments?.length > 0 && (
-                <div style={{ marginTop: 7, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                  {d.assignments.map((a) => (
-                    <span
-                      key={`${a.theater_id}-${a.seat_id}`}
-                      style={{
-                        padding: '4px 7px',
-                        borderRadius: 5,
-                        background: 'rgba(168,177,255,0.16)',
-                        color: 'var(--accent-italic)',
-                        fontSize: 10,
-                        fontWeight: 800,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {a.movieShort || 'Seat'} · {seatLabel(a.seat_id)}
-                      {a.dinner_choice ? ` · ${dinnerLabel(a.dinner_choice)}` : ''}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <DelegationStatusPill delegation={d} />
-          </button>
-        ))}
-        {delegations.length === 0 && (
-          <div
-            style={{
-              padding: '24px 18px',
-              borderRadius: 14,
-              border: `1px dashed var(--rule)`,
-              fontSize: 13,
-              color: 'var(--mute)',
-              fontStyle: 'italic',
-              textAlign: 'center',
-              lineHeight: 1.55,
-            }}
-          >
-            No guests invited yet. Tap "Invite a guest" above and we'll text + email them
-            their own link to select seats.
-          </div>
-        )}
-      </div>
-    </div>
-  );
 };
 
 // ── DelegateManage sheet body ─────────────────────────────────────────
@@ -3423,15 +2485,6 @@ export default function Mobile({
   // seatPicker: { seat, ticket } | null — opens SeatAssignSheet.
   const [seatPicker, setSeatPicker] = useState(null);
 
-  // V2 IA — opt-in via ?v2=1 URL param. When enabled:
-  //   - Bottom nav drops the GUESTS tab (4 → 3 tabs)
-  //   - Tickets tab uses TicketsTabV2 (lock banner + V1 cards + folded
-  //     Guests section with delegation cards)
-  // V1 surfaces stay mounted in parallel so we can flip back instantly
-  // by removing ?v2=1 from the URL. Removing V1 happens after V2 is
-  // verified against real data.
-  const v2Enabled = searchParams.get('v2') === '1';
-
   // Phase 1.15 — adopted PR #56 architecture. The four states below
   // drive the SeatPick → PostPick → AssignThese → DinnerPicker chain.
   // SeatPickSheet (single source of truth for seat picking) replaces
@@ -3450,7 +2503,6 @@ export default function Mobile({
     if (openSheetOnMount) setSeatPickOpen(true);
   }, [openSheetOnMount]);
   const [postPick, setPostPick] = useState(null);
-  const [assignThese, setAssignThese] = useState(null);
   const [dinnerOpen, setDinnerOpen] = useState(false);
   // V2 R11 — post-pick state machine. The user lands on
   // PostPickOverview after seat selection, taps Invite or Pick meals,
@@ -3463,13 +2515,6 @@ export default function Mobile({
   // we return to overview automatically.
   const [postPickStep, setPostPickStep] = useState('overview');
   const [postPickInviteSeats, setPostPickInviteSeats] = useState(null); // string[] | null
-  // V2 IA — HandBlockSheet state. Mirrors postPick (same shape: the
-  // just-placed seats payload) and only opens when V2 is enabled. The
-  // sheet itself does the bulk /assign fan-out and routes "+ New guest"
-  // back through setInviteOpen with seat-binding so DelegateForm chains
-  // /assign post-create just like AssignTheseSheet's "Invite a new
-  // guest" affordance.
-  const [handBlock, setHandBlock] = useState(null);
   // V2 R3 — per-seat sheets driven by TicketCardV2 row buttons. R4
   // collapsed the per-seat invite into the canonical DelegateForm via
   // setInviteOpen({theaterId, seat}); only the dinner sheet remains
@@ -3627,94 +2672,53 @@ export default function Mobile({
       <FloatingAvatar name={data.name} onTap={() => setSettingsOpen(true)} />
 
       {tab === 'home' && (
-        v2Enabled ? (
-          <HomeTabV2
-            data={{ ...data, tickets: ticketsWithLocalGuests }}
-            onPlaceSeats={goSeats}
-            onInvite={openInvite}
-            onAssign={openTicket}
-            onMovieDetail={setMovieDetail}
-            onManageTickets={() => setTab('tickets')}
-            token={token}
-            apiBase={config.apiBase}
-          />
-        ) : (
-          <HomeTab
-            data={{ ...data, tickets: ticketsWithLocalGuests }}
-            onPlaceSeats={goSeats}
-            onInvite={openInvite}
-            onOpenTicket={openTicket}
-            onAssign={openTicket}
-            onMovieDetail={setMovieDetail}
-            onManageTickets={() => setTab('tickets')}
-            token={token}
-            apiBase={config.apiBase}
-          />
-        )
+        <HomeTabV2
+          data={{ ...data, tickets: ticketsWithLocalGuests }}
+          onPlaceSeats={goSeats}
+          onInvite={openInvite}
+          onAssign={openTicket}
+          onMovieDetail={setMovieDetail}
+          onManageTickets={() => setTab('tickets')}
+          token={token}
+          apiBase={config.apiBase}
+        />
       )}
       {tab === 'tickets' && (
-        v2Enabled ? (
-          <TicketsTabV2
-            data={{ ...data, tickets: ticketsWithLocalGuests }}
-            daysOut={data.daysOut}
-            token={token}
-            apiBase={config.apiBase}
-            onRefresh={onRefresh}
-            onPlaceSeats={goSeats}
-            onOpenTicket={openTicket}
-            onOpenDelegation={(d) => setDelegationSheet(d)}
-            onInviteGuest={openInvite}
-            // V2 R5 — per-group callbacks
-            onViewTicket={(ticket) => setTicketDetail(ticket)}
-            onInviteGroup={(ticket) => {
-              // Hand the whole showing-group to one guest. HandBlockSheet
-              // takes a "placed" payload shape ({theaterId, seatIds[],
-              // R13 — was setHandBlock(...). HandBlockSheet had two
-              // paths (new guest + existing-guest list with +2 affordance)
-              // which the user explicitly removed. Route straight to
-              // DelegateForm in Mode B (seatPills) so group invite is
-              // identical to per-seat invite and post-pick invite —
-              // ONE form, with the seats shown as tappable pills.
-              const seatIds = (ticket.assignmentRows || [])
-                // Only hand off seats the sponsor actually owns; never
-                // re-route a seat already assigned to a different
-                // delegation through this path.
-                .filter((r) => !r.delegation_id)
-                .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
-              if (seatIds.length === 0) return;
-              setInviteOpen({
-                theaterId: ticket.theaterId,
-                seatIds,
-              });
-            }}
-            // V2 R8 — per-row callbacks restored. Dinner pill on a
-            // SeatRow opens DinnerSheet; "+ Invite" on a sponsor-self
-            // SeatRow opens DelegateForm with seat-level binding.
-            onPickDinner={(seat) => setDinnerSheet(seat)}
-            onInviteSeat={(seat) => {
-              setInviteOpen({
-                theaterId: seat.theaterId,
-                seat: `${seat.row_label}-${seat.seat_num}`,
-              });
-            }}
-          />
-        ) : (
-          <TicketsTab
-            data={{ ...data, tickets: ticketsWithLocalGuests }}
-            onOpenTicket={openTicket}
-            onPlaceSeats={goSeats}
-            token={token}
-            apiBase={config.apiBase}
-            onRefresh={onRefresh}
-            onOpenDelegation={(d) => setDelegationSheet(d)}
-          />
-        )
-      )}
-      {tab === 'group' && !v2Enabled && (
-        <GroupTab
-          data={data}
-          onInvite={openInvite}
+        <TicketsTabV2
+          data={{ ...data, tickets: ticketsWithLocalGuests }}
+          daysOut={data.daysOut}
+          token={token}
+          apiBase={config.apiBase}
+          onRefresh={onRefresh}
+          onPlaceSeats={goSeats}
+          onOpenTicket={openTicket}
           onOpenDelegation={(d) => setDelegationSheet(d)}
+          onInviteGuest={openInvite}
+          onViewTicket={(ticket) => setTicketDetail(ticket)}
+          onInviteGroup={(ticket) => {
+            // Group invite — hand the showing-group to one guest via
+            // DelegateForm in Mode B (seatPills). Identical UX to
+            // per-seat invite and post-pick invite — ONE form, seats
+            // rendered as tappable pills.
+            const seatIds = (ticket.assignmentRows || [])
+              // Only hand off seats the sponsor actually owns; never
+              // re-route a seat already assigned to a different
+              // delegation through this path.
+              .filter((r) => !r.delegation_id)
+              .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+            if (seatIds.length === 0) return;
+            setInviteOpen({
+              theaterId: ticket.theaterId,
+              seatIds,
+            });
+          }}
+          onPickDinner={(seat) => setDinnerSheet(seat)}
+          onInviteSeat={(seat) => {
+            setInviteOpen({
+              theaterId: seat.theaterId,
+              seat: `${seat.row_label}-${seat.seat_num}`,
+            });
+          }}
         />
       )}
       {tab === 'night' && <NightTab />}
@@ -3722,13 +2726,9 @@ export default function Mobile({
       <TabBar
         active={tab}
         onChange={setTab}
-        tabs={
-          v2Enabled
-            ? ALL_TABS.filter((t) => t.id !== 'group')
-            : data.isDelegation
-              ? ALL_TABS.filter((t) => t.id !== 'group')
-              : ALL_TABS
-        }
+        // The 'group' tab was V1 only. V2 folded the Guests section
+        // into the Tickets tab, so the standalone tab is gone.
+        tabs={ALL_TABS.filter((t) => t.id !== 'group')}
       />
 
       <Sheet
@@ -3827,22 +2827,13 @@ export default function Mobile({
         )}
       </Sheet>
 
-      {/* V2 R2 reverted to V1's existing sheets (TicketManage,
-          DelegateManage, DelegateForm) — they handle every per-card
-          and per-guest action correctly and the user explicitly asked
-          for the original card-with-dropdown + Manage-invite UX back.
-          The V2 R1 SeatDetailSheet and BulkAssignSheet experiments
-          live on disk but are no longer wired in. They can be removed
-          in a cleanup pass once V2 R2 is verified live. */}
-
-      {/* V2 R3 — per-seat sheets driven by TicketCardV2 row buttons.
+      {/* Per-seat sheets driven by TicketCard row buttons.
           DinnerSheet opens when the user taps a row's dinner pill.
           The "+ Invite" row button routes through setInviteOpen() with
           single-seat binding {theaterId, seat} so the canonical
-          DelegateForm card opens (lockSeats=1) — kept consistent with
-          every other invite path per V2 R4 user feedback. Guest rows
-          route through DelegateManage via setDelegationSheet (already
-          wired in the V1 invite Sheet block above). */}
+          DelegateForm card opens — kept consistent with every other
+          invite path. Guest rows route through DelegateManage via
+          setDelegationSheet. */}
       <Sheet
         open={!!dinnerSheet}
         onClose={() => setDinnerSheet(null)}
@@ -3917,11 +2908,10 @@ export default function Mobile({
         />
       </Sheet>
 
-      {/* Phase 1.15 — Sheet flow adopted from PR #56. SeatPickSheet
-          is the canonical seat-pick surface (forced dark for cinema
-          feel, regardless of system theme). On commit it hands off to
-          PostPickSheet which fans out to AssignThese or DinnerPicker.
-          Done returns to Home. */}
+      {/* SeatPickSheet — the canonical seat-pick surface (forced dark
+          for cinema feel, regardless of system theme). On commit it
+          hands off to PostPickOverview, which routes to invite or
+          dinner picking and ultimately to CompletionCelebration. */}
       <Sheet
         open={seatPickOpen}
         onClose={() => setSeatPickOpen(false)}
@@ -3962,42 +2952,7 @@ export default function Mobile({
               : 'Seats placed'
         }
       >
-        {postPick && !v2Enabled && (
-          <PostPickSheet
-            placed={postPick}
-            missingDinnerCount={
-              (portal?.myAssignments || [])
-                .filter((a) =>
-                  postPick.seatIds?.includes(`${a.row_label}-${a.seat_num}`)
-                )
-                .filter((a) => !a.dinner_choice).length
-            }
-            onAssign={() => setAssignThese(postPick)}
-            onPickDinners={() => setDinnerOpen(true)}
-            onDone={() => {
-              setPostPick(null);
-              setAssignThese(null);
-              setDinnerOpen(false);
-            }}
-            canFinalize={canFinalize}
-            onFinalize={async () => {
-              try {
-                await finalize();
-                setPostPick(null);
-                setAssignThese(null);
-                setDinnerOpen(false);
-              } catch {
-                // useFinalize sets error state; sheet stays open and
-                // PostPickSheet renders the error banner.
-              }
-            }}
-            finalizing={finalizing}
-            error={finalizeError}
-            onClearError={clearFinalizeError}
-            onHandBlock={null}
-          />
-        )}
-        {postPick && v2Enabled && postPickStep === 'overview' && (
+        {postPick && postPickStep === 'overview' && (
           <PostPickOverview
             placed={postPick}
             assignmentRows={(portal?.myAssignments || []).map((a) => ({
@@ -4035,7 +2990,7 @@ export default function Mobile({
             onClearError={clearFinalizeError}
           />
         )}
-        {postPick && v2Enabled && postPickStep === 'inviteForm' && (
+        {postPick && postPickStep === 'inviteForm' && (
           <DelegateForm
             token={token}
             apiBase={config.apiBase}
@@ -4075,7 +3030,7 @@ export default function Mobile({
             }}
           />
         )}
-        {postPick && v2Enabled && postPickStep === 'celebrate' && (
+        {postPick && postPickStep === 'celebrate' && (
           (() => {
             // Build a synthetic ticket from the just-placed block so
             // CompletionCelebration can render it via TicketDetailSheet.
@@ -4117,71 +3072,11 @@ export default function Mobile({
                   setPostPick(null);
                   setPostPickStep('overview');
                   setPostPickInviteSeats(null);
-                  setAssignThese(null);
                   setDinnerOpen(false);
                 }}
               />
             );
           })()
-        )}
-      </Sheet>
-
-      {/* V2 IA — HandBlockSheet. Bulk-assigns all just-placed seats to
-          a single guest. The "+ New guest" path routes through the
-          existing DelegateForm with multi-seat binding so the new
-          delegation gets all the seats in one shot. */}
-      <Sheet
-        open={!!handBlock}
-        onClose={() => setHandBlock(null)}
-        title="Hand to a guest"
-      >
-        {handBlock && (
-          <HandBlockSheet
-            placed={handBlock}
-            delegations={data.delegations || []}
-            token={token}
-            apiBase={config.apiBase}
-            onSaved={async () => {
-              if (onRefresh) await onRefresh();
-              setHandBlock(null);
-              setPostPick(null);
-            }}
-            onClose={() => setHandBlock(null)}
-            onInviteNew={(placed) => {
-              // Bind all just-placed seat ids so DelegateForm's
-              // onCreated chain assigns them to the new delegation
-              setHandBlock(null);
-              setInviteOpen({
-                theaterId: placed.theaterId,
-                seatIds: placed.seatIds || [],
-              });
-            }}
-          />
-        )}
-      </Sheet>
-
-      <Sheet
-        open={!!assignThese}
-        onClose={() => setAssignThese(null)}
-        title="Assign seats"
-      >
-        {assignThese && (
-          <AssignTheseSheet
-            placed={assignThese}
-            delegations={data.delegations || []}
-            token={token}
-            apiBase={config.apiBase}
-            onSaved={async () => {
-              if (onRefresh) await onRefresh();
-              setAssignThese(null);
-              setPostPick(null);
-            }}
-            onSkip={() => setAssignThese(null)}
-            onInviteNew={() => {
-              setAssignThese(null);
-              setInviteOpen(true);
-            }}
-          />
         )}
       </Sheet>
 
@@ -4203,7 +3098,6 @@ export default function Mobile({
               try {
                 await finalize();
                 setPostPick(null);
-                setAssignThese(null);
                 setDinnerOpen(false);
               } catch {
                 // useFinalize sets error state; sheet stays open.
@@ -4214,7 +3108,6 @@ export default function Mobile({
             onClearError={clearFinalizeError}
             onDone={() => {
               setPostPick(null);
-              setAssignThese(null);
               setDinnerOpen(false);
             }}
           />

@@ -26,7 +26,7 @@ import { useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Avatar } from '../Mobile.jsx';
 import TicketCardV2 from './TicketCardV2.jsx';
-import { DINNER_LOCK_DAYS } from './SeatDetailSheet.jsx';
+import { DINNER_LOCK_DAYS } from '../../brand/tokens.js';
 
 function LockBanner({ daysOut, missingDinnerCount, onRemindAll, onPickForAll }) {
   if (daysOut == null) return null;

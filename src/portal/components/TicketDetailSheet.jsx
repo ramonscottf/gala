@@ -26,7 +26,7 @@
 import { useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { PosterMini, seatLabel as fmtSeat, assignmentOwner } from '../Mobile.jsx';
-import { DINNER_LOCK_DAYS } from './SeatDetailSheet.jsx';
+import { DINNER_LOCK_DAYS } from '../../brand/tokens.js';
 
 const DINNER_EMOJI = {
   brisket: '🍖',

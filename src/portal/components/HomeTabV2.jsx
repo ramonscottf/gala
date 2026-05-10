@@ -22,7 +22,7 @@
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { TicketHero } from '../Mobile.jsx';
 import { highestRottenScore } from '../movieScores.js';
-import { DINNER_LOCK_DAYS } from './SeatDetailSheet.jsx';
+import { DINNER_LOCK_DAYS } from '../../brand/tokens.js';
 
 export default function HomeTabV2({
   data,
