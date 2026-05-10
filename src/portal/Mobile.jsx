@@ -2648,15 +2648,65 @@ const GuestField = ({ label, value, onChange, placeholder, type = 'text' }) => (
 // the recipient an invite. seatsAllocated is capped to seatMath.available
 // so the +/- spinner can't oversubscribe. Server re-validates capacity.
 
-export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lockSeats = null }) => {
+// DelegateForm — V2 R13.
+//
+// Two modes, controlled by which props the caller passes:
+//
+//   Mode A (quota mode) — when invoked from the bare 'Invite a guest'
+//     button before any seats are placed. Caller passes 'available'
+//     (number of seats the sponsor still has to give) and DOES NOT
+//     pass seatPills. The form shows a +/- counter ('1 of N'). The
+//     allocated seats are spent later when the guest picks them via
+//     their personal portal.
+//
+//   Mode B (specific-seats mode) — when invoked from a context where
+//     the seats are already known: per-seat '+ Invite' on a Tickets
+//     row, the post-pick 'Invite a guest' flow, or 'Hand to a guest'
+//     on a placed block. Caller passes 'seatPills' as an array of
+//     seat ids (e.g. ['F-9','F-10']). The form shows tappable seat
+//     pills instead of a counter. Tap a pill to drop it from the
+//     invite (split-block use case). At least 1 must remain selected.
+//
+// onCreated receives the new delegation AND the final list of seat
+// ids the user kept selected (for Mode B), so the caller can chain a
+// /assign for those exact seats. Mode A passes through with no seat
+// ids (assignment happens later when the guest picks).
+export const DelegateForm = ({
+  token,
+  apiBase,
+  available,
+  onCreated,
+  onClose,
+  // R13 — Mode B: array of seat ids (strings like 'F-9'); when set,
+  // the form renders seat pills instead of the quota counter.
+  seatPills = null,
+  // Legacy: locks the counter to a specific count. Kept for any
+  // call sites still on the old contract; prefer seatPills.
+  lockSeats = null,
+}) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [seats, setSeats] = useState(lockSeats ?? (Math.min(available, 2) || 1));
+  // Mode B uses selectedPills as the source of truth. Mode A uses
+  // the seats counter.
+  const [selectedPills, setSelectedPills] = useState(() =>
+    new Set(seatPills || []),
+  );
+  const [seats, setSeats] = useState(
+    seatPills?.length ?? lockSeats ?? (Math.min(available, 2) || 1),
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
 
-  const valid = name.trim() && (phone.trim() || email.trim()) && seats >= 1 && seats <= available;
+  // In Mode B the effective seat count is the number of pills still
+  // selected. In Mode A it's the counter value.
+  const effectiveSeats = seatPills ? selectedPills.size : seats;
+
+  const valid =
+    name.trim() &&
+    (phone.trim() || email.trim()) &&
+    effectiveSeats >= 1 &&
+    (seatPills ? true : effectiveSeats <= available);
 
   const submit = async () => {
     if (!valid) return;
@@ -2670,7 +2720,7 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
           delegate_name: name.trim(),
           delegate_phone: phone.trim() || undefined,
           delegate_email: email.trim() || undefined,
-          seats_allocated: seats,
+          seats_allocated: effectiveSeats,
         }),
       });
       if (!res.ok) {
@@ -2678,7 +2728,11 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
         throw new Error(j.error || `HTTP ${res.status}`);
       }
       const j = await res.json();
-      if (onCreated) await onCreated(j.delegation);
+      // R13 — pass back BOTH the new delegation AND the final seat
+      // selection so the caller can chain /assign for Mode B. Mode A
+      // returns null for keptSeats (no specific assignment yet).
+      const keptSeats = seatPills ? Array.from(selectedPills) : null;
+      if (onCreated) await onCreated(j.delegation, keptSeats);
       onClose();
     } catch (e) {
       setError(e);
@@ -2687,11 +2741,26 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
     }
   };
 
+  const togglePill = (sid) => {
+    setSelectedPills((prev) => {
+      const next = new Set(prev);
+      if (next.has(sid)) {
+        // Don't let them deselect the last one — at least 1 must
+        // remain. The pill stays solid; submit stays valid.
+        if (next.size > 1) next.delete(sid);
+      } else {
+        next.add(sid);
+      }
+      return next;
+    });
+  };
+
   return (
     <>
       <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 16, lineHeight: 1.55 }}>
-        We'll text + email a link so they select their own seats. They get a personal portal you
-        can keep tabs on right here.
+        {seatPills
+          ? "We'll text + email a link with these specific seats. They get a personal portal you can keep tabs on right here."
+          : "We'll text + email a link so they select their own seats. They get a personal portal you can keep tabs on right here."}
       </div>
 
       <GuestField label="NAME" value={name} onChange={setName} placeholder="Their full name" />
@@ -2720,71 +2789,120 @@ export const DelegateForm = ({ token, apiBase, available, onCreated, onClose, lo
             marginBottom: 6,
           }}
         >
-          SEATS TO ASSIGN
+          {seatPills ? 'SEATS' : 'SEATS TO ASSIGN'}
         </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '10px 12px',
-            borderRadius: 12,
-            border: `1px solid var(--rule)`,
-            background: 'rgba(168,177,255,0.06)',
-          }}
-        >
-          <button
-            onClick={() => setSeats((s) => Math.max(1, s - 1))}
-            disabled={seats <= 1 || lockSeats !== null}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 99,
-              border: `1.5px solid var(--rule)`,
-              background: 'transparent',
-              color: '#fff',
-              cursor: seats <= 1 || lockSeats !== null ? 'not-allowed' : 'pointer',
-              fontSize: 20,
-              opacity: seats <= 1 || lockSeats !== null ? 0.4 : 1,
-            }}
-          >
-            −
-          </button>
+        {seatPills ? (
+          // Mode B — tap-to-deselect seat pills. At least 1 must stay
+          // selected. Selected pills are solid indigo; deselected
+          // pills go to a faded outline (still tappable to re-add).
           <div
             style={{
-              fontFamily: FONT_DISPLAY,
-              fontSize: 36,
-              fontWeight: 700,
-              color: 'var(--accent-italic)',
-              fontVariantNumeric: 'tabular-nums',
-              lineHeight: 1,
+              padding: '12px',
+              borderRadius: 12,
+              border: `1px solid var(--rule)`,
+              background: 'rgba(168,177,255,0.06)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 8,
             }}
           >
-            {seats}
-            <span
-              style={{ color: 'var(--mute)', fontSize: 14, fontStyle: 'italic', fontWeight: 400 }}
-            >
-              {' '}of {available}
-            </span>
+            {seatPills.map((sid) => {
+              const on = selectedPills.has(sid);
+              return (
+                <button
+                  key={sid}
+                  type="button"
+                  onClick={() => togglePill(sid)}
+                  style={{
+                    all: 'unset',
+                    cursor: 'pointer',
+                    padding: '8px 14px',
+                    borderRadius: 99,
+                    background: on
+                      ? 'rgba(168,177,255,0.18)'
+                      : 'transparent',
+                    border: `1.5px ${on ? 'solid' : 'dashed'} ${on ? 'rgba(168,177,255,0.45)' : 'rgba(255,255,255,0.20)'}`,
+                    fontFamily: FONT_DISPLAY,
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: on ? BRAND.indigoLight : 'rgba(255,255,255,0.50)',
+                    fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: 0.3,
+                    textDecoration: on ? 'none' : 'line-through',
+                    textDecorationThickness: '1.5px',
+                    textDecorationColor: 'rgba(255,255,255,0.40)',
+                  }}
+                >
+                  {seatLabel(sid)}
+                </button>
+              );
+            })}
           </div>
-          <button
-            onClick={() => setSeats((s) => Math.min(available, s + 1))}
-            disabled={seats >= available || lockSeats !== null}
+        ) : (
+          <div
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 99,
-              border: `1.5px solid var(--rule)`,
-              background: 'transparent',
-              color: '#fff',
-              cursor: seats >= available || lockSeats !== null ? 'not-allowed' : 'pointer',
-              fontSize: 20,
-              opacity: seats >= available || lockSeats !== null ? 0.4 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 12px',
+              borderRadius: 12,
+              border: `1px solid var(--rule)`,
+              background: 'rgba(168,177,255,0.06)',
             }}
           >
-            +
-          </button>
-        </div>
+            <button
+              onClick={() => setSeats((s) => Math.max(1, s - 1))}
+              disabled={seats <= 1 || lockSeats !== null}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 99,
+                border: `1.5px solid var(--rule)`,
+                background: 'transparent',
+                color: '#fff',
+                cursor: seats <= 1 || lockSeats !== null ? 'not-allowed' : 'pointer',
+                fontSize: 20,
+                opacity: seats <= 1 || lockSeats !== null ? 0.4 : 1,
+              }}
+            >
+              −
+            </button>
+            <div
+              style={{
+                fontFamily: FONT_DISPLAY,
+                fontSize: 36,
+                fontWeight: 700,
+                color: 'var(--accent-italic)',
+                fontVariantNumeric: 'tabular-nums',
+                lineHeight: 1,
+              }}
+            >
+              {seats}
+              <span
+                style={{ color: 'var(--mute)', fontSize: 14, fontStyle: 'italic', fontWeight: 400 }}
+              >
+                {' '}of {available}
+              </span>
+            </div>
+            <button
+              onClick={() => setSeats((s) => Math.min(available, s + 1))}
+              disabled={seats >= available || lockSeats !== null}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 99,
+                border: `1.5px solid var(--rule)`,
+                background: 'transparent',
+                color: '#fff',
+                cursor: seats >= available || lockSeats !== null ? 'not-allowed' : 'pointer',
+                fontSize: 20,
+                opacity: seats >= available || lockSeats !== null ? 0.4 : 1,
+              }}
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -3431,17 +3549,20 @@ export default function Mobile({
   // After DelegateForm creates a new delegation, optionally chain a
   // /assign call so the seat that triggered the invite goes straight to
   // the new delegate. inviteOpen carries { seat, theaterId } when the
-  // invite was launched from SeatAssignSheet's "Invite someone new" CTA.
-  const onDelegationCreated = async (newDeleg) => {
-    // seatBinding can be:
-    //   { seat, theaterId }            — single-seat from SeatAssignSheet
-    //   { seatIds: [...], theaterId }  — multi-seat from HandBlockSheet (V2)
-    //   null                            — no chain, just refresh
+  // invite was launched from SeatAssignSheet's "Invite someone new"
+  // CTA. R13 — DelegateForm now passes (newDeleg, keptSeats) where
+  // keptSeats is the array of seat ids the user left selected in the
+  // pill picker. Use that for /assign so dropped pills stay open.
+  const onDelegationCreated = async (newDeleg, keptSeats) => {
+    // seatBinding tells us the theater_id; keptSeats tells us which
+    // seat ids to bind. If the form ran in Mode A (no pills) keptSeats
+    // is null and no /assign happens — the guest will pick later.
     const seatBinding = typeof inviteOpen === 'object' ? inviteOpen : null;
-    const ids = seatBinding
-      ? (seatBinding.seatIds || (seatBinding.seat ? [seatBinding.seat] : []))
-      : [];
-    if (ids.length > 0 && newDeleg?.id) {
+    const ids = keptSeats
+      ?? (seatBinding
+        ? (seatBinding.seatIds || (seatBinding.seat ? [seatBinding.seat] : []))
+        : []);
+    if (ids.length > 0 && newDeleg?.id && seatBinding?.theaterId) {
       try {
         await fetch(`${config.apiBase}/api/gala/portal/${token}/assign`, {
           method: 'POST',
@@ -3545,9 +3666,12 @@ export default function Mobile({
             onInviteGroup={(ticket) => {
               // Hand the whole showing-group to one guest. HandBlockSheet
               // takes a "placed" payload shape ({theaterId, seatIds[],
-              // movieTitle, showLabel, theaterName}) — derive that from
-              // the ticket's assignmentRows so the sheet's "+ New guest"
-              // path binds all seats to the new delegation in one shot.
+              // R13 — was setHandBlock(...). HandBlockSheet had two
+              // paths (new guest + existing-guest list with +2 affordance)
+              // which the user explicitly removed. Route straight to
+              // DelegateForm in Mode B (seatPills) so group invite is
+              // identical to per-seat invite and post-pick invite —
+              // ONE form, with the seats shown as tappable pills.
               const seatIds = (ticket.assignmentRows || [])
                 // Only hand off seats the sponsor actually owns; never
                 // re-route a seat already assigned to a different
@@ -3555,14 +3679,9 @@ export default function Mobile({
                 .filter((r) => !r.delegation_id)
                 .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
               if (seatIds.length === 0) return;
-              setHandBlock({
+              setInviteOpen({
                 theaterId: ticket.theaterId,
                 seatIds,
-                movieTitle: ticket.movieTitle,
-                showLabel: ticket.showLabel,
-                showTime: ticket.showTime,
-                theaterName: ticket.theaterName,
-                posterUrl: ticket.posterUrl,
               });
             }}
             // V2 R8 — per-row callbacks restored. Dinner pill on a
@@ -3650,18 +3769,32 @@ export default function Mobile({
         onClose={() => setInviteOpen(false)}
         title={(() => {
           if (typeof inviteOpen !== 'object' || !inviteOpen) return 'Invite a guest';
-          // Multi-seat binding from HandBlockSheet
-          if (inviteOpen.seatIds?.length > 1) {
-            return `Invite for ${inviteOpen.seatIds.length} seats`;
-          }
-          // Single-seat binding from SeatAssignSheet (legacy: { seat, theaterId })
-          const single = inviteOpen.seat || inviteOpen.seatIds?.[0];
-          return single ? `Invite for seat ${single.replace('-', '')}` : 'Invite a guest';
+          // R13 — title shows actual seat ids, comma-separated, no
+          // counter-style "for N seats" framing. Both single-seat
+          // and multi-seat callers land in the same Mode B form.
+          const ids = inviteOpen.seatIds?.length
+            ? inviteOpen.seatIds
+            : inviteOpen.seat
+              ? [inviteOpen.seat]
+              : [];
+          if (ids.length === 0) return 'Invite a guest';
+          return `Invite for ${ids.map((s) => s.replace('-', '')).join(', ')}`;
         })()}
       >
         <DelegateForm
           token={token}
           apiBase={config.apiBase}
+          // R13 — when the caller passes seat ids (per-seat '+ Invite'
+          // from a Tickets row, or multi-seat hand-off from a placed
+          // block), switch DelegateForm into Mode B (pills). When no
+          // seats are passed (the bare 'Invite a guest' button), fall
+          // back to Mode A (quota counter).
+          seatPills={(() => {
+            if (typeof inviteOpen !== 'object' || !inviteOpen) return null;
+            if (inviteOpen.seatIds?.length) return inviteOpen.seatIds;
+            if (inviteOpen.seat) return [inviteOpen.seat];
+            return null;
+          })()}
           available={
             typeof inviteOpen === 'object' && inviteOpen
               ? Math.max(
@@ -3669,11 +3802,6 @@ export default function Mobile({
                   data.seatMath?.available ?? 1
                 )
               : (data.seatMath?.available ?? 0)
-          }
-          lockSeats={
-            typeof inviteOpen === 'object' && inviteOpen
-              ? (inviteOpen.seatIds?.length || 1)
-              : null
           }
           onCreated={onDelegationCreated}
           onClose={() => setInviteOpen(false)}
@@ -3826,11 +3954,9 @@ export default function Mobile({
         title={
           postPickStep === 'celebrate'
             ? "You're all set"
-            : postPickStep === 'whichSeats'
-              ? 'Invite — which seats?'
-              : postPickStep === 'inviteForm'
-                ? `Invite for ${postPickInviteSeats?.length || 0} seat${(postPickInviteSeats?.length || 0) === 1 ? '' : 's'}`
-                : 'Seats placed'
+            : postPickStep === 'inviteForm'
+              ? `Invite for ${(postPickInviteSeats || []).map((s) => s.replace('-', '')).join(', ')}`
+              : 'Seats placed'
         }
       >
         {postPick && !v2Enabled && (
@@ -3875,7 +4001,22 @@ export default function Mobile({
               ...a,
               seat_id: a.seat_id || `${a.row_label}-${a.seat_num}`,
             }))}
-            onInvite={() => setPostPickStep('whichSeats')}
+            // R13 — Invite goes straight to the form. The form shows
+            // every just-placed seat that's not yet assigned as a
+            // tappable pill (default all selected). User can drop
+            // pills before submitting if they want to split. No more
+            // separate WhichSeatsPicker step.
+            onInvite={() => {
+              const unassigned = (portal?.myAssignments || [])
+                .filter((a) =>
+                  postPick.seatIds?.includes(a.seat_id || `${a.row_label}-${a.seat_num}`),
+                )
+                .filter((a) => !a.delegation_id)
+                .map((a) => a.seat_id || `${a.row_label}-${a.seat_num}`);
+              if (unassigned.length === 0) return;
+              setPostPickInviteSeats(unassigned);
+              setPostPickStep('inviteForm');
+            }}
             onPickMeals={() => setDinnerOpen(true)}
             onDone={async () => {
               try {
@@ -3891,53 +4032,31 @@ export default function Mobile({
             onClearError={clearFinalizeError}
           />
         )}
-        {postPick && v2Enabled && postPickStep === 'whichSeats' && (
-          <WhichSeatsPicker
-            placed={postPick}
-            assignmentRows={(portal?.myAssignments || []).map((a) => ({
-              ...a,
-              seat_id: a.seat_id || `${a.row_label}-${a.seat_num}`,
-            }))}
-            onContinue={(selectedSeatIds) => {
-              // R12 — instead of opening the global DelegateForm sheet
-              // on top of this one (causes the visual stacking bug
-              // where both sheets render at once), advance the
-              // post-pick step to 'inviteForm' and render DelegateForm
-              // INSIDE the post-pick sheet at that step. State stays
-              // self-contained: form completes → /assign chains to
-              // the selected seats → step returns to 'overview' with
-              // counters refreshed.
-              setPostPickInviteSeats(selectedSeatIds);
-              setPostPickStep('inviteForm');
-            }}
-            onBack={() => setPostPickStep('overview')}
-          />
-        )}
         {postPick && v2Enabled && postPickStep === 'inviteForm' && (
           <DelegateForm
             token={token}
             apiBase={config.apiBase}
-            // available count drives the form's "SEATS TO ASSIGN"
-            // pre-fill (capped to selection length below). Pass the
-            // selected count so the user can't allocate more than the
-            // batch they just chose.
+            // R13 — Mode B: seat pills from the just-placed block.
+            // available stays as the count for legacy validation but
+            // the form uses selectedPills.size as the source of truth
+            // when seatPills is set.
             available={postPickInviteSeats?.length || 0}
-            lockSeats={postPickInviteSeats?.length || 0}
-            onClose={() => setPostPickStep('whichSeats')}
-            onCreated={async (newDeleg) => {
-              // After DelegateForm POSTs /delegations and gets back
-              // the new delegation id, chain a /assign call to bind
-              // the just-selected seats to that delegation. Then
-              // refresh portal data and bounce back to overview so
-              // counters re-render with the new state.
+            seatPills={postPickInviteSeats || []}
+            onClose={() => setPostPickStep('overview')}
+            onCreated={async (newDeleg, keptSeats) => {
+              // R13 — keptSeats is the final list of seat ids the user
+              // left selected in the form. Use that (not the original
+              // postPickInviteSeats) for the /assign so dropped pills
+              // stay open for a second invite.
+              const seatsToAssign = keptSeats || postPickInviteSeats || [];
               try {
-                if (postPickInviteSeats?.length && newDeleg?.id) {
+                if (seatsToAssign.length && newDeleg?.id) {
                   await fetch(`${config.apiBase}/api/gala/portal/${token}/assign`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       theater_id: postPick.theaterId,
-                      seat_ids: postPickInviteSeats,
+                      seat_ids: seatsToAssign,
                       delegation_id: newDeleg.id,
                     }),
                   });
