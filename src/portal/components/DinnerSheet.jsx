@@ -1,7 +1,7 @@
 // DinnerSheet — V2 IA, Phase 6
 //
 // Bottom sheet that opens when the user taps the dinner pill on a
-// TicketCardV2 row. Shows the 5 meal options as colored tiles. Tap
+// TicketCard row. Shows the 5 meal options as colored tiles. Tap
 // → POST /pick set_dinner with the chosen value. Pre-lock only;
 // after T-7 the parent suppresses the sheet (pill becomes a 🔒
 // read-only label).

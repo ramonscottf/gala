@@ -1,4 +1,4 @@
-// HomeTabV2 — V2 IA, Phase 5 (new Home)
+// HomeTab — V2 IA, Phase 5 (new Home)
 //
 // What changed from V1's HomeTab:
 //   - Single hybrid "X seats still to place" status card replaced by
@@ -16,15 +16,15 @@
 //   - All callbacks (onPlaceSeats, onInvite, onAssign, onMovieDetail,
 //     onManageTickets) — same wiring
 //
-// Behind the same ?v2=1 flag as TicketsTabV2. V1 HomeTab still mounts
+// Behind the same ?v2=1 flag as TicketsTab. V1 HomeTab still mounts
 // when v2 is off, so nothing breaks for live sponsors.
 
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
-import { TicketHero } from '../Mobile.jsx';
+import { TicketHero } from '../Portal.jsx';
 import { highestRottenScore } from '../movieScores.js';
 import { DINNER_LOCK_DAYS } from '../../brand/tokens.js';
 
-export default function HomeTabV2({
+export default function HomeTab({
   data,
   onPlaceSeats,
   onInvite,

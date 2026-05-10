@@ -1,4 +1,4 @@
-// TicketCardV2 — V2 R9 (clean three-column row layout)
+// TicketCard — V2 R9 (clean three-column row layout)
 //
 // User feedback (paraphrased): "Three columns: SEAT, DINNER, GUEST.
 // All caps small headers. Same font and weight on the values. Pills
@@ -27,7 +27,7 @@
 
 import { useState, useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
-import { PosterMini, seatLabel as fmtSeat, assignmentOwner } from '../Mobile.jsx';
+import { PosterMini, seatLabel as fmtSeat, assignmentOwner } from '../Portal.jsx';
 
 const DINNER_EMOJI = {
   brisket: '🍖',
@@ -44,7 +44,7 @@ const DINNER_LABEL = {
   glutenfree: 'Gluten-free',
 };
 
-export default function TicketCardV2({
+export default function TicketCard({
   ticket,
   guest = false,
   onViewTicket,    // sponsor cards: opens TicketDetailSheet

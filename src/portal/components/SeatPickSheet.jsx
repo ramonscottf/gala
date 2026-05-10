@@ -31,7 +31,7 @@ import { Btn, Icon } from '../../brand/atoms.jsx';
 import { SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock, seatById } from '../SeatEngine.jsx';
 import { otherTakenForTheater, checkBatchOrphans } from '../../hooks/useSeats.js';
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../../hooks/usePortal.js';
-import { formatShowTime } from '../Mobile.jsx';
+import { formatShowTime } from '../Portal.jsx';
 import { enrichMovieScores, formatRottenBadge } from '../movieScores.js';
 
 const SEAT_TYPE_ORDER = ['luxury', 'standard', 'dbox', 'loveseat', 'wheelchair', 'companion'];

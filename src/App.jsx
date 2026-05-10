@@ -20,7 +20,7 @@ import { BRAND, FONT_DISPLAY, FONT_UI } from './brand/tokens.js';
 import { usePortal } from './hooks/usePortal.js';
 import { useSeats } from './hooks/useSeats.js';
 import { useTheme } from './hooks/useTheme.js';
-import Mobile from './portal/Mobile.jsx';
+import Portal from './portal/Portal.jsx';
 
 function isDevPrefix() {
   // No dev mirror in the gala repo — single /sponsor prefix only.

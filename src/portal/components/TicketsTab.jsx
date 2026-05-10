@@ -1,4 +1,4 @@
-// TicketsTabV2 — V2 IA, REVISION 2
+// TicketsTab — V2 IA, REVISION 2
 //
 // REVISION 2 (May 2026): the original V2 flat seat-row list was the
 // wrong mental model. People think in tickets-per-showing, not
@@ -24,8 +24,8 @@
 
 import { useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
-import { Avatar } from '../Mobile.jsx';
-import TicketCardV2 from './TicketCardV2.jsx';
+import { Avatar } from '../Portal.jsx';
+import TicketCard from './TicketCard.jsx';
 import { DINNER_LOCK_DAYS } from '../../brand/tokens.js';
 
 function LockBanner({ daysOut, missingDinnerCount, onRemindAll, onPickForAll }) {
@@ -214,7 +214,7 @@ function DelegationStatusPill({ delegation, hasMissingDinner }) {
   );
 }
 
-export default function TicketsTabV2({
+export default function TicketsTab({
   data,
   daysOut,
   token,
@@ -227,7 +227,7 @@ export default function TicketsTabV2({
   // V2 R5 — per-group callbacks
   onViewTicket,    // (ticket) => void  — opens TicketDetailSheet
   onInviteGroup,   // (ticket) => void  — opens HandBlockSheet
-  // V2 R8 — per-row callbacks (back from R5; TicketCardV2 expanded
+  // V2 R8 — per-row callbacks (back from R5; TicketCard expanded
   // body again has inline seat rows for sponsor cards + chevron-
   // expand for guest cards)
   onPickDinner,    // (seat) => void  — opens DinnerSheet
@@ -326,7 +326,7 @@ export default function TicketsTabV2({
 
       <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {tickets.map((ticket) => (
-          <TicketCardV2
+          <TicketCard
             key={ticket.id}
             ticket={ticket}
             onViewTicket={onViewTicket}
@@ -389,7 +389,7 @@ export default function TicketsTabV2({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {guestTickets.map((ticket) => (
-              <TicketCardV2
+              <TicketCard
                 key={ticket.id}
                 ticket={ticket}
                 guest

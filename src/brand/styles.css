@@ -143,7 +143,7 @@ body {
   overflow: hidden;
 }
 
-.mobile-shell-root--desktop-frame {
+.portal-shell-root--desktop-frame {
   height: 100% !important;
 }
 
@@ -1200,7 +1200,7 @@ img,
    * docks at the top, so the page content needs top breathing room
    * to clear it. Scope: page-level scroll containers ONLY — not the
    * one inside .sheet-panel which is already inside a centered modal. */
-  .mobile-shell-root > .scroll-container {
+  .portal-shell-root > .scroll-container {
     max-width: 720px;
     margin: 0 auto;
     padding-top: 88px;

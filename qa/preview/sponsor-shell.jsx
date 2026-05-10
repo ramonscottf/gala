@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import '../../src/brand/styles.css';
-import Mobile from '../../src/portal/Mobile.jsx';
+import Portal from '../../src/portal/Portal.jsx';
 import {
   createPreviewPortal,
   createPreviewSeats,
@@ -68,7 +68,7 @@ function PreviewApp() {
 
   return (
     <MemoryRouter initialEntries={[`/sponsor/${TOKEN}`]}>
-      <Mobile {...props} />
+      <Portal {...props} />
     </MemoryRouter>
   );
 }

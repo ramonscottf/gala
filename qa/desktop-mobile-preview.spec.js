@@ -141,7 +141,7 @@ test.describe('sponsor shell preview', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${PREVIEW_URL}?surface=mobile`);
 
-    await expect(page.getByTestId('mobile-shell-root')).toBeVisible();
+    await expect(page.getByTestId('portal-shell-root')).toBeVisible();
     await expect(page.getByTestId('desktop-companion-notes')).toHaveCount(0);
     await expect(page.getByTestId('cta-place-seats').first()).toBeVisible();
     await expect(page.getByTestId('mobile-lineup-card')).toHaveCount(4);

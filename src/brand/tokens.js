@@ -104,6 +104,6 @@ export function accentAction(isLight) {
 // DINNER_LOCK_DAYS — N days before gala, dinner choices freeze for
 // kitchen prep. Was historically declared in SeatDetailSheet.jsx;
 // moved here when SeatDetailSheet was retired in the V1 cleanup.
-// Used by TicketsTabV2 / TicketDetailSheet / HomeTabV2 to render
+// Used by TicketsTab / TicketDetailSheet / HomeTab to render
 // the "dinners lock in N days" banner and disable the dinner pill.
 export const DINNER_LOCK_DAYS = 7;

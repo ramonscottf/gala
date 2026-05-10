@@ -19,7 +19,7 @@
 
 import { useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
-import { PosterMini } from '../Mobile.jsx';
+import { PosterMini } from '../Portal.jsx';
 
 export default function PostPickOverview({
   placed,

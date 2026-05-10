@@ -35,8 +35,8 @@ import SeatPickSheet from './components/SeatPickSheet.jsx';
 import PostPickOverview from './components/PostPickOverview.jsx';
 import CompletionCelebration from './components/CompletionCelebration.jsx';
 import PostPickDinnerSheet from './components/PostPickDinnerSheet.jsx';
-import TicketsTabV2 from './components/TicketsTabV2.jsx';
-import HomeTabV2 from './components/HomeTabV2.jsx';
+import TicketsTab from './components/TicketsTab.jsx';
+import HomeTab from './components/HomeTab.jsx';
 import DinnerSheet from './components/DinnerSheet.jsx';
 import TicketDetailSheet from './components/TicketDetailSheet.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
@@ -2438,7 +2438,7 @@ export const SeatAssignSheet = ({
 
 // ── Mobile root ───────────────────────────────────────────────────────
 
-export default function Mobile({
+export default function Portal({
   portal,
   token,
   theaterLayouts,
@@ -2515,13 +2515,13 @@ export default function Mobile({
   // we return to overview automatically.
   const [postPickStep, setPostPickStep] = useState('overview');
   const [postPickInviteSeats, setPostPickInviteSeats] = useState(null); // string[] | null
-  // V2 R3 — per-seat sheets driven by TicketCardV2 row buttons. R4
+  // V2 R3 — per-seat sheets driven by TicketCard row buttons. R4
   // collapsed the per-seat invite into the canonical DelegateForm via
   // setInviteOpen({theaterId, seat}); only the dinner sheet remains
   // as a dedicated V2 surface here.
   const [dinnerSheet, setDinnerSheet] = useState(null); // seat object | null
   // V2 R5 — TicketDetailSheet (per-group ticket view with QR + save-
-  // to-phone). Opened from TicketCardV2's "View ticket" button.
+  // to-phone). Opened from TicketCard's "View ticket" button.
   const [ticketDetail, setTicketDetail] = useState(null); // ticket | null
 
   // F4 / Phase 1.15.x — MovieDetailSheet open state. Wired on May 5
@@ -2654,8 +2654,8 @@ export default function Mobile({
   return (
     <SheetFrameContext.Provider value={desktopFrame}>
       <div
-        className={desktopFrame ? 'mobile-shell-root mobile-shell-root--desktop-frame' : 'mobile-shell-root'}
-        data-testid="mobile-shell-root"
+        className={desktopFrame ? 'portal-shell-root portal-shell-root--desktop-frame' : 'portal-shell-root'}
+        data-testid="portal-shell-root"
         style={{
           width: '100%',
           height: '100dvh',
@@ -2672,7 +2672,7 @@ export default function Mobile({
       <FloatingAvatar name={data.name} onTap={() => setSettingsOpen(true)} />
 
       {tab === 'home' && (
-        <HomeTabV2
+        <HomeTab
           data={{ ...data, tickets: ticketsWithLocalGuests }}
           onPlaceSeats={goSeats}
           onInvite={openInvite}
@@ -2684,7 +2684,7 @@ export default function Mobile({
         />
       )}
       {tab === 'tickets' && (
-        <TicketsTabV2
+        <TicketsTab
           data={{ ...data, tickets: ticketsWithLocalGuests }}
           daysOut={data.daysOut}
           token={token}
@@ -2854,7 +2854,7 @@ export default function Mobile({
       </Sheet>
 
       {/* V2 R5 — TicketDetailSheet (per-group ticket view).
-          Opened from TicketCardV2's "View ticket" button. The QR is
+          Opened from TicketCard's "View ticket" button. The QR is
           per sponsor token (single QR per portal — same one V1 had on
           the page-level card, just relocated into each ticket).
           Inside the sheet, dinner pills and per-row Invite/Manage
