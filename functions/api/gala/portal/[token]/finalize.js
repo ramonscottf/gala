@@ -15,12 +15,33 @@ export async function onRequestPost(context) {
   const resolved = await resolveToken(env, token);
   if (!resolved) return jsonError('Invalid token', 404);
 
-  // Load current assignments for this scope
+  // Load current assignments for this scope.
+  //
+  // SPONSOR scope: every seat under this sponsor's umbrella — both the
+  // ones the sponsor placed directly (delegation_id IS NULL) AND any
+  // seats placed under one of this sponsor's child delegations. This
+  // matters because a sponsor can fully delegate their entire block
+  // (e.g. Wicko delegates all 2 of 2 seats to Chuck). With the old
+  // delegation_id IS NULL filter, the seat list came back empty and
+  // /finalize returned 400 "No seats picked yet" — the client threw
+  // and the user got a blank post-confirmation screen. The QR is
+  // group-level (the token IS the auth) so summarizing all seats in
+  // the umbrella is the correct semantic anyway.
+  //
+  // DELEGATION scope: only this delegation's own placements. (A
+  // delegation lead does NOT see seats placed by sub-delegates of
+  // theirs in this summary — they finalize their own slice.)
   const myAssignmentsQ = resolved.kind === 'sponsor'
-    ? `SELECT * FROM seat_assignments WHERE sponsor_id = ? AND delegation_id IS NULL ORDER BY theater_id, row_label, seat_num`
+    ? `SELECT * FROM seat_assignments
+         WHERE sponsor_id = ?
+           AND (delegation_id IS NULL OR delegation_id IN (
+             SELECT id FROM sponsor_delegations WHERE parent_sponsor_id = ?
+           ))
+         ORDER BY theater_id, row_label, seat_num`
     : `SELECT * FROM seat_assignments WHERE delegation_id = ? ORDER BY theater_id, row_label, seat_num`;
-  const scopeId = resolved.kind === 'sponsor' ? resolved.record.id : resolved.record.id;
-  const seats = await env.GALA_DB.prepare(myAssignmentsQ).bind(scopeId).all();
+  const seats = resolved.kind === 'sponsor'
+    ? await env.GALA_DB.prepare(myAssignmentsQ).bind(resolved.record.id, resolved.record.id).all()
+    : await env.GALA_DB.prepare(myAssignmentsQ).bind(resolved.record.id).all();
   const seatList = seats.results || [];
 
   if (!seatList.length) {
