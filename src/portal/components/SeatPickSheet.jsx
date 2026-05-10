@@ -237,6 +237,13 @@ export default function SeatPickSheet({
   onCommitted,
   onClose,
   variant = 'sheet',
+  // Phase 5.5 — when opened from a MovieDetailSheet's "Select seats
+  // for this film" CTA, the picker should land on that film's
+  // showing/movie/theater regardless of where the sponsor's existing
+  // seats live. These props override the mount-time
+  // "default to placed-seats location" effect when supplied.
+  initialShowingNumber = null,
+  initialMovieId = null,
 }) {
   const compact = variant === 'sheet';
   const showtimes = portal?.showtimes || [];
@@ -325,9 +332,11 @@ export default function SeatPickSheet({
     return out;
   }, [theaterLayouts]);
 
-  const [showingNumber, setShowingNumber] = useState(showings[0] || 1);
+  const [showingNumber, setShowingNumber] = useState(
+    initialShowingNumber || showings[0] || 1
+  );
   const moviesHere = moviesByShowing[showingNumber] || [];
-  const [movieId, setMovieId] = useState(moviesHere[0]?.id);
+  const [movieId, setMovieId] = useState(initialMovieId || moviesHere[0]?.id);
   useEffect(() => {
     const list = moviesByShowing[showingNumber] || [];
     if (!list.find((m) => m.id === movieId)) setMovieId(list[0]?.id);
@@ -350,7 +359,12 @@ export default function SeatPickSheet({
   // the only way to edit is to unplace and re-place. We do this once,
   // on mount, so the user can still navigate away to place additional
   // seats in another auditorium afterward.
-  const didInitFromAssignments = useRef(false);
+  //
+  // Phase 5.5 — when initialShowingNumber/initialMovieId are passed
+  // (CTA flow from MovieDetailSheet), they take precedence and we
+  // skip this effect entirely. Mark the flag so it doesn't run later
+  // either.
+  const didInitFromAssignments = useRef(initialShowingNumber || initialMovieId ? true : false);
   useEffect(() => {
     if (didInitFromAssignments.current) return;
     const placed = portal?.myAssignments || [];
@@ -541,11 +555,34 @@ export default function SeatPickSheet({
   const onMoreInfo = () => {
     if (!onMovieDetail || !movie) return;
     const ctx = showingsRich.find((sr) => sr.number === showingNumber);
+    // Phase 5.5 — build a schedule for this movie on the fly from
+    // showtimes, matching the shape MovieDetailSheet expects from the
+    // home-tab lineup path. This way the sheet's schedule block + CTA
+    // work the same regardless of where it was opened from.
+    const schedule = showtimes
+      .filter((s) => s.movie_id === movie.id)
+      .map((s) => ({
+        theaterId: s.theater_id,
+        theaterName: theatersById[s.theater_id]?.name || `Theater ${s.theater_id}`,
+        showingNumber: s.showing_number,
+        showLabel:
+          s.showing_number === 1 ? 'Early' :
+          s.showing_number === 2 ? 'Late' : '',
+        showTime: formatShowTime(s.show_start),
+        showStart: s.show_start,
+      }))
+      .sort((a, b) => {
+        if (a.showingNumber !== b.showingNumber) {
+          return (a.showingNumber || 99) - (b.showingNumber || 99);
+        }
+        return String(a.showStart || '').localeCompare(String(b.showStart || ''));
+      });
     onMovieDetail({
       ...movie,
       __showingNumber: showingNumber,
       __showLabel: ctx?.label,
       __showTime: ctx?.time,
+      schedule,
     });
   };
 

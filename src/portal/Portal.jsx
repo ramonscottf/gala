@@ -1603,6 +1603,12 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
 
   // lineup — unique movies across all showtimes
   const movieMap = new Map();
+  // Phase 5.5 — for each unique movie in the lineup, collect every
+  // showtime that plays it so the MovieDetailSheet can render a
+  // schedule block ("Early · 4:30 PM · Auditorium 7"). Some films
+  // play in both the early and late slot (different theaters); some
+  // play only in one. The schedule needs to be stable-sorted by
+  // showing_number so 'Early' always renders above 'Late'.
   showtimes.forEach((s) => {
     if (movieMap.has(s.movie_id)) return;
     movieMap.set(s.movie_id, enrichMovieScores({
@@ -1628,7 +1634,38 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       rtCriticsScore: s.rt_critics_score,
       rtAudienceScore: s.rt_audience_score,
       rtUrl: s.rt_url,
+      // Schedule: filled in below after movieMap is seeded so we
+      // capture every showtime row that plays this movie (a film
+      // playing in both early + late lands two entries here).
+      schedule: [],
     }));
+  });
+  // Second pass — append every showtime to its movie's schedule.
+  showtimes.forEach((s) => {
+    const m = movieMap.get(s.movie_id);
+    if (!m) return;
+    const theater = theatersById[s.theater_id];
+    m.schedule.push({
+      theaterId: s.theater_id,
+      theaterName: theater?.name || `Theater ${s.theater_id}`,
+      showingNumber: s.showing_number,
+      showLabel:
+        s.showing_number === 1 ? 'Early' :
+        s.showing_number === 2 ? 'Late' : '',
+      showTime: formatShowTime(s.show_start),
+      showStart: s.show_start, // raw, for any future sorting needs
+    });
+  });
+  // Sort each movie's schedule: Early before Late, then by raw start
+  // time as tiebreaker. Done in-place after collection so multiple
+  // entries per showing slot also stay deterministic.
+  movieMap.forEach((m) => {
+    m.schedule.sort((a, b) => {
+      if (a.showingNumber !== b.showingNumber) {
+        return (a.showingNumber || 99) - (b.showingNumber || 99);
+      }
+      return String(a.showStart || '').localeCompare(String(b.showStart || ''));
+    });
   });
   const lineup = [...movieMap.values()];
 
@@ -2522,6 +2559,11 @@ export default function Portal({
   // three cards. AssignTheseSheet does multi-seat batch delegation.
   // DinnerPicker scopes to just-placed seats.
   const [seatPickOpen, setSeatPickOpen] = useState(false);
+  // Phase 5.5 — when SeatPickSheet is opened from a MovieDetailSheet
+  // CTA, this carries the showing/movie that the sheet should land on
+  // (rather than defaulting to showings[0] or the placed-seats theater).
+  // null means "no preselection — use existing init logic."
+  const [seatPickInitial, setSeatPickInitial] = useState(null);
   // Task 11: `/seats` deep-link now flows through `openSheetOnMount`
   // (App.jsx no longer routes /seats to MobileWizard). Deps
   // `[openSheetOnMount]` (NOT `[]`) so route changes from `/:token` →
@@ -3046,11 +3088,17 @@ export default function Portal({
             apiBase={config.apiBase}
             onRefresh={onRefresh}
             onMovieDetail={setMovieDetail}
+            initialShowingNumber={seatPickInitial?.showingNumber || null}
+            initialMovieId={seatPickInitial?.movieId || null}
             onCommitted={(placed) => {
               setSeatPickOpen(false);
+              setSeatPickInitial(null);
               setPostPick(placed);
             }}
-            onClose={() => setSeatPickOpen(false)}
+            onClose={() => {
+              setSeatPickOpen(false);
+              setSeatPickInitial(null);
+            }}
           />
         )}
       </Sheet>
@@ -3237,7 +3285,13 @@ export default function Portal({
           holds open-state and the sheet renders conditionally. The
           movie object carries __showLabel / __showTime / __showingNumber
           tagged on by SeatPickSheet's onMoreInfo so the sheet header
-          can show "Early showing · 6:00 PM" without a re-lookup. */}
+          can show "Early showing · 6:00 PM" without a re-lookup.
+          Phase 5.5 — sheet now also receives the bottom CTAs:
+          'SELECT SEATS FOR THIS FILM' opens SeatPickSheet preselected
+          on the movie's first showtime, OR if the sponsor has finalized
+          and has nothing left to place, switches to a 'View your
+          tickets' CTA that closes the sheet and routes to the Tickets
+          tab. */}
       {movieDetail && (
         <MovieDetailSheet
           movie={movieDetail}
@@ -3250,6 +3304,37 @@ export default function Portal({
                 : '')
           }
           showTime={movieDetail.__showTime}
+          // Used by the bottom CTA to swap from "SELECT SEATS" to
+          // "View your tickets" when there are no seats left to place
+          // (sponsor has finalized OR every seat is already placed).
+          // The CTA still opens the seat-picker on the chosen film
+          // even if isFinalized — the user can rearrange. The
+          // "viewTickets" branch only fires when seatMath says zero
+          // available AND zero on hold.
+          ctaMode={
+            (data.seatMath?.available ?? 0) <= 0
+              ? 'viewTickets'
+              : 'selectSeats'
+          }
+          onSelectSeatsForFilm={(scheduleEntry) => {
+            // Open SeatPickSheet preselected on this movie + showing.
+            // Movie id comes from movieDetail; showingNumber from the
+            // schedule entry the user saw on the sheet (when there's
+            // only one showing, scheduleEntry is implicit). If the
+            // schedule has multiple entries the sheet shows them all
+            // and the user picks one.
+            setSeatPickInitial({
+              showingNumber: scheduleEntry?.showingNumber || null,
+              movieId: movieDetail.id,
+            });
+            setMovieDetail(null);
+            setSeatPickOpen(true);
+          }}
+          onViewTickets={() => {
+            // No seats to place — route to the Tickets tab.
+            setMovieDetail(null);
+            setTab('tickets');
+          }}
           onClose={() => setMovieDetail(null)}
         />
       )}
