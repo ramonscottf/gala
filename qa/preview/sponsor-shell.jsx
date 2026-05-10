@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import '../../src/brand/styles.css';
-import Desktop from '../../src/portal/Desktop.jsx';
 import Mobile from '../../src/portal/Mobile.jsx';
 import {
   createPreviewPortal,
@@ -53,7 +52,10 @@ const installPreviewApi = () => {
 function PreviewApp() {
   const [portal, setPortal] = useState(() => createPreviewPortal());
   const seats = useMemo(() => createPreviewSeats(portal, setPortal), [portal]);
-  const surface = new URLSearchParams(window.location.search).get('surface') || 'desktop';
+  // The portal is one responsive shell now (was Mobile|Desktop split).
+  // The ?surface=mobile|desktop query param is preserved for legacy
+  // QA scripts but both branches render the same component — viewport
+  // size is what determines layout, not a runtime branch.
   const props = {
     portal,
     token: TOKEN,
@@ -64,39 +66,9 @@ function PreviewApp() {
     openSheetOnMount: false,
   };
 
-  if (surface === 'mobile') {
-    return (
-      <MemoryRouter initialEntries={[`/sponsor/${TOKEN}`]}>
-        <Mobile {...props} />
-      </MemoryRouter>
-    );
-  }
-
   return (
     <MemoryRouter initialEntries={[`/sponsor/${TOKEN}`]}>
-      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        <Desktop {...props} />
-        <div
-          data-testid="desktop-companion-notes"
-          style={{
-            position: 'fixed',
-            left: 18,
-            bottom: 16,
-            zIndex: 5,
-            maxWidth: 310,
-            padding: '10px 12px',
-            borderRadius: 8,
-            background: 'rgba(7,10,29,0.82)',
-            border: '1px solid rgba(255,255,255,0.16)',
-            color: 'rgba(255,255,255,0.78)',
-            font: '600 11px/1.45 Inter, system-ui, sans-serif',
-            letterSpacing: 0.2,
-            boxShadow: '0 14px 38px rgba(0,0,0,0.28)',
-          }}
-        >
-          Same flow as mobile. Desktop adds summary context around the live portal, not a second wizard.
-        </div>
-      </div>
+      <Mobile {...props} />
     </MemoryRouter>
   );
 }
