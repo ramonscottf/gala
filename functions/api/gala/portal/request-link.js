@@ -114,6 +114,7 @@ export async function onRequestPost(context) {
 
   const rawEmail = (body && body.email) || '';
   const email = String(rawEmail).toLowerCase().trim();
+  console.log('[request-link][trace1] email=', email);
 
   // Basic input shape check. Beyond this we don't reveal anything.
   if (!email || email.indexOf('@') < 1 || email.length > 254) {
@@ -130,6 +131,7 @@ export async function onRequestPost(context) {
         AND (LOWER(email) = ? OR LOWER(secondary_email) = ?)
       LIMIT 1`
   ).bind(email, email).first();
+  console.log('[request-link][trace2] sponsor=', sponsorRow ? sponsorRow.id : 'none');
 
   // Look up delegations — anyone invited as a guest. Active (not revoked)
   // records only; status='revoked' means the sponsor took the seat back.
@@ -140,6 +142,7 @@ export async function onRequestPost(context) {
         AND (status IS NULL OR status != 'revoked')
       LIMIT 1`
   ).bind(email).first();
+  console.log('[request-link][trace3] delegation=', delegationRow ? delegationRow.id : 'none');
 
   // Always-same response shape so we don't leak presence.
   const genericOk = jsonOk({
@@ -149,6 +152,7 @@ export async function onRequestPost(context) {
 
   if (!sponsorRow && !delegationRow) {
     // No match. Pretend we sent.
+    console.log('[request-link][trace4a] no match, generic OK');
     return genericOk;
   }
 
@@ -167,6 +171,7 @@ export async function onRequestPost(context) {
     portalToken = delegationRow.token;
     kind = 'delegation';
   }
+  console.log('[request-link][trace4b] resolved', { kind, portalToken: portalToken ? portalToken.slice(0,4)+'…' : null });
 
   if (!portalToken) {
     // Data integrity issue — sponsor record exists but has no token.
@@ -180,6 +185,7 @@ export async function onRequestPost(context) {
 
   const html = buildEmailHtml({ recipientName, portalUrl, kind });
   const text = buildEmailText({ recipientName, portalUrl, kind });
+  console.log('[request-link][trace5] about to call sendEmail, html len=', html.length);
 
   // _notify.sendEmail returns { ok, ... } — uses GALA_MAIL_TOKEN
   // (SkippyMail) primary, falls back to RESEND_API_KEY if configured.
@@ -190,6 +196,7 @@ export async function onRequestPost(context) {
     replyTo: REPLY_TO,
     text,
   });
+  console.log('[request-link][trace6] sendEmail returned', { ok: mailResult.ok, id: mailResult.id, via: mailResult.via, error: mailResult.error });
 
   if (!mailResult.ok) {
     console.error('[request-link] mail send failed', { email, error: mailResult.error });
