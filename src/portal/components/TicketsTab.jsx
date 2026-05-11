@@ -237,6 +237,13 @@ export default function TicketsTab({
   // dinner-pick state + sponsor.rsvpStatus. These wire the tap handlers.
   onSelectMeals,        // (ticket) => void — opens batch dinner picker
   onFinalizeFromCard,   // (ticket) => void — fires /finalize, triggers celebration
+  // Phase 5.14 — Home-tab parity. Per-card Edit/View + global bottom
+  // action bar (red Edit seats / yellow Edit meals). All optional;
+  // missing handlers degrade gracefully.
+  onEditSeats,      // (ticket) => void — per-card seat editor
+  onEditMeals,      // (ticket) => void — per-card meal editor
+  onEditAllSeats,   // () => void — global Edit-all-seats (bottom bar)
+  onEditAllMeals,   // () => void — global Edit-all-meals (bottom bar)
 }) {
   const { tickets = [], guestTickets = [], delegations = [], blockSize = 0, seatMath, isFinalized = false } = data || {};
 
@@ -341,6 +348,8 @@ export default function TicketsTab({
             onInviteSeat={onInviteSeat}
             onSelectMeals={onSelectMeals}
             onFinalizeFromCard={onFinalizeFromCard}
+            onEditSeats={onEditSeats}
+            onEditMeals={onEditMeals}
           />
         ))}
         {tickets.length === 0 && (
@@ -413,6 +422,67 @@ export default function TicketsTab({
               />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Phase 5.14 — global bottom action bar. Mirrors HomeTab's
+          inline edit picker shape at the page footer level: red 'Edit
+          seats' on the left, yellow 'Edit meals' on the right, full
+          width pair. Only renders when there's something to edit and
+          the handlers are wired. Per-card pills handle per-ticket
+          editing; this bar handles the cross-ticket case. */}
+      {tickets.length > 0 && (onEditAllSeats || onEditAllMeals) && (
+        <div
+          style={{
+            padding: '14px 18px 0',
+            display: 'flex',
+            gap: 10,
+          }}
+        >
+          {typeof onEditAllSeats === 'function' && (
+            <button
+              type="button"
+              onClick={onEditAllSeats}
+              data-testid="tickets-edit-all-seats"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                flex: 1,
+                padding: '12px 14px',
+                borderRadius: 12,
+                background: 'linear-gradient(135deg,#CB262C,#a01f24)',
+                color: '#fff',
+                fontSize: 14,
+                fontWeight: 700,
+                textAlign: 'center',
+              }}
+            >
+              🪑 Edit seats
+            </button>
+          )}
+          {typeof onEditAllMeals === 'function' && (
+            <button
+              type="button"
+              onClick={onEditAllMeals}
+              data-testid="tickets-edit-all-meals"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                flex: 1,
+                padding: '12px 14px',
+                borderRadius: 12,
+                background: 'linear-gradient(135deg,#ffc24d,#f5a623)',
+                color: BRAND.navyDeep,
+                fontSize: 14,
+                fontWeight: 700,
+                textAlign: 'center',
+              }}
+            >
+              🍽️ Edit meals
+            </button>
+          )}
         </div>
       )}
 

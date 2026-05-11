@@ -3107,6 +3107,53 @@ function PortalInner({
               // pre-finalize state until /finalize succeeds.
             }
           }}
+          // Phase 5.14 — Home-tab parity. Per-card Edit reuses the same
+          // paths HomeTab uses (openTicket for seats, postPick+dinnerOpen
+          // for meals). Global bottom bar routes to seat-pick wizard
+          // (goSeats) and an all-seats meal editor mirroring HomeTab's
+          // onPickMeals path.
+          onEditSeats={(ticket) => openTicket(ticket)}
+          onEditMeals={(ticket) => {
+            const seatIds = (ticket.assignmentRows || [])
+              .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+            if (seatIds.length === 0) return;
+            setPostPick({
+              theaterId: ticket.theaterId,
+              seatIds,
+              movieTitle: ticket.movieTitle,
+              showLabel: ticket.showLabel,
+              showTime: ticket.showTime,
+              theaterName: ticket.theaterName,
+              posterUrl: ticket.posterUrl,
+              editOnly: true,
+            });
+            setDinnerOpen(true);
+          }}
+          onEditAllSeats={goSeats}
+          onEditAllMeals={() => {
+            // Mirror HomeTab's onPickMeals path: scope to every placed
+            // seat the sponsor owns. Prefers seats still missing a meal;
+            // falls back to every placed seat if all already have one.
+            const meallessSeatIds = (portal?.myAssignments || [])
+              .filter((a) => !a.dinner_choice || String(a.dinner_choice).trim() === '')
+              .map((a) => a.seat_id || `${a.row_label}-${a.seat_num}`);
+            const targetIds = meallessSeatIds.length > 0
+              ? meallessSeatIds
+              : (portal?.myAssignments || []).map((a) => a.seat_id || `${a.row_label}-${a.seat_num}`);
+            if (targetIds.length === 0) return;
+            const firstTicket = ticketsWithLocalGuests[0];
+            setPostPick({
+              theaterId: firstTicket?.theaterId,
+              seatIds: targetIds,
+              movieTitle: firstTicket?.movieTitle,
+              showLabel: firstTicket?.showLabel,
+              showTime: firstTicket?.showTime,
+              theaterName: firstTicket?.theaterName,
+              posterUrl: firstTicket?.posterUrl,
+              editOnly: true,
+            });
+            setDinnerOpen(true);
+          }}
         />
       )}
       {tab === 'night' && <NightTab />}

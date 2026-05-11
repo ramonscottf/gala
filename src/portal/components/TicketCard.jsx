@@ -56,11 +56,18 @@ export default function TicketCard({
   onInviteGroup,   // (ticket) => void — opens HandBlockSheet for the group
   onSelectMeals,   // (ticket) => void — opens batch dinner picker
   onFinalizeFromCard, // (ticket) => void — fires /finalize, triggers celebration
+  // Phase 5.14 — Home-tab parity on Tickets tab. Per-card Edit/View
+  // pills + inline red/yellow picker matching HomeTab's TicketHeroCard.
+  // Optional; falls back to legacy chevron-only behavior when omitted.
+  onEditSeats,     // (ticket) => void — opens TicketManage / seat picker
+  onEditMeals,     // (ticket) => void — opens batch dinner editor
 }) {
   const rows = ticket.assignmentRows || [];
   // R9 — sponsor cards now collapse like guest cards. Default closed
   // for both contexts; chevron toggles the seat list.
   const [expanded, setExpanded] = useState(false);
+  // Phase 5.14 — inline Edit picker (mirrors HomeTab TicketHeroCard).
+  const [editOpen, setEditOpen] = useState(false);
 
   // Subline: 'Dinner 4:00 · Movie 4:30 · Auditorium 7'
   const subline = useMemo(() => {
@@ -176,6 +183,52 @@ export default function TicketCard({
               Manage
             </button>
           )}
+          {/* Phase 5.14 — Home-tab parity: per-card Edit + View pills
+              on sponsor cards. Edit toggles an inline red/yellow picker
+              (Edit seats / Edit meals); View opens TicketDetailSheet.
+              Does NOT replace the existing Finalize seats CTA below —
+              this is additive surface for editing already-placed seats.
+              Both pills only render when their callbacks are wired. */}
+          {!guest && (typeof onEditSeats === 'function' || typeof onEditMeals === 'function') && (
+            <button
+              type="button"
+              onClick={() => setEditOpen((v) => !v)}
+              aria-expanded={editOpen}
+              data-testid="ticket-edit-toggle"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                padding: '6px 12px',
+                borderRadius: 99,
+                background: editOpen ? 'rgba(168,177,255,0.18)' : 'rgba(255,255,255,0.06)',
+                color: editOpen ? BRAND.indigoLight : 'var(--ink-on-ground)',
+                fontSize: 11,
+                fontWeight: 700,
+                border: `1px solid ${editOpen ? 'rgba(168,177,255,0.32)' : 'var(--rule)'}`,
+              }}
+            >
+              {editOpen ? 'Close' : 'Edit'}
+            </button>
+          )}
+          {!guest && onViewTicket && (
+            <button
+              type="button"
+              onClick={() => onViewTicket(ticket)}
+              data-testid="ticket-view-pill"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                padding: '6px 13px',
+                borderRadius: 99,
+                background: 'rgba(168,177,255,0.18)',
+                color: BRAND.indigoLight,
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              View
+            </button>
+          )}
           <button
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
@@ -186,6 +239,73 @@ export default function TicketCard({
           </button>
         </div>
       </div>
+
+      {/* Phase 5.14 — inline Edit picker. Mirrors HomeTab TicketHeroCard.
+          Red 'Edit seats' (always shown when onEditSeats wired) + yellow
+          'Edit meals' (only when onEditMeals wired and seats exist). Sits
+          between the header and the expanded seat list / Finalize CTA so
+          it reads as a secondary action set, not a primary one. */}
+      {editOpen && !guest && (
+        <div
+          style={{
+            padding: '0 14px 12px',
+            display: 'flex',
+            gap: 8,
+            borderTop: `1px solid var(--rule)`,
+            paddingTop: 12,
+            background: 'rgba(0,0,0,0.12)',
+          }}
+        >
+          {typeof onEditSeats === 'function' && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditOpen(false);
+                onEditSeats(ticket);
+              }}
+              data-testid="ticket-edit-seats"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                flex: 1,
+                padding: '10px 12px',
+                borderRadius: 10,
+                background: 'linear-gradient(135deg,#CB262C,#a01f24)',
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: 'center',
+              }}
+            >
+              🪑 Edit seats
+            </button>
+          )}
+          {typeof onEditMeals === 'function' && rows.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditOpen(false);
+                onEditMeals(ticket);
+              }}
+              data-testid="ticket-edit-meals"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                flex: 1,
+                padding: '10px 12px',
+                borderRadius: 10,
+                background: 'linear-gradient(135deg,#ffc24d,#f5a623)',
+                color: BRAND.navyDeep,
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: 'center',
+              }}
+            >
+              🍽️ Edit meals
+            </button>
+          )}
+        </div>
+      )}
 
       {expanded && rows.length > 0 && (
         <div
