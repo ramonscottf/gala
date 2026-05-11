@@ -464,19 +464,29 @@ export async function onRequestPost(context) {
   // label, scoped to Platinum tier to disambiguate. Falls back to the
   // literal {TOKEN} placeholder if no match — test still arrives, link is
   // visibly broken so we know to fix the lookup.
+  // Pin to specific (first_name, company) pairs — there are three
+  // Scotts in the sponsor table (Legacy Pediatric, MHTN, Wicko Waypoint)
+  // so we MUST disambiguate by company or token resolution is a coin flip.
+  // Scott  -> Wicko Waypoint   (his own sandbox sponsorship)
+  // Kara   -> 2N Family        (her own sandbox sponsorship)
+  // Sherry -> Miggin Inc.      (her own sandbox sponsorship)
   const tokenByLabel = {};
   try {
     if (env.GALA_DB) {
       const rows = await env.GALA_DB.prepare(
-        `SELECT first_name, last_name, email, rsvp_token
+        `SELECT first_name, company, rsvp_token
            FROM sponsors
           WHERE archived_at IS NULL
             AND rsvp_token IS NOT NULL
-            AND first_name IN ('Scott', 'Sherry', 'Kara')`
+            AND (
+                 (first_name = 'Scott'  AND company = 'Wicko Waypoint')
+              OR (first_name = 'Kara'   AND company = '2N Family')
+              OR (first_name = 'Sherry' AND company = 'Miggin Inc.')
+            )`
       ).all();
       for (const row of (rows.results || [])) {
         const key = (row.first_name || '').toLowerCase();
-        if (!tokenByLabel[key]) tokenByLabel[key] = row.rsvp_token;
+        tokenByLabel[key] = row.rsvp_token;
       }
     }
   } catch (e) {
