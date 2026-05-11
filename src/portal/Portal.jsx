@@ -240,15 +240,17 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
       {/* Top gold perforation strip — boarding-pass trim. Sits ABOVE the
           red→indigo gradient, taking 1.5px of the 3px header band so
           both reads visible. May 5 2026 add per Scott — original boarding
-          pass had this and it got lost in the migration. */}
+          pass had this and it got lost in the migration.
+          May 11 2026 — now uses shimmer-strip class for the 4s animated
+          gradient that matches daviskids.org/events-gala. */}
       <div
+        className="shimmer-strip"
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           height: 3,
-          background: BRAND.gradient,
           zIndex: 3,
         }}
       />
@@ -495,6 +497,7 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
                   value: openCount,
                   sub: 'To place',
                   color: openCount > 0 ? BRAND.indigoLight : 'rgba(255,255,255,0.6)',
+                  shimmer: openCount > 0,
                 },
               ]
             : [
@@ -506,6 +509,7 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
                   value: openCount,
                   sub: 'To place',
                   color: openCount > 0 ? BRAND.indigoLight : 'rgba(255,255,255,0.6)',
+                  shimmer: openCount > 0,
                 },
               ]
           ).map((s, i) => (
@@ -527,11 +531,12 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
                 {s.label}
               </div>
               <div
+                className={s.shimmer ? 'shimmer-text-stat' : undefined}
                 style={{
                   fontFamily: FONT_DISPLAY,
                   fontSize: 30,
                   fontWeight: 700,
-                  color: s.color,
+                  color: s.shimmer ? undefined : s.color,
                   marginTop: 4,
                   lineHeight: 1,
                   fontVariantNumeric: 'tabular-nums',
@@ -595,13 +600,13 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
         </div>
         {/* Bottom gradient strip — mirrors the top edge per F7b. */}
         <div
+          className="shimmer-strip"
           style={{
             position: 'absolute',
             bottom: 0,
             left: 0,
             right: 0,
             height: 3,
-            background: BRAND.gradient,
           }}
         />
       </div>
@@ -1205,7 +1210,7 @@ export const NightTab = () => (
           lineHeight: 1,
         }}
       >
-        Questions & <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>answers.</i>
+        Questions & <i className="shimmer-text" style={{ fontWeight: 500 }}>answers.</i>
       </h1>
       <div style={{ fontSize: 13, color: 'var(--mute)', lineHeight: 1.5 }}>
         Everything for Wednesday June 10. Search if you're looking for something
@@ -1307,7 +1312,10 @@ const TabBar = ({ active, onChange, tabs = ALL_TABS }) => {
                 : 'transparent',
               // Phase 1.15 — inactive label uses var(--mute) so it
               // flips to a readable dark on paper in light mode.
-              color: isActive ? BRAND.indigoLight : 'var(--mute)',
+              // May 11 — active color is now DEF gold to match the
+              // gold radial wash above. Was BRAND.indigoLight (periwinkle)
+              // which read too purple against the navy.
+              color: isActive ? BRAND.gold : 'var(--mute)',
               transition: 'background .25s ease, color .2s',
             }}
           >

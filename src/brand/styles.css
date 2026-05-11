@@ -1348,3 +1348,72 @@ img,
 .scroll-container details[open] > summary .faq-chevron {
   transform: rotate(45deg);
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+ * BRAND SHIMMER — ported from daviskids.org/events-gala (May 11 2026)
+ *
+ * The 4-second linear loop is THE brand signature on the marketing site.
+ * Used on:
+ *   - italic flair words inside display headlines ("Dawson.", "answers.")
+ *   - the 3px masthead strip
+ *   - section dividers
+ *   - stat numbers (with drop-shadow glow)
+ *
+ * Apply by adding class="shimmer-text" / "shimmer-text-stat" /
+ * "shimmer-strip" to the relevant element. The keyframe is shared.
+ * ──────────────────────────────────────────────────────────────────── */
+@keyframes goldShimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #2858d6, #CB262C, #4a7df0, #CB262C, #2858d6);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: goldShimmer 4s linear infinite;
+}
+
+.shimmer-text-stat {
+  background: linear-gradient(90deg, #CB262C, #4a7df0, #CB262C, #2858d6);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: goldShimmer 4s linear infinite;
+  filter: drop-shadow(0 0 14px rgba(40,88,214,0.25));
+}
+
+.shimmer-strip {
+  background: linear-gradient(90deg, #2858d6, #CB262C, #4a7df0, #CB262C);
+  background-size: 200% auto;
+  animation: goldShimmer 4s linear infinite;
+}
+
+/* Primary red CTA — gradient + pulsing scale, matching marketing site btn */
+@keyframes ctaPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.03); }
+}
+.cta-red-pulse {
+  background: linear-gradient(135deg, #CB262C, #a01f24) !important;
+  box-shadow: 0 12px 32px rgba(203,38,44,0.25) !important;
+  animation: ctaPulse 2.6s ease-in-out infinite;
+  color: #fff !important;
+}
+.cta-red-pulse:hover {
+  filter: brightness(1.05);
+  animation-play-state: paused;
+}
+
+/* Blue→red tier-pill gradient for secondary CTAs (Invite, etc.) */
+.cta-tier-pill {
+  background: linear-gradient(135deg, #2858d6, #CB262C) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 8px 22px -10px rgba(40,88,214,0.55) !important;
+}

@@ -200,7 +200,7 @@ export default function HomeTab({
               letterSpacing: -0.4,
             }}
           >
-            {lineup.length} <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>films.</i>
+            {lineup.length} <i className="shimmer-text" style={{ fontWeight: 500 }}>films.</i>
           </h2>
           <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 4 }}>
             Two showtimes · select one or split your block
@@ -412,11 +412,14 @@ function ActionCard({ icon, gradient, title, sub, cta, ctaPrimary, onClick, test
           borderRadius: 99,
           background: ctaPrimary
             ? 'linear-gradient(135deg,#CB262C,#a01f24)'
-            : 'rgba(168,177,255,0.18)',
-          color: ctaPrimary ? '#fff' : BRAND.indigoLight,
+            : 'linear-gradient(135deg,#2858d6,#CB262C)',
+          color: '#fff',
           fontSize: 12,
           fontWeight: 700,
           flexShrink: 0,
+          boxShadow: ctaPrimary
+            ? '0 8px 20px -8px rgba(203,38,44,0.45)'
+            : '0 8px 20px -8px rgba(40,88,214,0.45)',
         }}
       >
         {cta}
