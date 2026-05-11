@@ -62,6 +62,19 @@ export default function TicketDetailSheet({
   const dinnerLocked = daysOut != null && daysOut <= DINNER_LOCK_DAYS;
   const qrSrc = `${apiBase}/api/gala/qr?t=${encodeURIComponent(token || '')}&size=400`;
 
+  // Phase 5.11 — if any seat is missing a meal, the QR is not yet
+  // valid for check-in (the kitchen needs a meal count per seat).
+  // Replace the QR block with a "finish your meals" prompt rather
+  // than showing a code that can't be honored at the door. Logan
+  // tested the place-seats flow without picking any meals and ended
+  // up with a QR-bearing ticket; gate it here too so even users who
+  // somehow got past finalize (legacy state, race) don't see a
+  // misleading 'show this at the door' affordance.
+  const missingMealCount = rows.filter(
+    (r) => !r.dinner_choice || String(r.dinner_choice).trim() === ''
+  ).length;
+  const mealsComplete = rows.length > 0 && missingMealCount === 0;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       {/* ─── HERO BAND — matches MovieDetailSheet ─────────────────
@@ -294,10 +307,15 @@ export default function TicketDetailSheet({
         </div>
       </div>
 
-      {/* ─── QR — DOMINANT. The whole reason this sheet exists. ───
-          Centered, large (200px), prominent label below. This was
-          the small footer in the old layout; it's the focal point
-          now. */}
+      {/* ─── QR — DOMINANT when meals complete. PRE-QR prompt when
+          meals incomplete. Phase 5.11 — the QR is the whole reason
+          this sheet exists at the door, but it's not valid until
+          every seat has a meal. When meals are incomplete, replace
+          the white-card QR with a hatched placeholder + "Finish your
+          meals to unlock your check-in QR" message. The user can
+          still see meal status in the seats list below; the prompt
+          tells them what to do. Once they pick meals (refresh comes
+          through onRefresh on the dinner sheet), the QR slots in. */}
       <div
         style={{
           marginTop: 22,
@@ -307,85 +325,161 @@ export default function TicketDetailSheet({
           gap: 12,
         }}
       >
-        <div
-          style={{
-            width: 200,
-            height: 200,
-            borderRadius: 18,
-            background: '#fff',
-            padding: 12,
-            boxSizing: 'border-box',
-            boxShadow:
-              '0 18px 40px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.30)',
-          }}
-        >
-          <img
-            src={qrSrc}
-            alt="Check-in QR"
-            width="176"
-            height="176"
-            style={{ width: '100%', height: '100%', display: 'block' }}
-          />
-        </div>
-        <div style={{ textAlign: 'center' }}>
+        {mealsComplete ? (
+          <>
+            <div
+              style={{
+                width: 200,
+                height: 200,
+                borderRadius: 18,
+                background: '#fff',
+                padding: 12,
+                boxSizing: 'border-box',
+                boxShadow:
+                  '0 18px 40px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.30)',
+              }}
+            >
+              <img
+                src={qrSrc}
+                alt="Check-in QR"
+                width="176"
+                height="176"
+                style={{ width: '100%', height: '100%', display: 'block' }}
+              />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: 1.4,
+                  color: BRAND.gold,
+                }}
+              >
+                CHECK-IN
+              </div>
+              <div
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: '#fff',
+                  marginTop: 4,
+                  lineHeight: 1.2,
+                }}
+              >
+                Show this at the door
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: 'rgba(255,255,255,0.65)',
+                  marginTop: 4,
+                  lineHeight: 1.4,
+                }}
+              >
+                One QR for your whole party.
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div
+              style={{
+                width: 200,
+                height: 200,
+                borderRadius: 18,
+                background: 'rgba(255,255,255,0.04)',
+                border: `2px dashed rgba(255,255,255,0.18)`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxSizing: 'border-box',
+                padding: 18,
+              }}
+            >
+              <div style={{ fontSize: 32, lineHeight: 1 }} aria-hidden>🍽️</div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: 1.4,
+                  color: BRAND.gold,
+                  textTransform: 'uppercase',
+                  textAlign: 'center',
+                }}
+              >
+                Check-in QR pending
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.65)',
+                  textAlign: 'center',
+                  lineHeight: 1.4,
+                }}
+              >
+                {missingMealCount} seat{missingMealCount === 1 ? '' : 's'} still need{missingMealCount === 1 ? 's' : ''} a meal.
+              </div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: '#fff',
+                  marginTop: 4,
+                  lineHeight: 1.3,
+                }}
+              >
+                Pick your meals to unlock your ticket
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.55)',
+                  marginTop: 4,
+                  lineHeight: 1.4,
+                  fontStyle: 'italic',
+                }}
+              >
+                Tap a seat below to pick its meal. You can change meals later from the Tickets tab.
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Wallet buttons — only shown when meals complete (otherwise
+          there's nothing valid to add to wallet). */}
+      {mealsComplete && (
+        <>
+          <div
+            style={{
+              marginTop: 18,
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 8,
+            }}
+          >
+            <WalletButton tone="black" label="Apple Wallet" />
+            <WalletButton tone="white" label="Google Wallet" />
+          </div>
           <div
             style={{
               fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: 1.4,
-              color: BRAND.gold,
-            }}
-          >
-            CHECK-IN
-          </div>
-          <div
-            style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: '#fff',
-              marginTop: 4,
-              lineHeight: 1.2,
-            }}
-          >
-            Show this at the door
-          </div>
-          <div
-            style={{
-              fontSize: 12,
-              color: 'rgba(255,255,255,0.65)',
-              marginTop: 4,
+              color: 'rgba(255,255,255,0.55)',
+              textAlign: 'center',
+              marginTop: 8,
+              fontStyle: 'italic',
               lineHeight: 1.4,
             }}
           >
-            One QR for your whole party.
+            Wallet support is coming. For now, screenshot this ticket.
           </div>
-        </div>
-      </div>
-
-      {/* Wallet buttons — kept below QR for now, soon-tagged */}
-      <div
-        style={{
-          marginTop: 18,
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 8,
-        }}
-      >
-        <WalletButton tone="black" label="Apple Wallet" />
-        <WalletButton tone="white" label="Google Wallet" />
-      </div>
-      <div
-        style={{
-          fontSize: 10,
-          color: 'rgba(255,255,255,0.55)',
-          textAlign: 'center',
-          marginTop: 8,
-          fontStyle: 'italic',
-          lineHeight: 1.4,
-        }}
-      >
-        Wallet support is coming. For now, screenshot this ticket.
-      </div>
+        </>
+      )}
 
       {/* ─── SEATS — collapsed-by-default list. No longer the main
           attraction. Tap a row to reveal that seat's meal + change/

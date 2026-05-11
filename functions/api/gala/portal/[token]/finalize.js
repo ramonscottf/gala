@@ -48,6 +48,32 @@ export async function onRequestPost(context) {
     return jsonError('No seats picked yet', 400);
   }
 
+  // Phase 5.11 — meals-required gate. Logan tested the place-seats
+  // flow without choosing any meals and the system still finalized
+  // him, sent a QR, and triggered the celebration screen. Per Scott:
+  // no QR or finalize until every seat has a meal. Seats stay
+  // editable in the Tickets tab after finalize, but the QR isn't
+  // valid (and shouldn't render) until the kitchen has a meal count
+  // per seat. Sponsor sees a clear blocker; client mirrors this in
+  // the useFinalize hook so the button never even fires the POST.
+  const missingDinners = seatList.filter(
+    (s) => !s.dinner_choice || String(s.dinner_choice).trim() === ''
+  );
+  if (missingDinners.length) {
+    return new Response(
+      JSON.stringify({
+        error: `Pick a meal for every seat before confirming (${missingDinners.length} seat${missingDinners.length === 1 ? '' : 's'} still needs a dinner)`,
+        reason: 'meals_required',
+        missingCount: missingDinners.length,
+        totalCount: seatList.length,
+      }),
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      }
+    );
+  }
+
   // Mark delegation as finalized (sponsor equiv: update rsvp_status)
   if (resolved.kind === 'delegation') {
     await env.GALA_DB.prepare(
