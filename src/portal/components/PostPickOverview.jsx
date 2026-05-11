@@ -223,11 +223,11 @@ function CounterPill({ label, done, total }) {
 function ActionButton({ label, subtext, tone, disabled, onClick }) {
   const map = {
     indigo: {
-      bg: 'linear-gradient(135deg,#a8b1ff,#6f75d8)',
+      bg: 'linear-gradient(135deg,#4a7df0,#2858d6)',
       fg: BRAND.navyDeep,
     },
     amber: {
-      bg: 'linear-gradient(135deg,#f4b942,#c98517)',
+      bg: 'linear-gradient(135deg,#ffc24d,#f5a623)',
       fg: BRAND.navyDeep,
     },
   };

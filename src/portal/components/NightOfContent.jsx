@@ -283,7 +283,7 @@ function BookerCta() {
           boxSizing: 'border-box',
           padding: '11px 22px',
           borderRadius: 99,
-          background: 'linear-gradient(135deg,#a8b1ff,#6f75d8)',
+          background: 'linear-gradient(135deg,#4a7df0,#2858d6)',
           color: BRAND.navyDeep,
           fontSize: 13,
           fontWeight: 800,

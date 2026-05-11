@@ -16,15 +16,19 @@ import { useEffect, useRef, useState } from 'react';
 import { BRAND } from '../brand/tokens.js';
 
 // Brand-coherent palette over the navy ground. Real types from theater-
-// layouts.json mapped to colors that read well against #0f1639. Yours (gold)
-// is reserved for the user's own seats and applied at render time.
+// layouts.json mapped to colors that read well against #0b1b3c (DEF navy).
+// Yours (gold) is reserved for the user's own seats and applied at render
+// time. These are *category* colors — they need to remain distinct from
+// each other on the seat map, so a few sit outside the strict 2-color
+// brand system (loveseat purple, wheelchair sky blue, companion light-blue)
+// and that's intentional.
 export const SEAT_TYPES = {
-  luxury: { label: 'Luxury Recliner', short: 'Luxury', color: '#3b3f9f' },
+  luxury: { label: 'Luxury Recliner', short: 'Luxury', color: '#1a3aa3' },  // brand-blue-deep (was off-brand #3b3f9f)
   standard: { label: 'Standard', short: 'Standard', color: '#5a6e8f' },
   wheelchair: { label: 'Wheelchair', short: 'Accessible', color: '#0ea5e9' },
   companion: { label: 'Companion', short: 'Companion', color: '#7dd3fc' },
-  loveseat: { label: 'Loveseat', short: 'Loveseat', color: '#6a3a9a' },
-  dbox: { label: 'D-BOX', short: 'D-BOX', color: '#f4b942' },
+  loveseat: { label: 'Loveseat', short: 'Loveseat', color: '#6a3a9a' },  // deliberately purple — category distinguisher, review separately
+  dbox: { label: 'D-BOX', short: 'D-BOX', color: '#ffc24d' },
   blocked: { label: 'Unavailable', short: 'Blocked', color: '#3a3f55' },
 };
 
