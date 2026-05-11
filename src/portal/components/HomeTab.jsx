@@ -22,7 +22,6 @@
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { TicketHero } from '../Portal.jsx';
 import { highestRottenScore } from '../movieScores.js';
-import { DINNER_LOCK_DAYS } from '../../brand/tokens.js';
 
 export default function HomeTab({
   data,
@@ -75,10 +74,6 @@ export default function HomeTab({
   // Place seats card is the only action that makes sense.
   const showMealsCard = placed > 0;
 
-  // Dinner lock countdown — shown alongside daysOut so the kitchen
-  // deadline is always visible. T = 7 days before gala (lockDate).
-  const daysToLock = daysOut != null ? Math.max(0, daysOut - DINNER_LOCK_DAYS) : null;
-
   return (
     <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
       <TicketHero
@@ -108,19 +103,8 @@ export default function HomeTab({
             color: 'var(--mute)',
           }}
         >
-          Three things to do here:{' '}
-          <strong style={{ color: 'var(--ink-on-ground)' }}>place your seats</strong>,{' '}
-          <strong style={{ color: 'var(--ink-on-ground)' }}>pick dinners</strong>, and{' '}
-          <strong style={{ color: 'var(--ink-on-ground)' }}>invite guests</strong>.
-          {daysToLock != null && daysToLock > 0 && (
-            <>
-              {' '}Pick movies the day-of, but{' '}
-              <strong style={{ color: 'var(--accent-italic)' }}>
-                dinners lock in {daysToLock} day{daysToLock === 1 ? '' : 's'}
-              </strong>
-              .
-            </>
-          )}
+          <strong style={{ color: 'var(--ink-on-ground)' }}>Reserve your seats and dinners.</strong>
+          {' '}Want to invite guests? They can join your showing or pick their own. Their choice.
         </div>
       )}
 
