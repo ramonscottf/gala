@@ -39,6 +39,7 @@ import TicketsTab from './components/TicketsTab.jsx';
 import HomeTab from './components/HomeTab.jsx';
 import DinnerSheet from './components/DinnerSheet.jsx';
 import TicketDetailSheet from './components/TicketDetailSheet.jsx';
+import { FlowErrorProvider, useFlowError } from './components/FlowError.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
@@ -932,6 +933,10 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
   const [confirmReclaim, setConfirmReclaim] = useState(false);
   const [copied, setCopied] = useState(false);
   const [reminded, setReminded] = useState(false);
+  // Phase 5.13 — flow-blocking errors fire the dead-center FlowError modal.
+  // Sheets stretch tall on the sponsor portal and inline error banners on
+  // these forms can land below viewport on a zoomed phone.
+  const flowErr = useFlowError();
 
   if (!delegation) return null;
 
@@ -957,6 +962,9 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       onClose();
     } catch (e) {
       setError(e);
+      // Phase 5.13 — surface flow-blocking error via the dead-center modal.
+      // useFlowError is hoisted to component scope below (see hook addition).
+      flowErr?.showFlowError(e?.message || 'Could not resend invite', { title: "Couldn't resend" });
     } finally {
       setPending(null);
     }
@@ -984,6 +992,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       setTimeout(() => setReminded(false), 3500);
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not send reminder', { title: "Couldn't send reminder" });
     } finally {
       setPending(null);
     }
@@ -1005,6 +1014,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       onClose();
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not reclaim seats', { title: "Couldn't reclaim" });
     } finally {
       setPending(null);
       setConfirmReclaim(false);
@@ -1930,6 +1940,9 @@ export const DelegateForm = ({
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  // Phase 5.13 — surface flow-blocking submit errors via the dead-center
+  // FlowError modal so users can't miss them on tall sheets.
+  const flowErr = useFlowError();
 
   // In Mode B the effective seat count is the number of pills still
   // selected. In Mode A it's the counter value.
@@ -1969,6 +1982,7 @@ export const DelegateForm = ({
       onClose();
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not invite delegate', { title: "Couldn't send invite" });
     } finally {
       setPending(false);
     }
@@ -2477,6 +2491,8 @@ export const SeatAssignSheet = ({
 }) => {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  // Phase 5.13 — flow-blocking assignment errors fire the dead-center modal.
+  const flowErr = useFlowError();
 
   if (!seat) return null;
   const currentDelegId = ticket?.seatDelegations?.[seat] || null;
@@ -2502,6 +2518,7 @@ export const SeatAssignSheet = ({
       onClose();
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not assign seat', { title: "Couldn't assign seat" });
     } finally {
       setPending(false);
     }
@@ -2615,7 +2632,7 @@ export const SeatAssignSheet = ({
 
 // ── Mobile root ───────────────────────────────────────────────────────
 
-export default function Portal({
+function PortalInner({
   portal,
   token,
   theaterLayouts,
@@ -3615,5 +3632,18 @@ export default function Portal({
       )}
       </div>
     </SheetFrameContext.Provider>
+  );
+}
+
+// Portal default export wraps PortalInner with FlowErrorProvider so any
+// component inside the portal tree can call useFlowError().showFlowError(msg)
+// to surface a dead-center modal for flow-blocking errors — visible no matter
+// where the user is scrolled in any sheet. Fixes Kara's case where the
+// seat-orphan-rule warning was below viewport edge on a zoomed phone.
+export default function Portal(props) {
+  return (
+    <FlowErrorProvider>
+      <PortalInner {...props} />
+    </FlowErrorProvider>
   );
 }
