@@ -1404,8 +1404,8 @@ export default function SeatPickSheet({
         aria-label="Seat map"
         tabIndex={0}
         style={{
-          maxHeight: compact ? 360 : 440,
-          minHeight: 240,
+          maxHeight: compact ? 360 : 'min(250px, 30dvh)',
+          minHeight: compact ? 240 : 220,
           overflow: 'auto',
           borderRadius: 10,
           background: 'rgba(0,0,0,0.2)',
@@ -1426,7 +1426,7 @@ export default function SeatPickSheet({
             <SeatMap
               theater={adaptedTheater}
               theme="dark"
-              scale={compact ? 20 : 22}
+              scale={compact ? 20 : 16}
               showLetters={true}
               showSeatNumbers={true}
               allowZoom={false}
@@ -1592,7 +1592,7 @@ export default function SeatPickSheet({
         </>
       )}
 
-      <div aria-hidden="true" style={{ height: 54, flex: '0 0 auto' }} />
+      {compact && <div aria-hidden="true" style={{ height: 54, flex: '0 0 auto' }} />}
 
       {/* Error from commit/place — must render ABOVE the sticky CTA, not
           after it. Previously this was below the sticky button which on
@@ -1624,7 +1624,7 @@ export default function SeatPickSheet({
       {/* Sticky CTA — bottom of sheet body */}
       <div
         style={{
-          position: 'sticky',
+          position: compact ? 'sticky' : 'static',
           bottom: 0,
           marginTop: 4,
           paddingTop: 10,
