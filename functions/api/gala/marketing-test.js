@@ -456,6 +456,39 @@ export async function onRequestPost(context) {
   const targets = resolveRecipients(env, recipients);
   if (targets.length === 0) return jsonError('No valid recipients', 400);
 
+  // Phase 5.14 test-send improvement — look up each recipient's sponsor row
+  // to grab their real rsvp_token. Test emails go to internal addresses
+  // (sfoster@dsdmail.net, smiggin@dsdmail.net, ktoone@dsdmail.net) but the
+  // matching sponsor rows use personal emails (ramonscottf@gmail.com etc).
+  // Strategy: match by first_name (case-insensitive) against the recipient
+  // label, scoped to Platinum tier to disambiguate. Falls back to the
+  // literal {TOKEN} placeholder if no match — test still arrives, link is
+  // visibly broken so we know to fix the lookup.
+  const tokenByLabel = {};
+  try {
+    if (env.GALA_DB) {
+      const rows = await env.GALA_DB.prepare(
+        `SELECT first_name, last_name, email, rsvp_token
+           FROM sponsors
+          WHERE archived_at IS NULL
+            AND rsvp_token IS NOT NULL
+            AND first_name IN ('Scott', 'Sherry', 'Kara')`
+      ).all();
+      for (const row of (rows.results || [])) {
+        const key = (row.first_name || '').toLowerCase();
+        if (!tokenByLabel[key]) tokenByLabel[key] = row.rsvp_token;
+      }
+    }
+  } catch (e) {
+    console.error('Token lookup failed, falling back to placeholder:', e.message);
+  }
+
+  function substituteToken(str, label) {
+    const tok = tokenByLabel[(label || '').toLowerCase()];
+    if (!tok) return str; // leave {TOKEN} so the broken link is visible in test
+    return String(str || '').replaceAll('{TOKEN}', tok);
+  }
+
   const results = [];
 
   for (const t of targets) {
@@ -464,24 +497,38 @@ export async function onRequestPost(context) {
         results.push({ recipient: t.label, channel: 'email', ok: false, error: 'No email on file' });
         continue;
       }
+      const bodyForRecipient = substituteToken(send.body, t.label);
+      const subjectForRecipient = substituteToken(send.subject, t.label);
       const html = galaEmailHtml({
         firstName: t.label,
-        body: `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;margin:0 0 18px;color:#92400e;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">⚠️ TEST SEND · ${sendId} · not for distribution</div>${send.body}`,
+        body: `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;margin:0 0 18px;color:#92400e;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">⚠️ TEST SEND · ${sendId} · not for distribution</div>${bodyForRecipient}`,
         footerLine: `Davis Education Foundation · Test Send · ${sendId} · ${new Date().toLocaleString('en-US', { timeZone: 'America/Denver' })} MT`,
       });
       const r = await sendEmail(env, {
         to: t.email,
-        subject: `[TEST] ${send.subject}`,
+        subject: `[TEST] ${subjectForRecipient}`,
         html,
-        replyTo: env.GALA_ADMIN_EMAIL || 'smiggin@dsdmail.net',
+        // Single replyTo only — SkippyMail silently drops comma-separated.
+        replyTo: 'smiggin@dsdmail.net',
       });
-      results.push({ recipient: t.label, channel: 'email', to: t.email, ok: r.ok, error: r.error || null, id: r.id || null });
+      // Defensive: SkippyMail returns ok:true with no id when it silently
+      // drops a send. Treat that as failure.
+      const realOk = r.ok && r.id;
+      results.push({
+        recipient: t.label,
+        channel: 'email',
+        to: t.email,
+        ok: realOk,
+        error: r.error || (r.ok && !r.id ? 'silent_drop_no_resend_id' : null),
+        id: r.id || null,
+      });
     } else if (send.type === 'sms') {
       if (!t.phone) {
         results.push({ recipient: t.label, channel: 'sms', ok: false, error: `No phone on file (set GALA_TEST_PHONE_${t.label.toUpperCase()} env var)` });
         continue;
       }
-      const r = await sendSMS(env, t.phone, `[TEST ${sendId}] ${send.body}`);
+      const smsBody = substituteToken(send.body, t.label);
+      const r = await sendSMS(env, t.phone, `[TEST ${sendId}] ${smsBody}`);
       results.push({ recipient: t.label, channel: 'sms', to: t.phone, ok: r.ok, error: r.error || null, sid: r.sid || null });
     }
   }

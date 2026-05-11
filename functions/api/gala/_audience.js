@@ -94,7 +94,7 @@ export async function resolveAudience(audience, db) {
 
   // Recipients we WILL send to: tier-matching, not archived, has email
   const recipientsSql = `
-    SELECT id, email, first_name, last_name, company, sponsorship_tier
+    SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
     FROM sponsors
     WHERE sponsorship_tier IN (${placeholders})
       AND archived_at IS NULL

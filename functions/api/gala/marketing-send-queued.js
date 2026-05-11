@@ -83,6 +83,7 @@ export async function onRequestPost({ request, env }) {
         first_name: r.first_name || null,
         last_name: r.last_name || null,
         company: r.company || null,
+        rsvp_token: r.rsvp_token || null,
       },
       sendRow,
     },

@@ -45,9 +45,22 @@ async function processOne(body, env) {
     throw new Error('Invalid message body — missing fields');
   }
 
+  // Substitute the {TOKEN} placeholder with the recipient's portal token.
+  // If a recipient has no token, that's a data-integrity bug — fail loudly
+  // so we don't ship dead links. Sponsor records without rsvp_token shouldn't
+  // exist (migration:001 seeded tokens for every row, and the create-sponsor
+  // path generates them) — but defending against null here means a missing
+  // token surfaces in marketing_send_log as a 'failed' row, not a silent
+  // dead-link delivery.
+  if (!recipient.rsvp_token) {
+    throw new Error(`Recipient ${recipient.email} has no rsvp_token — cannot substitute {TOKEN}`);
+  }
+  const bodyWithToken = String(sendRow.body || '').replaceAll('{TOKEN}', recipient.rsvp_token);
+  const subjectWithToken = String(sendRow.subject || '').replaceAll('{TOKEN}', recipient.rsvp_token);
+
   const html = galaEmailHtml({
     firstName: recipient.first_name || recipient.company || null,
-    body: sendRow.body,
+    body: bodyWithToken,
   });
 
   let status = 'sent';
@@ -60,13 +73,17 @@ async function processOne(body, env) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${env.MAIL_TOKEN}`,
-        'User-Agent': 'gala-send-consumer/1.1',
+        'User-Agent': 'gala-send-consumer/1.2',
       },
       body: JSON.stringify({
         from: 'Davis Education Foundation Gala <gala@daviskids.org>',
-        replyTo: 'smiggin@dsdmail.net, sfoster@dsdmail.net',
+        // Single replyTo only. SkippyMail silently drops sends with
+        // comma-separated replyTo (returns ok:true with no resend_id, no
+        // email leaves Resend). Proven May 11 2026 via curl tests against
+        // mail.fosterlabs.org/send. Sherry forwards to Scott when needed.
+        replyTo: 'smiggin@dsdmail.net',
         to: recipient.email,
-        subject: sendRow.subject,
+        subject: subjectWithToken,
         html,
       }),
     });
@@ -79,10 +96,16 @@ async function processOne(body, env) {
       status = 'failed';
       errorMessage = `SkippyMail ${res.status}: ${errText.slice(0, 200)}`;
     } else {
-      // SkippyMail returns { ok: true, resend_id: '...' } — capture it for tracking.
-      // Cross-reference with marketing_email_events (Resend webhook landings).
+      // SkippyMail returns { ok: true, resend_id: '...' } on real sends.
+      // If resend_id is missing (e.g. the comma-replyTo silent-drop bug),
+      // treat as failed so future regressions surface in marketing_send_log
+      // instead of looking like a clean success.
       const data = await res.json().catch(() => ({}));
       resendId = data.resend_id || data.id || null;
+      if (!resendId) {
+        status = 'failed';
+        errorMessage = 'SkippyMail returned ok with no resend_id — silent drop?';
+      }
     }
   } catch (e) {
     // Network errors → retry
@@ -90,7 +113,7 @@ async function processOne(body, env) {
   }
 
   // Always log — success OR permanent failure
-  const bodyPreview = stripHtml(sendRow.body).slice(0, 200);
+  const bodyPreview = stripHtml(bodyWithToken).slice(0, 200);
   await env.GALA_DB.prepare(`
     INSERT INTO marketing_send_log (
       send_id, send_run_id, channel, recipient_email, recipient_name,
@@ -99,7 +122,7 @@ async function processOne(body, env) {
     ) VALUES (?, ?, 'email', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     sendId, runId, recipient.email, displayName(recipient), recipient.id,
-    sendRow.audience, status, errorMessage, sendRow.subject,
+    sendRow.audience, status, errorMessage, subjectWithToken,
     bodyPreview, 'queue-consumer', resendId
   ).run();
 }
