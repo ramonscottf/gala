@@ -59,21 +59,53 @@ export async function onRequestPost({ request, env }) {
   const errors = [];
 
   for (const r of recipients) {
+    // Phase 5.14 launch fix — substitute {TOKEN} placeholder in body
+    // AND subject with this recipient's real rsvp_token. Without this,
+    // every email ships with literal text "{TOKEN}" in the portal link,
+    // making the link dead. Fails loudly if a recipient is missing a
+    // token rather than silently shipping a dead-link email — surfaces
+    // in marketing_send_log as status=failed with a clear error.
+    if (!r.rsvp_token) {
+      failed++;
+      errors.push({ email: r.email, error: 'Recipient has no rsvp_token — would ship dead-link email' });
+      try {
+        await db.prepare(`
+          INSERT INTO marketing_send_log (
+            send_id, send_run_id, channel, recipient_email, recipient_name,
+            sponsor_id, audience_label, status, error_message, subject,
+            body_preview, sent_by
+          ) VALUES (?, ?, 'email', ?, ?, ?, ?, 'failed', ?, ?, ?, ?)
+        `).bind(
+          sendId, runId, r.email, displayName(r), r.id,
+          send.audience, 'No rsvp_token', send.subject,
+          bodyPreview, sentBy
+        ).run();
+      } catch {}
+      continue;
+    }
+
+    const bodyForRecipient = String(send.body || '').replaceAll('{TOKEN}', r.rsvp_token);
+    const subjectForRecipient = String(send.subject || '').replaceAll('{TOKEN}', r.rsvp_token);
     const html = galaEmailHtml({
       firstName: r.first_name || r.company || null,
-      body: send.body,
+      body: bodyForRecipient,
     });
 
     let status = 'sent', errorMessage = null;
     try {
       const res = await sendEmail(env, {
         to: r.email,
-        subject: send.subject,
+        subject: subjectForRecipient,
         html,
       });
-      if (!res.ok) {
+      if (!res.ok || !res.id) {
+        // !res.id catches the SkippyMail silent-drop case where the
+        // endpoint returns {ok:true} but never reaches Resend (proven
+        // root cause from earlier this session — comma-separated
+        // replyTo triggered it, now fixed upstream but keep the
+        // defensive check in case any other config trips it).
         status = 'failed';
-        errorMessage = res.error || 'Unknown error';
+        errorMessage = res.error || 'SkippyMail returned ok but no resend_id (silent drop)';
         failed++;
         errors.push({ email: r.email, error: errorMessage });
       } else {
@@ -96,7 +128,7 @@ export async function onRequestPost({ request, env }) {
         ) VALUES (?, ?, 'email', ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         sendId, runId, r.email, displayName(r), r.id,
-        send.audience, status, errorMessage, send.subject,
+        send.audience, status, errorMessage, subjectForRecipient,
         bodyPreview, sentBy
       ).run();
     } catch (e) {
