@@ -66,6 +66,43 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
         </div>
       )}
 
+      {/* Phase 5.10 — floating close X (top-right). Logan tested the
+          confirmation screen and asked for a way to back out from
+          here — the bottom "Confirm" button doesn't read as
+          "exit." This X mirrors every other sheet in the app
+          (MovieDetailSheet, TicketDetailSheet, Sheet header) so the
+          gesture is consistent. Calls the same onEdit() handler the
+          bottom button uses — parent clears celebration state and
+          returns to portal home. Positioned with safe-area-inset
+          so it clears the notch on iPhone. */}
+      <button
+        onClick={onEdit}
+        aria-label="Close"
+        style={{
+          position: 'fixed',
+          top: 'calc(env(safe-area-inset-top) + 14px)',
+          right: 14,
+          zIndex: 10,
+          width: 36,
+          height: 36,
+          borderRadius: 99,
+          background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          border: 0,
+          color: '#fff',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 20,
+          lineHeight: 1,
+          padding: 0,
+        }}
+      >
+        ×
+      </button>
+
       {/* Hero */}
       <section
         className="page-header"
@@ -285,11 +322,16 @@ export default function ConfirmationScreen({ name, data, onEdit, isDev, logoUrl 
             // tab afterward, not from here. The handler still calls
             // onEdit() which the parent uses to clear celebration
             // state and navigate to Home.
+            // Phase 5.10 — relabeled again to "Back to my portal"
+            // after Logan's bug report. "Confirm" read as "yes, do
+            // something more" rather than "exit this screen." The
+            // floating X up top + this label together give two clear
+            // back-paths.
             onEdit();
           }}
           icon={<Icon name="arrowR" size={16} />}
         >
-          Confirm
+          Back to my portal
         </Btn>
         <button
           disabled
