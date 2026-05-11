@@ -27,6 +27,19 @@ const PROTECTED_PREFIXES = ['/admin'];
 const COOKIE_NAME = 'gala_session';
 const MAX_AGE_SEC = 2592000; // 30 days — admin convenience, password-protected
 
+// Phase 5.14 — /admin-signin/ is the public password page (not protected).
+// _routes.json doesn't currently route it through middleware, so this
+// guard is defense-in-depth: if someone later adds /admin-signin to
+// _routes.json include[], the literal `startsWith('/admin')` check
+// below would protect the sign-in page itself and cause a redirect
+// loop. matchProtected ensures only path-segment matches count, so
+// /admin-signin (different segment) never matches /admin.
+function matchProtected(pathname) {
+  return PROTECTED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + '/')
+  );
+}
+
 async function verifySession(cookie, secret) {
   if (!cookie) return false;
   const dot = cookie.indexOf('.');
@@ -89,13 +102,20 @@ export async function onRequest(context) {
     const cookie = getCookie(request, COOKIE_NAME);
     const valid = await verifySession(cookie, env.GALA_DASH_SECRET);
     if (!valid) {
-      return Response.redirect(new URL('/?from=checkin', request.url).toString(), 302);
+      // Phase 5.14 — admin sign-in moved from / to /admin-signin/ when
+      // the public event page took over the root. Pass ?next= so the
+      // sign-in page can bounce the user back to where they were going
+      // (the admin-signin script reads URLSearchParams 'next' and uses
+      // it as the post-auth destination; defaults to /admin if missing).
+      const target = new URL('/admin-signin/', request.url);
+      target.searchParams.set('next', url.pathname + url.search);
+      return Response.redirect(target.toString(), 302);
     }
     return next();
   }
 
-  // Listed protected prefixes: /admin
-  const protectedMatch = PROTECTED_PREFIXES.some((p) => url.pathname.startsWith(p));
+  // Listed protected prefixes: /admin (segment-aware so /admin-signin won't match)
+  const protectedMatch = matchProtected(url.pathname);
   if (!protectedMatch) {
     return next();
   }
@@ -104,7 +124,11 @@ export async function onRequest(context) {
   const valid = await verifySession(cookie, env.GALA_DASH_SECRET);
 
   if (!valid) {
-    return Response.redirect(new URL('/?from=admin', request.url).toString(), 302);
+    // Phase 5.14 — admin sign-in moved from / to /admin-signin/. Same
+    // ?next= contract as the /checkin path above.
+    const target = new URL('/admin-signin/', request.url);
+    target.searchParams.set('next', url.pathname + url.search);
+    return Response.redirect(target.toString(), 302);
   }
 
   return next();

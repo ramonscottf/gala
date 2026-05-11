@@ -2,3 +2,9 @@
 # This file only handles /checkin/{token} since checkin runs through
 # middleware (cookie auth check) and a function isn't desired there.
 /checkin/*  /checkin/index.html  200
+
+# Phase 5.14 — /event/ content is now the homepage. Redirect any
+# legacy links (emails, screenshots, social shares pointing at /event)
+# to root so we don't have two pages with the same content.
+/event/   /   301
+/event    /   301

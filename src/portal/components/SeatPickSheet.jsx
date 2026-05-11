@@ -35,6 +35,7 @@ import { otherTakenForTheater, checkBatchOrphans } from '../../hooks/useSeats.js
 import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../../hooks/usePortal.js';
 import { formatShowTime } from '../Portal.jsx';
 import { enrichMovieScores, formatRottenBadge } from '../movieScores.js';
+import { useFlowError } from './FlowError.jsx';
 
 const SEAT_TYPE_ORDER = ['luxury', 'standard', 'dbox', 'loveseat', 'wheelchair', 'companion'];
 
@@ -571,6 +572,12 @@ export default function SeatPickSheet({
   const [mode, setMode] = useState('place');
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState(null);
+  // Phase 5.13 — for flow-BLOCKING errors (orphan rule, race conditions,
+  // reassign failures) we also fire a dead-center modal via the global
+  // FlowError context. Inline `error` state stays so the banner above
+  // the sticky CTA still renders for users who scroll back up; the modal
+  // is the "you cannot miss this" surface for big-text / zoomed phones.
+  const { showFlowError } = useFlowError();
   const remaining = blockSize - seats.totalAssigned;
   const selectedSeatDetails = useMemo(
     () =>
@@ -624,9 +631,9 @@ export default function SeatPickSheet({
     const seatIds = [...sel];
     const orphanCheck = checkBatchOrphans(portal, theaterId, seatIds);
     if (!orphanCheck.ok) {
-      setError(
-        `That selection would leave seat ${orphanCheck.orphan} alone in row ${orphanCheck.row}. Please choose a different seat so no single seat is left empty.`
-      );
+      const msg = `That selection would leave seat ${orphanCheck.orphan} alone in row ${orphanCheck.row}. Please choose a different seat so no single seat is left empty.`;
+      setError(msg);
+      showFlowError(msg, { title: "Can't place these seats" });
       return;
     }
 
@@ -661,15 +668,16 @@ export default function SeatPickSheet({
       // were grabbed ~60s before he tapped Commit.)
       const wasTakenRace = /already taken|already finalized|already placed/i.test(msg);
       if (wasTakenRace) {
-        setError(
-          'One or more of those seats was just taken by someone else. Refreshing the seat map — pick again from the open seats.'
-        );
+        const raceMsg = 'One or more of those seats was just taken by someone else. Refreshing the seat map — pick again from the open seats.';
+        setError(raceMsg);
+        showFlowError(raceMsg, { title: 'Seats just got grabbed' });
         setSel(new Set());
         if (onRefresh) {
           try { await onRefresh(); } catch { /* swallow — error already shown */ }
         }
       } else {
         setError(msg);
+        showFlowError(msg, { title: "Couldn't place seats" });
       }
     } finally {
       setCommitting(false);
@@ -706,7 +714,9 @@ export default function SeatPickSheet({
       setAssignTo('');
       setMode('place');
     } catch (e) {
-      setError(e?.message || 'Could not reassign');
+      const msg = e?.message || 'Could not reassign';
+      setError(msg);
+      showFlowError(msg, { title: "Couldn't reassign seats" });
     } finally {
       setAssignPending(false);
     }

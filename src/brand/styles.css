@@ -1495,3 +1495,14 @@ img,
   border: none !important;
   box-shadow: 0 8px 22px -10px rgba(40,88,214,0.55) !important;
 }
+
+/* FlowError modal — Phase 5.13. Dead-center alert above all sheets.
+   Keyframes referenced by src/portal/components/FlowError.jsx. */
+@keyframes flow-error-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes flow-error-scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}

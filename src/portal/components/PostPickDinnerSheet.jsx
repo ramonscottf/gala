@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BRAND } from '../../brand/tokens.js';
 import { Icon } from '../../brand/atoms.jsx';
 import DinnerPicker from './DinnerPicker.jsx';
+import { useFlowError } from './FlowError.jsx';
 
 const rowKey = (row) => `${row.theater_id}-${row.row_label}-${row.seat_num}`;
 
@@ -22,6 +23,19 @@ export default function PostPickDinnerSheet({
     [assignments]
   );
   const [choices, setChoices] = useState({});
+
+  // Phase 5.13 — fire the dead-center FlowError modal whenever the parent
+  // hands us a non-null `error`. useFinalize captures /finalize failures
+  // (412 seat-conflict, 5xx, network) and the user is staring at the
+  // dinner sheet wondering why the "All seats locked in" CTA isn't
+  // progressing. The inline post-pick-dinner-error banner stays as a
+  // visual cue, but the modal is the unmissable surface.
+  const { showFlowError } = useFlowError();
+  useEffect(() => {
+    if (!error) return;
+    const msg = error.message || String(error);
+    showFlowError(msg, { title: "Couldn't lock in your seats" });
+  }, [error, showFlowError]);
 
   useEffect(() => {
     setChoices((prev) => {

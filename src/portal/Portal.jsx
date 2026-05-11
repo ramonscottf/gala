@@ -39,6 +39,7 @@ import TicketsTab from './components/TicketsTab.jsx';
 import HomeTab from './components/HomeTab.jsx';
 import DinnerSheet from './components/DinnerSheet.jsx';
 import TicketDetailSheet from './components/TicketDetailSheet.jsx';
+import { FlowErrorProvider, useFlowError } from './components/FlowError.jsx';
 import MovieDetailSheet from './MovieDetailSheet.jsx';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from './movieScores.js';
 
@@ -190,7 +191,7 @@ const miniBtn = (kind, isLight = false) => ({
 // perforation circles cut at calc(100%-78px), dashed border between
 // body and stub, MEGAPLEX wordmark, "YOUR GALA / N days out" eyebrow.
 
-export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut, isDelegation = false, inviterCompany = '' }) => {
+export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut, isDelegation = false, inviterCompany = '', allDone = false }) => {
   const firstName = (name || '').split(' ')[0];
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
@@ -479,6 +480,68 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
           </div>
         )}
 
+        {allDone ? (
+          // Phase 5.13 — completion banner. Kara feedback: "should
+          // make them feel done." Replaces the Total/Placed/Assigned/
+          // Open stat grid when every seat is placed AND every placed
+          // seat has a meal AND (sponsors only) nothing is left to
+          // give to guests. Single line, check icon, warm and final.
+          <div
+            style={{
+              marginTop: 18,
+              borderTop: `1px solid var(--rule)`,
+              paddingTop: 18,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div
+              aria-hidden
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 99,
+                background:
+                  'linear-gradient(135deg, rgba(127,207,160,0.30), rgba(127,207,160,0.12))',
+                border: `1px solid rgba(127,207,160,0.35)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#7fcfa0',
+                fontSize: 18,
+                fontWeight: 900,
+                flexShrink: 0,
+              }}
+            >
+              ✓
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 900,
+                  letterSpacing: 1.6,
+                  color: '#7fcfa0',
+                  textTransform: 'uppercase',
+                }}
+              >
+                You're all set
+              </div>
+              <div
+                style={{
+                  marginTop: 3,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.85)',
+                  lineHeight: 1.4,
+                }}
+              >
+                {placed} seat{placed === 1 ? '' : 's'} placed · meals chosen
+              </div>
+            </div>
+          </div>
+        ) : (
         <div
           style={{
             marginTop: 18,
@@ -556,6 +619,7 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* stub */}
@@ -869,6 +933,10 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
   const [confirmReclaim, setConfirmReclaim] = useState(false);
   const [copied, setCopied] = useState(false);
   const [reminded, setReminded] = useState(false);
+  // Phase 5.13 — flow-blocking errors fire the dead-center FlowError modal.
+  // Sheets stretch tall on the sponsor portal and inline error banners on
+  // these forms can land below viewport on a zoomed phone.
+  const flowErr = useFlowError();
 
   if (!delegation) return null;
 
@@ -894,6 +962,9 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       onClose();
     } catch (e) {
       setError(e);
+      // Phase 5.13 — surface flow-blocking error via the dead-center modal.
+      // useFlowError is hoisted to component scope below (see hook addition).
+      flowErr?.showFlowError(e?.message || 'Could not resend invite', { title: "Couldn't resend" });
     } finally {
       setPending(null);
     }
@@ -921,6 +992,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       setTimeout(() => setReminded(false), 3500);
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not send reminder', { title: "Couldn't send reminder" });
     } finally {
       setPending(null);
     }
@@ -942,6 +1014,7 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
       onClose();
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not reclaim seats', { title: "Couldn't reclaim" });
     } finally {
       setPending(null);
       setConfirmReclaim(false);
@@ -1867,6 +1940,9 @@ export const DelegateForm = ({
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  // Phase 5.13 — surface flow-blocking submit errors via the dead-center
+  // FlowError modal so users can't miss them on tall sheets.
+  const flowErr = useFlowError();
 
   // In Mode B the effective seat count is the number of pills still
   // selected. In Mode A it's the counter value.
@@ -1906,6 +1982,7 @@ export const DelegateForm = ({
       onClose();
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not invite delegate', { title: "Couldn't send invite" });
     } finally {
       setPending(false);
     }
@@ -2152,7 +2229,15 @@ function useDesktopSheet() {
   return isDesktop;
 }
 
-const Sheet = ({ open, onClose, title, children, forceDark = false, variant = 'default' }) => {
+const Sheet = ({
+  open,
+  onClose,
+  title,
+  children,
+  forceDark = false,
+  variant = 'default',
+  hideClose = false,
+}) => {
   const { isDark: systemDark } = useTheme();
   const withinFrame = useContext(SheetFrameContext);
   // Phase 1.15 — forceDark lets the SeatPickSheet host the cinema/seat-pick
@@ -2225,24 +2310,26 @@ const Sheet = ({ open, onClose, title, children, forceDark = false, variant = 'd
             <div style={{ fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 600 }}>
               {title}
             </div>
-            <button
-              aria-label="Close dialog"
-              onClick={onClose}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 99,
-                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(13,18,36,0.08)',
-                border: 0,
-                color: isDark ? '#fff' : BRAND.ink,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <Icon name="close" size={16} />
-            </button>
+            {!hideClose && (
+              <button
+                aria-label="Close dialog"
+                onClick={onClose}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 99,
+                  background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(13,18,36,0.08)',
+                  border: 0,
+                  color: isDark ? '#fff' : BRAND.ink,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <Icon name="close" size={16} />
+              </button>
+            )}
           </div>
         )}
         <div className="scroll-container" style={{ flex: 1, padding: '18px 22px' }}>
@@ -2438,6 +2525,8 @@ export const SeatAssignSheet = ({
 }) => {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
+  // Phase 5.13 — flow-blocking assignment errors fire the dead-center modal.
+  const flowErr = useFlowError();
 
   if (!seat) return null;
   const currentDelegId = ticket?.seatDelegations?.[seat] || null;
@@ -2463,6 +2552,7 @@ export const SeatAssignSheet = ({
       onClose();
     } catch (e) {
       setError(e);
+      flowErr?.showFlowError(e?.message || 'Could not assign seat', { title: "Couldn't assign seat" });
     } finally {
       setPending(false);
     }
@@ -2576,7 +2666,7 @@ export const SeatAssignSheet = ({
 
 // ── Mobile root ───────────────────────────────────────────────────────
 
-export default function Portal({
+function PortalInner({
   portal,
   token,
   theaterLayouts,
@@ -2836,8 +2926,82 @@ export default function Portal({
           onAssign={openTicket}
           onMovieDetail={setMovieDetail}
           onManageTickets={() => setTab('tickets')}
-          onPickMeals={() => setTab('tickets')}
+          onPickMeals={() => {
+            // Phase 5.13 — Kara feedback: "on home page selecting
+            // edit meal goes to ticket tab then you hit selectmeals.
+            // it should jksut open the meal selector from home page."
+            // Reuse the same postPick + dinnerOpen path the tickets
+            // tab uses; scope seat ids to every placed seat that's
+            // still missing a meal across ALL the sponsor's tickets.
+            // If they've already picked some, those seats appear
+            // with their existing choice prefilled (PostPickDinnerSheet
+            // reads dinner_choice off each row).
+            const meallessSeatIds = (portal?.myAssignments || [])
+              .filter((a) => !a.dinner_choice || String(a.dinner_choice).trim() === '')
+              .map((a) => a.seat_id || `${a.row_label}-${a.seat_num}`);
+            if (meallessSeatIds.length === 0) {
+              // No missing meals (e.g. user tapped the "Edit" state).
+              // Open the full set so they can change any of them.
+              const allPlacedIds = (portal?.myAssignments || [])
+                .map((a) => a.seat_id || `${a.row_label}-${a.seat_num}`);
+              if (allPlacedIds.length === 0) {
+                setTab('tickets');
+                return;
+              }
+              // Pick the first ticket's identity for the title bar.
+              const firstTicket = ticketsWithLocalGuests[0];
+              setPostPick({
+                theaterId: firstTicket?.theaterId,
+                seatIds: allPlacedIds,
+                movieTitle: firstTicket?.movieTitle,
+                showLabel: firstTicket?.showLabel,
+                showTime: firstTicket?.showTime,
+                theaterName: firstTicket?.theaterName,
+                posterUrl: firstTicket?.posterUrl,
+                editOnly: true, // don't route to celebrate after; this is an edit, not a flow
+              });
+              setDinnerOpen(true);
+              return;
+            }
+            // Standard case — open the picker with the meal-needed
+            // seats. editOnly flag tells the dinner-sheet onDone
+            // path to just dismiss, not advance to celebrate.
+            const firstTicket = ticketsWithLocalGuests[0];
+            setPostPick({
+              theaterId: firstTicket?.theaterId,
+              seatIds: meallessSeatIds,
+              movieTitle: firstTicket?.movieTitle,
+              showLabel: firstTicket?.showLabel,
+              showTime: firstTicket?.showTime,
+              theaterName: firstTicket?.theaterName,
+              posterUrl: firstTicket?.posterUrl,
+              editOnly: true,
+            });
+            setDinnerOpen(true);
+          }}
           onViewTicket={(ticket) => setTicketDetail(ticket)}
+          // Phase 5.13 — per-ticket edit picker on the hero card.
+          // Mirrors the Tickets tab paths: seats go through openTicket
+          // (TicketManage sheet — per-seat reassign / unplace), meals
+          // go through the postPick + dinnerOpen flow with editOnly so
+          // the sheet dismisses cleanly back to Home.
+          onEditSeats={(ticket) => openTicket(ticket)}
+          onEditMeals={(ticket) => {
+            const seatIds = (ticket.assignmentRows || [])
+              .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+            if (seatIds.length === 0) return;
+            setPostPick({
+              theaterId: ticket.theaterId,
+              seatIds,
+              movieTitle: ticket.movieTitle,
+              showLabel: ticket.showLabel,
+              showTime: ticket.showTime,
+              theaterName: ticket.theaterName,
+              posterUrl: ticket.posterUrl,
+              editOnly: true,
+            });
+            setDinnerOpen(true);
+          }}
           token={token}
           apiBase={config.apiBase}
         />
@@ -2912,6 +3076,9 @@ export default function Portal({
             // but scope it to this ticket's full seat list (not just
             // post-pick subset). Seeds postPick with the ticket-scoped
             // seat ids so the sheet picks them up unchanged.
+            // Phase 5.13 — flag editOnly so onDone dismisses cleanly
+            // instead of routing to the celebration screen (that's
+            // the seat-pick → meals flow's path, not an edit's).
             const seatIds = (ticket.assignmentRows || [])
               .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
             if (seatIds.length === 0) return;
@@ -2923,6 +3090,7 @@ export default function Portal({
               showTime: ticket.showTime,
               theaterName: ticket.theaterName,
               posterUrl: ticket.posterUrl,
+              editOnly: true,
             });
             setDinnerOpen(true);
           }}
@@ -3186,9 +3354,18 @@ export default function Portal({
             initialShowingNumber={seatPickInitial?.showingNumber || null}
             initialMovieId={seatPickInitial?.movieId || null}
             onCommitted={(placed) => {
+              // Phase 5.13 — seats commit goes STRAIGHT to the meal
+              // picker. PostPickOverview's "what next?" tile is skipped:
+              // Kara's feedback was that the choice is artificial when
+              // you've literally just placed seats. Open the dinner
+              // sheet, leave postPick set so the celebration step has
+              // its block-scoped seat ids to render against, and let
+              // PostPickDinnerSheet enforce the modal "must pick all
+              // meals before continuing" behavior.
               setSeatPickOpen(false);
               setSeatPickInitial(null);
               setPostPick(placed);
+              setDinnerOpen(true);
             }}
             onClose={() => {
               setSeatPickOpen(false);
@@ -3261,7 +3438,14 @@ export default function Portal({
             // when seatPills is set.
             available={postPickInviteSeats?.length || 0}
             seatPills={postPickInviteSeats || []}
-            onClose={() => setPostPickStep('overview')}
+            // Phase 5.13 — back from invite returns to celebrate
+            // (post-Done flow). The old "overview" target is no
+            // longer reachable from the seat-pick → meals → celebrate
+            // path, so close → celebrate is the only sensible return.
+            onClose={() => {
+              setPostPickInviteSeats(null);
+              setPostPickStep('celebrate');
+            }}
             onCreated={async (newDeleg, keptSeats) => {
               // R13 — keptSeats is the final list of seat ids the user
               // left selected in the form. Use that (not the original
@@ -3287,7 +3471,10 @@ export default function Portal({
               }
               if (onRefresh) await onRefresh();
               setPostPickInviteSeats(null);
-              setPostPickStep('overview');
+              // Phase 5.13 — invite created from the celebration
+              // path returns to celebrate (where the user can hit
+              // Done or invite another guest).
+              setPostPickStep('celebrate');
             }}
           />
         )}
@@ -3328,6 +3515,24 @@ export default function Portal({
                     seat: `${seat.row_label}-${seat.seat_num}`,
                   });
                 }}
+                onInviteGroup={(t) => {
+                  // Phase 5.13 — "Want to invite a guest" CTA from
+                  // celebration. Route to the existing inviteForm
+                  // step (DelegateForm in Mode B with seat pills).
+                  // Seeds the form with every seat in the just-placed
+                  // block that's not already delegated — user picks
+                  // which pills to hand off. After submit, the form's
+                  // onCreated bounces back to step='overview', so we
+                  // do NOT want overview to render. Send them back
+                  // to celebrate when the form closes (handled by
+                  // re-routing in DelegateForm's onClose below).
+                  const giveable = (t.assignmentRows || [])
+                    .filter((r) => !r.delegation_id)
+                    .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+                  if (giveable.length === 0) return;
+                  setPostPickInviteSeats(giveable);
+                  setPostPickStep('inviteForm');
+                }}
                 onManageGuest={(d) => setDelegationSheet(d)}
                 onClose={() => {
                   setPostPick(null);
@@ -3343,7 +3548,23 @@ export default function Portal({
 
       <Sheet
         open={dinnerOpen}
-        onClose={() => setDinnerOpen(false)}
+        // Phase 5.13 — dinner sheet is MODAL after a seat pick
+        // (postPick set, NOT editOnly). Kara feedback: "once seats
+        // are selected, it needs to be just selecting meals." We
+        // block close when the user is mid-flow. Edit paths from
+        // Home or Tickets pass editOnly=true and remain dismissible.
+        onClose={() => {
+          if (postPick && !postPick.editOnly) {
+            // In the seat-pick → meals → celebrate flow. Don't let
+            // them ditch out. Backdrop tap / X are no-ops.
+            return;
+          }
+          // Edit path — clean dismiss. Clear postPick too so the
+          // next seat pick starts fresh (avoids stale movieTitle).
+          setDinnerOpen(false);
+          if (postPick?.editOnly) setPostPick(null);
+        }}
+        hideClose={!!postPick && !postPick.editOnly}
         title="Pick dinners"
       >
         {dinnerOpen && postPick && (
@@ -3354,12 +3575,15 @@ export default function Portal({
             token={token}
             apiBase={config.apiBase}
             onRefresh={onRefresh}
-            canFinalize={canFinalize}
+            canFinalize={canFinalize && !postPick.editOnly}
             onFinalize={async () => {
               try {
                 await finalize();
-                setPostPick(null);
+                // Phase 5.13 — finalize advances to celebration
+                // INSIDE the postPick sheet. Edit-only paths never
+                // reach this branch (canFinalize is forced off).
                 setDinnerOpen(false);
+                setPostPickStep('celebrate');
               } catch {
                 // useFinalize sets error state; sheet stays open.
               }
@@ -3368,8 +3592,18 @@ export default function Portal({
             error={finalizeError}
             onClearError={clearFinalizeError}
             onDone={() => {
-              setPostPick(null);
+              // Two paths:
+              //   - editOnly: user is just editing meals; dismiss
+              //     cleanly back to whatever tab they came from.
+              //   - flow path (no finalize gate): advance to
+              //     celebrate so they hit the closure screen.
+              if (postPick?.editOnly) {
+                setDinnerOpen(false);
+                setPostPick(null);
+                return;
+              }
               setDinnerOpen(false);
+              setPostPickStep('celebrate');
             }}
           />
         )}
@@ -3435,5 +3669,18 @@ export default function Portal({
       )}
       </div>
     </SheetFrameContext.Provider>
+  );
+}
+
+// Portal default export wraps PortalInner with FlowErrorProvider so any
+// component inside the portal tree can call useFlowError().showFlowError(msg)
+// to surface a dead-center modal for flow-blocking errors — visible no matter
+// where the user is scrolled in any sheet. Fixes Kara's case where the
+// seat-orphan-rule warning was below viewport edge on a zoomed phone.
+export default function Portal(props) {
+  return (
+    <FlowErrorProvider>
+      <PortalInner {...props} />
+    </FlowErrorProvider>
   );
 }

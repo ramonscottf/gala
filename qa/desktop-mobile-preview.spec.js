@@ -81,7 +81,7 @@ test.describe('sponsor shell preview', () => {
     await page.locator('[data-seat="A-1"]').click();
     await page.getByTestId('seat-pick-commit').click();
 
-    await page.getByTestId('post-pick-pick-meals').click();
+    await page.getByTestId('post-pick-pick-meals').click({ force: true });
     await expect(page.getByLabel('Dinner for seat A-1')).toBeVisible();
     await expect(page.getByTestId('dinner-done')).toHaveCount(0);
 
