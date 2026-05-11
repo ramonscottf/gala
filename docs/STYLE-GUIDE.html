@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gala 2026 — Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ── Canonical Gala palette (extracted from daviskids.org/events-gala) ── */
+    --gala-red:        #CB262C;
+    --gala-red-light:  #e84e53;
+    --gala-red-deep:   #a01f24;
+
+    --gala-blue:       #2858d6;
+    --gala-blue-light: #4a7df0;
+    --gala-blue-deep:  #1a3aa3;
+
+    /* Navy — aligned to DEF canonical (#0b1b3c, not the gala-only #0d1b3d) */
+    --navy-950: #0b1b3c;
+    --navy-900: #122a57;
+    --navy-800: #1c3a78;
+    --navy-700: #24508f;
+
+    /* DEF Gold — the three-stop ramp from daviskids.org */
+    --def-gold-300: #ffd77f;  /* soft / dividers / glow */
+    --def-gold-400: #ffc24d;  /* canonical accent — eyebrows, italic flair on navy */
+    --def-gold-500: #f5a623;  /* deepest — scrollbars, hairline icons, small dots */
+    --def-sky-300:  #8bcfff;  /* DEF complement — available, used sparingly */
+
+    --paper-50:  #f8fbff;
+    --paper-100: #eff6ff;
+    --paper-150: #e9f2ff;
+
+    --ink-900: #0f172a;
+    --ink-700: #334155;
+    --ink-600: #475569;
+    --ink-500: #64748b;
+    --ink-400: #94a3b8;
+
+    --font-display: "Fraunces", "Times New Roman", Georgia, serif;
+    --font-sans:    "Inter", system-ui, -apple-system, sans-serif;
+    --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+    --grad-brand: linear-gradient(125deg, var(--gala-blue), var(--gala-red), var(--gala-blue-light), var(--gala-red), var(--gala-blue));
+    --grad-strip-h: linear-gradient(90deg, var(--gala-blue), var(--gala-red), var(--gala-blue-light), var(--gala-red));
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--ink-700);
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(40,88,214,0.04), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(203,38,44,0.04), transparent 50%),
+      #fbfaf7;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  code { font-family: var(--font-mono); font-size: 0.86em; }
+
+  /* ── Top strip (animated brand band, the signature) ── */
+  .brand-strip {
+    height: 3px;
+    background: var(--grad-strip-h);
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+
+  /* ── Layout ── */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    padding: clamp(80px, 12vw, 140px) 0 clamp(56px, 8vw, 96px);
+    background:
+      radial-gradient(ellipse at 25% 70%, rgba(203,38,44,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse at 75% 25%, rgba(40,88,214,0.18) 0%, transparent 50%),
+      linear-gradient(160deg, var(--navy-950), var(--navy-900) 70%, #08122b 100%);
+    color: #fff;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .hero__eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 0.72rem; font-weight: 800;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gala-red-light);
+    margin-bottom: 20px;
+  }
+  .hero__eyebrow::before {
+    content: ""; width: 36px; height: 2px;
+    background: var(--grad-strip-h);
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+    border-radius: 2px;
+  }
+  .hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 5.5vw, 4rem);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    max-width: 18ch;
+  }
+  .hero__title em {
+    font-style: italic;
+    font-weight: 500;
+    background: var(--grad-brand);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+  .hero__body {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.78);
+    max-width: 64ch;
+    margin-bottom: 32px;
+  }
+  .hero__meta {
+    display: flex; flex-wrap: wrap; gap: 28px;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.04em;
+  }
+  .hero__meta strong { color: #fff; font-weight: 700; letter-spacing: 0; margin-right: 4px; }
+
+  /* ── Section ── */
+  section { padding: clamp(64px, 9vw, 112px) 0; position: relative; }
+  section + section::before {
+    content: ""; display: block; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(15,23,42,0.08), transparent);
+    margin-bottom: clamp(64px, 9vw, 112px);
+    transform: translateY(-1px);
+  }
+  .section__num {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-400);
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .section__num::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--def-gold-400);
+    box-shadow: 0 0 12px rgba(255,194,77,0.5);
+  }
+  .section__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--navy-950);
+    margin-bottom: 12px;
+    letter-spacing: -0.015em;
+  }
+  .section__title em {
+    font-style: italic;
+    font-weight: 500;
+    background: var(--grad-brand);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+  .section__sub {
+    font-size: 1.02rem;
+    color: var(--ink-600);
+    max-width: 70ch;
+    margin-bottom: 48px;
+  }
+
+  /* ── Color swatches ── */
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .swatch {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(15,23,42,0.08);
+    background: #fff;
+    transition: transform 280ms var(--ease), box-shadow 280ms var(--ease);
+  }
+  .swatch:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 42px rgba(15,23,42,0.10);
+  }
+  .swatch__color { height: 120px; position: relative; }
+  .swatch__body { padding: 14px 16px 18px; }
+  .swatch__name {
+    font-size: 0.74rem; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--navy-950);
+    margin-bottom: 6px;
+  }
+  .swatch__hex {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink-600);
+    margin-bottom: 4px;
+  }
+  .swatch__token {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-400);
+  }
+
+  /* ── Gradient specimens ── */
+  .gradients { display: grid; gap: 20px; }
+  .grad {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(15,23,42,0.06);
+    background: #fff;
+  }
+  .grad__strip {
+    height: 64px;
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+  .grad__strip--brand { background-image: var(--grad-brand); }
+  .grad__strip--horizon { background-image: var(--grad-strip-h); }
+  .grad__strip--statnum { background: linear-gradient(90deg, var(--gala-red), var(--gala-blue-light), var(--gala-red), var(--gala-blue)); background-size: 200% auto; }
+  .grad__strip--btn { background: linear-gradient(135deg, var(--gala-red), var(--gala-red-deep)); animation: none; }
+  .grad__strip--tier { background: linear-gradient(135deg, var(--gala-blue), var(--gala-red)); animation: none; }
+  .grad__body { padding: 16px 20px 20px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .grad__label { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--navy-950); }
+  .grad__note { font-size: 0.84rem; color: var(--ink-500); max-width: 60ch; }
+  .grad__code { font-family: var(--font-mono); font-size: 0.76rem; color: var(--ink-600); background: rgba(15,23,42,0.04); padding: 4px 8px; border-radius: 6px; }
+
+  /* ── Type specimens ── */
+  .type-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 32px;
+    padding: 32px 0;
+    border-bottom: 1px solid rgba(15,23,42,0.06);
+    align-items: baseline;
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-meta { }
+  .type-meta__name {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--navy-950);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .type-meta__detail {
+    font-size: 0.78rem;
+    color: var(--ink-500);
+    line-height: 1.5;
+  }
+  .type-specimen { color: var(--ink-900); }
+  .type-display-xl { font-family: var(--font-display); font-size: clamp(2.8rem, 5vw, 4rem); font-weight: 600; line-height: 1.04; letter-spacing: -0.02em; }
+  .type-display-xl em { font-style: italic; font-weight: 500; background: var(--grad-brand); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 4s linear infinite; }
+  .type-display-lg { font-family: var(--font-display); font-size: 2.2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.015em; }
+  .type-display-md { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; line-height: 1.2; }
+  .type-eyebrow { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gala-red); }
+  .type-body { font-size: 1rem; line-height: 1.75; color: var(--ink-700); max-width: 60ch; }
+  .type-label { font-size: 0.78rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.04em; }
+  .type-mono { font-family: var(--font-mono); font-size: 0.86rem; color: var(--ink-700); }
+
+  /* ── Component demos ── */
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .demo {
+    border-radius: var(--radius-md);
+    background: #fff;
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow: 0 6px 20px rgba(15,23,42,0.04);
+    overflow: hidden;
+    position: relative;
+  }
+  .demo::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--grad-brand);
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+  .demo__body { padding: 28px 24px 24px; }
+  .demo__label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-400);
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: transform 200ms var(--ease), box-shadow 200ms var(--ease), filter 200ms var(--ease);
+    text-decoration: none;
+  }
+  .btn--red {
+    background: linear-gradient(135deg, var(--gala-red), var(--gala-red-deep));
+    color: #fff;
+    box-shadow: 0 12px 32px rgba(203,38,44,0.25);
+    animation: ctaPulse 2.6s ease-in-out infinite;
+  }
+  .btn--red:hover { box-shadow: 0 16px 40px rgba(203,38,44,0.35); filter: brightness(1.05); animation-play-state: paused; }
+  @keyframes ctaPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+  }
+  .btn--outline {
+    background: transparent;
+    color: var(--gala-red);
+    border: 2px solid var(--gala-red);
+    padding: 10px 22px;
+  }
+  .btn--outline:hover { background: rgba(203,38,44,0.06); }
+  .btn--ghost-light {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(6px);
+  }
+
+  /* Stat block */
+  .stats-demo {
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(203,38,44,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 30%, rgba(40,88,214,0.16) 0%, transparent 50%),
+      linear-gradient(135deg, var(--navy-950), var(--navy-900));
+    color: #fff;
+    padding: 40px 32px;
+    border-radius: var(--radius-md);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stats-demo::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .stat-item { position: relative; }
+  .stat-item__num {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 2.6rem);
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--gala-red), var(--gala-blue-light), var(--gala-red), var(--gala-blue));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 4s linear infinite;
+    line-height: 1.1;
+    filter: drop-shadow(0 0 14px rgba(40,88,214,0.25));
+  }
+  .stat-item__lbl {
+    font-size: 0.76rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Portal preview cards */
+  .portal-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 720px) { .portal-row { grid-template-columns: 1fr; } }
+  .portal-card {
+    border-radius: var(--radius-md);
+    padding: 24px 22px;
+    background: var(--navy-950);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .portal-card__strip {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+  .portal-card__strip--off { background: linear-gradient(90deg, #d72846, #b1306d, #6a3a9a, #3b3f9f); animation: none; }
+  .portal-card__strip--on  { background: var(--grad-strip-h); }
+  .portal-card__verdict {
+    position: absolute; top: 14px; right: 14px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .portal-card__verdict--bad  { background: rgba(203,38,44,0.18); color: var(--gala-red-light); border: 1px solid rgba(203,38,44,0.35); }
+  .portal-card__verdict--good { background: rgba(74,125,240,0.18); color: var(--gala-blue-light); border: 1px solid rgba(74,125,240,0.35); }
+  .portal-card__num {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-top: 32px;
+  }
+  .portal-card__num--off { color: #a8b1ff; }
+  .portal-card__num--on {
+    background: linear-gradient(90deg, var(--gala-red), var(--gala-blue-light), var(--gala-red), var(--gala-blue));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 4s linear infinite;
+    filter: drop-shadow(0 0 14px rgba(40,88,214,0.25));
+  }
+  .portal-card__lbl {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .portal-card__caption {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.5;
+    margin-top: 20px;
+  }
+
+  /* Do/Don't blocks */
+  .rules {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 720px) { .rules { grid-template-columns: 1fr; } }
+  .rule {
+    border-radius: var(--radius-md);
+    padding: 24px;
+    background: #fff;
+    border: 1px solid rgba(15,23,42,0.08);
+  }
+  .rule__head {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+  .rule--do .rule__head { color: var(--gala-blue-deep); }
+  .rule--dont .rule__head { color: var(--gala-red-deep); }
+  .rule__head::before {
+    content: "";
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: #fff;
+  }
+  .rule--do .rule__head::before { background: var(--gala-blue); content: "✓"; line-height: 18px; }
+  .rule--dont .rule__head::before { background: var(--gala-red); content: "✕"; line-height: 18px; }
+  .rule ul { list-style: none; }
+  .rule li {
+    position: relative;
+    padding: 8px 0 8px 22px;
+    font-size: 0.94rem;
+    color: var(--ink-700);
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(15,23,42,0.05);
+  }
+  .rule li:last-child { border-bottom: none; }
+  .rule li::before {
+    content: "";
+    position: absolute; left: 4px; top: 18px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--ink-400);
+  }
+  .rule li code { background: rgba(15,23,42,0.05); padding: 2px 6px; border-radius: 4px; color: var(--navy-950); }
+
+  /* Token table */
+  .token-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(15,23,42,0.08);
+    font-size: 0.9rem;
+  }
+  .token-table th, .token-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid rgba(15,23,42,0.06);
+  }
+  .token-table th {
+    background: rgba(15,23,42,0.025);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-500);
+  }
+  .token-table tr:last-child td { border-bottom: none; }
+  .token-table code { font-family: var(--font-mono); font-size: 0.82rem; color: var(--navy-950); }
+  .token-chip {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 8px;
+    border: 1px solid rgba(15,23,42,0.08);
+  }
+
+  /* Code block */
+  pre.code {
+    background: var(--navy-950);
+    color: #e6edf7;
+    padding: 22px 24px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+  }
+  pre.code::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--grad-strip-h);
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+  pre.code .c { color: #7d8aa3; }
+  pre.code .k { color: var(--gala-blue-light); }
+  pre.code .v { color: var(--gala-red-light); }
+  pre.code .s { color: #ffd166; }
+
+  /* Footer */
+  footer {
+    padding: 48px 0 64px;
+    border-top: 1px solid rgba(15,23,42,0.06);
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--ink-500);
+  }
+  footer strong { color: var(--navy-950); font-weight: 700; }
+
+  /* Yellow scrollbar — DEF-trim, a small demonstration */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: rgba(15,23,42,0.04); }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--def-gold-300), var(--def-gold-500));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--def-gold-400); background-clip: padding-box; border: 2px solid transparent; }
+
+  /* Print prep */
+  @media print {
+    body { background: #fff; }
+    .hero { padding: 60px 0; }
+    section { padding: 40px 0; }
+    .demo, .swatch, .rule { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="brand-strip"></div>
+
+<!-- ═══ HERO ═══ -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero__eyebrow">Davis Education Foundation · Visual System</div>
+    <h1 class="hero__title">Gala <em>2026.</em><br>The style guide.</h1>
+    <p class="hero__body">
+      The colors, type, gradients, and motion that ship on
+      <strong style="color:#fff;font-weight:600;">daviskids.org/events-gala</strong> —
+      documented here as the canonical source. Anything wearing the Gala badge
+      (sponsor portal, admin tools, emails, SMS, print) should pull from this
+      page and nothing else.
+    </p>
+    <div class="hero__meta">
+      <span><strong>Event</strong> June 10, 2026</span>
+      <span><strong>Venue</strong> Megaplex Legacy Crossing</span>
+      <span><strong>Theme</strong> Lights · Camera · Take Action</span>
+      <span><strong>Doc version</strong> v1.1 · May 10, 2026</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ 01 — IDENTITY ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">01 — IDENTITY</div>
+    <h2 class="section__title">A <em>blue → red</em> brand. With <em>yellow</em> trim.</h2>
+    <p class="section__sub">
+      The Gala visual identity is built on a two-color story: deep brand
+      <strong>blue (#2858d6)</strong> and crimson <strong>red (#CB262C)</strong>, set
+      against a near-black <strong>DEF navy (#0b1b3c)</strong> ground. The gradient runs directly
+      from blue to red without a purple bridge — keeping the brand readable,
+      optimistic, and unmistakably civic. <strong>DEF yellow (#ffc24d)</strong> is the
+      foundation's signature accent and earns a small but real role on Gala
+      surfaces: dividers, scrollbars, hairline icons, dots, and italic flair
+      words on dark grounds. Never on paper. Never on text the user has to read.
+    </p>
+  </div>
+</section>
+
+<!-- ═══ 02 — COLOR ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">02 — COLOR</div>
+    <h2 class="section__title">The <em>palette.</em></h2>
+    <p class="section__sub">
+      Every color used in the Gala system. CSS custom-property names are the
+      canonical tokens — use them, don't ship hex literals.
+    </p>
+
+    <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--navy-950);margin:24px 0 18px;">Brand reds</h3>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch__color" style="background:#CB262C"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Gala Red</div>
+          <div class="swatch__hex">#CB262C</div>
+          <div class="swatch__token">--gala-red</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#e84e53"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Gala Red Light</div>
+          <div class="swatch__hex">#e84e53</div>
+          <div class="swatch__token">--gala-red-light</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#a01f24"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Gala Red Deep</div>
+          <div class="swatch__hex">#a01f24</div>
+          <div class="swatch__token">--gala-red-deep</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--navy-950);margin:40px 0 18px;">Brand blues</h3>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch__color" style="background:#2858d6"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Gala Blue</div>
+          <div class="swatch__hex">#2858d6</div>
+          <div class="swatch__token">--gala-blue</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#4a7df0"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Gala Blue Light</div>
+          <div class="swatch__hex">#4a7df0</div>
+          <div class="swatch__token">--gala-blue-light</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#1a3aa3"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Gala Blue Deep</div>
+          <div class="swatch__hex">#1a3aa3</div>
+          <div class="swatch__token">--gala-blue-deep</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--navy-950);margin:40px 0 18px;">DEF Navy ground</h3>
+    <p style="font-size:0.92rem;color:var(--ink-500);margin-bottom:18px;max-width:64ch;line-height:1.6;">
+      Aligned to <code>daviskids.org</code>. The Gala-only token system previously used <code>#0d1b3d</code> — corrected here to the canonical DEF navy <code>#0b1b3c</code>. Two-character delta, but it's the difference between Gala feeling like a sub-brand and feeling like a department.
+    </p>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch__color" style="background:#0b1b3c"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">DEF Navy 950</div>
+          <div class="swatch__hex">#0b1b3c</div>
+          <div class="swatch__token">--navy-950 (canonical bg)</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#122a57"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">DEF Navy 900</div>
+          <div class="swatch__hex">#122a57</div>
+          <div class="swatch__token">--navy-900</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#1c3a78"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Navy 800</div>
+          <div class="swatch__hex">#1c3a78</div>
+          <div class="swatch__token">--navy-800</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#24508f"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">DEF Navy 700</div>
+          <div class="swatch__hex">#24508f</div>
+          <div class="swatch__token">--navy-700</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--navy-950);margin:40px 0 18px;">DEF Gold <span style="font-size:0.9rem;color:var(--ink-500);font-style:italic;font-weight:400;">— the third voice</span></h3>
+    <p style="font-size:0.92rem;color:var(--ink-500);margin-bottom:18px;max-width:64ch;line-height:1.6;">
+      The DEF foundation accent. Reserved for trim, hairline icons, dividers, scrollbars, gold-tier sponsor dots, and italic flair words <em>on navy grounds only</em>. Never on paper. Never for body text, status, buttons, or numbers — those are red or blue.
+    </p>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch__color" style="background:#ffd77f"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">DEF Gold 300</div>
+          <div class="swatch__hex">#ffd77f</div>
+          <div class="swatch__token">--def-gold-300 (soft / glow)</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#ffc24d"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">DEF Gold 400</div>
+          <div class="swatch__hex">#ffc24d</div>
+          <div class="swatch__token">--def-gold-400 (canonical)</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#f5a623"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">DEF Gold 500</div>
+          <div class="swatch__hex">#f5a623</div>
+          <div class="swatch__token">--def-gold-500 (deepest)</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#8bcfff"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">DEF Sky 300</div>
+          <div class="swatch__hex">#8bcfff</div>
+          <div class="swatch__token">--def-sky-300 (complement)</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--navy-950);margin:40px 0 18px;">Paper & ink (light surfaces)</h3>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch__color" style="background:#f8fbff;border-bottom:1px solid rgba(15,23,42,0.08)"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Paper 50</div>
+          <div class="swatch__hex">#f8fbff</div>
+          <div class="swatch__token">--paper-50</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#eff6ff;border-bottom:1px solid rgba(15,23,42,0.08)"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Paper 100</div>
+          <div class="swatch__hex">#eff6ff</div>
+          <div class="swatch__token">--paper-100</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#0f172a"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Ink 900</div>
+          <div class="swatch__hex">#0f172a</div>
+          <div class="swatch__token">--ink-900 (body on paper)</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch__color" style="background:#475569"></div>
+        <div class="swatch__body">
+          <div class="swatch__name">Ink 600</div>
+          <div class="swatch__hex">#475569</div>
+          <div class="swatch__token">--ink-600 (secondary)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 03 — GRADIENTS ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">03 — GRADIENTS</div>
+    <h2 class="section__title">The <em>signature</em> moves.</h2>
+    <p class="section__sub">
+      Five gradient patterns carry the brand. All shimmering gradients use the
+      same 4-second linear animation (<code>goldShimmer</code>) with
+      <code>background-size: 200% auto</code> — the timing and easing must
+      match across surfaces or the brand reads as out of sync.
+    </p>
+
+    <div class="gradients">
+      <div class="grad">
+        <div class="grad__strip grad__strip--brand"></div>
+        <div class="grad__body">
+          <div>
+            <div class="grad__label">Brand Gradient — Headline Text</div>
+            <div class="grad__note">The 125° five-stop wash. Used as a clipped background on italic display text (the <em>Nelson.</em> / <em>2026.</em> moment) and as the 3px top strip on cards. Animated.</div>
+          </div>
+          <code class="grad__code">linear-gradient(125deg, --gala-blue, --gala-red, --gala-blue-light, --gala-red, --gala-blue)</code>
+        </div>
+      </div>
+
+      <div class="grad">
+        <div class="grad__strip grad__strip--horizon"></div>
+        <div class="grad__body">
+          <div>
+            <div class="grad__label">Horizon Strip — Brand Bar</div>
+            <div class="grad__note">90° four-stop. The 3px bar that runs across the very top of every Gala surface and beneath the masthead. Email mastheads. Animated.</div>
+          </div>
+          <code class="grad__code">linear-gradient(90deg, --gala-blue, --gala-red, --gala-blue-light, --gala-red)</code>
+        </div>
+      </div>
+
+      <div class="grad">
+        <div class="grad__strip grad__strip--statnum"></div>
+        <div class="grad__body">
+          <div>
+            <div class="grad__label">Stat Number — Red-First Variant</div>
+            <div class="grad__note">Reversed stop order. Used on the big shimmering stat numbers in the navy stats banner. Always paired with a subtle blue drop-shadow glow.</div>
+          </div>
+          <code class="grad__code">linear-gradient(90deg, --gala-red, --gala-blue-light, --gala-red, --gala-blue)</code>
+        </div>
+      </div>
+
+      <div class="grad">
+        <div class="grad__strip grad__strip--btn"></div>
+        <div class="grad__body">
+          <div>
+            <div class="grad__label">Red CTA — Primary Button</div>
+            <div class="grad__note">Static 135° red-on-red-deep. Pulses scale, never color. Sponsor portal "Place" button uses this exact fill.</div>
+          </div>
+          <code class="grad__code">linear-gradient(135deg, --gala-red, --gala-red-deep)</code>
+        </div>
+      </div>
+
+      <div class="grad">
+        <div class="grad__strip grad__strip--tier"></div>
+        <div class="grad__body">
+          <div>
+            <div class="grad__label">Tier Pill — Sponsor Levels & Pills</div>
+            <div class="grad__note">Static 135° blue-to-red. Sponsor tier price pills, active nav pills, "Invite" callouts on the portal. The two-color story at its simplest.</div>
+          </div>
+          <code class="grad__code">linear-gradient(135deg, --gala-blue, --gala-red)</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 04 — TYPOGRAPHY ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">04 — TYPOGRAPHY</div>
+    <h2 class="section__title">Two fonts. <em>That's it.</em></h2>
+    <p class="section__sub">
+      <strong>Fraunces</strong> for display (the italic, optical-size serif that produces
+      the swashy "Nelson." flourish on the sponsor masthead). <strong>Inter</strong>
+      for everything else. JetBrains Mono shows up only in technical
+      contexts — this guide, debug surfaces, internal admin. The sponsor
+      portal currently ships Source Serif 4 for display headlines —
+      that's the swap target.
+    </p>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-meta__name">Display · XL</div>
+        <div class="type-meta__detail">Fraunces · 600/500 italic · clamp(2.2rem, 5vw, 3.6rem) · line 1.04</div>
+      </div>
+      <div class="type-specimen">
+        <div class="type-display-xl">Lights, camera, <em>take action.</em></div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-meta__name">Display · L</div>
+        <div class="type-meta__detail">Fraunces · 600 · 2.2rem · line 1.1 · letter-spacing -0.015em</div>
+      </div>
+      <div class="type-specimen">
+        <div class="type-display-lg">A night of dinner, auctions, and impact.</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-meta__name">Display · M</div>
+        <div class="type-meta__detail">Fraunces · 600 · 1.6rem · line 1.2</div>
+      </div>
+      <div class="type-specimen">
+        <div class="type-display-md">Sponsor a table.</div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-meta__name">Eyebrow</div>
+        <div class="type-meta__detail">Inter · 800 · 0.72rem · uppercase · letter 0.14em · usually red</div>
+      </div>
+      <div class="type-specimen">
+        <span class="type-eyebrow">— THE LINEUP</span>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-meta__name">Body</div>
+        <div class="type-meta__detail">Inter · 400 · 1rem · line 1.75 · ink-700 on paper · 0.78 white on navy</div>
+      </div>
+      <div class="type-specimen">
+        <p class="type-body">
+          On June 10, the Davis Education Foundation transforms Megaplex Legacy Crossing into a one-night theater for impact. Dinner, auctions, and a private screening — proceeds support classroom grants, teacher professional development, and the students of Davis School District.
+        </p>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-meta__name">Label</div>
+        <div class="type-meta__detail">Inter · 600 · 0.78rem · ink-500 · letter 0.04em</div>
+      </div>
+      <div class="type-specimen">
+        <span class="type-label">PLACED · ASSIGNED · OPEN</span>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-meta__name">Mono</div>
+        <div class="type-meta__detail">JetBrains Mono · 400/500 · 0.86rem · internal & debug surfaces only</div>
+      </div>
+      <div class="type-specimen">
+        <code class="type-mono">--gala-red: #CB262C;</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 05 — MOTION ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">05 — MOTION</div>
+    <h2 class="section__title">Hum, don't <em>flourish.</em></h2>
+    <p class="section__sub">
+      Two core animations carry the brand. No entrance animations (curtain
+      reveals, letter rises, halo drifts, ken-burns zooms) on hero sections —
+      these read as Squarespace and break the editorial seriousness.
+      Static heroes, animated trim.
+    </p>
+
+    <div class="demo-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="demo">
+        <div class="demo__body">
+          <div class="demo__label">Animation · goldShimmer</div>
+          <p style="font-size:0.94rem;color:var(--ink-700);margin-bottom:14px;line-height:1.6;">
+            The brand pulse. 4-second linear infinite loop sliding the gradient
+            background-position from 0% to 200%. Applied to every animated
+            gradient surface (strips, headline text, stat numbers, top trim).
+            All four must share this exact timing or the brand desyncs visually.
+          </p>
+          <pre class="code"><span class="k">animation</span>: shimmer <span class="v">4s</span> linear infinite;
+<span class="k">background-size</span>: <span class="v">200%</span> auto;
+
+<span class="k">@keyframes</span> <span class="v">shimmer</span> {
+  0%   { <span class="k">background-position</span>: <span class="v">0%</span> center; }
+  100% { <span class="k">background-position</span>: <span class="v">200%</span> center; }
+}</pre>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div class="demo__body">
+          <div class="demo__label">Animation · ctaPulse</div>
+          <p style="font-size:0.94rem;color:var(--ink-700);margin-bottom:14px;line-height:1.6;">
+            Scale-only pulse on the primary red CTA. 2.6-second ease-in-out,
+            pauses on hover. The button breathes (scale 1 → 1.03) without the
+            box-shadow expanding — color never animates. Used on
+            <code>btn--red</code> only; never on outlines, ghosts, or text links.
+          </p>
+          <pre class="code"><span class="k">animation</span>: ctaPulse <span class="v">2.6s</span> ease-in-out infinite;
+
+<span class="k">@keyframes</span> <span class="v">ctaPulse</span> {
+  0%, 100% { <span class="k">transform</span>: scale(1); }
+  50%      { <span class="k">transform</span>: scale(1.03); }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;">
+      <div class="demo-grid" style="grid-template-columns:1fr;">
+        <div class="demo">
+          <div class="demo__body" style="padding-top:34px;">
+            <div class="demo__label">Hover & focus easing</div>
+            <p style="font-size:0.94rem;color:var(--ink-700);margin-bottom:16px;line-height:1.6;">
+              All component-level transitions use a custom ease for a slight overshoot feel. Card lifts on hover use <code>transform: translateY(-3px)</code> + <code>box-shadow</code>. Buttons use shadow + filter only — no translate.
+            </p>
+            <pre class="code"><span class="k">--ease</span>: cubic-bezier(<span class="v">0.22</span>, <span class="v">0.61</span>, <span class="v">0.36</span>, <span class="v">1</span>);
+<span class="k">transition</span>: transform <span class="v">260ms</span> var(--ease),
+            box-shadow <span class="v">260ms</span> var(--ease),
+            border-color <span class="v">260ms</span> var(--ease);</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 06 — COMPONENTS ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">06 — COMPONENTS</div>
+    <h2 class="section__title">The <em>kit.</em></h2>
+    <p class="section__sub">
+      Canonical specimens. Any new Gala surface should reach for these
+      first before defining new components.
+    </p>
+
+    <div class="demo-grid">
+      <div class="demo">
+        <div class="demo__body">
+          <div class="demo__label">Primary CTA · btn--red</div>
+          <button class="btn btn--red">Get tickets</button>
+          <p style="font-size:0.84rem;color:var(--ink-500);margin-top:14px;line-height:1.55;">
+            Pill, red→red-deep 135° gradient, white text, pulsing scale animation, soft red glow. The only animated button in the system.
+          </p>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div class="demo__body">
+          <div class="demo__label">Outline · btn--outline</div>
+          <button class="btn btn--outline">Become a sponsor</button>
+          <p style="font-size:0.84rem;color:var(--ink-500);margin-top:14px;line-height:1.55;">
+            2px red border, transparent fill, red text. Fills with translucent red on hover. Used for secondary actions on paper.
+          </p>
+        </div>
+      </div>
+
+      <div class="demo" style="background:var(--navy-950);">
+        <div class="demo__body">
+          <div class="demo__label" style="color:rgba(255,255,255,0.5);">On navy · btn--ghost-light</div>
+          <button class="btn btn--ghost-light">Watch the trailer</button>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.6);margin-top:14px;line-height:1.55;">
+            Translucent white pill with backdrop blur. Used as the secondary action paired with the red CTA on navy heroes.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--navy-950);margin:48px 0 18px;">Stats banner (on navy)</h3>
+    <div class="stats-demo">
+      <div class="stat-item">
+        <div class="stat-item__num">$1.2M+</div>
+        <div class="stat-item__lbl">RAISED IN 2025</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-item__num">15K</div>
+        <div class="stat-item__lbl">STUDENTS REACHED</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-item__num">280+</div>
+        <div class="stat-item__lbl">CLASSROOM GRANTS</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-item__num">99</div>
+        <div class="stat-item__lbl">GALA SPONSORS</div>
+      </div>
+    </div>
+    <p style="font-size:0.84rem;color:var(--ink-500);margin-top:16px;line-height:1.55;">
+      Big-numbers block. Navy gradient ground with red and blue radial atmosphere, fine dot texture overlay, shimmering gradient numbers with a soft blue drop-shadow glow. The most distinctive Gala surface — use it once per page maximum.
+    </p>
+  </div>
+</section>
+
+<!-- ═══ 07 — DEF YELLOW IN USE ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">07 — DEF YELLOW</div>
+    <h2 class="section__title">The <em>third voice.</em></h2>
+    <p class="section__sub">
+      Yellow is the smallest brand color, but it is no longer just "trim." It earns
+      a real if minor role across the system — provided it stays on dark grounds
+      and never tries to carry text the user has to read. The rule of thumb: if
+      removing the yellow would leave the surface still legible and complete,
+      yellow is being used correctly. If removing it breaks understanding, you've
+      asked too much of it.
+    </p>
+
+    <div class="demo-grid" style="margin-bottom:32px;">
+      <div class="demo" style="background:var(--navy-950);color:#fff;">
+        <div class="demo__body">
+          <div class="demo__label" style="color:rgba(255,255,255,0.5);">Eyebrow on navy</div>
+          <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="width:32px;height:2px;background:linear-gradient(90deg,var(--def-gold-300),var(--def-gold-500));border-radius:2px;"></span>
+            <span style="font-size:0.72rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--def-gold-400);">— THE LINEUP</span>
+          </div>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.6);line-height:1.55;">
+            Yellow eyebrows on navy. Replaces the all-red eyebrow on dark grounds for variety. <strong style="color:#fff;">Paper grounds keep red eyebrows.</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="demo" style="background:var(--navy-950);color:#fff;">
+        <div class="demo__body">
+          <div class="demo__label" style="color:rgba(255,255,255,0.5);">Italic flair · on navy only</div>
+          <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:600;line-height:1.2;margin-bottom:14px;">
+            Lights, camera, <em style="font-weight:500;color:var(--def-gold-400);">action.</em>
+          </div>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.6);line-height:1.55;">
+            Italic display word in yellow as an alternative to the blue→red gradient. Use sparingly — once per page. Forbidden on paper (illegible).
+          </p>
+        </div>
+      </div>
+
+      <div class="demo" style="background:var(--navy-950);color:#fff;">
+        <div class="demo__body">
+          <div class="demo__label" style="color:rgba(255,255,255,0.5);">Hairline divider</div>
+          <div style="height:1px;background:linear-gradient(90deg,transparent,var(--def-gold-400),transparent);margin:24px 0;"></div>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.6);line-height:1.55;">
+            Yellow-fade hairline between sections on navy. Replaces the white rule for visual rhythm.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-grid">
+      <div class="demo" style="background:var(--navy-950);color:#fff;">
+        <div class="demo__body">
+          <div class="demo__label" style="color:rgba(255,255,255,0.5);">Gold-tier sponsor dot</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--def-gold-400);box-shadow:0 0 14px rgba(255,194,77,0.55);"></span>
+            <span style="font-family:var(--font-display);font-size:1.1rem;font-weight:600;">Gold tier sponsor</span>
+          </div>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.6);line-height:1.55;">
+            The only place yellow gets to literally represent the gold-tier brand level. Glowing dot, never a filled tier card.
+          </p>
+        </div>
+      </div>
+
+      <div class="demo" style="background:var(--navy-950);color:#fff;">
+        <div class="demo__body">
+          <div class="demo__label" style="color:rgba(255,255,255,0.5);">Hairline icon stroke</div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffc24d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffc24d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffc24d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.6);line-height:1.55;">
+            Yellow 1.6px stroke icons on navy grounds. Section markers, decorative glyphs. Never for primary action icons (those stay white or red).
+          </p>
+        </div>
+      </div>
+
+      <div class="demo" style="background:var(--navy-950);color:#fff;">
+        <div class="demo__body">
+          <div class="demo__label" style="color:rgba(255,255,255,0.5);">Scrollbar · scroll this page</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="width:6px;height:48px;background:linear-gradient(180deg,var(--def-gold-300),var(--def-gold-500));border-radius:999px;"></span>
+            <span style="font-size:0.84rem;color:rgba(255,255,255,0.78);">Custom yellow scrollbar — already active on this page.</span>
+          </div>
+          <p style="font-size:0.84rem;color:rgba(255,255,255,0.6);line-height:1.55;">
+            Yellow scrollbars on Gala surfaces. A tiny, almost-subliminal moment of brand presence. The very definition of trim.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;background:var(--navy-950);color:#fff;border-radius:var(--radius-md);padding:32px 28px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--def-gold-400),transparent);"></div>
+      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--def-gold-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">The yellow test</div>
+      <p style="font-size:0.96rem;color:rgba(255,255,255,0.85);line-height:1.7;max-width:64ch;">
+        Before adding yellow to a new surface, ask: <strong style="color:#fff;">does removing it break the design or just dim it slightly?</strong>
+        If removing it breaks anything, find another color. Yellow is jewelry, never structure.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 08 — PORTAL RESKIN ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">08 — PORTAL RESKIN</div>
+    <h2 class="section__title">The sponsor portal, <em>realigned.</em></h2>
+    <p class="section__sub">
+      The portal currently ships with a separate token system that drifts off-brand
+      in three specific ways. Each is a one-token-swap fix in
+      <code>src/brand/tokens.js</code> — no structural changes needed.
+    </p>
+
+    <div class="portal-row">
+      <div class="portal-card">
+        <div class="portal-card__strip portal-card__strip--off"></div>
+        <div class="portal-card__verdict portal-card__verdict--bad">Current</div>
+        <div>
+          <div class="portal-card__num portal-card__num--off">3</div>
+          <div class="portal-card__lbl">OPEN · TO PLACE</div>
+        </div>
+        <p class="portal-card__caption">
+          Light purple <code style="color:#a8b1ff;background:rgba(168,177,255,0.12);padding:1px 6px;border-radius:4px;">#a8b1ff</code> stat number. Strip gradient walks crimson → magenta → indigo. Reads as a different product than the marketing site.
+        </p>
+      </div>
+
+      <div class="portal-card">
+        <div class="portal-card__strip portal-card__strip--on"></div>
+        <div class="portal-card__verdict portal-card__verdict--good">Proposed</div>
+        <div>
+          <div class="portal-card__num portal-card__num--on">3</div>
+          <div class="portal-card__lbl">OPEN · TO PLACE</div>
+        </div>
+        <p class="portal-card__caption">
+          Shimmering blue→red gradient on the number. Strip uses the canonical four-stop horizon gradient. Portal now visibly part of the same event.
+        </p>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-display);font-size:1.4rem;font-weight:600;color:var(--navy-950);margin:48px 0 18px;">Token swaps required</h3>
+
+    <table class="token-table">
+      <thead>
+        <tr>
+          <th style="width:30%">Surface</th>
+          <th style="width:35%">Current (off-brand)</th>
+          <th style="width:35%">Replace with</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Stat numbers (OPEN, PLACED, ASSIGNED)</td>
+          <td><span class="token-chip" style="background:#a8b1ff"></span><code>BRAND.indigoLight</code> · #a8b1ff</td>
+          <td><span class="token-chip" style="background:#4a7df0"></span><code>--gala-blue-light</code> · #4a7df0</td>
+        </tr>
+        <tr>
+          <td>"Invite a guest" tile icon background</td>
+          <td><span class="token-chip" style="background:rgba(168,177,255,0.18)"></span>rgba(168,177,255,0.18)</td>
+          <td><span class="token-chip" style="background:rgba(74,125,240,0.18)"></span>rgba(74,125,240,0.18)</td>
+        </tr>
+        <tr>
+          <td>Header strip gradient</td>
+          <td><code>#d72846 → #b1306d → #6a3a9a → #3b3f9f</code></td>
+          <td><code>--gala-blue → --gala-red → --gala-blue-light → --gala-red</code> (horizon)</td>
+        </tr>
+        <tr>
+          <td>"Place" red CTA</td>
+          <td><span class="token-chip" style="background:#d72846"></span><code>BRAND.red</code> · #d72846</td>
+          <td><span class="token-chip" style="background:#CB262C"></span><code>--gala-red</code> · #CB262C</td>
+        </tr>
+        <tr>
+          <td>Navy ground</td>
+          <td><span class="token-chip" style="background:#1a2350"></span><code>BRAND.navy</code> · #1a2350</td>
+          <td><span class="token-chip" style="background:#0b1b3c"></span><code>--navy-950</code> · #0b1b3c (DEF canonical)</td>
+        </tr>
+        <tr>
+          <td>Display font</td>
+          <td><code>"Source Serif 4"</code></td>
+          <td><code>"Fraunces"</code> (already loaded on the parent site)</td>
+        </tr>
+        <tr>
+          <td>"Yours" treatment (placed/claimed chips)</td>
+          <td><span class="token-chip" style="background:#a8b1ff"></span><code>BRAND.indigoLight</code></td>
+          <td><span class="token-chip" style="background:#4a7df0"></span><code>--gala-blue-light</code> (same role, brand-aligned)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:0.88rem;color:var(--ink-500);margin-top:18px;line-height:1.6;">
+      The portal's <code>BRAND.indigoLight</code> token is used as the "yours" treatment across multiple components (TicketCard, TicketsTab, SeatPickSheet, DinnerPicker). Keeping it as a single semantic token is correct — just point it at <code>#4a7df0</code> instead of <code>#a8b1ff</code> and the entire portal shifts in one change. No per-component refactor needed.
+    </p>
+  </div>
+</section>
+
+<!-- ═══ 09 — RULES ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">09 — RULES</div>
+    <h2 class="section__title">Do & <em>don't.</em></h2>
+    <p class="section__sub">Hard-won. Most of these come from specific surfaces that shipped wrong.</p>
+
+    <div class="rules">
+      <div class="rule rule--do">
+        <div class="rule__head">DO</div>
+        <ul>
+          <li>Pair Fraunces italic with the brand gradient for headline emphasis (the <em>Nelson.</em> moment).</li>
+          <li>Use <code>--gala-red</code> for primary CTAs, <code>--gala-blue</code> for selection and progress states.</li>
+          <li>Anchor every Gala surface with the 3px shimmering strip at the very top.</li>
+          <li>Keep the DEF navy ground (<code>#0b1b3c</code>) as your darkest value. Don't go pure black.</li>
+          <li>Apply the radial blue + red atmosphere wash on any dark surface (heroes, stats, footers).</li>
+          <li>Use <code>--def-gold-400</code> for eyebrows, italic flair, hairline dividers, dots, and scrollbars <em>on navy grounds only</em>.</li>
+          <li>Static heroes. The image doesn't move. The trim moves.</li>
+          <li>Maintain 4-second <code>shimmer</code> timing across every animated gradient surface.</li>
+        </ul>
+      </div>
+
+      <div class="rule rule--dont">
+        <div class="rule__head">DON'T</div>
+        <ul>
+          <li>Use light purple (<code>#a8b1ff</code>) for status numbers, "yours" markers, or any UI surface.</li>
+          <li>Bridge the gradient through magenta. The brand goes blue → red, not blue → purple → red.</li>
+          <li>Apply yellow to body text, buttons, numbers, status, or any text on paper grounds. Gold-on-paper is illegible — the rule was earned the hard way.</li>
+          <li>Animate hero entrances (curtain reveals, letter rises, ken-burns). Static heroes only.</li>
+          <li>Ship Source Serif on Gala surfaces. Fraunces is the canonical display font.</li>
+          <li>Use Inter for display headlines. Inter is body only.</li>
+          <li>Color-animate buttons. Scale or filter only.</li>
+          <li>Use <code>sed</code> on production HTML for CSS changes. CSS edits are appended and reviewed.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 10 — DROP-IN ═══ -->
+<section>
+  <div class="wrap">
+    <div class="section__num">10 — DROP-IN</div>
+    <h2 class="section__title">The <em>tokens</em>, ready to ship.</h2>
+    <p class="section__sub">
+      Paste this block at the top of any Gala stylesheet, or set as the
+      <code>:root</code> in a new component. Both <code>src/brand/styles.css</code>
+      and <code>src/brand/tokens.js</code> on the gala repo should converge on these values.
+    </p>
+
+    <pre class="code"><span class="c">/* Gala 2026 — canonical tokens. Mirror from daviskids.org. */</span>
+<span class="k">:root</span> {
+  <span class="c">/* Brand reds */</span>
+  <span class="k">--gala-red</span>:        <span class="v">#CB262C</span>;
+  <span class="k">--gala-red-light</span>:  <span class="v">#e84e53</span>;
+  <span class="k">--gala-red-deep</span>:   <span class="v">#a01f24</span>;
+
+  <span class="c">/* Brand blues — these REPLACE all purple/indigo tokens */</span>
+  <span class="k">--gala-blue</span>:       <span class="v">#2858d6</span>;
+  <span class="k">--gala-blue-light</span>: <span class="v">#4a7df0</span>;  <span class="c">/* the new "yours" color */</span>
+  <span class="k">--gala-blue-deep</span>:  <span class="v">#1a3aa3</span>;
+
+  <span class="c">/* DEF navy — aligned to canonical daviskids.org tokens */</span>
+  <span class="k">--navy-950</span>: <span class="v">#0b1b3c</span>;  <span class="c">/* WAS #0d1b3d — corrected */</span>
+  <span class="k">--navy-900</span>: <span class="v">#122a57</span>;
+  <span class="k">--navy-800</span>: <span class="v">#1c3a78</span>;
+  <span class="k">--navy-700</span>: <span class="v">#24508f</span>;
+
+  <span class="c">/* DEF gold — trim and accents on navy ONLY, never on paper */</span>
+  <span class="k">--def-gold-300</span>: <span class="v">#ffd77f</span>;  <span class="c">/* soft / glow / dividers */</span>
+  <span class="k">--def-gold-400</span>: <span class="v">#ffc24d</span>;  <span class="c">/* canonical accent */</span>
+  <span class="k">--def-gold-500</span>: <span class="v">#f5a623</span>;  <span class="c">/* deepest */</span>
+  <span class="k">--def-sky-300</span>:  <span class="v">#8bcfff</span>;  <span class="c">/* complement, sparing use */</span>
+
+  <span class="c">/* Type */</span>
+  <span class="k">--font-display</span>: <span class="s">"Fraunces"</span>, Georgia, serif;
+  <span class="k">--font-sans</span>:    <span class="s">"Inter"</span>, system-ui, sans-serif;
+
+  <span class="c">/* Signature gradients */</span>
+  <span class="k">--grad-brand</span>: <span class="v">linear-gradient</span>(125deg,
+    var(--gala-blue), var(--gala-red),
+    var(--gala-blue-light), var(--gala-red), var(--gala-blue));
+
+  <span class="k">--grad-strip</span>: <span class="v">linear-gradient</span>(90deg,
+    var(--gala-blue), var(--gala-red),
+    var(--gala-blue-light), var(--gala-red));
+
+  <span class="c">/* Yellow trim — for hairlines and scrollbars */</span>
+  <span class="k">--grad-gold-soft</span>: <span class="v">linear-gradient</span>(180deg,
+    var(--def-gold-300), var(--def-gold-500));
+
+  <span class="c">/* Motion */</span>
+  <span class="k">--ease</span>: <span class="v">cubic-bezier</span>(0.22, 0.61, 0.36, 1);
+}
+
+<span class="k">@keyframes</span> <span class="v">shimmer</span> {
+  0%   { <span class="k">background-position</span>: 0% center; }
+  100% { <span class="k">background-position</span>: 200% center; }
+}
+
+<span class="c">/* DEF yellow scrollbar — opt-in per page */</span>
+<span class="k">::-webkit-scrollbar-thumb</span> {
+  <span class="k">background</span>: var(--grad-gold-soft);
+  <span class="k">border-radius</span>: 999px;
+}</pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Gala 2026 Style Guide</strong> · v1.1 · May 10, 2026</p>
+    <p style="margin-top:6px;">Canonical source: <strong>daviskids.org/events-gala</strong> · Maintained alongside the gala repo at <code>docs/STYLE-GUIDE.html</code></p>
+  </div>
+</footer>
+
+</body>
+</html>
