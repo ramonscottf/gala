@@ -140,6 +140,7 @@ export default function PostPickOverview({
           tone="indigo"
           disabled={stillToAssign === 0}
           onClick={onInvite}
+          testId="post-pick-invite"
         />
         <ActionButton
           label="Pick meals"
@@ -151,6 +152,7 @@ export default function PostPickOverview({
           tone="amber"
           disabled={stillNeedMeal === 0}
           onClick={onPickMeals}
+          testId="post-pick-pick-meals"
         />
       </div>
 
@@ -220,7 +222,7 @@ function CounterPill({ label, done, total }) {
   );
 }
 
-function ActionButton({ label, subtext, tone, disabled, onClick }) {
+function ActionButton({ label, subtext, tone, disabled, onClick, testId }) {
   const map = {
     indigo: {
       bg: 'linear-gradient(135deg,#4a7df0,#2858d6)',
@@ -237,6 +239,7 @@ function ActionButton({ label, subtext, tone, disabled, onClick }) {
       type="button"
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
+      data-testid={testId}
       style={{
         all: 'unset',
         cursor: disabled ? 'not-allowed' : 'pointer',

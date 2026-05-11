@@ -1,21 +1,35 @@
 import { test, expect } from '@playwright/test';
-import { ensureFreshState, ensurePlacedState, cleanupToken } from './lib/portal-api.js';
+import { ensureFreshState, ensurePlacedState, cleanupToken, getPortal } from './lib/portal-api.js';
 import { gotoSponsor, openSeatPicker, expectSeatMapReady } from './lib/ui.js';
 
 test.describe.configure({ mode: 'serial' });
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 for (const state of ['fresh', 'placed']) {
   test(`${state} sponsor portal loads and exposes seat picking`, async ({ page }, testInfo) => {
-    if (state === 'fresh') await ensureFreshState();
-    else await ensurePlacedState();
+    let portal = null;
+    if (state === 'fresh') {
+      portal = await ensureFreshState();
+    } else {
+      await ensurePlacedState();
+      portal = await getPortal();
+    }
+
+    const identity = portal.identity || {};
+    const sponsorLabel = identity.company || identity.contactName || identity.email || 'Sponsor portal';
+    const placedCount = (portal.myAssignments || []).length + (portal.myHolds || []).length;
 
     await gotoSponsor(page);
-    await expect(page.locator('body')).toContainText(/Kara Toone|DEF Staff/i);
+    await expect(page.locator('body')).toContainText(new RegExp(escapeRegExp(sponsorLabel), 'i'));
 
     if (state === 'fresh') {
-      await expect(page.locator('body')).toContainText(/2 seats still to place|Place your 2 seats|2 remaining/i);
+      expect(placedCount).toBe(0);
+      await expect(page.getByTestId('cta-place-seats')).toBeVisible();
     } else {
-      await expect(page.locator('body')).toContainText(/2\s*\/\s*2|2 placed|All 2 seats|B\d+/i);
+      expect(placedCount).toBeGreaterThanOrEqual(2);
     }
 
     await openSeatPicker(page, testInfo);

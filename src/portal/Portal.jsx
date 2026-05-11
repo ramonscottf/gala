@@ -2207,7 +2207,37 @@ export const DelegateForm = ({
 
 // ── Sheet (bottom modal) ──────────────────────────────────────────────
 
-const Sheet = ({ open, onClose, title, children, forceDark = false, hideClose = false }) => {
+function useDesktopSheet() {
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(min-width: 880px)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const query = window.matchMedia('(min-width: 880px)');
+    const update = () => setIsDesktop(query.matches);
+    update();
+    if (query.addEventListener) {
+      query.addEventListener('change', update);
+      return () => query.removeEventListener('change', update);
+    }
+    query.addListener(update);
+    return () => query.removeListener(update);
+  }, []);
+
+  return isDesktop;
+}
+
+const Sheet = ({
+  open,
+  onClose,
+  title,
+  children,
+  forceDark = false,
+  variant = 'default',
+  hideClose = false,
+}) => {
   const { isDark: systemDark } = useTheme();
   const withinFrame = useContext(SheetFrameContext);
   // Phase 1.15 — forceDark lets the SeatPickSheet host the cinema/seat-pick
@@ -2233,7 +2263,11 @@ const Sheet = ({ open, onClose, title, children, forceDark = false, hideClose = 
       }}
     >
       <div
-        className={`sheet-panel ${isDark ? 'force-dark-vars' : ''}`.trim()}
+        className={[
+          'sheet-panel',
+          variant !== 'default' ? `sheet-panel--${variant}` : '',
+          isDark ? 'force-dark-vars' : '',
+        ].filter(Boolean).join(' ')}
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
@@ -2646,6 +2680,7 @@ function PortalInner({
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { isDark } = useTheme();
+  const isDesktopSheet = useDesktopSheet();
   // Wizard's "Take me to my tickets" CTA navigates here with ?tab=tickets
   // so we land on the right tab without needing a global tab store.
   const initialTab = searchParams.get('tab') || 'home';
@@ -3303,6 +3338,7 @@ function PortalInner({
         onClose={() => setSeatPickOpen(false)}
         title="Place seats"
         forceDark
+        variant="seat-picker"
       >
         {seatPickOpen && (
           <SeatPickSheet
@@ -3314,6 +3350,7 @@ function PortalInner({
             apiBase={config.apiBase}
             onRefresh={onRefresh}
             onMovieDetail={setMovieDetail}
+            variant={isDesktopSheet ? 'modal' : 'sheet'}
             initialShowingNumber={seatPickInitial?.showingNumber || null}
             initialMovieId={seatPickInitial?.movieId || null}
             onCommitted={(placed) => {

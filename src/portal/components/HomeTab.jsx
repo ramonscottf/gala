@@ -92,119 +92,129 @@ export default function HomeTab({
     (isDelegation || !canInviteGuest);
 
   return (
-    <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
-      <TicketHero
-        tier={tier}
-        name={name}
-        subline={subline}
-        blockSize={blockSize}
-        placed={placed}
-        assigned={assignedCount}
-        openCount={openCount}
-        logoUrl={logoUrl}
-        daysOut={daysOut}
-        isDelegation={isDelegation}
-        inviterCompany={company}
-        allDone={allDone}
-      />
-
-      {/* Intro copy — sets the model in two sentences. Hidden for
-          delegations because their flow is different (their host
-          already explained context to them). */}
-      {!isDelegation && (
-        <div
-          style={{
-            margin: '14px 22px 0',
-            padding: '0',
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: 'var(--mute)',
-          }}
-        >
-          <strong style={{ color: 'var(--ink-on-ground)' }}>Reserve your seats and dinners.</strong>
-          {' '}Want to invite guests? They can join your showing or pick their own. Their choice.
-        </div>
-      )}
-
-      {/* Action cards */}
-      <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {/* Phase 5.13 — when fully done (every seat placed + every
-            meal picked + nothing left to give), suppress the action
-            cards entirely. The ticket hero card below carries the
-            page. Kara feedback: "should make them feel done." */}
-        {!allDone && (
-          <ActionCard
-            icon="🪑"
-            gradient="linear-gradient(135deg,#CB262C,#a01f24)"
-            title={openCount > 0 ? 'Place seats' : `All ${personalQuota} seats placed`}
-            sub={
-              openCount > 0
-                ? `${openCount} of ${personalQuota} still to place`
-                : `${assignedCount} with guests · tap to edit`
-            }
-            cta={openCount > 0 ? 'Place' : 'Edit'}
-            ctaPrimary
-            onClick={openCount > 0 ? onPlaceSeats : onManageTickets}
-            testId="cta-place-seats"
-          />
-        )}
-
-        {/* Phase 5.12 — Pick meals card. Only appears once seats are
-            placed (no meals to pick before there are seats).
-            Phase 5.13 — hides entirely when fully done (the hero
-            ticket card's Edit picker is the only path to edit meals
-            in that state). */}
-        {showMealsCard && !allDone && (
-          <ActionCard
-            icon="🍽️"
-            gradient="linear-gradient(135deg,#ffc24d,#f5a623)"
-            title={mealsNeededCount > 0 ? 'Pick meals' : 'All meals picked'}
-            sub={
-              mealsNeededCount > 0
-                ? `${mealsNeededCount} of your seat${mealsNeededCount === 1 ? '' : 's'} still need${mealsNeededCount === 1 ? 's' : ''} a meal`
-                : `${placed} meal${placed === 1 ? '' : 's'} ready · tap to change`
-            }
-            cta={mealsNeededCount > 0 ? 'Pick' : 'Edit'}
-            ctaPrimary={mealsNeededCount > 0}
-            onClick={onPickMeals}
-            testId="cta-pick-meals"
-          />
-        )}
-
-        {canInviteGuest && (
-          <ActionCard
-            icon="👥"
-            gradient="linear-gradient(135deg,#4a7df0,#2858d6)"
-            title="Invite a guest"
-            sub={`${availableToGive} of your seats can go to a guest`}
-            cta="Invite"
-            onClick={onInvite}
-            testId="cta-invite-guest"
-          />
-        )}
-
-        {/* Your ticket(s) — hero entry to TicketDetailSheet (QR + per-seat
-            dinner + meta). Only renders when this caller has at least one
-            ticket of their own (i.e. seats they placed under their token).
-            For a sponsor who has fully delegated their entire block, the
-            tickets array is empty and we skip — their ticket lives on the
-            delegate's portal in that scenario. */}
-        {tickets.length > 0 && typeof onViewTicket === 'function' && (
-          tickets.map((t) => (
-            <TicketHeroCard
-              key={t.id}
-              ticket={t}
-              onViewTicket={onViewTicket}
-              onEditSeats={onEditSeats}
-              onEditMeals={onEditMeals}
-            />
-          ))
-        )}
+    <div className="scroll-container home-tab" style={{ flex: 1, paddingBottom: 130 }}>
+      <div className="home-tab__hero" data-testid="home-hero-region">
+        <TicketHero
+          tier={tier}
+          name={name}
+          subline={subline}
+          blockSize={blockSize}
+          placed={placed}
+          assigned={assignedCount}
+          openCount={openCount}
+          logoUrl={logoUrl}
+          daysOut={daysOut}
+          isDelegation={isDelegation}
+          inviterCompany={company}
+          allDone={allDone}
+        />
       </div>
 
-      {/* Lineup — horizontal slider */}
-      <div style={{ marginTop: 28 }}>
-        <div style={{ padding: '0 22px' }}>
+      <div className="home-tab__body">
+        <section className="home-tab__actions" data-testid="home-actions-region" aria-label="Sponsor actions">
+          {/* Intro copy — sets the model in two sentences. Hidden for
+              delegations because their flow is different (their host
+              already explained context to them). */}
+          {!isDelegation && (
+            <div
+              className="home-tab__intro"
+              style={{
+                margin: '14px 22px 0',
+                padding: '0',
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: 'var(--mute)',
+              }}
+            >
+              <strong style={{ color: 'var(--ink-on-ground)' }}>Reserve your seats and dinners.</strong>
+              {' '}Want to invite guests? They can join your showing or pick their own. Their choice.
+            </div>
+          )}
+
+          {/* Action cards */}
+          <div
+            className="home-tab__actions-list"
+            style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 10 }}
+          >
+            {!allDone && (
+              <ActionCard
+                icon="🪑"
+                gradient="linear-gradient(135deg,#CB262C,#a01f24)"
+                title={openCount > 0 ? 'Place seats' : `All ${personalQuota} seats placed`}
+                sub={
+                  openCount > 0
+                    ? `${openCount} of ${personalQuota} still to place`
+                    : `${assignedCount} with guests · tap to edit`
+                }
+                cta={openCount > 0 ? 'Place' : 'Edit'}
+                ctaPrimary
+                onClick={openCount > 0 ? onPlaceSeats : onManageTickets}
+                testId="cta-place-seats"
+              />
+            )}
+
+            {/* Phase 5.12 — Pick meals card. Only appears once seats are
+                placed (no meals to pick before there are seats). When
+                every placed seat has a meal, the card shifts to a
+                completion state but stays visible so the user can still
+                tap to change meals before the lock date. */}
+            {showMealsCard && !allDone && (
+              <ActionCard
+                icon="🍽️"
+                gradient="linear-gradient(135deg,#ffc24d,#f5a623)"
+                title={mealsNeededCount > 0 ? 'Pick meals' : 'All meals picked'}
+                sub={
+                  mealsNeededCount > 0
+                    ? `${mealsNeededCount} of your seat${mealsNeededCount === 1 ? '' : 's'} still need${mealsNeededCount === 1 ? 's' : ''} a meal`
+                    : `${placed} meal${placed === 1 ? '' : 's'} ready · tap to change`
+                }
+                cta={mealsNeededCount > 0 ? 'Pick' : 'Edit'}
+                ctaPrimary={mealsNeededCount > 0}
+                onClick={onPickMeals}
+                testId="cta-pick-meals"
+              />
+            )}
+
+            {canInviteGuest && (
+              <ActionCard
+                icon="👥"
+                gradient="linear-gradient(135deg,#4a7df0,#2858d6)"
+                title="Invite a guest"
+                sub={`${availableToGive} of your seats can go to a guest`}
+                cta="Invite"
+                onClick={onInvite}
+                testId="cta-invite-guest"
+              />
+            )}
+
+            {/* Your ticket(s) — hero entry to TicketDetailSheet (QR + per-seat
+                dinner + meta). Only renders when this caller has at least one
+                ticket of their own (i.e. seats they placed under their token).
+                For a sponsor who has fully delegated their entire block, the
+                tickets array is empty and we skip — their ticket lives on the
+                delegate's portal in that scenario. */}
+            {tickets.length > 0 && typeof onViewTicket === 'function' && (
+              tickets.map((t) => (
+                <TicketHeroCard
+                  key={t.id}
+                  ticket={t}
+                  onViewTicket={onViewTicket}
+                  onEditSeats={onEditSeats}
+                  onEditMeals={onEditMeals}
+                />
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Lineup — horizontal slider */}
+        <aside
+          className="home-tab__lineup"
+          data-testid="home-lineup-region"
+          style={{ marginTop: 28 }}
+          aria-label="Movie lineup"
+        >
+        <div className="home-tab__lineup-header" style={{ padding: '0 22px' }}>
           <div
             style={{
               fontSize: 10,
@@ -234,6 +244,7 @@ export default function HomeTab({
         </div>
 
         <div
+          className="home-tab__lineup-slider"
           data-testid="mobile-lineup-slider"
           style={{
             marginTop: 14,
@@ -261,6 +272,7 @@ export default function HomeTab({
               <button
                 key={m.id}
                 data-testid="mobile-lineup-card"
+                className="home-tab__lineup-card"
                 onClick={() => onMovieDetail && onMovieDetail(m)}
                 style={{
                   all: 'unset',
@@ -370,8 +382,9 @@ export default function HomeTab({
             );
           })}
           {/* trailing spacer so the last card has breathing room when scrolled into view */}
-          <div style={{ flexShrink: 0, width: 8 }} />
+          <div className="home-tab__lineup-spacer" style={{ flexShrink: 0, width: 8 }} />
         </div>
+        </aside>
       </div>
     </div>
   );
