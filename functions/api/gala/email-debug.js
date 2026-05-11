@@ -1,42 +1,39 @@
-// TEMP DIAGNOSTIC — Phase 5.14 hotfix investigation
-// Tests sendEmail() in isolation, bypassing any DB lookups.
-// Token-gated so it's not abusable.
-//
-// REMOVE THIS FILE once email path is confirmed working.
-
+// TEMP DIAGNOSTIC v2 — replicate request-link's DB lookups + send
 import { sendEmail } from './_notify.js';
 import { jsonOk, jsonError } from './_sponsor_portal.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
-
-  // Light gate — body must have the right token to fire a send.
   let body;
   try { body = await request.json(); } catch { return jsonError('bad json', 400); }
+  if (body.token !== 'skippy-debug-tta') return jsonError('nope', 403);
 
-  if (body.token !== 'skippy-debug-tta') {
-    return jsonError('nope', 403);
-  }
+  const email = (body.email || 'ramonscottf@gmail.com').toLowerCase().trim();
+  const trace = { steps: [], errors: [] };
 
-  const to = body.to || 'ramonscottf@gmail.com';
+  trace.steps.push({ step: 'start', email });
 
-  // Snapshot what the worker actually sees in env
-  const envCheck = {
-    has_GALA_DB: !!env.GALA_DB,
-    has_GALA_MAIL_TOKEN: !!env.GALA_MAIL_TOKEN,
-    GALA_MAIL_TOKEN_len: env.GALA_MAIL_TOKEN ? env.GALA_MAIL_TOKEN.length : 0,
-    has_RESEND_API_KEY: !!env.RESEND_API_KEY,
-    GALA_FROM_EMAIL: env.GALA_FROM_EMAIL || '(unset)',
-    GALA_ADMIN_EMAIL: env.GALA_ADMIN_EMAIL || '(unset)',
-  };
+  try {
+    const sponsorRow = await env.GALA_DB.prepare(
+      `SELECT id, first_name, last_name, email, secondary_email, rsvp_token
+         FROM sponsors
+        WHERE archived_at IS NULL
+          AND (LOWER(email) = ? OR LOWER(secondary_email) = ?)
+        LIMIT 1`
+    ).bind(email, email).first();
+    trace.steps.push({ step: 'sponsor_lookup', found: !!sponsorRow, row: sponsorRow ? { id: sponsorRow.id, has_token: !!sponsorRow.rsvp_token, token_len: sponsorRow.rsvp_token ? sponsorRow.rsvp_token.length : 0 } : null });
+  } catch (e) { trace.errors.push({ step: 'sponsor_lookup', error: String(e && e.message || e) }); }
 
-  const html = '<p>Skippy diagnostic from /api/gala/email-debug. If you see this, sendEmail() works inside the worker.</p>';
-  const result = await sendEmail(env, {
-    to,
-    subject: 'SKIPPYTEST-D: sendEmail() inside worker',
-    html,
-    replyTo: 'smiggin@dsdmail.net',
-  });
+  try {
+    const delegationRow = await env.GALA_DB.prepare(
+      `SELECT id, delegate_name, delegate_email, token, status
+         FROM sponsor_delegations
+        WHERE LOWER(delegate_email) = ?
+          AND (status IS NULL OR status != 'revoked')
+        LIMIT 1`
+    ).bind(email).first();
+    trace.steps.push({ step: 'delegation_lookup', found: !!delegationRow, row: delegationRow ? { id: delegationRow.id, has_token: !!delegationRow.token } : null });
+  } catch (e) { trace.errors.push({ step: 'delegation_lookup', error: String(e && e.message || e) }); }
 
-  return jsonOk({ env_check: envCheck, mail: result });
+  return jsonOk(trace);
 }
