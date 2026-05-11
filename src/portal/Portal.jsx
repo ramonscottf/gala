@@ -1468,6 +1468,21 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
         movieTitle: st?.movie_title,
         movieShort: st?.movie_title?.split(' ')[0] || '',
         posterUrl: st?.poster_url,
+        // Phase 5.9 — carry the rich movie metadata onto each ticket
+        // so TicketDetailSheet's hero band can render Movie-Detail-
+        // sheet-style cinematic chrome (backdrop, year, rating, runtime,
+        // rotten badge). Source: same showtime row that supplies the
+        // poster + title. enrichMovieScores normalizes the rotten
+        // score fields the badge component expects.
+        backdropUrl: st?.backdrop_url,
+        year: st?.year,
+        rating: st?.rating,
+        runtime: st?.runtime_minutes,
+        synopsis: st?.synopsis,
+        tmdbScore: st?.tmdb_score,
+        rtCriticsScore: st?.rt_critics_score,
+        rtAudienceScore: st?.rt_audience_score,
+        rtUrl: st?.rt_url,
         theaterName: theater?.name || `Theater ${key}`,
         seats: [],
         // Per-seat delegation_id map: { 'F-7': 4, 'F-8': null } so
@@ -1549,6 +1564,18 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
       movieTitle: st?.movie_title,
       movieShort: st?.movie_title?.split(' ')[0] || '',
       posterUrl: st?.poster_url,
+      // Phase 5.9 — rich movie metadata for delegation ticket sheets,
+      // mirrors the sponsor ticket adapter so guest portals render the
+      // same hero band.
+      backdropUrl: st?.backdrop_url,
+      year: st?.year,
+      rating: st?.rating,
+      runtime: st?.runtime_minutes,
+      synopsis: st?.synopsis,
+      tmdbScore: st?.tmdb_score,
+      rtCriticsScore: st?.rt_critics_score,
+      rtAudienceScore: st?.rt_audience_score,
+      rtUrl: st?.rt_url,
       theaterName: theater?.name || `Theater ${row.theater_id}`,
     };
   };
@@ -1577,6 +1604,17 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
         movieTitle: row.movieTitle,
         movieShort: row.movieShort,
         posterUrl: row.posterUrl,
+        // Phase 5.9 — same rich-movie-metadata pass-through as
+        // sponsor tickets. The hero band needs these to render.
+        backdropUrl: row.backdropUrl,
+        year: row.year,
+        rating: row.rating,
+        runtime: row.runtime,
+        synopsis: row.synopsis,
+        tmdbScore: row.tmdbScore,
+        rtCriticsScore: row.rtCriticsScore,
+        rtAudienceScore: row.rtAudienceScore,
+        rtUrl: row.rtUrl,
         theaterName: row.theaterName,
         seats: [],
         assignmentRows: [],
