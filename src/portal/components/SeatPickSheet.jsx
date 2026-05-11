@@ -1634,9 +1634,26 @@ export default function SeatPickSheet({
           gap: 8,
         }}
       >
-        <Btn kind="secondary" size="lg" onClick={onClose}>
-          Close
-        </Btn>
+        {/* Phase 5.15 — left-side button is step-aware. Step 1 is
+            the "first screen" of the flow so it shows Close (closes
+            the whole sheet, returns to portal). Steps 2 and 3 show
+            Back, which steps backward one stage. Stepper jumps still
+            work for nonlinear navigation; Back is just the "I'm not
+            done with this flow, take me one step prior" convenience. */}
+        {step === 1 ? (
+          <Btn kind="secondary" size="lg" onClick={onClose} testId="seat-pick-close">
+            Close
+          </Btn>
+        ) : (
+          <Btn
+            kind="secondary"
+            size="lg"
+            onClick={() => setStep(step - 1)}
+            testId={`seat-pick-step${step}-back`}
+          >
+            Back
+          </Btn>
+        )}
         {step === 3 ? (
           <Btn
             kind="primary"
