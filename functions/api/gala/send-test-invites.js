@@ -110,7 +110,7 @@ export async function onRequestPost(context) {
     const contactName = [s.first_name, s.last_name].filter(Boolean).join(' ').trim() || 'there';
     const tier = s.sponsorship_tier || 'Sponsor';
     const seats = s.seats_purchased || 0;
-    const portalUrl = `https://gala.daviskids.org/portal/${s.rsvp_token}`;
+    const portalUrl = `https://gala.daviskids.org/sponsor/${s.rsvp_token}`;
     const entry = { id: s.id, company: s.company, first, email_ok: null, sms_ok: null };
 
     if (s.email) {
