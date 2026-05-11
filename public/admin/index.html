@@ -4235,13 +4235,44 @@ function showSendConfirmModal(sendId, preview) {
       resultSpan.textContent = 'Enqueuing…'; resultSpan.style.color = 'var(--muted)';
       try {
         // ── Step 1: enqueue (returns in <1s, no 30s timeout risk) ────
-        const r = await fetch('/api/gala/marketing-send-queued', {
+        let r = await fetch('/api/gala/marketing-send-queued', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ sendId, confirmedRecipientCount: preview.recipientCount }),
         });
-        const data = await r.json();
+        let data = await r.json();
+
+        // Phase 5.14 launch fallback — if the queue producer binding
+        // isn't attached to this deployment (Cloudflare Pages drops it
+        // on rebuild sometimes), fall back to the synchronous send-now
+        // path. Both endpoints do {TOKEN} substitution and the same
+        // SkippyMail dispatch — the only difference is whether we go
+        // through Queues. For small batches (≤15) the synchronous path
+        // is fine and stays well under the 30s Pages Function timeout.
+        if (!r.ok && (data.error || '').includes('GALA_SEND_QUEUE not bound')) {
+          resultSpan.textContent = 'Queue unavailable, sending directly…';
+          r = await fetch('/api/gala/marketing-send-now', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ sendId, confirmedRecipientCount: preview.recipientCount }),
+          });
+          data = await r.json();
+          if (r.ok) {
+            // send-now returns { runId, sent, failed, total, errors }
+            // directly — no polling needed, format and exit early
+            const { runId, sent = 0, failed = 0, total = preview.recipientCount, errors = [] } = data;
+            resultSpan.textContent = `✓ Sent ${sent} of ${total}${failed ? ` · ${failed} failed` : ''}`;
+            resultSpan.style.color = failed > 0 ? 'var(--amber, #d97706)' : 'var(--green, #15803d)';
+            confirmBtn.textContent = 'Done';
+            if (failed > 0 && errors.length) {
+              console.warn('Send-now errors:', errors);
+            }
+            return;
+          }
+        }
+
         if (!r.ok) {
           resultSpan.textContent = '✗ ' + (data.error || `HTTP ${r.status}`);
           resultSpan.style.color = 'var(--red)';
