@@ -3624,6 +3624,7 @@ function PortalInner({
       {movieDetail && (
         <MovieDetailSheet
           movie={movieDetail}
+          variant={isDesktopSheet ? 'modal' : 'sheet'}
           showLabel={
             movieDetail.__showLabel ||
             (movieDetail.__showingNumber === 1

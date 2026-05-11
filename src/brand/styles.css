@@ -1230,13 +1230,41 @@ img,
   }
 
   .sheet-panel--seat-picker {
-    max-width: min(1040px, calc(100vw - 64px));
-    width: calc(100vw - 64px) !important;
+    /* Phase 5.14 launch polish — the previous 1040px cap left ~800px of
+     * unused screen on a typical 1920x1080 monitor and forced horizontal
+     * scroll inside the seat map for the wider auditoriums (Aud 8 = 40
+     * cols, Aud 7 = 33 cols, Aud 11 = 24 cols). Let the modal grow up
+     * to 1480px so the full auditorium fits without scrubbing back and
+     * forth. Still bounded by viewport with a 48px gutter on each side. */
+    max-width: min(1480px, calc(100vw - 96px));
+    width: calc(100vw - 96px) !important;
     max-height: calc(100dvh - 48px) !important;
   }
 
   .sheet-panel--seat-picker > .scroll-container {
     padding: 18px 24px 24px !important;
+  }
+
+  /* Phase 5.14 launch polish — gradient strip across the top edge of
+   * the seat-picker modal. Pulls in the brand red/blue gradient as a
+   * narrow ribbon at the top of the panel to give the booker a fun,
+   * branded accent that matches the cinema/marquee vibe of the rest
+   * of the flow. The strip sits inside the rounded top corners
+   * (overflow:hidden on the panel clips it cleanly). */
+  .sheet-panel--seat-picker {
+    position: relative;
+    overflow: hidden;
+  }
+  .sheet-panel--seat-picker::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #2858d6, #CB262C, #4a7df0, #CB262C);
+    pointer-events: none;
+    z-index: 1;
   }
 }
 

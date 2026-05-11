@@ -279,15 +279,19 @@ const Stepper = ({ step, onJump }) => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  // Phase 5.14 launch polish — active step gets a solid
+                  // red fill (not the multi-color gradient which was
+                  // visually busy on the 22x22 dot). Done is still gold;
+                  // future is still outlined.
                   background: active
-                    ? BRAND.gradient
+                    ? BRAND.red
                     : done
                       ? 'rgba(244,185,66,0.18)'
                       : 'transparent',
                   border: done
                     ? `1.5px solid ${BRAND.gold}`
                     : active
-                      ? `1.5px solid transparent`
+                      ? `1.5px solid ${BRAND.red}`
                       : `1.5px solid rgba(255,255,255,0.22)`,
                   color: active
                     ? '#fff'
@@ -1698,7 +1702,7 @@ export default function SeatPickSheet({
             icon={<Icon name="arrowR" size={16} />}
             testId={`seat-pick-step${step}-continue`}
           >
-            Continue →
+            Continue
           </Btn>
         )}
       </div>
