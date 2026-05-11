@@ -32,7 +32,12 @@ import { sendEmail } from '../_notify.js';
 import { jsonError, jsonOk } from '../_sponsor_portal.js';
 
 const PORTAL_BASE = 'https://gala.daviskids.org/sponsor/';
-const REPLY_TO = 'smiggin@dsdmail.net, sfoster@dsdmail.net';
+// Phase 5.14 hotfix — SkippyMail silently drops sends when replyTo is
+// comma-separated (returns {ok:true} with no resend_id; email never
+// reaches Resend). Stick to a single address. Sherry forwards to Scott
+// when his eyes are needed. _notify.js has a stale comment claiming
+// comma-separated is supported — it isn't, at least not as of May 2026.
+const REPLY_TO = 'smiggin@dsdmail.net';
 
 function buildEmailHtml({ recipientName, portalUrl, kind }) {
   const greeting = recipientName ? `Hi ${recipientName.split(' ')[0]},` : 'Hello,';
@@ -114,7 +119,6 @@ export async function onRequestPost(context) {
 
   const rawEmail = (body && body.email) || '';
   const email = String(rawEmail).toLowerCase().trim();
-  console.log('[request-link][trace1] email=', email);
 
   // Basic input shape check. Beyond this we don't reveal anything.
   if (!email || email.indexOf('@') < 1 || email.length > 254) {
@@ -131,7 +135,6 @@ export async function onRequestPost(context) {
         AND (LOWER(email) = ? OR LOWER(secondary_email) = ?)
       LIMIT 1`
   ).bind(email, email).first();
-  console.log('[request-link][trace2] sponsor=', sponsorRow ? sponsorRow.id : 'none');
 
   // Look up delegations — anyone invited as a guest. Active (not revoked)
   // records only; status='revoked' means the sponsor took the seat back.
@@ -142,7 +145,6 @@ export async function onRequestPost(context) {
         AND (status IS NULL OR status != 'revoked')
       LIMIT 1`
   ).bind(email).first();
-  console.log('[request-link][trace3] delegation=', delegationRow ? delegationRow.id : 'none');
 
   // Always-same response shape so we don't leak presence.
   const genericOk = jsonOk({
@@ -152,7 +154,6 @@ export async function onRequestPost(context) {
 
   if (!sponsorRow && !delegationRow) {
     // No match. Pretend we sent.
-    console.log('[request-link][trace4a] no match, generic OK');
     return genericOk;
   }
 
@@ -171,7 +172,6 @@ export async function onRequestPost(context) {
     portalToken = delegationRow.token;
     kind = 'delegation';
   }
-  console.log('[request-link][trace4b] resolved', { kind, portalToken: portalToken ? portalToken.slice(0,4)+'…' : null });
 
   if (!portalToken) {
     // Data integrity issue — sponsor record exists but has no token.
@@ -185,7 +185,6 @@ export async function onRequestPost(context) {
 
   const html = buildEmailHtml({ recipientName, portalUrl, kind });
   const text = buildEmailText({ recipientName, portalUrl, kind });
-  console.log('[request-link][trace5] about to call sendEmail, html len=', html.length);
 
   // _notify.sendEmail returns { ok, ... } — uses GALA_MAIL_TOKEN
   // (SkippyMail) primary, falls back to RESEND_API_KEY if configured.
@@ -196,10 +195,18 @@ export async function onRequestPost(context) {
     replyTo: REPLY_TO,
     text,
   });
-  console.log('[request-link][trace6] sendEmail returned', { ok: mailResult.ok, id: mailResult.id, via: mailResult.via, error: mailResult.error });
 
-  if (!mailResult.ok) {
-    console.error('[request-link] mail send failed', { email, error: mailResult.error });
+  // Phase 5.14 hotfix — SkippyMail returns {ok:true} with no resend_id
+  // when it silently drops a send (e.g. on comma-separated replyTo).
+  // Treat a missing id as a failure so we surface real "send didn't
+  // happen" cases as 502 instead of falsely returning success.
+  if (!mailResult.ok || !mailResult.id) {
+    console.error('[request-link] mail send failed or dropped', {
+      email,
+      error: mailResult.error,
+      via: mailResult.via,
+      id: mailResult.id,
+    });
     return jsonError(
       'We could not send your link right now. Please try again in a minute, or email smiggin@dsdmail.net.',
       502
