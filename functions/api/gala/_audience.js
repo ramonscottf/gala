@@ -17,6 +17,17 @@
 // Keep in sync with the <select> options in public/admin/index.html.
 export const AUDIENCE_PRESETS = [
   'Platinum Sponsors',
+  // Internal-only test/sandbox audience used for dry-running a full
+  // production send before blasting to real corporate sponsors. Resolves
+  // to the three internal sandbox sponsorships only:
+  //   - Miggin Inc.     (Sherry Miggin)
+  //   - 2N Family       (Kara Toone)
+  //   - Wicko Waypoint  (Scott Foster)
+  // The blast path (queue + consumer + per-recipient {TOKEN} substitution)
+  // is identical to a real send — just scoped to people who know what to
+  // do when it lands wrong. Always flip s3.audience back to "Platinum
+  // Sponsors" after the dry-run before firing the real Platinum blast.
+  'Platinum Internal',
   'Gold Sponsors',
   'Silver Sponsors',
   'Bronze Sponsors',
@@ -26,6 +37,11 @@ export const AUDIENCE_PRESETS = [
   'All Sponsors + Friends & Family',
   'Confirmed Buyers',          // Everyone who has bought a tier and is attending — all paid + F&F + Individual Seats
 ];
+
+// Companies that count as the "Platinum Internal" sandbox audience.
+// These are the three internal-Foster-orbit sponsorships used for dry
+// runs. NOT exposed to the public — admin-only convenience filter.
+const PLATINUM_INTERNAL_COMPANIES = ['Miggin Inc.', '2N Family', 'Wicko Waypoint'];
 
 // Lowercase substring match against sponsorship_tier. Returns an array
 // matching the variants we've seen in the wild.
@@ -59,6 +75,30 @@ export async function resolveAudience(audience, db) {
 
   const lc = label.toLowerCase();
   let tiers = [];
+  // Company-based audience (sandbox/internal dry-run). Returns the
+  // recipient list directly via the same SELECT shape as the tier path,
+  // skipping the tier-IN logic below. MUST be checked BEFORE the
+  // 'platinum' substring branch, because 'platinum internal' would
+  // otherwise resolve as 'platinum' and pull all 13 corporate sponsors.
+  if (lc.includes('platinum internal')) {
+    const placeholders = PLATINUM_INTERNAL_COMPANIES.map(() => '?').join(',');
+    const internalSql = `
+      SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+      FROM sponsors
+      WHERE company IN (${placeholders})
+        AND archived_at IS NULL
+        AND email IS NOT NULL
+        AND email != ''
+      ORDER BY company COLLATE NOCASE
+    `;
+    const internalResult = await db.prepare(internalSql)
+      .bind(...PLATINUM_INTERNAL_COMPANIES).all();
+    return {
+      tiers: ['Platinum (Internal sandbox)'],
+      recipients: internalResult.results || [],
+      missingEmail: [],
+    };
+  }
 
   // Sponsor tier presets
   if (lc.includes('platinum')) tiers = tierMatches('platinum');
