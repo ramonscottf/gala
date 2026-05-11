@@ -2801,6 +2801,7 @@ export default function Portal({
           onAssign={openTicket}
           onMovieDetail={setMovieDetail}
           onManageTickets={() => setTab('tickets')}
+          onPickMeals={() => setTab('tickets')}
           onViewTicket={(ticket) => setTicketDetail(ticket)}
           token={token}
           apiBase={config.apiBase}

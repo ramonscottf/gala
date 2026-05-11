@@ -31,6 +31,7 @@ export default function HomeTab({
   onAssign,
   onMovieDetail,
   onManageTickets,
+  onPickMeals,
   onViewTicket,
   token,
   apiBase,
@@ -58,6 +59,21 @@ export default function HomeTab({
   const openCount = Math.max(0, personalQuota - placed);
   const availableToGive = seatMath?.available ?? 0;
   const canInviteGuest = !isDelegation && availableToGive > 0 && typeof onInvite === 'function';
+
+  // Phase 5.12 — meals are a top-level action now, not buried inside
+  // the seat-pick flow. Logan's note: "Three things to do — pick
+  // movie/seats, choose dinner, and invite guests." Count seats
+  // that have been placed by this sponsor (i.e. show up in their
+  // own tickets) but haven't picked a dinner yet. When all placed
+  // seats have meals, the card shifts to a completion state.
+  const placedRows = tickets.flatMap((t) => t.assignmentRows || []);
+  const mealsNeededCount = placedRows.filter(
+    (r) => !r.dinner_choice || String(r.dinner_choice).trim() === ''
+  ).length;
+  // The Pick meals card only appears once they have something
+  // placed. If placed === 0 there are no meals to pick yet — the
+  // Place seats card is the only action that makes sense.
+  const showMealsCard = placed > 0;
 
   // Dinner lock countdown — shown alongside daysOut so the kitchen
   // deadline is always visible. T = 7 days before gala (lockDate).
@@ -92,9 +108,9 @@ export default function HomeTab({
             color: 'var(--mute)',
           }}
         >
-          Two things to do here:{' '}
-          <strong style={{ color: 'var(--ink-on-ground)' }}>place your seats</strong>{' '}
-          and{' '}
+          Three things to do here:{' '}
+          <strong style={{ color: 'var(--ink-on-ground)' }}>place your seats</strong>,{' '}
+          <strong style={{ color: 'var(--ink-on-ground)' }}>pick dinners</strong>, and{' '}
           <strong style={{ color: 'var(--ink-on-ground)' }}>invite guests</strong>.
           {daysToLock != null && daysToLock > 0 && (
             <>
@@ -124,6 +140,28 @@ export default function HomeTab({
           onClick={openCount > 0 ? onPlaceSeats : onManageTickets}
           testId="cta-place-seats"
         />
+
+        {/* Phase 5.12 — Pick meals card. Only appears once seats are
+            placed (no meals to pick before there are seats). When
+            every placed seat has a meal, the card shifts to a
+            completion state but stays visible so the user can still
+            tap to change meals before the lock date. */}
+        {showMealsCard && (
+          <ActionCard
+            icon="🍽️"
+            gradient="linear-gradient(135deg,#f4b942,#c98517)"
+            title={mealsNeededCount > 0 ? 'Pick meals' : 'All meals picked'}
+            sub={
+              mealsNeededCount > 0
+                ? `${mealsNeededCount} of your seat${mealsNeededCount === 1 ? '' : 's'} still need${mealsNeededCount === 1 ? 's' : ''} a meal`
+                : `${placed} meal${placed === 1 ? '' : 's'} ready · tap to change`
+            }
+            cta={mealsNeededCount > 0 ? 'Pick' : 'Edit'}
+            ctaPrimary={mealsNeededCount > 0}
+            onClick={onPickMeals}
+            testId="cta-pick-meals"
+          />
+        )}
 
         {canInviteGuest && (
           <ActionCard
