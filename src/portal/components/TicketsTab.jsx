@@ -367,7 +367,7 @@ export default function TicketsTab({
                     marginTop: 12,
                     padding: '8px 18px',
                     borderRadius: 99,
-                    background: 'linear-gradient(135deg,#d72846,#b32d4e)',
+                    background: 'linear-gradient(135deg,#CB262C,#a01f24)',
                     color: '#fff',
                     fontSize: 12,
                     fontWeight: 700,
