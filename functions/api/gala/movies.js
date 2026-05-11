@@ -8,14 +8,18 @@ import {
 } from './_movie_time.js';
 
 // Default time anchors for the two showings (in minutes from midnight)
+// Updated 2026-05-11 — schedule shifted 30 min back. Dinner 4:30/7:15,
+// movies 5:00/7:45. Mandalorian early starts 4:45 (15 min earlier than
+// other films) so the 132-min runtime ends at a reasonable hour; that
+// per-movie override lives in showtimes table, not here.
 const SHOWING_DEFAULTS = {
-  1: { dinner_time: '3:45 PM',  show_start: '4:30 PM' },
-  2: { dinner_time: '6:45 PM',  show_start: '7:30 PM' },
+  1: { dinner_time: '4:30 PM',  show_start: '5:00 PM' },
+  2: { dinner_time: '7:15 PM',  show_start: '7:45 PM' },
 };
 const TURNOVER_MIN = 30;       // required cleanup gap between showings
 const DEFAULT_TRAILERS_MIN = 5; // DEF intro video before each showing
 const MESSAGING_MIN = 0;       // legacy field — pre-roll is now bundled into trailers
-const SHOWING_2_FLOOR_MIN = 19 * 60 + 30; // 7:30 PM — secondary cannot start earlier than this
+const SHOWING_2_FLOOR_MIN = 19 * 60 + 45; // 7:45 PM — secondary cannot start earlier than this
 
 function enrichShowtime(st, movies) {
   const movie = st.movie_id ? movies.find(m => m.id === st.movie_id) : null;
