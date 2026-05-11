@@ -37,6 +37,7 @@ export default function HomeTab({
   onEditMeals,
   token,
   apiBase,
+  footerSlot = null,
 }) {
   const {
     tier,
@@ -386,6 +387,7 @@ export default function HomeTab({
         </div>
         </aside>
       </div>
+      {footerSlot}
     </div>
   );
 }

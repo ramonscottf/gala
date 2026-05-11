@@ -1263,14 +1263,100 @@ export const DelegateManage = ({ delegation, token, onRefresh, onClose, apiBase 
   );
 };
 
+// ── Need help footer (Platinum only, Phase 5.14) ──────────────────────
+//
+// Real footer that sits at the end of page content (scrolls with the
+// page, not fixed). Renders tap-to-SMS to Scott (801-810-6642). Only
+// the sponsor portal renders this; gated upstream on tier === 'Platinum'.
+// On the FAQ tab it also appears at the top so a confused user sees it
+// before reading.
+export const HelpFooter = ({ position = 'bottom' }) => {
+  const isTop = position === 'top';
+  return (
+    <div
+      data-testid="help-footer"
+      style={{
+        // Real footer: padded breathing room above; sits inside the
+        // scroll-container so it scrolls naturally. The container's
+        // existing paddingBottom: 130 keeps it clear of the tab bar.
+        margin: isTop ? '0 18px 18px' : '32px 18px 0',
+        padding: '18px 20px',
+        borderRadius: 14,
+        background: 'linear-gradient(135deg, rgba(203,38,44,0.10), rgba(160,31,36,0.18))',
+        border: `1px solid rgba(203,38,44,0.32)`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        boxShadow: '0 6px 16px -10px rgba(203,38,44,0.45)',
+      }}
+    >
+      <div
+        style={{
+          fontSize: 26,
+          flexShrink: 0,
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          background: 'rgba(203,38,44,0.18)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        aria-hidden="true"
+      >
+        💬
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 900,
+            letterSpacing: 1.5,
+            color: '#ff8a92',
+            textTransform: 'uppercase',
+            marginBottom: 3,
+          }}
+        >
+          Need help?
+        </div>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: 'var(--ink-on-ground)',
+            lineHeight: 1.3,
+          }}
+        >
+          Text Scott Foster — anytime.
+        </div>
+        <a
+          href="sms:+18018106642"
+          style={{
+            display: 'inline-block',
+            marginTop: 4,
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#ff8a92',
+            textDecoration: 'none',
+            letterSpacing: 0.3,
+          }}
+        >
+          801-810-6642 →
+        </a>
+      </div>
+    </div>
+  );
+};
+
 // ── Night tab ─────────────────────────────────────────────────────────
 
 // V2 R6 — NightTab is now the FAQ surface (replaces the old timeline
 // + good-to-know tiles, which had wrong times and pointed help to
 // Sherry's email). Pulls from /api/gala/chat/faq — the same source
 // of truth as gala.daviskids.org/faq and the Booker chatbot.
-export const NightTab = () => (
+export const NightTab = ({ topSlot = null, bottomSlot = null }) => (
   <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
+    {topSlot}
     <div style={{ padding: 'calc(env(safe-area-inset-top) + 12px) 56px 14px 22px' }}>
       <SectionEyebrow>Frequently asked</SectionEyebrow>
       <h1
@@ -1291,6 +1377,7 @@ export const NightTab = () => (
       </div>
     </div>
     <NightOfContent />
+    {bottomSlot}
   </div>
 );
 
@@ -3004,6 +3091,7 @@ function PortalInner({
           }}
           token={token}
           apiBase={config.apiBase}
+          footerSlot={data?.tier === 'Platinum' ? <HelpFooter position="bottom" /> : null}
         />
       )}
       {tab === 'tickets' && (
@@ -3154,9 +3242,15 @@ function PortalInner({
             });
             setDinnerOpen(true);
           }}
+          footerSlot={data?.tier === 'Platinum' ? <HelpFooter position="bottom" /> : null}
         />
       )}
-      {tab === 'night' && <NightTab />}
+      {tab === 'night' && (
+        <NightTab
+          topSlot={data?.tier === 'Platinum' ? <HelpFooter position="top" /> : null}
+          bottomSlot={data?.tier === 'Platinum' ? <HelpFooter position="bottom" /> : null}
+        />
+      )}
 
       <TabBar
         active={tab}

@@ -244,6 +244,7 @@ export default function TicketsTab({
   onEditMeals,      // (ticket) => void — per-card meal editor
   onEditAllSeats,   // () => void — global Edit-all-seats (bottom bar)
   onEditAllMeals,   // () => void — global Edit-all-meals (bottom bar)
+  footerSlot = null,
 }) {
   const { tickets = [], guestTickets = [], delegations = [], blockSize = 0, seatMath, isFinalized = false } = data || {};
 
@@ -654,6 +655,7 @@ export default function TicketsTab({
           </div>
         )}
       </div>
+      {footerSlot}
     </div>
   );
 }
