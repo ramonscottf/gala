@@ -1,4 +1,4 @@
-// SeatPickSheet — Phase 1.9.1.
+// SeatPickSheet — Phase 1.9.1 → Phase 5.13 staged flow.
 //
 // Sheet body that replaces the wizard's StepShowing + StepSeats flow.
 // Mounted on a feature flag (?sheet=1) for staged rollout — both old
@@ -11,21 +11,23 @@
 //
 // Same source for both shells per the Phase 1.9 process rule.
 //
-// Layout (top to bottom):
-//   - Counter line ("N to place")
-//   - Movie chips (scroll-x)
-//   - Compact movie card with "More about this movie →"
-//   - Early/Late + Auditorium row (⅔ + ⅓ — single line)
-//   - Seat map (scrollable)
-//   - Legend
-//   - Auto-pick chip OR selected-seat chips
-//   - Place new / Reassign yours toggle (when applicable)
-//   - Sticky Commit CTA
+// Phase 5.13 — three-step staged flow.
+//   Step 1: Movie       — movie pills + selected movie card
+//   Step 2: Time + aud  — showtime pills + auditorium chip/select
+//   Step 3: Seats       — legend + seat map + selection + commit CTA
+//
+// Horizontal stepper at top (Movie · Time · Seats) shows where the
+// user is. Tapping any step in the stepper jumps there. Auto-advance
+// fires on each selection: tap a movie → step 2; tap a time → step 3.
+// Returning users with seats already placed open directly on step 3
+// (haveSelfHere) with a "Change movie ↑" affordance to jump back.
+// Selections (movie/time/seats) persist across step jumps; selected
+// seats are only cleared if the underlying theater changes.
 //
 // Commit calls seats.place() then fires onCommitted(theaterId, seatIds,
 // movieMeta) so the host can hand off to PostPickSheet.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { Btn, Icon } from '../../brand/atoms.jsx';
 import { SeatMap, SEAT_TYPES, adaptTheater, autoPickBlock, seatById } from '../SeatEngine.jsx';
@@ -221,6 +223,118 @@ const SelectedSeatPreview = ({ seats }) => {
           {seats.length > 1 ? ` ${seats.length - 1} more selected.` : ''}
         </div>
       </div>
+    </div>
+  );
+};
+
+// Phase 5.13 — horizontal stepper for the staged seat-pick flow.
+// Three dots labeled Movie / Time / Seats. Active step gets a
+// gradient red fill + bold label. Completed steps get a filled gold
+// dot with a check glyph. Future steps stay outlined and dim.
+// Tappable: a tap on any dot or label jumps to that step. Connector
+// bars between dots fill in based on the step's status.
+const Stepper = ({ step, onJump }) => {
+  const steps = [
+    { n: 1, label: 'Movie' },
+    { n: 2, label: 'Time' },
+    { n: 3, label: 'Seats' },
+  ];
+  return (
+    <div
+      data-testid="seat-pick-stepper"
+      data-current-step={step}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        padding: '4px 2px 2px',
+      }}
+    >
+      {steps.map((s, i) => {
+        const active = step === s.n;
+        const done = step > s.n;
+        const future = step < s.n;
+        return (
+          <Fragment key={s.n}>
+            <button
+              type="button"
+              onClick={() => onJump(s.n)}
+              data-testid={`stepper-${s.n}${active ? '-active' : done ? '-done' : '-future'}`}
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                flex: '0 0 auto',
+                padding: '2px 4px',
+              }}
+            >
+              <span
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 99,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: active
+                    ? BRAND.gradient
+                    : done
+                      ? 'rgba(244,185,66,0.18)'
+                      : 'transparent',
+                  border: done
+                    ? `1.5px solid ${BRAND.gold}`
+                    : active
+                      ? `1.5px solid transparent`
+                      : `1.5px solid rgba(255,255,255,0.22)`,
+                  color: active
+                    ? '#fff'
+                    : done
+                      ? BRAND.gold
+                      : 'rgba(255,255,255,0.45)',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  transition: 'background 0.18s ease, border 0.18s ease',
+                }}
+              >
+                {done ? '✓' : s.n}
+              </span>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: active ? 800 : 600,
+                  letterSpacing: 0.3,
+                  textTransform: 'uppercase',
+                  color: active
+                    ? '#fff'
+                    : done
+                      ? 'rgba(255,255,255,0.78)'
+                      : 'rgba(255,255,255,0.45)',
+                  transition: 'color 0.18s ease',
+                }}
+              >
+                {s.label}
+              </span>
+            </button>
+            {i < steps.length - 1 && (
+              <span
+                aria-hidden="true"
+                style={{
+                  flex: 1,
+                  height: 1.5,
+                  borderRadius: 1,
+                  background: step > s.n
+                    ? `linear-gradient(90deg, ${BRAND.gold}, rgba(244,185,66,0.45))`
+                    : 'rgba(255,255,255,0.12)',
+                  transition: 'background 0.18s ease',
+                  minWidth: 12,
+                }}
+              />
+            )}
+          </Fragment>
+        );
+      })}
     </div>
   );
 };
@@ -590,6 +704,69 @@ export default function SeatPickSheet({
     ? adaptedTheater.rows.some((r) => r.seats.some((s) => s && seats.allSelfIds.has(s.id)))
     : false;
 
+  // Phase 5.13 — three-step staged flow. Step state defaults to 3
+  // for returning users (they already have seats placed in this
+  // theater, so their movie+time is already determined and they're
+  // just here to pick more seats or reassign), and to 1 for new
+  // users picking from scratch.
+  //
+  // didInitStepRef gates the auto-default to a single mount-time
+  // effect, so subsequent state changes don't yank the user out of
+  // the step they navigated to. The same pattern as the
+  // didInitFromAssignments ref above for movie/showing defaulting.
+  const didInitStepRef = useRef(false);
+  const [step, setStep] = useState(1);
+  useEffect(() => {
+    if (didInitStepRef.current) return;
+    if (!adaptedTheater) return;
+    didInitStepRef.current = true;
+    // initialShowingNumber/initialMovieId from a Movie Detail CTA mean
+    // the caller already knows the movie + time, so we should land
+    // the user on the seats step too. Same idea: skip the picker, go
+    // straight to the seat map.
+    if (haveSelfHere || initialShowingNumber || initialMovieId) {
+      setStep(3);
+    }
+  }, [adaptedTheater, haveSelfHere, initialShowingNumber, initialMovieId]);
+
+  // Stepper jumps: tapping a step in the stepper navigates there. We
+  // do NOT clear seat selection on backward jumps unless the movie
+  // actually changes (handled in setMovieIdAdvance below).
+  const goToStep = (n) => setStep(n);
+
+  // Auto-advance handlers — wrap setMovieId / setShowingNumber to
+  // also bump the step. Backwards-compatible because the underlying
+  // state setters still work; this is just the staged-flow shim.
+  const setMovieIdAdvance = (id) => {
+    if (id !== movieId) {
+      // Movie changed → seat selection on the old theater is no longer
+      // valid (different layout, possibly different theater entirely).
+      // Clear so the user doesn't carry over selections that may not
+      // exist in the new auditorium.
+      setSel(new Set());
+    }
+    setMovieId(id);
+    setStep(2);
+  };
+  const setShowingNumberAdvance = (n) => {
+    if (n !== showingNumber) setSel(new Set());
+    setShowingNumber(n);
+    setStep(3);
+  };
+  const setTheaterIdAdvance = (id) => {
+    if (id !== theaterId) setSel(new Set());
+    setTheaterId(id);
+    setStep(3);
+  };
+
+  // Step headlines. Counter line ("N to place") stays on every step
+  // so the user always knows how many they still owe; the headline
+  // changes to match the step.
+  const stepTitle =
+    step === 1 ? 'Pick your movie'
+    : step === 2 ? 'Pick a showtime'
+    : 'Pick your seats';
+
   return (
     <div
       data-testid="seat-pick-sheet"
@@ -603,7 +780,8 @@ export default function SeatPickSheet({
         padding: 0,
       }}
     >
-      {/* Counter line */}
+      {/* Counter line + step title — counter stays on every step so the
+          user always knows how many seats they still owe. */}
       <div
         style={{
           display: 'flex',
@@ -619,7 +797,7 @@ export default function SeatPickSheet({
             letterSpacing: -0.2,
           }}
         >
-          Select your movie
+          {stepTitle}
         </div>
         <div
           style={{
@@ -638,6 +816,12 @@ export default function SeatPickSheet({
         </div>
       </div>
 
+      {/* Phase 5.13 — horizontal stepper. Tap any step to jump. */}
+      <Stepper step={step} onJump={goToStep} />
+
+      {/* ─── STEP 1 — Movie ────────────────────────────────────── */}
+      {step === 1 && (
+        <>
       {/* Movie chips — scroll-x. Mirrors MobileWizard line 632. */}
       <div
         className="no-scrollbar"
@@ -654,7 +838,7 @@ export default function SeatPickSheet({
           return (
             <button
               key={m.id}
-              onClick={() => setMovieId(m.id)}
+              onClick={() => setMovieIdAdvance(m.id)}
               style={{
                 flexShrink: 0,
                 scrollSnapAlign: 'center',
@@ -788,6 +972,74 @@ export default function SeatPickSheet({
           </div>
         </button>
       )}
+        </>
+      )}
+
+      {/* ─── STEP 2 — Time + Auditorium ────────────────────────── */}
+      {step === 2 && (
+        <>
+      {/* Phase 5.13 — selected-movie summary at top of step 2, with a
+          tap-to-change affordance back to step 1. Mirrors the
+          "Change movie ↑" pattern step 3 uses. */}
+      {movie && (
+        <button
+          onClick={() => goToStep(1)}
+          data-testid="step2-movie-summary"
+          style={{
+            all: 'unset',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 12px',
+            borderRadius: 10,
+            border: `1px solid ${BRAND.rule}`,
+            background: 'rgba(255,255,255,0.04)',
+          }}
+        >
+          <div
+            style={{
+              width: 36,
+              height: 48,
+              borderRadius: 6,
+              background: movie.posterUrl
+                ? `url(${movie.posterUrl}) center/cover no-repeat`
+                : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: 1.2,
+                color: BRAND.gold,
+                textTransform: 'uppercase',
+              }}
+            >
+              Step 1 · Movie
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#fff',
+                lineHeight: 1.2,
+                marginTop: 2,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {movie.title}
+            </div>
+          </div>
+          <span style={{ fontSize: 11, color: BRAND.indigoLight, fontWeight: 700 }}>
+            Change ↑
+          </span>
+        </button>
+      )}
 
       {/* Time + Auditorium row.
           Phase 5.6 — times are the primary selectors; auditorium is
@@ -811,7 +1063,7 @@ export default function SeatPickSheet({
             return (
               <button
                 key={s.number}
-                onClick={() => setShowingNumber(s.number)}
+                onClick={() => setShowingNumberAdvance(s.number)}
                 style={{
                   flex: 1,
                   padding: '6px 10px',
@@ -892,7 +1144,7 @@ export default function SeatPickSheet({
           <select
             aria-label="Auditorium"
             value={theaterId || ''}
-            onChange={(e) => setTheaterId(Number(e.target.value))}
+            onChange={(e) => setTheaterIdAdvance(Number(e.target.value))}
             style={{
               flex: 1,
               padding: '6px 22px 6px 10px',
@@ -922,6 +1174,80 @@ export default function SeatPickSheet({
           </select>
         ) : null}
       </div>
+        </>
+      )}
+
+      {/* ─── STEP 3 — Seats ────────────────────────────────────── */}
+      {step === 3 && (
+        <>
+      {/* Phase 5.13 — compact summary at top of step 3 showing the
+          movie + time + auditorium chosen, with a tap target to jump
+          back. Returning users (haveSelfHere) open here directly,
+          and this is their primary affordance to change movie/time.
+          For first-time users it acts as a confirmation breadcrumb. */}
+      {movie && (
+        <button
+          onClick={() => goToStep(1)}
+          data-testid="step3-summary"
+          style={{
+            all: 'unset',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 12px',
+            borderRadius: 10,
+            border: `1px solid ${BRAND.rule}`,
+            background: 'rgba(255,255,255,0.04)',
+          }}
+        >
+          <div
+            style={{
+              width: 30,
+              height: 40,
+              borderRadius: 5,
+              background: movie.posterUrl
+                ? `url(${movie.posterUrl}) center/cover no-repeat`
+                : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#fff',
+                lineHeight: 1.2,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {movie.title}
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: BRAND.mute,
+                marginTop: 2,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {(() => {
+                const ctx = showingsRich.find((sr) => sr.number === showingNumber);
+                const audName = (theatersById[theaterId]?.name || `Aud ${theaterId}`).replace(/^Auditorium\s+/i, '');
+                return `${ctx?.label || ''}${ctx?.time ? ` · ${ctx.time}` : ''} · ${audName}`;
+              })()}
+            </div>
+          </div>
+          <span style={{ fontSize: 11, color: BRAND.indigoLight, fontWeight: 700 }}>
+            Change ↑
+          </span>
+        </button>
+      )}
 
       {seatTypesPresent.length > 0 && (
         <SeatTypeGuide
@@ -1124,6 +1450,8 @@ export default function SeatPickSheet({
           </Btn>
         </div>
       )}
+        </>
+      )}
 
       <div aria-hidden="true" style={{ height: 54, flex: '0 0 auto' }} />
 
@@ -1170,23 +1498,43 @@ export default function SeatPickSheet({
         <Btn kind="secondary" size="lg" onClick={onClose}>
           Close
         </Btn>
-        <Btn
-          kind="primary"
-          size="lg"
-          full
-          disabled={mode !== 'place' || !sel.size || committing}
-          onClick={commit}
-          icon={<Icon name="arrowR" size={16} />}
-          testId="seat-pick-commit"
-        >
-          {committing
-            ? 'Placing…'
-            : sel.size
-              ? `Commit ${sel.size} seat${sel.size === 1 ? '' : 's'}`
-              : mode === 'assign'
-                ? 'Reassign mode'
-                : 'Pick seats to commit'}
-        </Btn>
+        {step === 3 ? (
+          <Btn
+            kind="primary"
+            size="lg"
+            full
+            disabled={mode !== 'place' || !sel.size || committing}
+            onClick={commit}
+            icon={<Icon name="arrowR" size={16} />}
+            testId="seat-pick-commit"
+          >
+            {committing
+              ? 'Placing…'
+              : sel.size
+                ? `Commit ${sel.size} seat${sel.size === 1 ? '' : 's'}`
+                : mode === 'assign'
+                  ? 'Reassign mode'
+                  : 'Pick seats to commit'}
+          </Btn>
+        ) : (
+          /* Phase 5.13 — on steps 1 and 2 the right-side primary
+             becomes a Continue button. Step 1 advances to 2 when a
+             movie is picked; step 2 advances to 3 when a theater is
+             determined. Auto-advance still fires on selection — this
+             is the explicit secondary path for users who land on a
+             step with defaults already set. */
+          <Btn
+            kind="primary"
+            size="lg"
+            full
+            disabled={step === 1 ? !movieId : !theaterId}
+            onClick={() => setStep(step + 1)}
+            icon={<Icon name="arrowR" size={16} />}
+            testId={`seat-pick-step${step}-continue`}
+          >
+            Continue →
+          </Btn>
+        )}
       </div>
     </div>
   );
