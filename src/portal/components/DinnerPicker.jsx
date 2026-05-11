@@ -9,12 +9,20 @@
 // feature ships to both shells from the same import. This file is the
 // single source for that styling + network behavior.
 //
-// The five-option enum mirrors GET /api/gala/dinner exactly:
-//   brisket    → Hot brisket french dip
-//   turkey     → Cold turkey sandwich
-//   veggie     → Veggie salad
-//   kids       → Kids meal
-//   glutenfree → Gluten-free
+// The four-option enum mirrors GET /api/gala/dinner exactly:
+//   frenchdip  → Hot French Dip Sandwich
+//   salad      → Green Salad with Grilled Chicken (Gluten Free)
+//   veggie     → Vegetarian
+//   kids       → Kids Meal
+//
+// Phase 5.8 (May 10 2026) — Kara's revised menu. Drops the cold-turkey
+// option entirely; renames brisket→frenchdip and glutenfree→salad
+// (the GF option is now a distinct grilled-chicken salad, not a
+// "gluten-free version of the others"); veggie label changes from
+// "Veggie salad" to "Vegetarian." The veggie+kids IDs are preserved
+// so any in-flight test selections (we wiped this morning, so none
+// in production) wouldn't dangle. Server validator in pick.js and
+// dinner.js mirror this set.
 //
 // Optimistic update: onChange fires synchronously with the new value
 // so the parent's local state can repaint without waiting for the
@@ -25,11 +33,10 @@ import { useState } from 'react';
 import { BRAND, FONT_UI } from '../../brand/tokens.js';
 
 export const DINNER_OPTIONS = [
-  { value: 'brisket', label: 'Hot brisket french dip' },
-  { value: 'turkey', label: 'Cold turkey sandwich' },
-  { value: 'veggie', label: 'Veggie salad' },
-  { value: 'kids', label: 'Kids meal' },
-  { value: 'glutenfree', label: 'Gluten-free' },
+  { value: 'frenchdip', label: 'Hot French Dip Sandwich' },
+  { value: 'salad', label: 'Green Salad with Grilled Chicken (Gluten Free)' },
+  { value: 'veggie', label: 'Vegetarian' },
+  { value: 'kids', label: 'Kids Meal' },
 ];
 
 const DINNER_LABEL = Object.fromEntries(DINNER_OPTIONS.map((o) => [o.value, o.label]));

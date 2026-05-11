@@ -111,7 +111,18 @@ export async function onRequestPost(context) {
   // for guests who haven't done it themselves (e.g. Aaron picked seats but never
   // chose meals). Delegates remain scoped to their own seats only.
   if (action === 'set_dinner') {
-    const VALID = new Set(['brisket','turkey','veggie','kids','glutenfree']);
+    // Phase 5.8 — menu set after Kara's update on May 10 2026.
+    // 'veggie' and 'kids' keep their IDs; 'frenchdip' replaces
+    // 'brisket', 'salad' replaces 'glutenfree' (the GF option is
+    // now a distinct grilled-chicken salad), 'turkey' is gone.
+    // Mirror this set in DinnerPicker.jsx (DINNER_OPTIONS),
+    // DinnerSheet.jsx (DINNER_TILES), dinner.js (server enum),
+    // and admin/seating.html (admin tile list). Any in-flight
+    // dinner_choice values with the old keys would fail this
+    // validator — there were none in production at the time of
+    // this change (we wiped seat_assignments to 0 earlier the
+    // same day).
+    const VALID = new Set(['frenchdip','salad','veggie','kids']);
     const raw = body.dinner_choice;
     const dinner = (raw == null || raw === '') ? null : String(raw);
     if (dinner !== null && !VALID.has(dinner)) {

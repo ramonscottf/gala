@@ -1,20 +1,27 @@
 // DinnerSheet — V2 IA, Phase 6
 //
 // Bottom sheet that opens when the user taps the dinner pill on a
-// TicketCard row. Shows the 5 meal options as colored tiles. Tap
+// TicketCard row. Shows the 4 meal options as colored tiles. Tap
 // → POST /pick set_dinner with the chosen value. Pre-lock only;
 // after T-7 the parent suppresses the sheet (pill becomes a 🔒
 // read-only label).
+//
+// Phase 5.8 (May 10 2026) — menu updated per Kara. Brisket renamed
+// to French Dip, turkey sandwich removed, gluten-free renamed to a
+// distinct grilled-chicken salad option, veggie renamed to
+// "Vegetarian." Four options total. The DINNER_OPTIONS list in
+// DinnerPicker.jsx mirrors these — both are the source of truth for
+// their respective surfaces; the server validator in pick.js and the
+// admin seating dashboard import the same set of IDs.
 
 import { useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 
 const DINNER_TILES = [
-  { value: 'brisket', label: 'Hot brisket french dip', short: 'Brisket', emoji: '🍖', tint: 'rgba(244,185,66,0.18)', fg: BRAND.gold },
-  { value: 'turkey', label: 'Cold turkey sandwich', short: 'Turkey', emoji: '🥪', tint: 'rgba(168,177,255,0.18)', fg: BRAND.indigoLight },
-  { value: 'veggie', label: 'Veggie salad', short: 'Veggie', emoji: '🥗', tint: 'rgba(127,207,160,0.18)', fg: '#7fcfa0' },
-  { value: 'kids', label: 'Kids meal', short: 'Kids', emoji: '🧒', tint: 'rgba(215,40,70,0.18)', fg: BRAND.red },
-  { value: 'glutenfree', label: 'Gluten-free', short: 'GF', emoji: '🌾', tint: 'rgba(255,255,255,0.10)', fg: '#fff' },
+  { value: 'frenchdip', label: 'Hot French Dip Sandwich', short: 'French Dip', emoji: '🥖', tint: 'rgba(244,185,66,0.18)', fg: BRAND.gold },
+  { value: 'salad', label: 'Green Salad with Grilled Chicken (Gluten Free)', short: 'Salad', emoji: '🥗', tint: 'rgba(127,207,160,0.18)', fg: '#7fcfa0' },
+  { value: 'veggie', label: 'Vegetarian', short: 'Veggie', emoji: '🌱', tint: 'rgba(168,177,255,0.18)', fg: BRAND.indigoLight },
+  { value: 'kids', label: 'Kids Meal', short: 'Kids', emoji: '🧒', tint: 'rgba(215,40,70,0.18)', fg: BRAND.red },
 ];
 
 export default function DinnerSheet({

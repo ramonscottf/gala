@@ -8,9 +8,9 @@
 //
 // New row pattern — collapsed by default:
 //   ┌────────────────────────────────────────────────┐
-//   │ G12   🥗 Veggie                            ▾   │   sponsor-self
+//   │ G12   🌱 Vegetarian                        ▾   │   sponsor-self
 //   ├────────────────────────────────────────────────┤
-//   │ G14   Charles · 🍖 Brisket                 ▾   │   guest row (name only here)
+//   │ G14   Charles · 🥖 French Dip              ▾   │   guest row (name only here)
 //   └────────────────────────────────────────────────┘
 //
 // Tap the row → expands inline with action buttons (Pick dinner /
@@ -28,19 +28,20 @@ import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { PosterMini, seatLabel as fmtSeat, assignmentOwner } from '../Portal.jsx';
 import { DINNER_LOCK_DAYS } from '../../brand/tokens.js';
 
+// Phase 5.8 — Kara's revised menu. Mirrors DinnerSheet.jsx tiles +
+// DinnerPicker.jsx DINNER_OPTIONS + server enum in dinner.js. Four
+// options; turkey removed; brisket→frenchdip, glutenfree→salad.
 const DINNER_EMOJI = {
-  brisket: '🍖',
-  turkey: '🥪',
-  veggie: '🥗',
+  frenchdip: '🥖',
+  salad: '🥗',
+  veggie: '🌱',
   kids: '🧒',
-  glutenfree: '🌾',
 };
 const DINNER_SHORT = {
-  brisket: 'Brisket',
-  turkey: 'Turkey',
+  frenchdip: 'French Dip',
+  salad: 'Salad',
   veggie: 'Veggie',
   kids: 'Kids',
-  glutenfree: 'GF',
 };
 
 export default function TicketDetailSheet({
