@@ -386,6 +386,45 @@ export default function SeatPickSheet({
       }));
   }, [showtimes]);
 
+  // Phase 5.14 — per-movie showings. When the user picks a movie,
+  // the time buttons in step 2 should reflect THAT movie's actual
+  // start + dinner times, not a generic average across all films.
+  // (Some movies — e.g. Mandalorian on certain auditoriums — have
+  // earlier dinner times to accommodate runtime; this lets that
+  // variance show through.)
+  //
+  // For each showing_number, we pick the canonical row for the
+  // current movie: the row whose theater matches the currently
+  // selected theaterId if one is chosen, otherwise the first row
+  // for that (showing, movie). That way switching auditoriums on
+  // step 3 doesn't redraw the time buttons unless the times truly
+  // differ for that aud.
+  const showingsForMovie = useMemo(() => {
+    if (!movieId) return showingsRich;
+    const byShowing = new Map();
+    showtimes
+      .filter((s) => s.movie_id === movieId)
+      .forEach((s) => {
+        const prev = byShowing.get(s.showing_number);
+        // Prefer the row matching the currently selected theater so
+        // a per-aud variance shows the right times.
+        if (
+          !prev ||
+          (theaterId && s.theater_id === theaterId)
+        ) {
+          byShowing.set(s.showing_number, s);
+        }
+      });
+    return [...byShowing.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([n, s]) => ({
+        number: n,
+        label: n === 1 ? 'Early' : n === 2 ? 'Late' : `Show ${n}`,
+        time: formatShowTime(s.show_start),
+        dinnerTime: formatShowTime(s.dinner_time),
+      }));
+  }, [showtimes, movieId, theaterId, showingsRich]);
+
   const moviesByShowing = useMemo(() => {
     const m = {};
     showtimes.forEach((s) => {
@@ -729,34 +768,28 @@ export default function SeatPickSheet({
     }
   }, [adaptedTheater, haveSelfHere, initialShowingNumber, initialMovieId]);
 
-  // Stepper jumps: tapping a step in the stepper navigates there. We
-  // do NOT clear seat selection on backward jumps unless the movie
-  // actually changes (handled in setMovieIdAdvance below).
+  // Stepper jumps: tapping a step in the stepper navigates there.
+  // Selections persist across step jumps; seats clear only when
+  // the underlying theater actually changes.
   const goToStep = (n) => setStep(n);
 
-  // Auto-advance handlers — wrap setMovieId / setShowingNumber to
-  // also bump the step. Backwards-compatible because the underlying
-  // state setters still work; this is just the staged-flow shim.
-  const setMovieIdAdvance = (id) => {
-    if (id !== movieId) {
-      // Movie changed → seat selection on the old theater is no longer
-      // valid (different layout, possibly different theater entirely).
-      // Clear so the user doesn't carry over selections that may not
-      // exist in the new auditorium.
-      setSel(new Set());
-    }
+  // Phase 5.14 — auto-advance is OFF. Selection just selects;
+  // the Continue button is the only way to advance. These helpers
+  // wrap setMovieId / setShowingNumber / setTheaterId so that
+  // changes to the theater (movie pick, time pick on a different
+  // showing, aud change) clear the current seat selection so we
+  // don't carry over picks that don't map to the new auditorium.
+  const selectMovie = (id) => {
+    if (id !== movieId) setSel(new Set());
     setMovieId(id);
-    setStep(2);
   };
-  const setShowingNumberAdvance = (n) => {
+  const selectShowing = (n) => {
     if (n !== showingNumber) setSel(new Set());
     setShowingNumber(n);
-    setStep(3);
   };
-  const setTheaterIdAdvance = (id) => {
+  const selectTheater = (id) => {
     if (id !== theaterId) setSel(new Set());
     setTheaterId(id);
-    setStep(3);
   };
 
   // Step headlines. Counter line ("N to place") stays on every step
@@ -819,168 +852,184 @@ export default function SeatPickSheet({
       {/* Phase 5.13 — horizontal stepper. Tap any step to jump. */}
       <Stepper step={step} onJump={goToStep} />
 
-      {/* ─── STEP 1 — Movie ────────────────────────────────────── */}
+      {/* ─── STEP 1 — Movie ──────────────────────────────────────
+          Phase 5.14 — four (or however many) movie cards stacked.
+          No pill row; the cards themselves are the selector. Tap a
+          card to select it (no auto-advance); tap Continue at the
+          bottom to advance to step 2. Selected card gets a gold
+          ring + tinted background. "More about this movie" link
+          inside each card opens the MovieDetailSheet for the deep
+          info dive. */}
       {step === 1 && (
-        <>
-      {/* Movie chips — scroll-x. Mirrors MobileWizard line 632. */}
-      <div
-        className="no-scrollbar"
-        style={{
-          display: 'flex',
-          gap: 6,
-          overflowX: 'auto',
-          paddingBottom: 4,
-          scrollSnapType: 'x proximity',
-        }}
-      >
-        {moviesHere.map((m) => {
-          const active = movieId === m.id;
-          return (
-            <button
-              key={m.id}
-              onClick={() => setMovieIdAdvance(m.id)}
-              style={{
-                flexShrink: 0,
-                scrollSnapAlign: 'center',
-                padding: '4px 12px 4px 4px',
-                borderRadius: 99,
-                border: 0,
-                cursor: 'pointer',
-                background: active ? 'rgba(244,185,66,0.14)' : 'rgba(255,255,255,0.05)',
-                boxShadow: active
-                  ? `inset 0 0 0 1.5px ${BRAND.gold}`
-                  : `inset 0 0 0 1px ${BRAND.rule}`,
-                color: '#fff',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                fontSize: 12,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <span
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 99,
-                  background: m.thumbnailUrl || m.posterUrl
-                    ? `url(${m.thumbnailUrl || m.posterUrl}) center/cover`
-                    : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
-                  flexShrink: 0,
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {moviesHere.map((m) => {
+            const selected = movieId === m.id;
+            const rotten = formatRottenBadge(m);
+            return (
+              <div
+                key={m.id}
+                data-testid={`step1-movie-card${selected ? '-selected' : ''}`}
+                data-movie-id={m.id}
+                onClick={() => {
+                  // Phase 5.14 — select only; do NOT advance. User
+                  // commits the choice with the Continue button.
+                  selectMovie(m.id);
                 }}
-              />
-              {m.title}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Compact movie card (smaller than wizard) */}
-      {movie && (
-        <button
-          onClick={onMoreInfo}
-          style={{
-            all: 'unset',
-            cursor: 'pointer',
-            display: 'flex',
-            gap: 0,
-            background: 'rgba(255,255,255,0.04)',
-            border: `1px solid ${BRAND.rule}`,
-            borderRadius: 12,
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              flexShrink: 0,
-              width: 60,
-              minHeight: 84,
-              background: movie.posterUrl
-                ? `url(${movie.posterUrl}) center/cover no-repeat`
-                : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
-            }}
-          />
-          <div
-            style={{
-              flex: 1,
-              padding: '10px 12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-              minWidth: 0,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: '#fff',
-                lineHeight: 1.2,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {movie.title}
-              {movie.year ? (
-                <span style={{ color: BRAND.mute, fontWeight: 500 }}> ({movie.year})</span>
-              ) : null}
-            </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {movie.rating && (
-                <span
+                style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  gap: 0,
+                  background: selected
+                    ? 'rgba(244,185,66,0.10)'
+                    : 'rgba(255,255,255,0.04)',
+                  border: `1.5px solid ${selected ? BRAND.gold : BRAND.rule}`,
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  transition: 'border 0.18s ease, background 0.18s ease',
+                }}
+              >
+                <div
                   style={{
-                    padding: '1px 6px',
-                    borderRadius: 3,
-                    background: BRAND.ink,
-                    color: '#fff',
-                    fontSize: 9,
-                    fontWeight: 800,
-                    letterSpacing: 0.6,
+                    flexShrink: 0,
+                    width: 84,
+                    minHeight: 124,
+                    background: m.posterUrl
+                      ? `url(${m.posterUrl}) center/cover no-repeat`
+                      : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+                  }}
+                />
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 6,
+                    minWidth: 0,
                   }}
                 >
-                  {movie.rating}
-                </span>
-              )}
-              {formatRottenBadge(movie) && (
-                <span
-                  style={{
-                    padding: '1px 6px',
-                    borderRadius: 3,
-                    background: 'rgba(244,185,66,0.16)',
-                    color: BRAND.gold,
-                    fontSize: 9,
-                    fontWeight: 800,
-                    letterSpacing: 0.5,
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {formatRottenBadge(movie)}
-                </span>
-              )}
-              {movie.runtime && (
-                <span style={{ fontSize: 10, color: BRAND.mute, fontVariantNumeric: 'tabular-nums' }}>
-                  {movie.runtime} min · {movie.audCount} aud
-                  {movie.audCount === 1 ? '' : 's'} · {movie.totalCapacity} seats
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#ff6f86' }}>
-              More about this movie →
-            </div>
-          </div>
-        </button>
-      )}
-        </>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 800,
+                      color: '#fff',
+                      lineHeight: 1.2,
+                      letterSpacing: -0.2,
+                    }}
+                  >
+                    {m.title}
+                    {m.year ? (
+                      <span style={{ color: BRAND.mute, fontWeight: 500 }}> ({m.year})</span>
+                    ) : null}
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 6,
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {m.rating && (
+                      <span
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: 3,
+                          background: BRAND.ink,
+                          color: '#fff',
+                          fontSize: 9,
+                          fontWeight: 800,
+                          letterSpacing: 0.6,
+                        }}
+                      >
+                        {m.rating}
+                      </span>
+                    )}
+                    {rotten && (
+                      <span
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: 3,
+                          background: 'rgba(244,185,66,0.16)',
+                          color: BRAND.gold,
+                          fontSize: 9,
+                          fontWeight: 800,
+                          letterSpacing: 0.5,
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {rotten}
+                      </span>
+                    )}
+                    {m.runtime && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          color: BRAND.mute,
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {m.runtime} min · {m.audCount} aud
+                        {m.audCount === 1 ? '' : 's'}
+                      </span>
+                    )}
+                  </div>
+                  {m.synopsis && (
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: 'rgba(255,255,255,0.65)',
+                        lineHeight: 1.4,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {m.synopsis}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      // Stop the card's onClick so this doesn't also
+                      // toggle selection. Open the detail sheet for
+                      // this movie regardless of current selection.
+                      e.stopPropagation();
+                      selectMovie(m.id);
+                      // Defer one tick so movieId state is fresh.
+                      setTimeout(() => onMoreInfo(), 0);
+                    }}
+                    style={{
+                      all: 'unset',
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#ff6f86',
+                      alignSelf: 'flex-start',
+                      marginTop: 'auto',
+                    }}
+                  >
+                    More about this movie →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
-      {/* ─── STEP 2 — Time + Auditorium ────────────────────────── */}
+      {/* ─── STEP 2 — Time ────────────────────────────────────────
+          Phase 5.14 — two big stacked buttons (Early / Late), each
+          showing the movie start time AND dinner time for the
+          currently selected movie. Times come from showingsForMovie
+          so per-movie variance (e.g. Mandalorian's earlier dinner
+          on certain auditoriums) shows correctly. Auditorium moved
+          OUT of this step — it lives on step 3 next to the seat
+          map so users can flip aud quickly if the seats stink. */}
       {step === 2 && (
         <>
-      {/* Phase 5.13 — selected-movie summary at top of step 2, with a
-          tap-to-change affordance back to step 1. Mirrors the
-          "Change movie ↑" pattern step 3 uses. */}
+      {/* Selected-movie summary at top of step 2, tap to go back to step 1. */}
       {movie && (
         <button
           onClick={() => goToStep(1)}
@@ -1041,150 +1090,120 @@ export default function SeatPickSheet({
         </button>
       )}
 
-      {/* Time + Auditorium row.
-          Phase 5.6 — times are the primary selectors; auditorium is
-          now a visually-demoted chip (single option) or a small select
-          (multiple options) inline to the right. The previous design
-          read like a third time-slot. Times are shorter to bring the
-          auditorium chip flush with their height. */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
-        <div
-          style={{
-            flex: 2,
-            display: 'inline-flex',
-            border: `1px solid ${BRAND.rule}`,
-            borderRadius: 10,
-            padding: 3,
-            background: 'rgba(255,255,255,0.06)',
-          }}
-        >
-          {showingsRich.map((s) => {
-            const active = showingNumber === s.number;
-            return (
-              <button
-                key={s.number}
-                onClick={() => setShowingNumberAdvance(s.number)}
-                style={{
-                  flex: 1,
-                  padding: '6px 10px',
-                  background: active ? BRAND.gradient : 'transparent',
-                  border: 0,
-                  borderRadius: 7,
-                  cursor: 'pointer',
-                  color: active ? '#fff' : 'rgba(255,255,255,0.65)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: 1,
-                  transition: 'background 0.15s',
-                }}
-              >
-                <span style={{ fontSize: 12, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                  {s.time || s.label}
-                </span>
-                <span
-                  style={{
-                    fontSize: 9,
-                    color: active ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.72)',
-                  }}
-                >
-                  {s.label}
-                  {s.dinnerTime ? ` · dinner ${s.dinnerTime}` : ''}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        {/* Auditorium slot — three-state render:
-              - 0 choices: hide (defensive; shouldn't happen)
-              - 1 choice: informational chip (non-tappable label)
-              - >1 choices: native select demoted with a small caret
-                indicator so it reads as a control, not a primary pill. */}
-        {theaterChoices.length === 1 ? (
-          <div
-            data-testid="auditorium-chip-static"
-            aria-label="Auditorium"
-            style={{
-              flex: 1,
-              padding: '6px 10px',
-              borderRadius: 10,
-              background: 'transparent',
-              border: `1px dashed ${BRAND.rule}`,
-              color: 'rgba(255,255,255,0.72)',
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: 0.4,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-              justifyContent: 'center',
-              minWidth: 0,
-              textTransform: 'uppercase',
-              gap: 1,
-            }}
-          >
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>
-              Auditorium
-            </span>
-            <span
+      {/* Two big stacked buttons — Early / Late. Each shows the
+          movie start time + dinner time underneath the label. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {showingsForMovie.map((s) => {
+          const active = showingNumber === s.number;
+          return (
+            <button
+              key={s.number}
+              type="button"
+              data-testid={`step2-showing-${s.number}${active ? '-selected' : ''}`}
+              onClick={() => selectShowing(s.number)}
               style={{
-                fontSize: 11,
-                color: 'rgba(255,255,255,0.85)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '100%',
+                all: 'unset',
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                width: '100%',
+                padding: '16px 18px',
+                borderRadius: 14,
+                background: active
+                  ? 'rgba(244,185,66,0.10)'
+                  : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${active ? BRAND.gold : BRAND.rule}`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 6,
+                transition: 'border 0.18s ease, background 0.18s ease',
               }}
             >
-              {(theatersById[theaterId]?.name || `Theater ${theaterId}`).replace(/^Auditorium\s+/i, '')}
-              {theaterMeta?.format ? ` · ${theaterMeta.format}` : ''}
-            </span>
-          </div>
-        ) : theaterChoices.length > 1 ? (
-          <select
-            aria-label="Auditorium"
-            value={theaterId || ''}
-            onChange={(e) => setTheaterIdAdvance(Number(e.target.value))}
-            style={{
-              flex: 1,
-              padding: '6px 22px 6px 10px',
-              borderRadius: 10,
-              background:
-                'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
-              border: `1px solid ${BRAND.rule}`,
-              color: 'rgba(255,255,255,0.85)',
-              cursor: 'pointer',
-              fontSize: 11,
-              fontWeight: 600,
-              outline: 'none',
-              appearance: 'none',
-              WebkitAppearance: 'none',
-              minWidth: 0,
-              backgroundImage:
-                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.55)' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>\")",
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 8px center',
-            }}
-          >
-            {theaterChoices.map((c) => (
-              <option key={c.theaterId} value={c.theaterId} style={{ color: BRAND.ink }}>
-                {theatersById[c.theaterId]?.name || `Theater ${c.theaterId}`} · {c.format}
-              </option>
-            ))}
-          </select>
-        ) : null}
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: 1.4,
+                  textTransform: 'uppercase',
+                  color: active ? BRAND.gold : 'rgba(255,255,255,0.55)',
+                }}
+              >
+                {s.label}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 14,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: '#fff',
+                    letterSpacing: -0.4,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {s.time || '—'}
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: 'rgba(255,255,255,0.55)',
+                      marginLeft: 6,
+                      letterSpacing: 0,
+                    }}
+                  >
+                    movie
+                  </span>
+                </div>
+                {s.dinnerTime && (
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: 'rgba(255,255,255,0.75)',
+                      letterSpacing: -0.2,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {s.dinnerTime}
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'rgba(255,255,255,0.45)',
+                        marginLeft: 6,
+                      }}
+                    >
+                      dinner
+                    </span>
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
         </>
       )}
 
-      {/* ─── STEP 3 — Seats ────────────────────────────────────── */}
+      {/* ─── STEP 3 — Seats ──────────────────────────────────────
+          Phase 5.14 — auditorium picker moved INTO step 3, sitting
+          between the breadcrumb and the seat map. When the seats
+          in one aud are bad, the user can flip aud here without
+          jumping back to step 2. When there's only one aud the
+          slot becomes an informational chip. */}
       {step === 3 && (
         <>
-      {/* Phase 5.13 — compact summary at top of step 3 showing the
-          movie + time + auditorium chosen, with a tap target to jump
-          back. Returning users (haveSelfHere) open here directly,
-          and this is their primary affordance to change movie/time.
-          For first-time users it acts as a confirmation breadcrumb. */}
+      {/* Phase 5.13/5.14 — compact summary at top of step 3 showing the
+          movie + time chosen, with a tap target to jump back. Auditorium
+          is NOT in this summary because it has its own picker below
+          (right next to the seat map where flipping aud is most
+          useful). */}
       {movie && (
         <button
           onClick={() => goToStep(1)}
@@ -1237,9 +1256,14 @@ export default function SeatPickSheet({
               }}
             >
               {(() => {
-                const ctx = showingsRich.find((sr) => sr.number === showingNumber);
-                const audName = (theatersById[theaterId]?.name || `Aud ${theaterId}`).replace(/^Auditorium\s+/i, '');
-                return `${ctx?.label || ''}${ctx?.time ? ` · ${ctx.time}` : ''} · ${audName}`;
+                // Use per-movie showings so the time matches the
+                // selected film (e.g. Mandalorian's earlier dinner).
+                const ctx = showingsForMovie.find((sr) => sr.number === showingNumber);
+                if (!ctx) return '';
+                const parts = [ctx.label];
+                if (ctx.time) parts.push(ctx.time);
+                if (ctx.dinnerTime) parts.push(`dinner ${ctx.dinnerTime}`);
+                return parts.join(' · ');
               })()}
             </div>
           </div>
@@ -1247,6 +1271,114 @@ export default function SeatPickSheet({
             Change ↑
           </span>
         </button>
+      )}
+
+      {/* Auditorium picker — between breadcrumb and seat map. Three
+          states:
+            - 0 choices: hide (defensive; shouldn't happen)
+            - 1 choice: informational pill ("Auditorium 7 · Standard")
+            - >1 choices: scrollable row of tappable chips, current
+              selection highlighted. This makes flipping aud cheap
+              when the seats in one are bad. */}
+      {theaterChoices.length > 0 && (
+        <div
+          data-testid="step3-aud-picker"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: 1.4,
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.55)',
+            }}
+          >
+            Auditorium
+          </div>
+          {theaterChoices.length === 1 ? (
+            <div
+              data-testid="auditorium-chip-static"
+              style={{
+                padding: '10px 14px',
+                borderRadius: 10,
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${BRAND.rule}`,
+                color: 'rgba(255,255,255,0.85)',
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {(theatersById[theaterId]?.name || `Auditorium ${theaterId}`).replace(/^Auditorium\s+/i, 'Aud ')}
+              {theaterMeta?.format ? (
+                <span style={{ color: BRAND.mute, fontWeight: 500 }}>
+                  {' '}· {theaterMeta.format}
+                </span>
+              ) : null}
+            </div>
+          ) : (
+            <div
+              className="no-scrollbar"
+              style={{
+                display: 'flex',
+                gap: 8,
+                overflowX: 'auto',
+                paddingBottom: 4,
+                scrollSnapType: 'x proximity',
+              }}
+            >
+              {theaterChoices.map((c) => {
+                const active = theaterId === c.theaterId;
+                const audName = (theatersById[c.theaterId]?.name || `Auditorium ${c.theaterId}`).replace(/^Auditorium\s+/i, 'Aud ');
+                return (
+                  <button
+                    key={c.theaterId}
+                    type="button"
+                    onClick={() => selectTheater(c.theaterId)}
+                    data-testid={`step3-aud-${c.theaterId}${active ? '-selected' : ''}`}
+                    style={{
+                      all: 'unset',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      scrollSnapAlign: 'center',
+                      padding: '10px 14px',
+                      borderRadius: 10,
+                      background: active
+                        ? 'rgba(244,185,66,0.10)'
+                        : 'rgba(255,255,255,0.04)',
+                      border: `1.5px solid ${active ? BRAND.gold : BRAND.rule}`,
+                      color: '#fff',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      gap: 2,
+                      transition: 'border 0.18s ease, background 0.18s ease',
+                    }}
+                  >
+                    <span>{audName}</span>
+                    {c.format && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          color: BRAND.mute,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {c.format}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {seatTypesPresent.length > 0 && (
