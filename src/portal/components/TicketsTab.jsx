@@ -308,7 +308,7 @@ export default function TicketsTab({
             lineHeight: 1,
           }}
         >
-          All <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>{blockSize} seats.</i>
+          All <i className="shimmer-text" style={{ fontWeight: 500 }}>{blockSize} seats.</i>
         </h1>
         <div style={{ fontSize: 13, color: 'var(--mute)' }}>
           {placed} yours · {guestPlaced} guest seats · {stillOpen} still open
@@ -465,7 +465,7 @@ export default function TicketsTab({
           }}
         >
           Your{' '}
-          <i style={{ color: 'var(--accent-italic)', fontWeight: 500 }}>
+          <i className="shimmer-text" style={{ fontWeight: 500 }}>
             guest{delegations.length === 1 ? '' : 's'}.
           </i>
         </h2>
