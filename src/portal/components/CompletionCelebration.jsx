@@ -1,14 +1,18 @@
-// CompletionCelebration — V2 R11
+// CompletionCelebration — V2 R12 (Phase 5.13 — primary Done + invite CTA)
 //
-// Shown when the user hits "Done" on PostPickOverview after both
-// counters reach zero. Same TicketDetailSheet we already built —
-// poster, date/theater, seats, QR, Wallet buttons — but with a
-// celebration eyebrow banner on top to mark the moment.
+// Shown when the user hits "Done" on the dinner picker after the
+// seat-pick → meals flow finishes. Same TicketDetailSheet poster /
+// QR / per-seat detail, but with:
+//   - Celebration eyebrow banner at the top
+//   - Primary "Done" button (closes the sheet)
+//   - Hollow secondary "Want to invite a guest to join you?"
+//     button below — opens DelegateForm scoped to the just-placed
+//     seats so the sponsor can hand any/all of them to a guest
+//     without backing out and starting over.
 //
-// Per the user's spec: "Real closure. Nice celebration and thank you
-// for coming, stay timed and all that." So the banner reads warm and
-// finished, the show times are in the existing TicketDetailSheet
-// already, and the QR is the closing punctuation.
+// Why both: Kara feedback was that invite should happen AFTER seat
+// + meal commit, not alongside it. Most sponsors will tap Done; the
+// invite path is the warm follow-up offer, not the front door.
 
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import TicketDetailSheet from './TicketDetailSheet.jsx';
@@ -22,6 +26,7 @@ export default function CompletionCelebration({
   onPickDinner,
   onInviteSeat,
   onManageGuest,
+  onInviteGroup,
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -120,18 +125,42 @@ export default function CompletionCelebration({
           cursor: 'pointer',
           boxSizing: 'border-box',
           width: '100%',
-          padding: '12px 18px',
-          borderRadius: 99,
-          background: 'rgba(255,255,255,0.04)',
-          border: `1px solid var(--rule)`,
-          color: 'var(--ink-on-ground)',
+          padding: '14px 18px',
+          borderRadius: 14,
+          background: 'linear-gradient(135deg,#7fcfa0,#3fa86c)',
+          color: '#fff',
           textAlign: 'center',
-          fontSize: 13,
-          fontWeight: 700,
+          fontSize: 14,
+          fontWeight: 800,
+          letterSpacing: 0.3,
         }}
       >
-        Back to my tickets
+        Done
       </button>
+
+      {typeof onInviteGroup === 'function' && (
+        <button
+          type="button"
+          onClick={() => onInviteGroup(ticket)}
+          style={{
+            all: 'unset',
+            cursor: 'pointer',
+            boxSizing: 'border-box',
+            width: '100%',
+            padding: '12px 18px',
+            borderRadius: 99,
+            background: 'transparent',
+            border: `1.5px solid rgba(255,255,255,0.25)`,
+            color: 'var(--ink-on-ground)',
+            textAlign: 'center',
+            fontSize: 13,
+            fontWeight: 600,
+            marginTop: -4,
+          }}
+        >
+          Want to invite a guest to join you?
+        </button>
+      )}
     </div>
   );
 }
