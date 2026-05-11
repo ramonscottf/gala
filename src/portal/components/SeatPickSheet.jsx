@@ -1410,15 +1410,27 @@ export default function SeatPickSheet({
         />
       )}
 
-      {/* Seat map — capped height so the whole sheet stays scrollable.
-          Mobile sheet caps at 88vh; modal at 90vh. We give the map a
-          comfortable 360px (compact) / 440px (modal) ceiling. */}
+      {/* Seat map.
+       *
+       * Mobile (compact): bounded at 360px so the sheet stays comfortably
+       * scrollable within the bottom-sheet's 88vh ceiling. The seat map
+       * itself scrolls internally when the auditorium is taller than that.
+       *
+       * Desktop: NO height cap. Bug seen May 11 2026 — the previous cap
+       * (`min(250px, 30dvh)`) clipped rows A and H of Aud 2 (8 rows total)
+       * with a barely-visible internal scrollbar. The modal's own
+       * `max-height: calc(100dvh - 48px)` already bounds the total height;
+       * the modal's .scroll-container handles overflow if all rows can't
+       * fit. So on desktop we let the map grow to its natural row count —
+       * if everything fits within the viewport, all rows are visible at
+       * once with no internal scrub; if not, the whole modal scrolls and
+       * brings the CTA along with it. */}
       <div
         role="region"
         aria-label="Seat map"
         tabIndex={0}
         style={{
-          maxHeight: compact ? 360 : 'min(250px, 30dvh)',
+          maxHeight: compact ? 360 : 'none',
           minHeight: compact ? 240 : 220,
           overflow: 'auto',
           borderRadius: 10,
