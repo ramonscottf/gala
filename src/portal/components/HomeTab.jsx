@@ -112,7 +112,7 @@ export default function HomeTab({
       <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <ActionCard
           icon="🪑"
-          gradient="linear-gradient(135deg,#d72846,#b32d4e)"
+          gradient="linear-gradient(135deg,#CB262C,#a01f24)"
           title={openCount > 0 ? 'Place seats' : `All ${personalQuota} seats placed`}
           sub={
             openCount > 0
@@ -133,7 +133,7 @@ export default function HomeTab({
         {showMealsCard && (
           <ActionCard
             icon="🍽️"
-            gradient="linear-gradient(135deg,#f4b942,#c98517)"
+            gradient="linear-gradient(135deg,#ffc24d,#f5a623)"
             title={mealsNeededCount > 0 ? 'Pick meals' : 'All meals picked'}
             sub={
               mealsNeededCount > 0
@@ -150,7 +150,7 @@ export default function HomeTab({
         {canInviteGuest && (
           <ActionCard
             icon="👥"
-            gradient="linear-gradient(135deg,#a8b1ff,#6f75d8)"
+            gradient="linear-gradient(135deg,#4a7df0,#2858d6)"
             title="Invite a guest"
             sub={`${availableToGive} of your seats can go to a guest`}
             cta="Invite"
@@ -411,7 +411,7 @@ function ActionCard({ icon, gradient, title, sub, cta, ctaPrimary, onClick, test
           padding: '8px 16px',
           borderRadius: 99,
           background: ctaPrimary
-            ? 'linear-gradient(135deg,#d72846,#b32d4e)'
+            ? 'linear-gradient(135deg,#CB262C,#a01f24)'
             : 'rgba(168,177,255,0.18)',
           color: ctaPrimary ? '#fff' : BRAND.indigoLight,
           fontSize: 12,

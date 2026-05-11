@@ -158,8 +158,8 @@ body {
   padding: clamp(14px, 2.2vw, 28px);
   color: #fff;
   background:
-    linear-gradient(115deg, rgba(215, 40, 70, 0.20) 0%, rgba(215, 40, 70, 0) 32%),
-    linear-gradient(245deg, rgba(168, 177, 255, 0.18) 0%, rgba(168, 177, 255, 0) 34%),
+    linear-gradient(115deg, rgba(203, 38, 44, 0.20) 0%, rgba(203, 38, 44, 0) 32%),
+    linear-gradient(245deg, rgba(74, 125, 240, 0.18) 0%, rgba(74, 125, 240, 0) 34%),
     linear-gradient(180deg, #070a1d 0%, #111a43 46%, #080a18 100%);
 }
 
@@ -281,7 +281,7 @@ body {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #d72846, #a8b1ff);
+  background: linear-gradient(90deg, #CB262C, #4a7df0);
 }
 
 .desktop-parity-stat-grid {
@@ -311,8 +311,8 @@ button.desktop-parity-stat {
 
 button.desktop-parity-stat:hover,
 button.desktop-parity-stat:focus-visible {
-  border-color: rgba(168, 177, 255, 0.36);
-  background: rgba(168, 177, 255, 0.09);
+  border-color: rgba(74, 125, 240, 0.36);
+  background: rgba(74, 125, 240, 0.09);
 }
 
 .desktop-parity-stat-icon {
@@ -322,8 +322,8 @@ button.desktop-parity-stat:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #a8b1ff;
-  background: rgba(168, 177, 255, 0.14);
+  color: #4a7df0;
+  background: rgba(74, 125, 240, 0.14);
 }
 
 .desktop-parity-stat--good .desktop-parity-stat-icon {
@@ -332,8 +332,8 @@ button.desktop-parity-stat:focus-visible {
 }
 
 .desktop-parity-stat--warn .desktop-parity-stat-icon {
-  color: #f4b942;
-  background: rgba(244, 185, 66, 0.13);
+  color: #ffc24d;
+  background: rgba(255, 194, 77, 0.13);
 }
 
 .desktop-parity-stat strong,
@@ -378,7 +378,7 @@ button.desktop-parity-stat:focus-visible {
   padding: clamp(20px, 3vw, 34px);
   background:
     linear-gradient(135deg, rgba(31, 42, 94, 0.92), rgba(15, 22, 57, 0.98)),
-    linear-gradient(90deg, rgba(215, 40, 70, 0.20), rgba(168, 177, 255, 0.10));
+    linear-gradient(90deg, rgba(203, 38, 44, 0.20), rgba(74, 125, 240, 0.10));
   border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
@@ -387,7 +387,7 @@ button.desktop-parity-stat:focus-visible {
   position: absolute;
   inset: 0 0 auto;
   height: 3px;
-  background: linear-gradient(90deg, #d72846, #f4b942, #a8b1ff);
+  background: linear-gradient(90deg, #CB262C, #ffc24d, #4a7df0);
 }
 
 .desktop-main-kicker {
@@ -398,7 +398,7 @@ button.desktop-parity-stat:focus-visible {
 }
 
 .desktop-main-kicker > span {
-  color: #f4b942;
+  color: #ffc24d;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 2px;
@@ -451,8 +451,8 @@ button.desktop-parity-stat:focus-visible {
 
 .desktop-primary-action {
   color: #fff;
-  background: linear-gradient(95deg, #d72846, #3b3f9f);
-  box-shadow: 0 12px 26px rgba(215, 40, 70, 0.28);
+  background: linear-gradient(95deg, #CB262C, #1a3aa3);
+  box-shadow: 0 12px 26px rgba(203, 38, 44, 0.28);
 }
 
 .desktop-secondary-action,
@@ -593,8 +593,8 @@ button.desktop-parity-stat:focus-visible {
 .desktop-center-ticket-copy em {
   padding: 3px 7px;
   border-radius: 4px;
-  background: rgba(168, 177, 255, 0.18);
-  color: #a8b1ff;
+  background: rgba(74, 125, 240, 0.18);
+  color: #4a7df0;
   font-size: 10px;
   font-style: normal;
   font-weight: 800;
@@ -617,7 +617,7 @@ button.desktop-parity-stat:focus-visible {
   justify-content: center;
   gap: 9px;
   text-align: center;
-  color: #a8b1ff;
+  color: #4a7df0;
   border-style: dashed;
 }
 
@@ -834,7 +834,7 @@ button.desktop-parity-stat:focus-visible {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  color: #a8b1ff;
+  color: #4a7df0;
 }
 
 .desktop-parity-night strong,
@@ -956,8 +956,8 @@ button.desktop-parity-stat:focus-visible {
 .desktop-dinner-list span {
   padding: 6px 8px;
   border-radius: 5px;
-  color: #a8b1ff;
-  background: rgba(168, 177, 255, 0.16);
+  color: #4a7df0;
+  background: rgba(74, 125, 240, 0.16);
   text-align: center;
   font-size: 11px;
   font-weight: 800;
@@ -984,7 +984,7 @@ button.desktop-parity-stat:focus-visible {
   padding: 5px 9px;
   border-radius: 999px;
   color: var(--accent-italic);
-  background: rgba(168, 177, 255, 0.14);
+  background: rgba(74, 125, 240, 0.14);
   font-size: 11px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -1025,7 +1025,7 @@ button.desktop-parity-stat:focus-visible {
   padding: 6px 8px;
   border-radius: 5px;
   color: var(--accent-italic);
-  background: rgba(168, 177, 255, 0.16);
+  background: rgba(74, 125, 240, 0.16);
   text-align: center;
   font-size: 11px;
   font-weight: 800;
@@ -1052,8 +1052,8 @@ button.desktop-parity-stat:focus-visible {
   justify-content: space-between;
   gap: 10px;
   color: #ff8da4;
-  background: rgba(215, 40, 70, 0.12);
-  border: 1px solid rgba(215, 40, 70, 0.3);
+  background: rgba(203, 38, 44, 0.12);
+  border: 1px solid rgba(203, 38, 44, 0.3);
 }
 
 .post-pick-dinner-error button {
@@ -1071,8 +1071,8 @@ button.desktop-parity-stat:focus-visible {
   border-radius: 999px;
   margin-top: 2px;
   color: #fff;
-  background: linear-gradient(95deg, #d72846, #3b3f9f);
-  box-shadow: 0 16px 34px rgba(215, 40, 70, 0.28);
+  background: linear-gradient(95deg, #CB262C, #1a3aa3);
+  box-shadow: 0 16px 34px rgba(203, 38, 44, 0.28);
   display: inline-flex;
   align-items: center;
   justify-content: center;
