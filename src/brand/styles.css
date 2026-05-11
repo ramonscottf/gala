@@ -13,17 +13,17 @@
    * body color-scheme makes iOS render every chrome element dark too
    * (caret color, scrollbars, form widgets). */
   color-scheme: dark;
-  --ground: #0f1639;
+  --ground: #0b1b3c;
   --ink-on-ground: #fff;
   --rule: rgba(255, 255, 255, 0.10);
   --surface: rgba(255, 255, 255, 0.04);
   --mute: rgba(255, 255, 255, 0.65);
-  --accent-italic: #a8b1ff;  /* indigoLight — italic accent in headlines */
+  --accent-italic: #4a7df0;  /* gala-blue-light — italic accent in headlines (was #a8b1ff purple, May 10 2026) */
 
   /* Theme-adaptive "highlight text" — kept as a CSS var so call sites
    * stay theme-aware in case we resurrect light mode later. Currently
    * always reads gold on dark. */
-  --accent-text: #f4b942;     /* gold on dark ground */
+  --accent-text: #ffc24d;     /* DEF gold-400 on dark ground (was #f4b942) */
   --accent-text-strong: #ffffff;  /* hi-contrast variant for callouts */
 }
 
@@ -33,13 +33,13 @@ html, body {
 }
 
 .force-dark-vars {
-  --ground: #0f1639;
+  --ground: #0b1b3c;
   --ink-on-ground: #fff;
   --rule: rgba(255, 255, 255, 0.10);
   --surface: rgba(255, 255, 255, 0.04);
   --mute: rgba(255, 255, 255, 0.65);
-  --accent-italic: #a8b1ff;
-  --accent-text: #f4b942;
+  --accent-italic: #4a7df0;
+  --accent-text: #ffc24d;
   --accent-text-strong: #ffffff;
   color: #fff;
 }
