@@ -386,45 +386,6 @@ export default function SeatPickSheet({
       }));
   }, [showtimes]);
 
-  // Phase 5.14 — per-movie showings. When the user picks a movie,
-  // the time buttons in step 2 should reflect THAT movie's actual
-  // start + dinner times, not a generic average across all films.
-  // (Some movies — e.g. Mandalorian on certain auditoriums — have
-  // earlier dinner times to accommodate runtime; this lets that
-  // variance show through.)
-  //
-  // For each showing_number, we pick the canonical row for the
-  // current movie: the row whose theater matches the currently
-  // selected theaterId if one is chosen, otherwise the first row
-  // for that (showing, movie). That way switching auditoriums on
-  // step 3 doesn't redraw the time buttons unless the times truly
-  // differ for that aud.
-  const showingsForMovie = useMemo(() => {
-    if (!movieId) return showingsRich;
-    const byShowing = new Map();
-    showtimes
-      .filter((s) => s.movie_id === movieId)
-      .forEach((s) => {
-        const prev = byShowing.get(s.showing_number);
-        // Prefer the row matching the currently selected theater so
-        // a per-aud variance shows the right times.
-        if (
-          !prev ||
-          (theaterId && s.theater_id === theaterId)
-        ) {
-          byShowing.set(s.showing_number, s);
-        }
-      });
-    return [...byShowing.entries()]
-      .sort(([a], [b]) => a - b)
-      .map(([n, s]) => ({
-        number: n,
-        label: n === 1 ? 'Early' : n === 2 ? 'Late' : `Show ${n}`,
-        time: formatShowTime(s.show_start),
-        dinnerTime: formatShowTime(s.dinner_time),
-      }));
-  }, [showtimes, movieId, theaterId, showingsRich]);
-
   const moviesByShowing = useMemo(() => {
     const m = {};
     showtimes.forEach((s) => {
@@ -535,6 +496,52 @@ export default function SeatPickSheet({
     () => (theaterId ? adaptTheater(theatersById[theaterId]) : null),
     [theaterId, theatersById]
   );
+
+  // Phase 5.14 — per-movie showings. When the user picks a movie,
+  // the time buttons in step 2 should reflect THAT movie's actual
+  // start + dinner times, not a generic average across all films.
+  // (Some movies — e.g. Mandalorian on certain auditoriums — have
+  // earlier dinner times to accommodate runtime; this lets that
+  // variance show through.)
+  //
+  // For each showing_number, we pick the canonical row for the
+  // current movie: the row whose theater matches the currently
+  // selected theaterId if one is chosen, otherwise the first row
+  // for that (showing, movie). That way switching auditoriums on
+  // step 3 doesn't redraw the time buttons unless the times truly
+  // differ for that aud.
+  //
+  // MUST be declared AFTER movieId / theaterId / showingNumber state
+  // hooks above — useMemo deps array reads those variables at the
+  // call site, and reading a `const` before its declaration line
+  // throws a Temporal Dead Zone ReferenceError. This produced a
+  // blank seat-pick screen for fresh users (Phase 5.14.1 hotfix).
+  const showingsForMovie = useMemo(() => {
+    if (!movieId) return showingsRich;
+    const byShowing = new Map();
+    showtimes
+      .filter((s) => s.movie_id === movieId)
+      .forEach((s) => {
+        const prev = byShowing.get(s.showing_number);
+        // Prefer the row matching the currently selected theater so
+        // a per-aud variance shows the right times.
+        if (
+          !prev ||
+          (theaterId && s.theater_id === theaterId)
+        ) {
+          byShowing.set(s.showing_number, s);
+        }
+      });
+    return [...byShowing.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([n, s]) => ({
+        number: n,
+        label: n === 1 ? 'Early' : n === 2 ? 'Late' : `Show ${n}`,
+        time: formatShowTime(s.show_start),
+        dinnerTime: formatShowTime(s.dinner_time),
+      }));
+  }, [showtimes, movieId, theaterId, showingsRich]);
+
   const seatTypesPresent = useMemo(() => {
     if (!adaptedTheater) return [];
     const found = new Set();
