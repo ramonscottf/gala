@@ -2651,18 +2651,26 @@ export default function Portal({
 
   // canFinalize gate — the host computes whether PostPickSheet's "Done"
   // CTA should fire /finalize (canonical canFinalize=true) or just
-  // dismiss (false). Server contract is permissive (only requires >= 1
-  // placed seat), so the UX gate is "all entitled seats placed". Dinners
-  // are NOT part of the gate; sponsors pick them later.
+  // dismiss (false). UX gate is "all entitled seats placed AND every
+  // placed seat has a meal."
+  //
+  // Phase 5.11 — meals are now part of the gate. Logan placed seats
+  // without picking meals and the system still finalized him, sent a
+  // QR, and ran the celebration. Per Scott: no QR until every seat
+  // has a meal. Seats stay editable in the Tickets tab after
+  // finalize, but the QR is not valid until every seat is fed.
+  // Server-side mirror lives in finalize.js (returns 400 reason:
+  // 'meals_required' if a seat is missing dinner_choice).
   const placedCount = (portal?.myAssignments || []).length;
-  // personalQuota — sponsor's directly-placeable cap. Server pick.js:240
-  // caps at (total - delegated): seats given to a sub-delegation are the
-  // delegate's responsibility. Sponsors with active sub-delegations would
-  // never reach placedCount >= blockSize themselves, so canFinalize would
-  // never trip. Use the personal quota instead.
+  const missingMealCount = (portal?.myAssignments || []).filter(
+    (s) => !s.dinner_choice || String(s.dinner_choice).trim() === ''
+  ).length;
   const delegatedAway = data.seatMath?.delegated ?? 0;
   const personalQuota = Math.max(0, (data.blockSize || 0) - delegatedAway);
-  const canFinalize = placedCount >= personalQuota && personalQuota > 0;
+  const canFinalize =
+    placedCount >= personalQuota &&
+    personalQuota > 0 &&
+    missingMealCount === 0;
 
   // Tickets are passed through without the v1 localGuestId shim — per-seat
   // assignment now lives in ticket.seatDelegations from the API.
@@ -3074,7 +3082,18 @@ export default function Portal({
             // without per-row Invite (the seats belong to a delegation
             // already; the sponsor manages via DelegateManage).
             guest={!!ticketDetail.delegationId}
-            onPickDinner={(seat) => setDinnerSheet(seat)}
+            onPickDinner={(seat) => {
+              // Phase 5.11 — close the ticket sheet BEFORE opening the
+              // dinner sheet. Without this both Sheets mount and the
+              // dinner one (declared earlier in JSX) gets occluded by
+              // the ticket one. Logan reported tapping 'Pick dinner'
+              // did nothing UNTIL he closed the ticket sheet with X,
+              // at which point the dinner sheet appeared — confirming
+              // the occlusion. Match the same pattern onInviteSeat and
+              // onManageGuest already use.
+              setTicketDetail(null);
+              setDinnerSheet(seat);
+            }}
             onInviteSeat={(seat) => {
               setTicketDetail(null);
               setInviteOpen({

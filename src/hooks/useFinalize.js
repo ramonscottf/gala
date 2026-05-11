@@ -7,9 +7,12 @@
 // identical.
 //
 // Server contract (functions/api/gala/portal/[token]/finalize.js):
-//   - Permissive: only requires >= 1 placed seat.
-//   - Does NOT check dinner choices, total seat count vs entitled,
-//     or any other gate.
+//   - Requires >= 1 placed seat.
+//   - Phase 5.11 — requires every seat to have a dinner_choice. If
+//     any seat is missing dinner the server returns 400 with body
+//     { error, reason: 'meals_required', missingCount, totalCount }.
+//     Client should mirror this check before the POST so the user
+//     gets immediate feedback instead of a server round-trip + alert.
 //   - Flips sponsors.rsvp_status = 'completed' on success and fires
 //     QR email + SMS via Twilio. The seat rows themselves remain
 //     editable until June 9 — finalize is a notification trigger,
