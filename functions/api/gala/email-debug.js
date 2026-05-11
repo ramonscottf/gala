@@ -4,8 +4,8 @@
 //
 // REMOVE THIS FILE once email path is confirmed working.
 
-import { sendEmail } from '../_notify.js';
-import { jsonOk, jsonError } from '../_sponsor_portal.js';
+import { sendEmail } from './_notify.js';
+import { jsonOk, jsonError } from './_sponsor_portal.js';
 
 export async function onRequestPost(context) {
   const { request, env } = context;
