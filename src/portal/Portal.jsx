@@ -190,7 +190,7 @@ const miniBtn = (kind, isLight = false) => ({
 // perforation circles cut at calc(100%-78px), dashed border between
 // body and stub, MEGAPLEX wordmark, "YOUR GALA / N days out" eyebrow.
 
-export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut, isDelegation = false, inviterCompany = '' }) => {
+export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, openCount, logoUrl, daysOut, isDelegation = false, inviterCompany = '', allDone = false }) => {
   const firstName = (name || '').split(' ')[0];
   const restName = (name || '').split(' ').slice(1).join(' ');
   return (
@@ -479,6 +479,68 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
           </div>
         )}
 
+        {allDone ? (
+          // Phase 5.13 — completion banner. Kara feedback: "should
+          // make them feel done." Replaces the Total/Placed/Assigned/
+          // Open stat grid when every seat is placed AND every placed
+          // seat has a meal AND (sponsors only) nothing is left to
+          // give to guests. Single line, check icon, warm and final.
+          <div
+            style={{
+              marginTop: 18,
+              borderTop: `1px solid var(--rule)`,
+              paddingTop: 18,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}
+          >
+            <div
+              aria-hidden
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 99,
+                background:
+                  'linear-gradient(135deg, rgba(127,207,160,0.30), rgba(127,207,160,0.12))',
+                border: `1px solid rgba(127,207,160,0.35)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#7fcfa0',
+                fontSize: 18,
+                fontWeight: 900,
+                flexShrink: 0,
+              }}
+            >
+              ✓
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 900,
+                  letterSpacing: 1.6,
+                  color: '#7fcfa0',
+                  textTransform: 'uppercase',
+                }}
+              >
+                You're all set
+              </div>
+              <div
+                style={{
+                  marginTop: 3,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.85)',
+                  lineHeight: 1.4,
+                }}
+              >
+                {placed} seat{placed === 1 ? '' : 's'} placed · meals chosen
+              </div>
+            </div>
+          </div>
+        ) : (
         <div
           style={{
             marginTop: 18,
@@ -556,6 +618,7 @@ export const TicketHero = ({ tier, name, subline, blockSize, placed, assigned, o
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* stub */}
@@ -2865,6 +2928,28 @@ export default function Portal({
             setDinnerOpen(true);
           }}
           onViewTicket={(ticket) => setTicketDetail(ticket)}
+          // Phase 5.13 — per-ticket edit picker on the hero card.
+          // Mirrors the Tickets tab paths: seats go through openTicket
+          // (TicketManage sheet — per-seat reassign / unplace), meals
+          // go through the postPick + dinnerOpen flow with editOnly so
+          // the sheet dismisses cleanly back to Home.
+          onEditSeats={(ticket) => openTicket(ticket)}
+          onEditMeals={(ticket) => {
+            const seatIds = (ticket.assignmentRows || [])
+              .map((r) => r.seat_id || `${r.row_label}-${r.seat_num}`);
+            if (seatIds.length === 0) return;
+            setPostPick({
+              theaterId: ticket.theaterId,
+              seatIds,
+              movieTitle: ticket.movieTitle,
+              showLabel: ticket.showLabel,
+              showTime: ticket.showTime,
+              theaterName: ticket.theaterName,
+              posterUrl: ticket.posterUrl,
+              editOnly: true,
+            });
+            setDinnerOpen(true);
+          }}
           token={token}
           apiBase={config.apiBase}
         />

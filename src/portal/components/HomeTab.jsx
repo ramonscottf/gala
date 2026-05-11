@@ -19,6 +19,7 @@
 // Behind the same ?v2=1 flag as TicketsTab. V1 HomeTab still mounts
 // when v2 is off, so nothing breaks for live sponsors.
 
+import { useState } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { TicketHero } from '../Portal.jsx';
 import { highestRottenScore } from '../movieScores.js';
@@ -32,6 +33,8 @@ export default function HomeTab({
   onManageTickets,
   onPickMeals,
   onViewTicket,
+  onEditSeats,
+  onEditMeals,
   token,
   apiBase,
 }) {
@@ -74,6 +77,20 @@ export default function HomeTab({
   // Place seats card is the only action that makes sense.
   const showMealsCard = placed > 0;
 
+  // Phase 5.13 — fully-done collapse. Kara feedback: when every
+  // seat is placed AND every placed seat has a meal AND (sponsors
+  // only) there's nothing left to give to a guest, the two
+  // action cards become noise. Hide them and let the ticket hero
+  // card carry the page. Stat grid up top also flips to a single
+  // completion check + "X seats placed · meals chosen" line.
+  // Delegations don't have the canInviteGuest gate; their done
+  // state is just openCount===0 + meals.
+  const allDone =
+    openCount === 0 &&
+    placed > 0 &&
+    mealsNeededCount === 0 &&
+    (isDelegation || !canInviteGuest);
+
   return (
     <div className="scroll-container" style={{ flex: 1, paddingBottom: 130 }}>
       <TicketHero
@@ -88,6 +105,7 @@ export default function HomeTab({
         daysOut={daysOut}
         isDelegation={isDelegation}
         inviterCompany={company}
+        allDone={allDone}
       />
 
       {/* Intro copy — sets the model in two sentences. Hidden for
@@ -110,27 +128,33 @@ export default function HomeTab({
 
       {/* Action cards */}
       <div style={{ padding: '14px 18px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <ActionCard
-          icon="🪑"
-          gradient="linear-gradient(135deg,#CB262C,#a01f24)"
-          title={openCount > 0 ? 'Place seats' : `All ${personalQuota} seats placed`}
-          sub={
-            openCount > 0
-              ? `${openCount} of ${personalQuota} still to place`
-              : `${assignedCount} with guests · tap to edit`
-          }
-          cta={openCount > 0 ? 'Place' : 'Edit'}
-          ctaPrimary
-          onClick={openCount > 0 ? onPlaceSeats : onManageTickets}
-          testId="cta-place-seats"
-        />
+        {/* Phase 5.13 — when fully done (every seat placed + every
+            meal picked + nothing left to give), suppress the action
+            cards entirely. The ticket hero card below carries the
+            page. Kara feedback: "should make them feel done." */}
+        {!allDone && (
+          <ActionCard
+            icon="🪑"
+            gradient="linear-gradient(135deg,#CB262C,#a01f24)"
+            title={openCount > 0 ? 'Place seats' : `All ${personalQuota} seats placed`}
+            sub={
+              openCount > 0
+                ? `${openCount} of ${personalQuota} still to place`
+                : `${assignedCount} with guests · tap to edit`
+            }
+            cta={openCount > 0 ? 'Place' : 'Edit'}
+            ctaPrimary
+            onClick={openCount > 0 ? onPlaceSeats : onManageTickets}
+            testId="cta-place-seats"
+          />
+        )}
 
         {/* Phase 5.12 — Pick meals card. Only appears once seats are
-            placed (no meals to pick before there are seats). When
-            every placed seat has a meal, the card shifts to a
-            completion state but stays visible so the user can still
-            tap to change meals before the lock date. */}
-        {showMealsCard && (
+            placed (no meals to pick before there are seats).
+            Phase 5.13 — hides entirely when fully done (the hero
+            ticket card's Edit picker is the only path to edit meals
+            in that state). */}
+        {showMealsCard && !allDone && (
           <ActionCard
             icon="🍽️"
             gradient="linear-gradient(135deg,#ffc24d,#f5a623)"
@@ -171,6 +195,8 @@ export default function HomeTab({
               key={t.id}
               ticket={t}
               onViewTicket={onViewTicket}
+              onEditSeats={onEditSeats}
+              onEditMeals={onEditMeals}
             />
           ))
         )}
@@ -431,14 +457,17 @@ function ActionCard({ icon, gradient, title, sub, cta, ctaPrimary, onClick, test
 // TicketHeroCard — fast-path entry on Home into TicketDetailSheet.
 //
 // Visual: poster thumbnail (left) + show label / movie title / showtime
-// stack (middle) + "View ticket" pill CTA (right). Same surface treatment
+// stack (middle) + View / Edit pill CTAs (right). Same surface treatment
 // as ActionCard so the home column reads as one rhythmic stack of cards.
 //
 // One card per ticket — when a sponsor's block spans both early and late
 // showings, the home column shows two ticket cards stacked. Tapping
-// either opens the per-showing TicketDetailSheet (the same sheet you'd
-// reach from the Tickets tab).
-function TicketHeroCard({ ticket, onViewTicket }) {
+// View opens the per-showing TicketDetailSheet. Tapping Edit reveals
+// an inline picker (Seats / Meals) below the card so the user can
+// route straight to the right edit sheet without bouncing through
+// the Tickets tab. Phase 5.13.
+function TicketHeroCard({ ticket, onViewTicket, onEditSeats, onEditMeals }) {
+  const [editOpen, setEditOpen] = useState(false);
   const seatCount = (ticket.assignmentRows || ticket.seats || []).length;
   const showLabel = ticket.showLabel || '';
   const showTime = ticket.showTime || '';
@@ -449,118 +478,221 @@ function TicketHeroCard({ ticket, onViewTicket }) {
   const sub = subParts.join(' · ');
 
   return (
-    <button
-      onClick={() => onViewTicket(ticket)}
-      data-testid="cta-view-ticket"
+    <div
       style={{
-        all: 'unset',
-        cursor: 'pointer',
-        boxSizing: 'border-box',
         background: 'var(--surface)',
         border: `1px solid var(--rule)`,
         borderRadius: 14,
-        padding: '12px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
         boxShadow:
           '0 6px 16px -10px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02) inset',
+        overflow: 'hidden',
       }}
     >
-      {/* Poster thumbnail — taller aspect than ActionCard's icon bubble
-          to read as a movie ticket rather than a generic action. */}
       <div
         style={{
-          width: 44,
-          height: 60,
-          borderRadius: 8,
-          background: ticket.posterUrl
-            ? `url(${ticket.posterUrl}) center/cover`
-            : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
-          flexShrink: 0,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-          position: 'relative',
-          overflow: 'hidden',
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
         }}
       >
-        {!ticket.posterUrl && ticket.movieShort && (
+        {/* Poster thumbnail — taller aspect than ActionCard's icon bubble
+            to read as a movie ticket rather than a generic action. */}
+        <div
+          style={{
+            width: 44,
+            height: 60,
+            borderRadius: 8,
+            background: ticket.posterUrl
+              ? `url(${ticket.posterUrl}) center/cover`
+              : `linear-gradient(160deg, ${BRAND.navyMid}, ${BRAND.navyDeep})`,
+            flexShrink: 0,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {!ticket.posterUrl && ticket.movieShort && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 4,
+                padding: '0 4px',
+                fontFamily: FONT_DISPLAY,
+                fontStyle: 'italic',
+                fontSize: 11,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.92)',
+                lineHeight: 1.05,
+              }}
+            >
+              {ticket.movieShort}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onViewTicket(ticket)}
+          style={{
+            all: 'unset',
+            cursor: 'pointer',
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
+          {/* Caps overline mirrors the SEATS / DATE labels on the ticket
+              sheet itself — small visual rhyme so this reads as a
+              preview of that sheet. */}
           <div
             style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 4,
-              padding: '0 4px',
-              fontFamily: FONT_DISPLAY,
-              fontStyle: 'italic',
-              fontSize: 11,
-              fontWeight: 600,
-              color: 'rgba(255,255,255,0.92)',
-              lineHeight: 1.05,
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: 1.2,
+              color: 'var(--mute)',
+              textTransform: 'uppercase',
+              marginBottom: 2,
             }}
           >
-            {ticket.movieShort}
+            Your ticket
           </div>
-        )}
-      </div>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Caps overline mirrors the SEATS / DATE labels on the ticket
-            sheet itself — small visual rhyme so this reads as a
-            preview of that sheet. */}
-        <div
-          style={{
-            fontSize: 9,
-            fontWeight: 800,
-            letterSpacing: 1.2,
-            color: 'var(--mute)',
-            textTransform: 'uppercase',
-            marginBottom: 2,
-          }}
-        >
-          Your ticket
-        </div>
-        <div
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: 'var(--ink-on-ground)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {ticket.movieTitle || 'Showing TBD'}
-        </div>
-        {sub && (
           <div
             style={{
-              fontSize: 11,
-              color: 'var(--mute)',
-              marginTop: 2,
+              fontSize: 14,
+              fontWeight: 700,
+              color: 'var(--ink-on-ground)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }}
           >
-            {sub}
+            {ticket.movieTitle || 'Showing TBD'}
           </div>
-        )}
+          {sub && (
+            <div
+              style={{
+                fontSize: 11,
+                color: 'var(--mute)',
+                marginTop: 2,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {sub}
+            </div>
+          )}
+        </button>
+
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          {(typeof onEditSeats === 'function' || typeof onEditMeals === 'function') && (
+            <button
+              type="button"
+              onClick={() => setEditOpen((v) => !v)}
+              aria-expanded={editOpen}
+              data-testid="cta-edit-ticket"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                borderRadius: 99,
+                background: editOpen ? 'rgba(168,177,255,0.18)' : 'rgba(255,255,255,0.06)',
+                color: editOpen ? BRAND.indigoLight : 'var(--ink-on-ground)',
+                fontSize: 12,
+                fontWeight: 700,
+                border: `1px solid ${editOpen ? 'rgba(168,177,255,0.32)' : 'var(--rule)'}`,
+              }}
+            >
+              {editOpen ? 'Close' : 'Edit'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onViewTicket(ticket)}
+            data-testid="cta-view-ticket"
+            style={{
+              all: 'unset',
+              cursor: 'pointer',
+              padding: '8px 14px',
+              borderRadius: 99,
+              background: 'rgba(168,177,255,0.18)',
+              color: BRAND.indigoLight,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            View
+          </button>
+        </div>
       </div>
 
-      <div
-        style={{
-          padding: '8px 14px',
-          borderRadius: 99,
-          background: 'rgba(168,177,255,0.18)',
-          color: BRAND.indigoLight,
-          fontSize: 12,
-          fontWeight: 700,
-          flexShrink: 0,
-        }}
-      >
-        View
-      </div>
-    </button>
+      {/* Inline edit picker — only when Edit was tapped. Two pills:
+          Seats and Meals. Each routes to the parent-provided callback
+          which opens the corresponding sheet. Phase 5.13 — keeps the
+          edit path one tap deep instead of bouncing to Tickets tab. */}
+      {editOpen && (
+        <div
+          style={{
+            padding: '0 14px 12px',
+            display: 'flex',
+            gap: 8,
+            borderTop: `1px solid var(--rule)`,
+            paddingTop: 12,
+            background: 'rgba(0,0,0,0.12)',
+          }}
+        >
+          {typeof onEditSeats === 'function' && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditOpen(false);
+                onEditSeats(ticket);
+              }}
+              data-testid="cta-edit-seats"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                flex: 1,
+                padding: '10px 12px',
+                borderRadius: 10,
+                background: 'linear-gradient(135deg,#CB262C,#a01f24)',
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: 'center',
+              }}
+            >
+              🪑 Edit seats
+            </button>
+          )}
+          {typeof onEditMeals === 'function' && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditOpen(false);
+                onEditMeals(ticket);
+              }}
+              data-testid="cta-edit-meals"
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                flex: 1,
+                padding: '10px 12px',
+                borderRadius: 10,
+                background: 'linear-gradient(135deg,#ffc24d,#f5a623)',
+                color: BRAND.navyDeep,
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: 'center',
+              }}
+            >
+              🍽️ Edit meals
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
