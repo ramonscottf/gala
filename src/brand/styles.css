@@ -1160,6 +1160,26 @@ img,
   overscroll-behavior: contain;
 }
 
+/* Phase 5.14 fix — ticket editing sheet was clipping content top + bottom
+ * on both mobile and desktop. Root cause: .sheet-panel is display:flex
+ * column with max-height:88%, and its .scroll-container child has
+ * flex:1 + overflow-y:auto. But flex items default to min-height:auto
+ * (≈ content size), so the scroll-container refused to shrink below
+ * its content, the panel's max-height clipped the overflow, and the
+ * overflow-y:auto never triggered — you got a fixed-height panel with
+ * content spilling past the top and bottom edges. Adding min-height:0
+ * lets the flex child shrink to whatever space the panel has, which
+ * activates scrolling inside the modal. Adding overflow:hidden to the
+ * panel itself clips the TicketDetailSheet hero band (which uses
+ * negative margins to break out to the panel edges) cleanly at the
+ * rounded corners. */
+.sheet-panel {
+  overflow: hidden;
+}
+.sheet-panel > .scroll-container {
+  min-height: 0;
+}
+
 /* Page header / tab bar safe-area is owned by the inline styles in
  * Mobile.jsx now — having it here too produced a double dose of
  * env(safe-area-inset-*) that left visible cream bands above the hero
