@@ -1608,10 +1608,28 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
   (theaterLayouts?.theaters || []).forEach((t) => {
     theatersById[t.id] = t;
   });
-  const showtimeByTheater = {};
+  // Key showtimes by (theater_id, showing_number). Some auditoriums host
+  // both showings of the same movie (Aud 6/7/8/10 do this for the 2026
+  // gala) so a theater_id alone is not unique — keying by theater only
+  // would silently collapse late-showing tickets onto the early showtime.
+  // Bug discovered May 11 2026: Terra Cooper at Tanner Clinic placed 6
+  // Aud 8 seats at the 7:40 PM late Star Wars; her ticket card rendered
+  // 4:50 PM (early) because showtimeByTheater[8] kept whichever showing
+  // it saw first.
+  //
+  // For backward compatibility with old assignment rows lacking
+  // showing_number (or any other lookup site that doesn't carry it), we
+  // also fall back to "first showtime for this theater" — preserving the
+  // old behavior in single-showing auditoriums.
+  const showtimeByTheaterShowing = {};
+  const showtimeByTheater = {}; // legacy fallback — first showtime per theater
   showtimes.forEach((s) => {
+    showtimeByTheaterShowing[`${s.theater_id}-${s.showing_number}`] = s;
     if (!showtimeByTheater[s.theater_id]) showtimeByTheater[s.theater_id] = s;
   });
+  const lookupShowtime = (theaterId, showingNumber) =>
+    (showingNumber != null && showtimeByTheaterShowing[`${theaterId}-${showingNumber}`])
+      || showtimeByTheater[theaterId];
 
   // tickets — group myAssignments + myHolds by theater
   const delegationsById = {};
@@ -1620,15 +1638,22 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
   });
   const ticketMap = new Map();
   const addRow = (row, status) => {
-    const key = row.theater_id;
+    // Key by (theater_id, showing_number) — a theater can host two
+    // showings, each is its own ticket. Older rows lacking
+    // showing_number fall back via lookupShowtime; we still key them
+    // distinctly by the value we observe (defaulting to 1 when null
+    // so legacy rows behave as they did pre-fix).
+    const showingNum = row.showing_number ?? 1;
+    const key = `${row.theater_id}-${showingNum}`;
     if (!ticketMap.has(key)) {
-      const st = showtimeByTheater[key];
-      const theater = theatersById[key];
+      const st = lookupShowtime(row.theater_id, showingNum);
+      const theater = theatersById[row.theater_id];
       ticketMap.set(key, {
         id: `t-${key}`,
-        theaterId: key,
-        showingNumber: st?.showing_number,
-        showLabel: st?.showing_number === 1 ? 'Early' : st?.showing_number === 2 ? 'Late' : '',
+        theaterId: row.theater_id,
+        showingNumber: st?.showing_number ?? showingNum,
+        showLabel: (st?.showing_number ?? showingNum) === 1 ? 'Early'
+          : (st?.showing_number ?? showingNum) === 2 ? 'Late' : '',
         showTime: formatShowTime(st?.show_start),
         showFullDate: formatGalaDateTime(st?.show_start),
         dinnerTime: formatShowTime(st?.dinner_time),
@@ -1651,7 +1676,7 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
         rtCriticsScore: st?.rt_critics_score,
         rtAudienceScore: st?.rt_audience_score,
         rtUrl: st?.rt_url,
-        theaterName: theater?.name || `Theater ${key}`,
+        theaterName: theater?.name || `Theater ${row.theater_id}`,
         seats: [],
         // Per-seat delegation_id map: { 'F-7': 4, 'F-8': null } so
         // TicketManage chips can show per-chip assignment state and the
@@ -1705,12 +1730,14 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
   );
 
   const decorateDelegationAssignment = (row) => {
-    const st = showtimeByTheater[row.theater_id];
+    const showingNum = row.showing_number ?? 1;
+    const st = lookupShowtime(row.theater_id, showingNum);
     const theater = theatersById[row.theater_id];
     const sid = `${row.row_label}-${row.seat_num}`;
     return {
       seat_id: sid,
       theater_id: row.theater_id,
+      showing_number: row.showing_number ?? showingNum,
       row_label: row.row_label,
       seat_num: row.seat_num,
       dinner_choice: row.dinner_choice || null,
@@ -1758,7 +1785,11 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
 
   const guestTicketMap = new Map();
   childAssignments.forEach((row) => {
-    const key = `${row.delegation_id}-${row.theater_id}`;
+    // Same (theater_id, showing_number) keying as the host tickets.
+    // childDelegationAssignments comes from seat_assignments so each row
+    // carries showing_number directly.
+    const showingNum = row.showing_number ?? 1;
+    const key = `${row.delegation_id}-${row.theater_id}-${showingNum}`;
     if (!guestTicketMap.has(key)) {
       guestTicketMap.set(key, {
         id: `g-${key}`,
