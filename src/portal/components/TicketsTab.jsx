@@ -280,7 +280,7 @@ export default function TicketsTab({
 
   const pickForAll = () => {
     alert(
-      `${missingDinnerCount} seats still need dinners. Open the guest cards below — tap "View" to manage their dinners. The kitchen defaults to brisket if you don't pick.`
+      `${missingDinnerCount} seats still need dinners. Open the guest cards below — tap "View" to manage their dinners. The kitchen defaults to the French dip if you don't pick.`
     );
   };
 

@@ -68,11 +68,10 @@ const DINNER_BLOCK = `
     <p style="margin:0 0 6px;color:#0b1b3c;font-weight:700;font-size:15px;">🍱 Dinner — packed lunchbox style. Old school. Elevated.</p>
     <p style="margin:0 0 14px;color:#475569;font-size:13px;line-height:1.5;">Plated to your seat in a brown-paper-bag-meets-bistro-tray reveal. Choose one per ticket:</p>
     <ul style="color:#1e293b;font-size:14px;line-height:1.85;padding-left:20px;margin:0;">
-      <li><strong>The Cafeteria Champ</strong> — hot brisket French dip with au jus and crispy fries</li>
-      <li><strong>The Brown Bag Classic</strong> — cold turkey sandwich, chips, apple slices, the cookie</li>
-      <li><strong>The Garden Tray</strong> — veggie salad with seasonal toppings (vegetarian)</li>
-      <li><strong>The Lunch Lady Special</strong> — kids meal: chicken nuggets, fruit, juice box</li>
-      <li><strong>The Field Trip Fix</strong> — gluten-free option (chef's plate, GF-certified)</li>
+      <li><strong>The Cafeteria Champ</strong> — Hot French Dip Sandwich with au jus and crispy fries</li>
+      <li><strong>The Garden Tray</strong> — Green Salad with Grilled Chicken (Gluten Free)</li>
+      <li><strong>The Field Trip Fix</strong> — Vegetarian option (chef's plate)</li>
+      <li><strong>The Lunch Lady Special</strong> — Kids Meal: chicken nuggets, fruit, juice box</li>
     </ul>
   </div>`;
 
@@ -115,7 +114,7 @@ const SENDS = {
       <p>Here's what's new this year:</p>
       <p>🎟 <strong>A real seat selection platform.</strong> Select your exact seats, your dinner, and your showtime — all from your phone. No spreadsheets, no email chains.</p>
       <p>🎬 <strong>Four films across two showings.</strong> The Mandalorian &amp; Grogu in IMAX, Breadwinner, Paddington 2, How to Train Your Dragon. Choose what you want to see.</p>
-      <p>🍱 <strong>Dinner — packed lunchbox style.</strong> Old-school school lunch, elevated. Five options including kids and gluten-free.</p>
+      <p>🍱 <strong>Dinner — packed lunchbox style.</strong> Old-school school lunch, elevated. Four options including kids and a gluten-free chicken salad.</p>
       ${DRAWING_CARD_MEDIUM}
       ${BTN('https://daviskids.org/events-gala', 'Select your seats →')}
       <p style="color:#475569;font-size:13px;">— Sherry, Kara, and the entire DEF team</p>
@@ -228,7 +227,7 @@ const SENDS = {
       <p style="color:#475569;font-size:13px;">Drawing flow goes live with the main event email on <strong>May 28</strong>. Be ready.</p>
       <h3 style="color:#0b1b3c;font-size:16px;margin:24px 0 10px;">A few things to know</h3>
       <p>🎬 <strong>Four films, two showings.</strong> The Mandalorian &amp; Grogu (IMAX) is going fastest.<br/>
-      🍱 <strong>Dinner is packed-lunch style</strong> — five options, kids and gluten-free included.<br/>
+      🍱 <strong>Dinner is packed-lunch style</strong> — four options, kids and a gluten-free chicken salad included.<br/>
       🅿 <strong>Parking and check-in details</strong> come in the May 28 email.</p>
       <p style="color:#475569;font-size:13px;">— Sherry &amp; Kara</p>
     `,

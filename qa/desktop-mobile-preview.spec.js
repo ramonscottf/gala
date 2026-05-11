@@ -178,7 +178,7 @@ test.describe('sponsor shell preview', () => {
     await expect(page.getByLabel('Dinner for seat A-1')).toBeVisible();
     await expect(page.getByTestId('dinner-done')).toHaveCount(0);
 
-    await page.getByLabel('Dinner for seat A-1').selectOption('brisket');
+    await page.getByLabel('Dinner for seat A-1').selectOption('frenchdip');
     await expect(page.getByTestId('dinner-done')).toBeVisible();
   });
 });

@@ -8,7 +8,7 @@
 // New row anatomy:
 //
 //   ┌─ SEAT ─────── DINNER ─────────── GUEST ──────────┐
-//   │ [G11]         [🍖 Brisket]        Charles Foster │   guest row
+//   │ [G11]         [🥖 French Dip]      Charles Foster │   guest row
 //   │ [G14]         [— select dinner —] [+ Invite]      │   sponsor row
 //   └──────────────────────────────────────────────────┘
 //
@@ -29,19 +29,20 @@ import { useState, useMemo } from 'react';
 import { BRAND, FONT_DISPLAY } from '../../brand/tokens.js';
 import { PosterMini, seatLabel as fmtSeat, assignmentOwner } from '../Portal.jsx';
 
+// Phase 5.8 — Kara's revised menu. Keys match server enum in
+// functions/api/gala/dinner.js and validator in pick.js. Four
+// options only; turkey removed.
 const DINNER_EMOJI = {
-  brisket: '🍖',
-  turkey: '🥪',
-  veggie: '🥗',
+  frenchdip: '🥖',
+  salad: '🥗',
+  veggie: '🌱',
   kids: '🧒',
-  glutenfree: '🌾',
 };
 const DINNER_LABEL = {
-  brisket: 'Brisket',
-  turkey: 'Turkey',
-  veggie: 'Veggie',
-  kids: 'Kids meal',
-  glutenfree: 'Gluten-free',
+  frenchdip: 'French Dip',
+  salad: 'Chicken Salad',
+  veggie: 'Vegetarian',
+  kids: 'Kids Meal',
 };
 
 export default function TicketCard({

@@ -22,7 +22,7 @@
 //     theater_id: number,
 //     row_label: string,        // e.g. "F"
 //     seat_num: string|number,  // server casts to integer
-//     dinner_choice?: 'brisket'|'turkey'|'veggie'|'kids'|'glutenfree'|null
+//     dinner_choice?: 'frenchdip'|'salad'|'veggie'|'kids'|null
 //                                // ONLY when action === 'set_dinner'
 //   }
 //   set_dinner is handled INSIDE pick.js (see lines 108-130). There is NO

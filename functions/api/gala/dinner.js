@@ -4,13 +4,26 @@ import { verifyGalaAuth, jsonError, jsonOk } from './_auth.js';
  * Dinner choices for the 2026 Gala.
  * Single source of truth — also exposed via GET so the front-end picker
  * can render whatever the back-end currently allows.
+ *
+ * Phase 5.8 (May 10 2026) — Kara's revised menu, four options total:
+ *   frenchdip — Hot French Dip Sandwich
+ *   salad     — Green Salad with Grilled Chicken (Gluten Free)
+ *   veggie    — Vegetarian
+ *   kids      — Kids Meal
+ * Cold turkey sandwich removed entirely. veggie + kids IDs preserved
+ * across the rename; brisket→frenchdip and glutenfree→salad changed
+ * IDs because the meaning changed (the GF option is now a distinct
+ * grilled-chicken salad, not a "gluten-free version of the others").
+ * Mirror in src/portal/components/DinnerPicker.jsx DINNER_OPTIONS,
+ * DinnerSheet.jsx DINNER_TILES, portal/[token]/pick.js VALID set,
+ * admin/seating.html DINNER_OPTIONS const, marketing-test.js + the
+ * review/index.html email previews.
  */
 export const DINNER_OPTIONS = [
-  { id: 'brisket',     label: 'Hot brisket french dip', kind: 'sandwich' },
-  { id: 'turkey',      label: 'Cold turkey sandwich',   kind: 'sandwich' },
-  { id: 'veggie',      label: 'Veggie salad',           kind: 'salad'    },
-  { id: 'kids',        label: 'Kids meal',              kind: 'kids'     },
-  { id: 'glutenfree',  label: 'Gluten-free',            kind: 'gf'       },
+  { id: 'frenchdip', label: 'Hot French Dip Sandwich',                       kind: 'sandwich' },
+  { id: 'salad',     label: 'Green Salad with Grilled Chicken (Gluten Free)', kind: 'salad'    },
+  { id: 'veggie',    label: 'Vegetarian',                                     kind: 'veggie'   },
+  { id: 'kids',      label: 'Kids Meal',                                      kind: 'kids'     },
 ];
 
 const VALID_IDS = new Set(DINNER_OPTIONS.map(o => o.id));

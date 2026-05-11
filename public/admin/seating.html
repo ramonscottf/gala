@@ -2565,13 +2565,12 @@ function updateStats(total, blocked) {
   document.getElementById('stat-available').textContent = totalVal - assignedCount;
 }
 
-/* Dinner options — mirrors /api/gala/dinner. */
+/* Dinner options — mirrors /api/gala/dinner. Phase 5.8 menu update. */
 const DINNER_OPTIONS = [
-  { id: 'brisket',    label: 'Hot brisket french dip', short: 'Brisket' },
-  { id: 'turkey',     label: 'Cold turkey sandwich',   short: 'Turkey'  },
-  { id: 'veggie',     label: 'Veggie salad',           short: 'Veggie'  },
-  { id: 'kids',       label: 'Kids meal',              short: 'Kids'    },
-  { id: 'glutenfree', label: 'Gluten-free',            short: 'GF'      },
+  { id: 'frenchdip', label: 'Hot French Dip Sandwich',                       short: 'French Dip' },
+  { id: 'salad',     label: 'Green Salad with Grilled Chicken (Gluten Free)', short: 'Salad'      },
+  { id: 'veggie',    label: 'Vegetarian',                                     short: 'Veggie'     },
+  { id: 'kids',      label: 'Kids Meal',                                      short: 'Kids'       },
 ];
 
 async function adminSetDinnerChoice(theaterId, rowLabel, seatNum, dinner) {
@@ -2609,7 +2608,7 @@ function updateAssignmentList() {
   }
 
   // Dinner summary header for the current auditorium
-  const counts = { brisket: 0, turkey: 0, veggie: 0, kids: 0, glutenfree: 0, _none: 0 };
+  const counts = { frenchdip: 0, salad: 0, veggie: 0, kids: 0, _none: 0 };
   for (const [, val] of entries) {
     const dc = (val && typeof val === 'object') ? (val.dinner_choice || '') : '';
     if (counts[dc] !== undefined) counts[dc] += 1;

@@ -252,7 +252,7 @@ export const createPreviewPortal = () => ({
       seat_num: 5,
       guest_name: 'Scott Foster',
       delegation_id: null,
-      dinner_choice: 'brisket',
+      dinner_choice: 'frenchdip',
     },
     {
       theater_id: 1,
@@ -260,7 +260,7 @@ export const createPreviewPortal = () => ({
       seat_num: 6,
       guest_name: 'Scott Foster',
       delegation_id: null,
-      dinner_choice: 'turkey',
+      dinner_choice: 'salad',
     },
     {
       theater_id: 1,
@@ -325,7 +325,7 @@ export const createPreviewPortal = () => ({
       guest_name: 'Davis Education Foundation / Megan Foster',
       delegation_id: 301,
       delegate_name: 'Megan Foster',
-      dinner_choice: 'turkey',
+      dinner_choice: 'frenchdip',
     },
     {
       theater_id: 2,
