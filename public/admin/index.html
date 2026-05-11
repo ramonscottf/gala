@@ -3670,7 +3670,7 @@ function renderSendRow(send) {
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="sherry" style="padding:6px 12px; font-size:12px;">→ Test to Sherry</button>
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="kara" style="padding:6px 12px; font-size:12px;">→ Test to Kara</button>
         <button class="btn btn-secondary mkt-test-btn" data-send="${send.id}" data-recipient="all" style="padding:6px 12px; font-size:12px;">→ All 3</button>
-        ${send.channel === 'Email' || send.channel === 'email' ? `
+        ${send.channel === 'Email' || send.channel === 'email' || send.channel === 'SMS' || send.channel === 'sms' ? `
           <span style="width:1px; height:18px; background:var(--border); margin:0 4px;"></span>
           <button class="mkt-preview-send-btn" data-send="${send.id}" style="padding:6px 14px; font-size:12px; background:#0b1b3c; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">📨 Preview &amp; send to audience…</button>
         ` : ''}
@@ -4234,6 +4234,33 @@ function showSendConfirmModal(sendId, preview) {
       confirmBtn.disabled = true; confirmBtn.style.opacity = '0.6';
       resultSpan.textContent = 'Enqueuing…'; resultSpan.style.color = 'var(--muted)';
       try {
+        // SMS branch — uses the SMS-specific synchronous send endpoint.
+        // Twilio sends are fast enough that we never need a queue and
+        // never had the email pipeline's 30s timeout exposure.
+        const channelLc = String(preview.channel || '').toLowerCase();
+        if (channelLc === 'sms') {
+          resultSpan.textContent = 'Sending texts…';
+          const r = await fetch('/api/gala/marketing-sms-send-now', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ sendId, confirmedRecipientCount: preview.recipientCount }),
+          });
+          const data = await r.json();
+          if (!r.ok) {
+            resultSpan.textContent = '✗ ' + (data.error || `HTTP ${r.status}`);
+            resultSpan.style.color = 'var(--red)';
+            confirmBtn.disabled = false; confirmBtn.style.opacity = '1';
+            return;
+          }
+          const { sent = 0, failed = 0, total = preview.recipientCount, errors = [] } = data;
+          resultSpan.textContent = `✓ Sent ${sent} of ${total}${failed ? ` · ${failed} failed` : ''}`;
+          resultSpan.style.color = failed > 0 ? 'var(--amber, #d97706)' : 'var(--green, #15803d)';
+          confirmBtn.textContent = 'Done';
+          if (failed > 0 && errors.length) console.warn('SMS send errors:', errors);
+          return;
+        }
+
         // ── Step 1: enqueue (returns in <1s, no 30s timeout risk) ────
         let r = await fetch('/api/gala/marketing-send-queued', {
           method: 'POST',
