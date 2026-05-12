@@ -76,7 +76,10 @@ const DINNER_BLOCK = `
   </div>`;
 
 // ── Send registry (24 sends keyed by id, matches dashboard PIPELINE) ──────
-const SENDS = {
+// Exported for marketing-catch-up-list.js — when a sendId has been fired but
+// no marketing_sends row exists (legacy / in-code only), the list endpoint
+// falls back to this registry for title/audience metadata.
+export const SENDS = {
   // ─── PHASE 1: THE RESET ───
   s1a: {
     type: 'email',

@@ -64,3 +64,20 @@ export async function resendInvite(sponsorId) {
     body: JSON.stringify({ sponsor_ids: [sponsorId], force: true }),
   });
 }
+
+// ── Marketing catch-up ─────────────────────────────────────────────────────
+// Powers the "Resend a marketing piece" tab in the sponsor Composer.
+// Lists every marketing send that has actually been fired (so admin can
+// see what's already gone out) and fires a replay to one sponsor.
+
+export async function loadCatchUpSends() {
+  const data = await fetchJson('/api/gala/marketing-catch-up-list');
+  return data.sends || [];
+}
+
+export async function sendCatchUp(sponsorId, sendId) {
+  return fetchJson('/api/gala/marketing-catch-up-send', {
+    method: 'POST',
+    body: JSON.stringify({ sponsorId, sendId }),
+  });
+}

@@ -299,6 +299,15 @@ export function SponsorsView() {
           channel={composer.channel}
           onClose={() => setComposer(null)}
           onSend={handleSend}
+          onCatchUpSent={() => {
+            // Refresh sponsor list so the timeline picks up the new
+            // "Email sent — Catch-up …" row. Mirrors the same 800ms
+            // delay handleSend uses for custom sends — gives the
+            // marketing_send_log INSERT time to commit before the
+            // sponsors-with-tracking query reads it back.
+            setToast({ kind: 'success', text: 'Marketing piece sent' });
+            setTimeout(refresh, 800);
+          }}
         />
       )}
 
