@@ -72,6 +72,7 @@ export default function DinnerPicker({
         body: JSON.stringify({
           action: 'set_dinner',
           theater_id: assignment.theater_id,
+          showing_number: assignment.showing_number,
           row_label: assignment.row_label,
           seat_num: String(assignment.seat_num),
           dinner_choice: next,

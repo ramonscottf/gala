@@ -1708,6 +1708,7 @@ export function adaptPortalToMobileData(portal, theaterLayouts) {
     t.assignmentRows.push({
       seat_id: sid,
       theater_id: row.theater_id,
+      showing_number: showingNum,
       row_label: row.row_label,
       seat_num: row.seat_num,
       dinner_choice: row.dinner_choice || null,
@@ -2947,7 +2948,10 @@ function PortalInner({
   const onUnplace = async () => {
     if (!ticketSheet || !seats) return;
     try {
-      await seats.unplace(ticketSheet.theaterId, ticketSheet.seats);
+      // showingId required (May 11 2026 fix) — picked from the ticket's
+      // showingNumber which Portal already carries on every ticket.
+      const showingId = ticketSheet.showingNumber === 2 ? 'late' : 'early';
+      await seats.unplace(showingId, ticketSheet.theaterId, ticketSheet.seats);
       setTicketSheet(null);
     } catch {
       // pickError surfaced by useSeats; sheet stays open

@@ -48,6 +48,7 @@ export default function DinnerSheet({
         body: JSON.stringify({
           action: 'set_dinner',
           theater_id: seat.theaterId,
+          showing_number: seat.showingNumber,
           row_label: seat.row_label,
           seat_num: String(seat.seat_num),
           dinner_choice: value,
@@ -74,6 +75,7 @@ export default function DinnerSheet({
         body: JSON.stringify({
           action: 'set_dinner',
           theater_id: seat.theaterId,
+          showing_number: seat.showingNumber,
           row_label: seat.row_label,
           seat_num: String(seat.seat_num),
           dinner_choice: null,

@@ -3,31 +3,26 @@
 // Shape consumed by the lifted wizards:
 //   assigned[showingId][theaterId] = [{id, guestName?}]   // showingId = 'early'|'late'
 //   allSelfIds: Set<string>      // every seat ID belonging to this token
+//                                // ID is "showingNumber:row-seat" (showing-scoped)
 //   totalAssigned: number
 //   place(showingId, theaterId, seatIds[])  // POSTs each as 'finalize'
-//   unplace(theaterId, seatIds[])           // POSTs each as 'unfinalize'
+//   unplace(showingId, theaterId, seatIds[])           // POSTs each as 'unfinalize'
 //
 // Built from the API's myAssignments + myHolds arrays (rebuild on every
 // portal refresh so re-fetched state is the source of truth).
 //
-// Note: The /pick endpoint is single-seat per request with an action verb.
-// Batches happen client-side via Promise.all — the server checks each one
-// against the seat budget so a partial batch is not catastrophic.
+// Showing-aware (fixed May 11 2026): the seat row itself stores
+// showing_number, so we group by (showing_number, theater_id) instead
+// of assuming each theater hosts one showing. The Tanner Clinic incident
+// showed this assumption was wrong — Aud 8 hosts both early and late
+// Star Wars, and the old code was collapsing every late placement to
+// the early showing on write.
 
 import { useCallback, useMemo, useState } from 'react';
 import { config } from '../config.js';
 import { SHOWING_NUMBER_TO_ID, SHOWING_ID_TO_NUMBER } from './usePortal.js';
 
-function buildAssigned(myAssignments, myHolds, showtimes) {
-  // Index showtimes by theaterId → list of showing_number values that play
-  // there. A theater could (in principle) host both showings; the assignment
-  // row itself doesn't store showing_number, so we join via showtimes.
-  const showingsByTheater = {};
-  (showtimes || []).forEach((s) => {
-    if (!showingsByTheater[s.theater_id]) showingsByTheater[s.theater_id] = new Set();
-    showingsByTheater[s.theater_id].add(s.showing_number);
-  });
-
+function buildAssigned(myAssignments, myHolds) {
   const out = {};
   const push = (showingNumber, theaterId, id, guestName) => {
     const showingId = SHOWING_NUMBER_TO_ID[showingNumber] || `s${showingNumber}`;
@@ -38,11 +33,9 @@ function buildAssigned(myAssignments, myHolds, showtimes) {
 
   const place = (row) => {
     const id = `${row.row_label}-${row.seat_num}`;
-    const numbers = showingsByTheater[row.theater_id] || new Set([1]);
-    // If a theater hosts multiple showings, we associate the seat with the
-    // first showing the showtimes table lists for it. Realistically each
-    // theater plays one showing per night so this is a no-op.
-    const showingNumber = [...numbers][0];
+    // showing_number is on every assignment + hold row directly — read
+    // it from there instead of guessing from theater_id.
+    const showingNumber = Number(row.showing_number) || 1;
     push(showingNumber, row.theater_id, id, row.guest_name);
   };
   (myAssignments || []).forEach(place);
@@ -51,19 +44,22 @@ function buildAssigned(myAssignments, myHolds, showtimes) {
 }
 
 export function useSeats(portal, token, refresh) {
-  const showtimes = portal?.showtimes || [];
   const myAssignments = portal?.myAssignments || [];
   const myHolds = portal?.myHolds || [];
 
   const assigned = useMemo(
-    () => buildAssigned(myAssignments, myHolds, showtimes),
-    [myAssignments, myHolds, showtimes]
+    () => buildAssigned(myAssignments, myHolds),
+    [myAssignments, myHolds]
   );
 
   const allSelfIds = useMemo(() => {
     const s = new Set();
-    Object.values(assigned).forEach((byTheater) =>
-      Object.values(byTheater).forEach((arr) => arr.forEach((a) => s.add(a.id)))
+    // IDs are namespaced by showing so a sponsor with seats in Aud 8 at
+    // both early and late showings doesn't collapse to a single set.
+    Object.entries(assigned).forEach(([showingId, byTheater]) =>
+      Object.values(byTheater).forEach((arr) =>
+        arr.forEach((a) => s.add(`${showingId}:${a.id}`))
+      )
     );
     return s;
   }, [assigned]);
@@ -72,7 +68,8 @@ export function useSeats(portal, token, refresh) {
   const [pickError, setPickError] = useState(null);
 
   const callPick = useCallback(
-    async (action, theaterId, ids) => {
+    async (action, showingId, theaterId, ids) => {
+      const showing_number = SHOWING_ID_TO_NUMBER[showingId];
       const calls = ids.map((id) => {
         const dash = id.indexOf('-');
         const row_label = id.slice(0, dash);
@@ -80,7 +77,13 @@ export function useSeats(portal, token, refresh) {
         return fetch(`${config.apiBase}/api/gala/portal/${token}/pick`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action, theater_id: theaterId, row_label, seat_num }),
+          body: JSON.stringify({
+            action,
+            theater_id: theaterId,
+            showing_number,
+            row_label,
+            seat_num,
+          }),
         });
       });
       const responses = await Promise.all(calls);
@@ -98,13 +101,8 @@ export function useSeats(portal, token, refresh) {
         }
       }
       if (failed.length) {
-        // Dedupe: every seat in an at-capacity batch returns the same
-        // "You've already placed your full N seats" message. Showing it
-        // N times is just noise.
         const unique = [...new Set(failed)];
         const err = new Error(unique.join('; '));
-        // Tag the at-capacity case so the UI can show a friendly dialog
-        // instead of the raw server text.
         if (unique.length === 1 && /already placed your full/i.test(unique[0])) {
           err.code = 'AT_CAPACITY';
         }
@@ -116,15 +114,12 @@ export function useSeats(portal, token, refresh) {
 
   const place = useCallback(
     async (showingId, theaterId, seatIds) => {
-      // showingId is 'early'|'late' for symmetry with the design — not sent to
-      // the API (the API stores assignments per (theater, row, seat) and the
-      // showing is derivable via the showtimes table). Keeping the parameter
-      // so the lifted components don't need restructuring.
-      void SHOWING_ID_TO_NUMBER[showingId];
+      // showingId is required — it determines which showing's seat we
+      // write. Was previously voided here (legacy bug fixed May 11 2026).
       setPending(true);
       setPickError(null);
       try {
-        await callPick('finalize', theaterId, seatIds);
+        await callPick('finalize', showingId, theaterId, seatIds);
         await refresh();
       } catch (e) {
         setPickError(e);
@@ -137,11 +132,11 @@ export function useSeats(portal, token, refresh) {
   );
 
   const unplace = useCallback(
-    async (theaterId, seatIds) => {
+    async (showingId, theaterId, seatIds) => {
       setPending(true);
       setPickError(null);
       try {
-        await callPick('unfinalize', theaterId, seatIds);
+        await callPick('unfinalize', showingId, theaterId, seatIds);
         await refresh();
       } catch (e) {
         setPickError(e);

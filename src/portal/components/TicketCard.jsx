@@ -477,6 +477,7 @@ function SeatRow({ row, ticket, guest, onPickDinner, onInviteSeat }) {
 
   const seat = {
     theaterId: ticket.theaterId,
+    showingNumber: ticket.showingNumber,
     row_label: row.row_label,
     seat_num: row.seat_num,
     label,
