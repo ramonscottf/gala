@@ -788,12 +788,28 @@ export default function SeatPickSheet({
     if (didInitStepRef.current) return;
     if (!adaptedTheater) return;
     didInitStepRef.current = true;
-    // initialShowingNumber/initialMovieId from a Movie Detail CTA mean
-    // the caller already knows the movie + time, so we should land
-    // the user on the seats step too. Same idea: skip the picker, go
-    // straight to the seat map.
-    if (haveSelfHere || initialShowingNumber || initialMovieId) {
+    // Step-jump rules for callers passing initial context:
+    //
+    // - haveSelfHere (sponsor already has seats in this theater):
+    //   skip the picker, drop them on the seat map (Step 3) so they
+    //   can immediately tweak seat choices.
+    //
+    // - initialMovieId + initialShowingNumber (caller already knows
+    //   the movie AND the time, e.g. coming back to edit): same —
+    //   straight to Step 3.
+    //
+    // - initialMovieId only (caller knows the film but not the
+    //   showtime, e.g. tapping "Select seats for this film" on the
+    //   Movie Detail sheet): land on Step 2 (Time) so the user
+    //   explicitly picks a showtime. Previously we landed on Step 3
+    //   here, which silently used the default early showing — same
+    //   bug family as the May 11 2026 Tanner Clinic showing_number
+    //   incident (per-showing context dropped at a customer surface).
+    //   Scott caught it 2026-05-11.
+    if (haveSelfHere || (initialShowingNumber && initialMovieId)) {
       setStep(3);
+    } else if (initialMovieId) {
+      setStep(2);
     }
   }, [adaptedTheater, haveSelfHere, initialShowingNumber, initialMovieId]);
 

@@ -3823,14 +3823,27 @@ function PortalInner({
               : 'selectSeats'
           }
           onSelectSeatsForFilm={(scheduleEntry) => {
-            // Open SeatPickSheet preselected on this movie + showing.
-            // Movie id comes from movieDetail; showingNumber from the
-            // schedule entry the user saw on the sheet (when there's
-            // only one showing, scheduleEntry is implicit). If the
-            // schedule has multiple entries the sheet shows them all
-            // and the user picks one.
+            // Open SeatPickSheet preselected on this movie. We DO NOT
+            // pass through the schedule entry's showingNumber here,
+            // even when MovieDetailSheet hands us one — the Movie
+            // Detail flow is "I picked the film, now I pick the
+            // time," so the user should always land on Step 2 (Time).
+            //
+            // Previously this passed scheduleEntry?.showingNumber,
+            // which was always schedule[0] (Early) from the sheet's
+            // single-button CTA. SeatPickSheet then saw both ids and
+            // jumped straight to Step 3 with the early showing
+            // silently pre-picked — exactly the bug Scott caught for
+            // Paddington 2 on 2026-05-11. Same family as the Tanner
+            // Clinic showing_number incident: per-showing context
+            // being assumed instead of asked. Single-showing films
+            // are unaffected because Step 2 only renders one option
+            // and the user just taps Continue.
+            //
+            // scheduleEntry is intentionally unused but kept in the
+            // signature for back-compat with MovieDetailSheet.
             setSeatPickInitial({
-              showingNumber: scheduleEntry?.showingNumber || null,
+              showingNumber: null,
               movieId: movieDetail.id,
             });
             setMovieDetail(null);
