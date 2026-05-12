@@ -1769,12 +1769,20 @@ function getGuestName(key) {
   return a ? (typeof a === 'string' ? a : a.guest_name) : '';
 }
 
-/* ── API helpers ── */
-async function apiGet(theaterId) {
+/* ── API helpers ──
+ * showing_number is REQUIRED on all writes (May 11 2026 fix). The admin
+ * UI carries pickerState.currentShowingNumber; pass it explicitly here.
+ * Reads support an optional filter — when omitted, the API returns every
+ * showing for the theater (we use this for legacy/cross-showing views).
+ */
+async function apiGet(theaterId, showingNumber) {
   try {
-    const res = await fetch(`/api/gala/seating?theater_id=${theaterId}`, { credentials: 'same-origin' });
+    const url = showingNumber != null
+      ? `/api/gala/seating?theater_id=${theaterId}&showing_number=${showingNumber}`
+      : `/api/gala/seating?theater_id=${theaterId}`;
+    const res = await fetch(url, { credentials: 'same-origin' });
     if (!res.ok) {
-      console.warn(`[seating] GET /api/gala/seating?theater_id=${theaterId} → ${res.status}`);
+      console.warn(`[seating] GET ${url} → ${res.status}`);
       if (res.status === 401) {
         toast({ type: 'error', title: 'Session expired', message: 'Reload the page and log in again.' });
       }
@@ -1788,31 +1796,52 @@ async function apiGet(theaterId) {
   }
 }
 
-async function apiAssign(theaterId, rowLabel, seatNum, guestName, sponsorId) {
+async function apiAssign(theaterId, showingNumber, rowLabel, seatNum, guestName, sponsorId) {
   try {
     const res = await fetch('/api/gala/seating', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ theater_id: theaterId, row_label: rowLabel, seat_num: String(seatNum), guest_name: guestName, sponsor_id: sponsorId || null }),
+      body: JSON.stringify({
+        theater_id: theaterId,
+        showing_number: showingNumber,
+        row_label: rowLabel,
+        seat_num: String(seatNum),
+        guest_name: guestName,
+        sponsor_id: sponsorId || null,
+      }),
     });
     return res.ok;
   } catch { return false; }
 }
 
-async function apiUnassign(theaterId, rowLabel, seatNum) {
+async function apiUnassign(theaterId, showingNumber, rowLabel, seatNum) {
   try {
     const res = await fetch('/api/gala/seating', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ theater_id: theaterId, row_label: rowLabel, seat_num: String(seatNum) }),
+      body: JSON.stringify({
+        theater_id: theaterId,
+        showing_number: showingNumber,
+        row_label: rowLabel,
+        seat_num: String(seatNum),
+      }),
     });
     return res.ok;
   } catch { return false; }
 }
 
 /* ── Load assignments from D1 for a theater ── */
-async function loadAssignmentsFromAPI(theaterId) {
-  const rows = await apiGet(theaterId);
+/* ── Load assignments from D1 for a theater ──
+ * Scoped to the currently-selected showing. The admin's in-memory
+ * `assignments` map keys by `theaterId:row:seat` (no showing) — to keep
+ * that map consistent, we wipe and reload it whenever the showing
+ * toggles. The picker calls loadAssignmentsFromAPI on every showing
+ * switch so the chart never mixes showings.
+ */
+async function loadAssignmentsFromAPI(theaterId, showingNumber) {
+  // Resolve showing_number from picker state if caller didn't pass it.
+  const sn = showingNumber != null ? showingNumber : pickerState.currentShowingNumber;
+  const rows = await apiGet(theaterId, sn);
   if (!rows) return; // API unavailable, keep localStorage data
   // Clear existing assignments for this theater and reload from DB
   for (const key in assignments) {
@@ -2514,12 +2543,13 @@ async function doAssign() {
   const sponsorId = buyer?.id || null;
 
   if (name) {
-    // Assign via API, fall back to local
-    if (USE_API) await apiAssign(theaterId, rowLabel, seatNum, name, sponsorId);
+    // Assign via API, fall back to local. showing_number comes from
+    // pickerState — every assignment lives at a specific showing.
+    if (USE_API) await apiAssign(theaterId, pickerState.currentShowingNumber, rowLabel, seatNum, name, sponsorId);
     assignments[pendingSeat] = { guest_name: name, sponsor_id: sponsorId };
   } else {
     // Unassign via API
-    if (USE_API) await apiUnassign(theaterId, rowLabel, seatNum);
+    if (USE_API) await apiUnassign(theaterId, pickerState.currentShowingNumber, rowLabel, seatNum);
     delete assignments[pendingSeat];
   }
 

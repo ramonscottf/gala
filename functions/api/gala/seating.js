@@ -13,6 +13,7 @@ export async function onRequestGet(context) {
 
   const url = new URL(request.url);
   const theaterId = url.searchParams.get('theater_id');
+  const showingNumber = url.searchParams.get('showing_number');
   const isExport = url.searchParams.get('export') === 'true';
 
   // CSV export of all assignments
@@ -47,9 +48,23 @@ export async function onRequestGet(context) {
   // Fetch assignments for a specific theater
   if (!theaterId) return jsonError('theater_id required', 400);
 
-  const results = await env.GALA_DB.prepare(
-    'SELECT * FROM seat_assignments WHERE theater_id = ? ORDER BY row_label, seat_num'
-  ).bind(Number(theaterId)).all();
+  // Optional showing_number filter — when provided, return only that
+  // showing's assignments. When omitted, return all showings for the
+  // theater (legacy behavior; the admin UI now passes it explicitly).
+  let results;
+  if (showingNumber) {
+    results = await env.GALA_DB.prepare(
+      `SELECT * FROM seat_assignments
+         WHERE theater_id = ? AND showing_number = ?
+         ORDER BY row_label, seat_num`
+    ).bind(Number(theaterId), Number(showingNumber)).all();
+  } else {
+    results = await env.GALA_DB.prepare(
+      `SELECT * FROM seat_assignments
+         WHERE theater_id = ?
+         ORDER BY showing_number, row_label, seat_num`
+    ).bind(Number(theaterId)).all();
+  }
 
   return jsonOk({ assignments: results.results || [] }, 0);
 }
@@ -72,22 +87,27 @@ export async function onRequestPost(context) {
     return jsonError('Invalid JSON body', 400);
   }
 
-  const { theater_id, row_label, seat_num, guest_name, sponsor_id, monday_item_id, dinner_choice } = body;
+  const { theater_id, showing_number, row_label, seat_num, guest_name, sponsor_id, monday_item_id, dinner_choice } = body;
   if (!theater_id || !row_label || !seat_num || !guest_name) {
     return jsonError('theater_id, row_label, seat_num, and guest_name are required', 400);
+  }
+  if (showing_number == null || !Number.isFinite(Number(showing_number))) {
+    return jsonError('showing_number is required', 400);
   }
 
   try {
     await env.GALA_DB.prepare(
-      `INSERT INTO seat_assignments (theater_id, row_label, seat_num, guest_name, sponsor_id, dinner_choice, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `INSERT INTO seat_assignments
+         (theater_id, showing_number, row_label, seat_num, guest_name,
+          sponsor_id, dinner_choice, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
        ON CONFLICT(theater_id, showing_number, row_label, seat_num)
        DO UPDATE SET guest_name = excluded.guest_name,
                      sponsor_id = excluded.sponsor_id,
                      dinner_choice = COALESCE(excluded.dinner_choice, seat_assignments.dinner_choice),
                      updated_at = datetime('now')`
     ).bind(
-      Number(theater_id), row_label, seat_num, guest_name,
+      Number(theater_id), Number(showing_number), row_label, seat_num, guest_name,
       sponsor_id ? Number(sponsor_id) : null,
       dinner_choice || null
     ).run();
@@ -116,15 +136,20 @@ export async function onRequestDelete(context) {
     return jsonError('Invalid JSON body', 400);
   }
 
-  const { theater_id, row_label, seat_num } = body;
+  const { theater_id, showing_number, row_label, seat_num } = body;
   if (!theater_id || !row_label || !seat_num) {
     return jsonError('theater_id, row_label, and seat_num are required', 400);
+  }
+  if (showing_number == null || !Number.isFinite(Number(showing_number))) {
+    return jsonError('showing_number is required', 400);
   }
 
   try {
     const result = await env.GALA_DB.prepare(
-      'DELETE FROM seat_assignments WHERE theater_id = ? AND row_label = ? AND seat_num = ?'
-    ).bind(Number(theater_id), row_label, seat_num).run();
+      `DELETE FROM seat_assignments
+        WHERE theater_id = ? AND showing_number = ?
+          AND row_label = ? AND seat_num = ?`
+    ).bind(Number(theater_id), Number(showing_number), row_label, seat_num).run();
 
     return jsonOk({ ok: true, deleted: result.meta?.changes || 0 }, 0);
   } catch (err) {

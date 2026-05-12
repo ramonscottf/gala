@@ -21,9 +21,12 @@ export async function onRequestPost(context) {
   try { body = await request.json(); }
   catch { return jsonError('Invalid JSON', 400); }
 
-  const { theater_id, sponsor_id, assignments } = body;
+  const { theater_id, showing_number, sponsor_id, assignments } = body;
   if (!theater_id || !sponsor_id || !Array.isArray(assignments) || !assignments.length) {
     return jsonError('theater_id, sponsor_id, and assignments[] required', 400);
+  }
+  if (showing_number == null || !Number.isFinite(Number(showing_number))) {
+    return jsonError('showing_number is required', 400);
   }
 
   // Look up sponsor name for the guest_name column
@@ -54,13 +57,19 @@ export async function onRequestPost(context) {
     const guestName = `${baseLabel} — ${i + 1 + currentAssigned}`;
     try {
       await env.GALA_DB.prepare(`
-        INSERT INTO seat_assignments (theater_id, row_label, seat_num, guest_name, sponsor_id, updated_at)
-             VALUES (?, ?, ?, ?, ?, datetime('now'))
+        INSERT INTO seat_assignments
+          (theater_id, showing_number, row_label, seat_num,
+           guest_name, sponsor_id, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
         ON CONFLICT(theater_id, showing_number, row_label, seat_num)
              DO UPDATE SET guest_name = excluded.guest_name,
                            sponsor_id = excluded.sponsor_id,
                            updated_at = datetime('now')
-      `).bind(Number(theater_id), a.row_label, String(a.seat_num), guestName, Number(sponsor_id)).run();
+      `).bind(
+        Number(theater_id), Number(showing_number),
+        a.row_label, String(a.seat_num),
+        guestName, Number(sponsor_id),
+      ).run();
       results.succeeded += 1;
       results.seats.push({ row_label: a.row_label, seat_num: a.seat_num, guest_name: guestName });
     } catch (err) {
