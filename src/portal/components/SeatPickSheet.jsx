@@ -657,6 +657,14 @@ export default function SeatPickSheet({
           posterUrl: movie?.posterUrl || null,
           showLabel: showingsRich.find((s) => s.number === showingNumber)?.label || '',
           showTime: showingsRich.find((s) => s.number === showingNumber)?.time || '',
+          // Phase 5.14 (May 11 2026) — thread dinnerTime through so the
+          // welcome popup in CompletionCelebration shows the correct
+          // dinner+movie times for the chosen showing. Previously the
+          // popup was hardcoded to "Dinner 4:00, movie 4:30" which was
+          // wrong for late showings. Same bug class as the May 11
+          // Tanner Clinic showing_number incident — keep every per-
+          // showing field in scope.
+          dinnerTime: showingsRich.find((s) => s.number === showingNumber)?.dinnerTime || '',
           theaterName: theatersById[theaterId]?.name || `Theater ${theaterId}`,
         });
       }
