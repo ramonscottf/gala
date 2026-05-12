@@ -101,6 +101,57 @@ dinnerTime}` go together, every time.**
 template, has the new `welcome-modal-title` id. CF Pages picked
 up `Portal-BQ0PhpkM.js` and it's serving from production.
 
+### Phase 5.15 — Movie Detail "Select seats" lands on Time (2026-05-11)
+
+**Commit:** `2d99139` (live as `Portal-DyaMGFqD.js`)
+
+**Bug:** When a sponsor tapped "Select seats for this film" from a
+movie detail sheet, SeatPickSheet opened straight to Step 3 (Seats)
+with the early showing silently pre-picked. Two-showing films
+(Paddington 2, Mandalorian and Grogu) gave no obvious indication
+that the late showing was available — sponsors would commit seats
+on the early showing assuming it was the only option. Scott caught
+it 2026-05-11 on the Wicko test token while testing Paddington 2.
+
+**Why this is same-family:** Per-showing context being **assumed
+instead of asked** at a customer-facing surface. The DB layer
+(Phases 1–5) is correct, and the placement-time wiring
+(`onCommitted` in 5.14) is correct, but a different upstream
+surface — the entry callback from MovieDetailSheet — was passing
+`schedule[0].showingNumber` (always Early because schedule sorts
+ascending). SeatPickSheet's auto-advance rule then treated that
+as "caller knows the time" and skipped Step 2. **Lesson
+generalized: when only the film is known but the time is not,
+the user must be the one to pick. Don't infer a showtime from
+the data shape of a callback argument.**
+
+**Fix:**
+
+- `src/portal/Portal.jsx` `onSelectSeatsForFilm` handler: passes
+  `showingNumber: null` regardless of what MovieDetailSheet hands
+  the callback. The `scheduleEntry` arg is kept in the signature
+  for back-compat but no longer consumed.
+
+- `src/portal/components/SeatPickSheet.jsx` step-init `useEffect`
+  changed from "any initial id → Step 3" to:
+  - `haveSelfHere || (movieId && showingNumber)` → Step 3
+  - `movieId` only → Step 2
+  - else → Step 1
+  Comment block expanded to document the three callsites and
+  why each lands where it does.
+
+**Verified:** Built bundle has minified `showingNumber:null` baked
+in. Live as `Portal-DyaMGFqD.js`. Manual test path: tap film card
+on home → tap "Select seats for this film" → Step 2 Time picker
+shows Early + Late → tap one → Continue → Step 3 Seats for that
+auditorium. No more silent pre-pick.
+
+**Single-showing films are unaffected** — Step 2 still renders for
+them, but with only one option. User taps Continue and advances
+to seats. The extra tap is a small price for the clarity it buys
+on two-showing films, and consistent UX across all films is worth
+it.
+
 ---
 
 
