@@ -1,11 +1,11 @@
 ---
 title: showing_number end-to-end fix
-status: phases 1-4 shipped, awaiting smoke test + phase 5 (test harness)
+status: ✅ COMPLETE — all 5 phases shipped, regression test verified against production
 project: gala
 phase: bugfix (post-Tanner-Clinic incident)
 source_chat: 2026-05-11 Skippy session (Scott + Terra Cooper text exchange)
 created: 2026-05-11
-last_updated: 2026-05-11
+last_updated: 2026-05-12
 ---
 
 ## Status
@@ -14,18 +14,24 @@ last_updated: 2026-05-11
 - ✅ Phase 2 — read-path hotfix LIVE in production (`874285e`,
   `Portal-DTKs7jhM.js`). Terra Cooper's ticket card immediately showed
   correct showtimes from existing-correct DB data.
-- ✅ Phase 3 — sponsor portal write path fix committed and pushed
-  (`89b41fd`, new bundle `Portal-BTz3QoVF.js`). Migration 009 confirmed
-  already applied to production D1 before code push. pick.js fully
-  rewritten with showing_number threaded through every query.
-  useSeats.js stops voiding showingId; place/unplace require showingId.
-  DinnerPicker, DinnerSheet, TicketCard updated. Portal.jsx
-  assignmentRows carry showing_number.
-- ✅ Phase 4 — admin endpoints + admin chart fix committed and pushed
-  (`2632d7f`). seating.js GET/POST/DELETE and seating-bulk.js POST
-  require showing_number on writes, filter on reads. admin/seating.html
+- ✅ Phase 3 — sponsor portal write path fix LIVE (`89b41fd`,
+  `Portal-BTz3QoVF.js`). Migration 009 confirmed already applied to
+  production D1 before code push. pick.js fully rewritten with
+  showing_number threaded through every query. useSeats.js stops
+  voiding showingId. DinnerPicker, DinnerSheet, TicketCard updated.
+  Portal.jsx assignmentRows carry showing_number.
+- ✅ Phase 4 — admin endpoints + admin chart fix LIVE (`2632d7f`).
+  seating.js GET/POST/DELETE and seating-bulk.js POST require
+  showing_number on writes, filter on reads. admin/seating.html
   passes pickerState.currentShowingNumber through every API call.
-- ⏸️ Phase 5 — test harness + post-mortem doc pending.
+- ✅ Phase 5 — regression test + QA harness fixes + post-mortem
+  committed (`5ecdf00`). New `qa/showing-number.test.mjs` exercises
+  the exact bug pattern against live production; all 4 scenarios
+  passed (theater 7, seat A-1). QA helpers (`qa/lib/portal-api.js`,
+  `qa/api-stress.mjs`) updated to thread showing_number through —
+  was a latent bug that would have 400'd existing scenarios on
+  dual-showing theaters post-Phase 3. Post-mortem at
+  `docs/HANDOFF-2026-05-11-showing-number.md`.
 
 ## Acceptance verified live
 
@@ -36,21 +42,27 @@ last_updated: 2026-05-11
   - Aud 3 showing 1 (5:00 PM Breadwinner) — E8, E9
   - Aud 4 showing 2 (7:50 PM Breadwinner) — F1–F12
   - Aud 8 showing 2 (7:40 PM Star Wars) — E11–E16
+- Wicko (sponsor 89) end-to-end smoke test: hold + finalize + read +
+  unfinalize at Aud 8 showing 2 — all four operations correctly
+  scoped, DB row landed at showing 2, unfinalize removed only that
+  row. State clean after test.
+- Regression test `qa/showing-number.test.mjs` passed all 4 scenarios
+  against production.
 
-## Smoke test before declaring done
+## Followups (not blocking)
 
-1. Open Terra's portal as her (she should reload). Star Wars ticket
-   card shows "Late · 7:40 PM" / Aud 8. Breadwinner Aud 4 shows
-   "Late · 7:50 PM". Breadwinner Aud 3 shows "Early · 5:00 PM".
-2. Open Wicko sponsor portal (sponsor 80, token `dgu5lwmfmgtecky3`)
-   in a private window. Pick a seat at the LATE Star Wars showing in
-   Aud 8. Confirm DB row shows showing_number=2. Reload portal —
-   ticket card shows 7:40, not 4:50. Unplace — row deleted.
-3. Admin chart: tap "Aud 8 · 308 seats" with showing toggle on
-   EARLY. Terra's E11-E16 should NOT appear (they're on LATE). Flip
-   toggle to LATE — her seats appear.
+1. Memory update: Wicko Waypoint = sponsor 89, not 80. Token is
+   `sxnhcj7axdrllaku`. Scott to apply via `memory_user_edits`.
+2. Text Terra Cooper to refresh her tickets page.
+3. Audit `seat_blocks` and `vip_locks` write paths — schemas have
+   `showing_number` but no current code paths use them.
+4. Audit `_loveseat_pairs.js` partner-lookup helpers for showing-
+   awareness (used by pick.js — appears fine but worth a sweep).
+5. Schedule `npm run qa:stress` weekly against production with a
+   dedicated test token (currently ad-hoc).
 
 ---
+
 
 
 
