@@ -1,12 +1,58 @@
 ---
 title: showing_number end-to-end fix
-status: planning
+status: phases 1-4 shipped, awaiting smoke test + phase 5 (test harness)
 project: gala
 phase: bugfix (post-Tanner-Clinic incident)
 source_chat: 2026-05-11 Skippy session (Scott + Terra Cooper text exchange)
 created: 2026-05-11
 last_updated: 2026-05-11
 ---
+
+## Status
+
+- ✅ Phase 1 — plan + migration 009 committed (`3835806`)
+- ✅ Phase 2 — read-path hotfix LIVE in production (`874285e`,
+  `Portal-DTKs7jhM.js`). Terra Cooper's ticket card immediately showed
+  correct showtimes from existing-correct DB data.
+- ✅ Phase 3 — sponsor portal write path fix committed and pushed
+  (`89b41fd`, new bundle `Portal-BTz3QoVF.js`). Migration 009 confirmed
+  already applied to production D1 before code push. pick.js fully
+  rewritten with showing_number threaded through every query.
+  useSeats.js stops voiding showingId; place/unplace require showingId.
+  DinnerPicker, DinnerSheet, TicketCard updated. Portal.jsx
+  assignmentRows carry showing_number.
+- ✅ Phase 4 — admin endpoints + admin chart fix committed and pushed
+  (`2632d7f`). seating.js GET/POST/DELETE and seating-bulk.js POST
+  require showing_number on writes, filter on reads. admin/seating.html
+  passes pickerState.currentShowingNumber through every API call.
+- ⏸️ Phase 5 — test harness + post-mortem doc pending.
+
+## Acceptance verified live
+
+- Production seat_holds schema has showing_number column with
+  UNIQUE(theater_id, showing_number, row_label, seat_num).
+- gala.daviskids.org/sponsor/ serves Portal-BTz3QoVF.js.
+- Terra Cooper (sponsor 77) DB rows all on correct showings:
+  - Aud 3 showing 1 (5:00 PM Breadwinner) — E8, E9
+  - Aud 4 showing 2 (7:50 PM Breadwinner) — F1–F12
+  - Aud 8 showing 2 (7:40 PM Star Wars) — E11–E16
+
+## Smoke test before declaring done
+
+1. Open Terra's portal as her (she should reload). Star Wars ticket
+   card shows "Late · 7:40 PM" / Aud 8. Breadwinner Aud 4 shows
+   "Late · 7:50 PM". Breadwinner Aud 3 shows "Early · 5:00 PM".
+2. Open Wicko sponsor portal (sponsor 80, token `dgu5lwmfmgtecky3`)
+   in a private window. Pick a seat at the LATE Star Wars showing in
+   Aud 8. Confirm DB row shows showing_number=2. Reload portal —
+   ticket card shows 7:40, not 4:50. Unplace — row deleted.
+3. Admin chart: tap "Aud 8 · 308 seats" with showing toggle on
+   EARLY. Terra's E11-E16 should NOT appear (they're on LATE). Flip
+   toggle to LATE — her seats appear.
+
+---
+
+
 
 # showing_number end-to-end fix
 
