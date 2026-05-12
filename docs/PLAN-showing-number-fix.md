@@ -53,6 +53,7 @@ last_updated: 2026-05-12
 
 1. Memory update: Wicko Waypoint = sponsor 89, not 80. Token is
    `sxnhcj7axdrllaku`. Scott to apply via `memory_user_edits`.
+   **DONE 2026-05-11 (m27).**
 2. Text Terra Cooper to refresh her tickets page.
 3. Audit `seat_blocks` and `vip_locks` write paths — schemas have
    `showing_number` but no current code paths use them.
@@ -60,6 +61,45 @@ last_updated: 2026-05-12
    awareness (used by pick.js — appears fine but worth a sweep).
 5. Schedule `npm run qa:stress` weekly against production with a
    dedicated test token (currently ad-hoc).
+
+## Same-family fixes shipped after the core 5 phases
+
+### Phase 5.14 — Welcome popup showtime + UX fix (2026-05-11)
+
+**Commit:** `78a5dd8` (live as `Portal-BQ0PhpkM.js`)
+
+**Bug:** CompletionCelebration rendered a green "You're all set / See
+you on June 10" block stacked on top of the ticket card inside the
+same scroll container (not a real popup), AND the body text was
+hardcoded to `"Doors open at 4:00 PM. Dinner at 4:00, movie at 4:30."`
+Late-showing sponsors saw early-showing times right next to their
+late-showing ticket. Scott caught it on his Wicko test (Aud 8 Star
+Wars LATE 7:40 PM).
+
+**Why this is same-family as the Tanner Clinic incident:** Same
+class of bug — per-showing context dropped at a customer-facing
+surface. The DB writes are correct now (Phases 1–5), but
+`onCommitted` in SeatPickSheet was emitting `showTime` and
+`showLabel` without `dinnerTime`, so the prop chain into
+CompletionCelebration was incomplete. Even if you fix the visible
+copy, the missing prop forces a fallback. **Lesson generalized:
+when threading per-showing fields through React props, treat them
+as a fixed bundle — `{showingNumber, showLabel, showTime,
+dinnerTime}` go together, every time.**
+
+**Fix:**
+- `src/portal/components/CompletionCelebration.jsx` rewritten as
+  a proper dismissible modal overlay (fixed position, X button,
+  click-outside, ESC, "Got it" button). Body text derives from
+  `ticket.dinnerTime` + `ticket.showTime` with graceful fallback.
+- `src/portal/components/SeatPickSheet.jsx` `onCommitted` payload
+  now includes `dinnerTime` (sourced from `showingsRich`, same
+  pattern as the sibling `showTime` lookup).
+
+**Verified:** Built bundle has 0 occurrences of the hardcoded
+`"4:00 PM"` string, has the dynamic `Dinner at ${dinnerTime}`
+template, has the new `welcome-modal-title` id. CF Pages picked
+up `Portal-BQ0PhpkM.js` and it's serving from production.
 
 ---
 
