@@ -7,6 +7,17 @@
 //   GALA_FROM_EMAIL                         — optional, defaults gala@daviskids.org
 //   GALA_ADMIN_EMAIL                        — optional, reply-to + admin alerts
 
+// Canonical gala SMS hero image. Words-only Lights/Camera/TAKE ACTION! neon
+// masthead on a Megaplex marquee with kids watching. Single source of truth —
+// any gala SMS that has a Scott-approved hero attaches THIS URL, never any
+// other variant (Apr 28 2026 v6 branding). If the asset is ever rebuilt,
+// upload over this URL so every send picks it up. Cached 4h by R2/CF.
+export const GALA_SMS_HERO_URL = 'https://assets.daviskids.org/gala-2026/sms-hero.png';
+
+// sendSMS by default auto-attaches the gala hero image as MMS for any gala
+// send. To opt out (e.g. a 2FA code, a STOP confirmation), pass
+// { noHero: true }. To attach an additional/different media URL, pass
+// { mediaUrl: '...' } or { mediaUrl: ['...', '...'] }. Twilio takes up to 10.
 export async function sendSMS(env, to, body, options = {}) {
   if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN) {
     return { ok: false, error: 'Twilio not configured (missing SID/token)' };
@@ -32,13 +43,19 @@ export async function sendSMS(env, to, body, options = {}) {
   }
 
   // Optional MMS attachment — pass options.mediaUrl as string or array of URLs.
-  // For the gala, the canonical SMS hero is:
-  //   https://assets.daviskids.org/gala-2026/sms-hero.png
-  // Twilio accepts up to 10 MediaUrl params. We build the form body manually below
-  // to support multiple values for the same key.
-  const mediaUrls = options.mediaUrl
-    ? (Array.isArray(options.mediaUrl) ? options.mediaUrl : [options.mediaUrl]).slice(0, 10)
+  // Twilio accepts up to 10 MediaUrl params. We build the form body manually
+  // below to support multiple values for the same key.
+  //
+  // DEFAULT BEHAVIOR (May 13 2026): every gala SMS auto-attaches the canonical
+  // hero image (GALA_SMS_HERO_URL). Recipients see the kids/neon Take Action
+  // image alongside the message. To send a plain SMS without the hero (e.g.
+  // a STOP-confirmation or a 2FA code), pass { noHero: true }.
+  const extraMedia = options.mediaUrl
+    ? (Array.isArray(options.mediaUrl) ? options.mediaUrl : [options.mediaUrl])
     : [];
+  const mediaUrls = (options.noHero
+    ? extraMedia
+    : [GALA_SMS_HERO_URL, ...extraMedia]).slice(0, 10);
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`;
   const auth = btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`);

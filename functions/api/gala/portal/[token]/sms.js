@@ -17,6 +17,7 @@
 
 import { resolveToken, jsonError, jsonOk } from '../../_sponsor_portal.js';
 import { buildConfirmationSms } from '../../_confirmation_sms.js';
+import { sendSMS } from '../../_notify.js';
 
 function toE164(raw) {
   if (!raw) return null;
@@ -25,31 +26,6 @@ function toE164(raw) {
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
   if (String(raw).startsWith('+') && digits.length >= 10) return `+${digits}`;
   return null;
-}
-
-async function sendTwilioSms(env, { to, body }) {
-  if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN || !env.TWILIO_FROM_NUMBER) {
-    throw new Error('Twilio not configured');
-  }
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`;
-  const auth = btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`);
-  const form = new URLSearchParams();
-  form.set('To', to);
-  form.set('From', env.TWILIO_FROM_NUMBER);
-  form.set('Body', body);
-  const r = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: form.toString(),
-  });
-  const data = await r.json();
-  if (!r.ok) {
-    throw new Error(`Twilio ${r.status}: ${data.message || JSON.stringify(data)}`);
-  }
-  return data;
 }
 
 async function checkRateLimit(env, token) {
@@ -104,12 +80,9 @@ export async function onRequest({ request, env, params }) {
     const phone = toE164(body.phone || sponsor.phone);
     if (!phone) return jsonError('Valid phone required (sponsor record has no phone)', 400);
     const msg = await buildSponsorMessage(env, sponsor.id, sponsor.company, token);
-    try {
-      const tw = await sendTwilioSms(env, { to: phone, body: msg });
-      return jsonOk({ ok: true, sid: tw.sid, to: phone, kind: 'self' });
-    } catch (e) {
-      return jsonError(`SMS send failed: ${String(e.message || e)}`, 502);
-    }
+    const r = await sendSMS(env, phone, msg);
+    if (r.ok) return jsonOk({ ok: true, sid: r.sid, to: phone, kind: 'self', mms: r.mms });
+    return jsonError(`SMS send failed: ${r.error}`, 502);
   }
 
   if (kind === 'guest') {
@@ -134,12 +107,9 @@ export async function onRequest({ request, env, params }) {
       ``,
       `Questions? Reply or email smiggin@dsdmail.net`,
     ].filter(Boolean).join('\n');
-    try {
-      const tw = await sendTwilioSms(env, { to: phone, body: msg });
-      return jsonOk({ ok: true, sid: tw.sid, to: phone, kind: 'guest' });
-    } catch (e) {
-      return jsonError(`SMS send failed: ${String(e.message || e)}`, 502);
-    }
+    const r = await sendSMS(env, phone, msg);
+    if (r.ok) return jsonOk({ ok: true, sid: r.sid, to: phone, kind: 'guest', mms: r.mms });
+    return jsonError(`SMS send failed: ${r.error}`, 502);
   }
 
   return jsonError(`Unknown kind: ${kind}`, 400);
