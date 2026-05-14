@@ -20,6 +20,7 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import { BrandBlock, wrapBrandBlocks, unwrapBrandBlocks } from './brand-block.js';
 
 // ── Toolbar definitions ─────────────────────────────────────────────────────
 
@@ -135,6 +136,12 @@ function mount(targetDiv, initialHtml, onChange) {
   targetDiv.appendChild(wrap);
 
   // Build editor
+  // Pre-wrap any known styled blocks in the initial HTML so TipTap
+  // preserves them across edits. See src/admin/brand-block.js for the
+  // round-trip logic and why this is needed (StarterKit drops <table>
+  // and inline-styled <a> buttons otherwise).
+  const wrappedInitialHtml = wrapBrandBlocks(initialHtml || '');
+
   const editor = new Editor({
     element: editorHost,
     extensions: [
@@ -151,12 +158,15 @@ function mount(targetDiv, initialHtml, onChange) {
       Placeholder.configure({
         placeholder: 'Type your message…',
       }),
+      BrandBlock,
     ],
-    content: initialHtml || '',
+    content: wrappedInitialHtml,
     autofocus: false,
     onUpdate: () => {
       if (typeof onChange === 'function') {
-        debounced(onChange, editor.getHTML());
+        // Unwrap brand blocks back to their original HTML before handing
+        // the edited body to the admin save flow.
+        debounced(onChange, unwrapBrandBlocks(editor.getHTML()));
       }
     },
   });
@@ -207,10 +217,17 @@ function mount(targetDiv, initialHtml, onChange) {
   updateActive();
 
   return {
-    getHtml: () => sourceMode ? sourceTextarea.value : editor.getHTML(),
+    getHtml: () => {
+      // Source-mode textarea is raw HTML the admin typed by hand — pass
+      // through. The TipTap view goes through unwrap so brand blocks
+      // come back as their original inline HTML.
+      if (sourceMode) return sourceTextarea.value;
+      return unwrapBrandBlocks(editor.getHTML());
+    },
     setHtml: (html) => {
-      editor.commands.setContent(html || '', false);
-      sourceTextarea.value = html || '';
+      const safeHtml = html || '';
+      editor.commands.setContent(wrapBrandBlocks(safeHtml), false);
+      sourceTextarea.value = safeHtml;
     },
     destroy: () => {
       editor.destroy();
@@ -251,7 +268,9 @@ function runCommand(editor, b, toggleSource) {
 
 function toggleSourceMode(toSource, editor, editorHost, textarea, buttonNodes) {
   if (toSource) {
-    textarea.value = editor.getHTML();
+    // Going into HTML source view: show the unwrapped (canonical) HTML
+    // so the admin sees what'll actually go out in the email.
+    textarea.value = unwrapBrandBlocks(editor.getHTML());
     editorHost.style.display = 'none';
     textarea.style.display = '';
     // Disable everything except the source toggle
@@ -260,7 +279,9 @@ function toggleSourceMode(toSource, editor, editorHost, textarea, buttonNodes) {
       btn.style.opacity = def.cmd === '_toggleSource' ? '1' : '0.4';
     });
   } else {
-    editor.commands.setContent(textarea.value, false);
+    // Returning to rich view: re-wrap whatever the admin typed so brand
+    // blocks remain intact across the round trip.
+    editor.commands.setContent(wrapBrandBlocks(textarea.value), false);
     editorHost.style.display = '';
     textarea.style.display = 'none';
     buttonNodes.forEach(({ btn }) => {
