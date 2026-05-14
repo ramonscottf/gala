@@ -70,23 +70,35 @@ export async function onRequestGet(context) {
   //    We use the most recent row keyed by sent_at — this is the "current"
   //    invite the sponsor is engaging with. Older sends are visible in the
   //    expanded timeline via a separate fetch if Scott needs them.
-  const placeholders = sponsorIds.map(() => '?').join(',');
-  const latestSendsRes = await env.GALA_DB.prepare(`
-    SELECT msl.sponsor_id, msl.send_id, msl.send_run_id, msl.channel,
-           msl.recipient_email, msl.recipient_phone, msl.recipient_name,
-           msl.audience_label, msl.status, msl.subject, msl.body_preview,
-           msl.sent_at, msl.sent_by, msl.resend_id, msl.error_message
-      FROM marketing_send_log msl
-     INNER JOIN (
-       SELECT sponsor_id, MAX(sent_at) AS max_sent_at
-         FROM marketing_send_log
-        WHERE sponsor_id IN (${placeholders})
-          AND status IN ('sent', 'test')
-        GROUP BY sponsor_id
-     ) latest ON latest.sponsor_id = msl.sponsor_id AND latest.max_sent_at = msl.sent_at
-  `).bind(...sponsorIds).all();
+  //
+  // D1 caps bound SQL variables at 100 per statement. The active sponsor
+  // count crossed 100 on May 14 2026 (Bountiful High School added by Sherry,
+  // pushing the total to 101) which hit "too many SQL variables" and
+  // returned HTTP 500 on this endpoint. Chunk the IN-clause to dodge it.
+  // Chunk size 90 leaves headroom for any other bound params if this query
+  // gets extended in the future.
+  const SPONSOR_CHUNK_SIZE = 90;
+  const latestSends = [];
+  for (let i = 0; i < sponsorIds.length; i += SPONSOR_CHUNK_SIZE) {
+    const chunk = sponsorIds.slice(i, i + SPONSOR_CHUNK_SIZE);
+    const placeholders = chunk.map(() => '?').join(',');
+    const chunkRes = await env.GALA_DB.prepare(`
+      SELECT msl.sponsor_id, msl.send_id, msl.send_run_id, msl.channel,
+             msl.recipient_email, msl.recipient_phone, msl.recipient_name,
+             msl.audience_label, msl.status, msl.subject, msl.body_preview,
+             msl.sent_at, msl.sent_by, msl.resend_id, msl.error_message
+        FROM marketing_send_log msl
+       INNER JOIN (
+         SELECT sponsor_id, MAX(sent_at) AS max_sent_at
+           FROM marketing_send_log
+          WHERE sponsor_id IN (${placeholders})
+            AND status IN ('sent', 'test')
+          GROUP BY sponsor_id
+       ) latest ON latest.sponsor_id = msl.sponsor_id AND latest.max_sent_at = msl.sent_at
+    `).bind(...chunk).all();
+    for (const row of (chunkRes.results || [])) latestSends.push(row);
+  }
 
-  const latestSends = latestSendsRes.results || [];
   const sendBySponsorId = {};
   const resendIds = [];
   for (const row of latestSends) {
@@ -94,22 +106,27 @@ export async function onRequestGet(context) {
     if (row.resend_id) resendIds.push(row.resend_id);
   }
 
-  // 3. Pull all email events for the relevant resend_ids.
+  // 3. Pull all email events for the relevant resend_ids. Same 100-variable
+  //    chunking pattern — once sponsor count clears 100, this query has
+  //    the same risk if every sponsor has a resend_id.
   let eventsByResendId = {};
   if (resendIds.length > 0) {
-    const eventPlaceholders = resendIds.map(() => '?').join(',');
-    const eventsRes = await env.GALA_DB.prepare(`
-      SELECT resend_id, event_type, recipient_email, click_link,
-             bounce_type, bounce_reason, user_agent, ip_address,
-             occurred_at, received_at
-        FROM marketing_email_events
-       WHERE resend_id IN (${eventPlaceholders})
-       ORDER BY occurred_at ASC
-    `).bind(...resendIds).all();
-
-    for (const ev of (eventsRes.results || [])) {
-      if (!eventsByResendId[ev.resend_id]) eventsByResendId[ev.resend_id] = [];
-      eventsByResendId[ev.resend_id].push(ev);
+    const RESEND_CHUNK_SIZE = 90;
+    for (let i = 0; i < resendIds.length; i += RESEND_CHUNK_SIZE) {
+      const chunk = resendIds.slice(i, i + RESEND_CHUNK_SIZE);
+      const placeholders = chunk.map(() => '?').join(',');
+      const eventsRes = await env.GALA_DB.prepare(`
+        SELECT resend_id, event_type, recipient_email, click_link,
+               bounce_type, bounce_reason, user_agent, ip_address,
+               occurred_at, received_at
+          FROM marketing_email_events
+         WHERE resend_id IN (${placeholders})
+         ORDER BY occurred_at ASC
+      `).bind(...chunk).all();
+      for (const ev of (eventsRes.results || [])) {
+        if (!eventsByResendId[ev.resend_id]) eventsByResendId[ev.resend_id] = [];
+        eventsByResendId[ev.resend_id].push(ev);
+      }
     }
   }
 
