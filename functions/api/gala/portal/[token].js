@@ -6,7 +6,7 @@
 //   - their child delegations
 //   - ALL current seat assignments + active holds (for chart rendering)
 
-import { resolveToken, getSeatsAvailableToPlace, cleanupExpiredHolds, jsonError, jsonOk } from '../_sponsor_portal.js';
+import { resolveToken, getSeatsAvailableToPlace, cleanupExpiredHolds, getTierAccess, jsonError, jsonOk } from '../_sponsor_portal.js';
 import { normalizeSponsorTier } from '../_gala_data.js';
 
 export async function onRequestGet(context) {
@@ -19,6 +19,12 @@ export async function onRequestGet(context) {
 
   const resolved = await resolveToken(env, token);
   if (!resolved) return jsonError('Invalid or expired link', 404);
+
+  // Tier-window check (migration 010). Reported in the response payload so
+  // the client UI can pre-empt the write-side 403 with a friendly overlay
+  // ("Your window opens Tue May 18 at 8:00 AM"). The actual gate lives in
+  // pick.js / finalize.js / assign.js / delegate.js.
+  const tierAccess = await getTierAccess(env, resolved);
 
   const seatMath = await getSeatsAvailableToPlace(env, resolved);
 
@@ -155,6 +161,11 @@ export async function onRequestGet(context) {
 
   return jsonOk({
     identity,
+    tierAccess: {
+      open: tierAccess.open,
+      tier: tierAccess.tier,
+      opensAt: tierAccess.opens_at,
+    },
     seatMath,
     myAssignments: myAssignments.results || [],
     childDelegations: childDelegRows.map(d => ({

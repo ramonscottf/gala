@@ -113,6 +113,103 @@ export async function cleanupExpiredHolds(env) {
   ).bind(now).run();
 }
 
+/**
+ * Tier-window gate. Returns { open, opens_at, tier, error } for the given
+ * sponsor (or the parent sponsor of a delegation). Once opens_at is in the
+ * past for a given tier, that tier is open forever — nothing closes. The
+ * override_open column lets admins punch a hole without changing the global
+ * schedule (e.g. early-payer favor).
+ *
+ * Backed by the `tier_windows` table (migration 010, May 14 2026). If a
+ * sponsor's tier is missing from the table (or the table doesn't exist —
+ * fail-open during the transition window), the gate allows the action and
+ * logs a warning. We never *block* on a missing row because the gala write
+ * path predates the gate by months and we don't want a config gap to make
+ * the portal unusable.
+ *
+ * Why an open-future window doesn't block: the same `resolveToken` path
+ * powers post-finalization edits (changing a dinner, swapping a seat). Once
+ * a sponsor's tier is open, they keep access forever. So this function only
+ * answers the *first*-action question.
+ */
+import { normalizeSponsorTier } from './_gala_data.js';
+
+export async function getTierAccess(env, resolved) {
+  const rawTier = resolved.kind === 'sponsor'
+    ? resolved.record.sponsorship_tier
+    : resolved.record.parent_tier;
+  const tier = normalizeSponsorTier(rawTier) || rawTier || null;
+
+  if (!tier) {
+    // Missing tier on the sponsor record — fail-open and log. This is a
+    // data-quality issue, not a gate concern.
+    return { open: true, opens_at: null, tier: null, reason: 'no-tier-on-record' };
+  }
+
+  let row;
+  try {
+    row = await env.GALA_DB.prepare(
+      `SELECT tier, opens_at, override_open FROM tier_windows WHERE tier = ?`
+    ).bind(tier).first();
+  } catch (err) {
+    // tier_windows table missing (migration not yet applied to this D1).
+    // Fail-open during the transition. Logged so we can see it in the
+    // worker logs.
+    console.warn('[tier-gate] tier_windows query failed — failing open:', err.message);
+    return { open: true, opens_at: null, tier, reason: 'tier_windows-table-missing' };
+  }
+
+  if (!row) {
+    console.warn('[tier-gate] no tier_windows row for tier:', tier, '— failing open');
+    return { open: true, opens_at: null, tier, reason: 'tier-row-missing' };
+  }
+
+  if (row.override_open) {
+    return { open: true, opens_at: row.opens_at, tier, reason: 'override' };
+  }
+
+  const opensAtMs = Date.parse(row.opens_at);
+  if (!Number.isFinite(opensAtMs)) {
+    console.warn('[tier-gate] unparseable opens_at for tier:', tier, row.opens_at);
+    return { open: true, opens_at: row.opens_at, tier, reason: 'unparseable-opens_at' };
+  }
+
+  const open = Date.now() >= opensAtMs;
+  return { open, opens_at: row.opens_at, tier, reason: open ? 'on-schedule' : 'not-yet-open' };
+}
+
+/**
+ * Convenience wrapper for write endpoints. Returns a `Response` (jsonError)
+ * if the tier is not yet open, or `null` if the caller may proceed.
+ *
+ * Format the opens_at as a friendly Mountain-time string in the message so
+ * the sponsor knows when they CAN pick — not just that they currently can't.
+ * "Selection for Silver opens Mon, May 18 at 8:00 AM (Mountain). You'll get
+ *  an email when it does." beats an ambiguous 403.
+ */
+export function tierGateError(access) {
+  const tierLabel = access.tier || 'your tier';
+  const opensAt = access.opens_at ? new Date(access.opens_at) : null;
+  let when = '';
+  if (opensAt && !Number.isNaN(opensAt.getTime())) {
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Denver',
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    when = ` Seat selection for ${tierLabel} sponsors opens ${fmt.format(opensAt)} (Mountain). We'll email you a reminder when it does.`;
+  } else {
+    when = ` Seat selection for ${tierLabel} sponsors hasn't opened yet.`;
+  }
+  return jsonError(
+    `Your sponsor window is not open yet.${when} If you believe this is a mistake, please reply to your invitation email or contact Sherry Miggin (smiggin@dsdmail.net).`,
+    403,
+  );
+}
+
 /** JSON response helpers (mirror _auth.js style). */
 export function jsonError(message, status = 400) {
   return new Response(JSON.stringify({ error: message }), {

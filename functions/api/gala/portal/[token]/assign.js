@@ -21,7 +21,7 @@
 //                        AND delegation.parent_delegation_id is null
 //       delegation caller → delegation.parent_delegation_id matches caller.id
 
-import { resolveToken, jsonError, jsonOk } from '../../_sponsor_portal.js';
+import { resolveToken, getTierAccess, tierGateError, jsonError, jsonOk } from '../../_sponsor_portal.js';
 import { getLoveseatPartner } from '../../_loveseat_pairs.js';
 
 export async function onRequestPost(context) {
@@ -32,6 +32,10 @@ export async function onRequestPost(context) {
 
   const resolved = await resolveToken(env, token);
   if (!resolved) return jsonError('Invalid or expired link', 404);
+
+  // Tier-window gate (migration 010).
+  const access = await getTierAccess(env, resolved);
+  if (!access.open) return tierGateError(access);
 
   let body;
   try {

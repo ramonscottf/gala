@@ -27,6 +27,8 @@ import {
   resolveToken,
   getSeatsAvailableToPlace,
   cleanupExpiredHolds,
+  getTierAccess,
+  tierGateError,
   jsonError,
   jsonOk,
 } from '../../_sponsor_portal.js';
@@ -120,6 +122,12 @@ export async function onRequestPost(context) {
 
   const resolved = await resolveToken(env, token);
   if (!resolved) return jsonError('Invalid or expired link', 404);
+
+  // Tier-window gate (May 14 2026, migration 010). Once a sponsor's tier
+  // is open, they keep access forever — nothing closes. This check only
+  // blocks pre-open actions. See _sponsor_portal.js > getTierAccess.
+  const access = await getTierAccess(env, resolved);
+  if (!access.open) return tierGateError(access);
 
   let body;
   try { body = await request.json(); }

@@ -9,6 +9,8 @@ import {
   resolveToken,
   generateToken,
   getSeatsAvailableToPlace,
+  getTierAccess,
+  tierGateError,
   jsonError,
   jsonOk,
 } from '../../_sponsor_portal.js';
@@ -22,6 +24,11 @@ export async function onRequestPost(context) {
 
   const resolved = await resolveToken(env, token);
   if (!resolved) return jsonError('Invalid token', 404);
+
+  // Tier-window gate (migration 010). Delegation creates/resends/reclaims
+  // all require an open tier — they're all sponsor-active operations.
+  const access = await getTierAccess(env, resolved);
+  if (!access.open) return tierGateError(access);
 
   let body;
   try { body = await request.json(); }
@@ -180,6 +187,10 @@ export async function onRequestDelete(context) {
 
   const resolved = await resolveToken(env, token);
   if (!resolved) return jsonError('Invalid token', 404);
+
+  // Tier-window gate (migration 010).
+  const access = await getTierAccess(env, resolved);
+  if (!access.open) return tierGateError(access);
 
   const url = new URL(request.url);
   const delegationId = Number(url.searchParams.get('delegation_id'));

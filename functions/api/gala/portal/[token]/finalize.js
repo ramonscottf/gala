@@ -2,7 +2,7 @@
 // Called when the sponsor/delegate clicks "Done" — delivers QR code + confirmation
 // via email and SMS. Does NOT prevent further edits (seats remain editable until June 9).
 
-import { resolveToken, jsonError, jsonOk } from '../../_sponsor_portal.js';
+import { resolveToken, getTierAccess, tierGateError, jsonError, jsonOk } from '../../_sponsor_portal.js';
 import { sendSMS, sendEmail } from '../../_notify.js';
 import { buildConfirmationSms } from '../../_confirmation_sms.js';
 
@@ -14,6 +14,11 @@ export async function onRequestPost(context) {
 
   const resolved = await resolveToken(env, token);
   if (!resolved) return jsonError('Invalid token', 404);
+
+  // Tier-window gate (migration 010). Block finalize if the sponsor's
+  // tier isn't yet open.
+  const access = await getTierAccess(env, resolved);
+  if (!access.open) return tierGateError(access);
 
   // Load current assignments for this scope.
   //
