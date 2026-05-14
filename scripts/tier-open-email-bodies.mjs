@@ -28,22 +28,98 @@
 // portal. (Several existing bodies — s5, s9 — pointed at the obsolete
 // daviskids.org/gala-seats/{TOKEN} which 404s. Fixed in this pass.)
 
-const GRADIENT_BUTTON = (label = 'Make selections →') => `<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin:28px auto;">
+// ─── Gradient CTA button ───────────────────────────────────────────
+// Bulletproof email-safe gradient. Outlook gets the solid red fallback,
+// every modern client renders the blue→red brand gradient.
+const GRADIENT_BUTTON = (label = 'Make my selections →') => `<table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style="margin:28px auto;">
   <tr>
     <td align="center" bgcolor="#c8102e" style="border-radius:10px;background:#c8102e;background-image:linear-gradient(90deg,#0066ff 0%,#c8102e 100%);">
-      <a href="https://gala.daviskids.org/sponsor/{TOKEN}" target="_blank" style="display:inline-block;padding:16px 40px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;font-weight:800;letter-spacing:0.6px;color:#ffffff !important;text-decoration:none;border-radius:10px;background:#c8102e;background-image:linear-gradient(90deg,#0066ff 0%,#c8102e 100%);">${label}</a>
+      <a href="https://gala.daviskids.org/sponsor/{TOKEN}" target="_blank" style="display:inline-block;padding:18px 44px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;font-weight:800;letter-spacing:0.6px;color:#ffffff !important;text-decoration:none;border-radius:10px;background:#c8102e;background-image:linear-gradient(90deg,#0066ff 0%,#c8102e 100%);">${label}</a>
     </td>
   </tr>
 </table>`;
 
-const MEAL_LINE = `<strong><u>meal</u></strong> (French dip sandwich, GF chicken salad, vegetarian, and kid's meal)`;
+// ─── "Here's what to pick" — visual checklist of the 4 main choices ───
+// Replaces Kara's original "three main choices" paragraph. Same content,
+// scannable layout — each row is one action item with an icon and a
+// one-line clarifier. The four items: movie, showtime, seats, meals.
+// Built as a nested table so it renders the same in Outlook 2016 as it
+// does in Apple Mail.
+const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1b3d;font-weight:700;">Here's what you'll pick:</p>
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#ffffff;border:1px solid #d8dde8;border-radius:10px;margin:0 0 8px;">
+  <tr>
+    <td style="padding:14px 18px;border-bottom:1px solid #eef0f5;">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">🎬</td>
+          <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
+            <strong style="color:#0d1b3d;">Movie</strong> — four choices, two showings
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:14px 18px;border-bottom:1px solid #eef0f5;">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">🕓</td>
+          <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
+            <strong style="color:#0d1b3d;">Showtime</strong> — 4:30 PM or 7:15 PM
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:14px 18px;border-bottom:1px solid #eef0f5;">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">💺</td>
+          <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
+            <strong style="color:#0d1b3d;">Seats</strong> — pick your exact seats in your auditorium
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:14px 18px;">
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">🍽️</td>
+          <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
+            <strong style="color:#0d1b3d;">Meals</strong> — French dip sandwich, GF chicken salad, vegetarian, or kid's meal
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
 
-// The "three choices" paragraph is identical across tiers — preserves
-// Kara's verbatim phrasing including the underline emphasis on the
-// three nouns. Only the dish list updates to current menu.
-const THREE_CHOICES_P = `<p>You're making <strong>three main choices</strong>: <strong><u>session</u></strong> (4:30 PM or 7:15 PM), <strong><u>movie</u></strong> (four choices), and ${MEAL_LINE}.</p>`;
+// ─── "Bringing guests?" — delegation callout ──────────────────────
+// Soft yellow accent strip (brand yellow #ffb400 on a warm tint). Explains
+// the three ways to handle guests, in order of how often sponsors use them.
+const GUESTS_BOX = `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#fffaf0;border:1px solid #f4d68a;border-left:4px solid #ffb400;border-radius:10px;margin:18px 0;">
+  <tr><td style="padding:16px 20px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+    <p style="margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:1.2px;color:#8a5a00;text-transform:uppercase;">🎟️ Bringing guests?</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:21px;color:#1a1a1a;">Three ways to do it — your call:</p>
+    <ul style="margin:0;padding-left:20px;font-size:14px;line-height:22px;color:#1a1a1a;">
+      <li><strong>Pick everything yourself</strong> — seats and meals for your whole group.</li>
+      <li><strong>Invite each guest by name</strong> — they get their own link to pick their seat, meal, and movie. We'll send them their own ticket.</li>
+      <li><strong>Mix &amp; match</strong> — choose some now and invite others to choose for themselves later.</li>
+    </ul>
+  </td></tr>
+</table>`;
 
-const BOOKER_P = `<p>If you have questions while you're making selections, your digital assistant <strong>Booker</strong> can be found in the bottom right-hand corner of your screen. You may direct any further questions to <strong>Scott Foster</strong> (technology) or <strong>Sherry Miggin</strong> (sponsorship) using the contact information below.</p>`;
+// ─── FAQ link ─────────────────────────────────────────────────────
+const FAQ_LINE = `<p style="margin:14px 0 0;font-size:13px;color:#475569;text-align:center;">Want more details before you click? <a href="https://gala.daviskids.org/faq/" style="color:#0066ff;font-weight:600;text-decoration:underline;">Visit the FAQ →</a></p>`;
+
+// ─── Booker / contact handoff ─────────────────────────────────────
+// Tightened from Kara's original — moved Booker into one sentence so it
+// doesn't compete with the checklist + guests box visually. Sherry +
+// Scott contact info lives in the email footer (galaEmailHtml wrapper).
+const BOOKER_P = `<p style="margin:18px 0 0;font-size:14px;color:#475569;">Questions while you're picking? <strong>Booker</strong>, your digital assistant, is in the bottom-right of every screen — or contact Sherry or Scott using the info below.</p>`;
 
 const FEEDBACK_P_FIRST_GROUPS = `<p>We appreciate you being among the first to try this new platform and would love to hear your feedback so we can make adjustments that will improve the experience for all our guests. 🎬</p>`;
 
@@ -60,13 +136,17 @@ export const PLATINUM_BODY = `<h3 style="margin:0 0 16px;font-size:18px;color:#0
 
 <p>The link below is private and tied to your sponsorship. The interface allows you the option to select seats and meals for yourself, select on behalf of your guests, or allow your guests to select for themselves.</p>
 
-${THREE_CHOICES_P}
+${CHOICES_CHECKLIST}
 
-${GRADIENT_BUTTON('Make selections →')}
+${GRADIENT_BUTTON('Make my selections →')}
+
+${FAQ_LINE}
+
+${GUESTS_BOX}
 
 ${BOOKER_P}
 
-<p><strong>🔓 Ticket selection opens for the next group on May 14th</strong>, so act quickly to secure your preferred seats!</p>
+<p style="margin-top:18px;"><strong>🔓 Ticket selection opens for the next group on May 14th</strong>, so act quickly to secure your preferred seats!</p>
 
 ${FEEDBACK_P_FIRST_GROUPS}
 
@@ -79,13 +159,17 @@ export const GOLD_BODY = `<h3 style="margin:0 0 16px;font-size:18px;color:#0d1b3
 
 <p>The link below is private and tied to your sponsorship. The interface allows you the option to select seats and meals for yourself, select on behalf of your guests, or allow your guests to select for themselves.</p>
 
-${THREE_CHOICES_P}
+${CHOICES_CHECKLIST}
 
-${GRADIENT_BUTTON('Make selections →')}
+${GRADIENT_BUTTON('Make my selections →')}
+
+${FAQ_LINE}
+
+${GUESTS_BOX}
 
 ${BOOKER_P}
 
-<p><strong>🔓 Ticket selection opens for the next group on May 18th</strong>, so act quickly to secure your preferred seats!</p>
+<p style="margin-top:18px;"><strong>🔓 Ticket selection opens for the next group on May 18th</strong>, so act quickly to secure your preferred seats!</p>
 
 ${FEEDBACK_P_FIRST_GROUPS}
 
@@ -98,13 +182,17 @@ export const SILVER_BODY = `<h3 style="margin:0 0 16px;font-size:18px;color:#0d1
 
 <p>The link below is private and tied to your sponsorship. The interface allows you the option to select seats and meals for yourself, select on behalf of your guests, or allow your guests to select for themselves.</p>
 
-${THREE_CHOICES_P}
+${CHOICES_CHECKLIST}
 
-${GRADIENT_BUTTON('Make selections →')}
+${GRADIENT_BUTTON('Make my selections →')}
+
+${FAQ_LINE}
+
+${GUESTS_BOX}
 
 ${BOOKER_P}
 
-<p><strong>🔓 Ticket selection opens for the next group on May 20th</strong>, so act quickly to secure your preferred seats!</p>
+<p style="margin-top:18px;"><strong>🔓 Ticket selection opens for the next group on May 20th</strong>, so act quickly to secure your preferred seats!</p>
 
 ${FEEDBACK_P_LATER_GROUPS}
 
@@ -117,13 +205,17 @@ export const BRONZE_BODY = `<h3 style="margin:0 0 16px;font-size:18px;color:#0d1
 
 <p>The link below is private and tied to your sponsorship. The interface allows you the option to select seats and meals for yourself, select on behalf of your guests, or allow your guests to select for themselves.</p>
 
-${THREE_CHOICES_P}
+${CHOICES_CHECKLIST}
 
-${GRADIENT_BUTTON('Make selections →')}
+${GRADIENT_BUTTON('Make my selections →')}
+
+${FAQ_LINE}
+
+${GUESTS_BOX}
 
 ${BOOKER_P}
 
-<p><strong>🔓 Ticket selection opens for Friends &amp; Family on May 25th</strong>, so act quickly to secure your preferred seats!</p>
+<p style="margin-top:18px;"><strong>🔓 Ticket selection opens for Friends &amp; Family on May 25th</strong>, so act quickly to secure your preferred seats!</p>
 
 ${FEEDBACK_P_LATER_GROUPS}
 
@@ -136,32 +228,40 @@ export const FRIENDS_FAMILY_BODY = `<h3 style="margin:0 0 16px;font-size:18px;co
 
 <p>The link below is private and tied to your reservation. The interface allows you the option to select seats and meals for yourself, select on behalf of your guests, or allow your guests to select for themselves.</p>
 
-${THREE_CHOICES_P}
+${CHOICES_CHECKLIST}
 
-${GRADIENT_BUTTON('Make selections →')}
+${GRADIENT_BUTTON('Make my selections →')}
+
+${FAQ_LINE}
+
+${GUESTS_BOX}
 
 ${BOOKER_P}
 
-<p><strong>🔓 Ticket selection opens for individual ticket holders on May 28th</strong>, so act quickly to secure your preferred seats!</p>
+<p style="margin-top:18px;"><strong>🔓 Ticket selection opens for individual ticket holders on May 28th</strong>, so act quickly to secure your preferred seats!</p>
 
 ${FEEDBACK_P_LATER_GROUPS}
 
 ${SIGN_OFF}`;
 
 // ────────────────────────────────────────────────────────────────────
-//  INDIVIDUAL SEATS — opens May 28 (the last group, so no "next group")
+//  INDIVIDUAL SEATS — opens May 28 (last group, so no "next group")
 // ────────────────────────────────────────────────────────────────────
 export const INDIVIDUAL_SEATS_BODY = `<h3 style="margin:0 0 16px;font-size:18px;color:#0d1b3d;">🎟️ <strong>Hello, and welcome!</strong> We are so grateful for your participation in this year's gala and are excited to open ticket selection to you and your guests.</h3>
 
 <p>The link below is private and tied to your reservation. The interface allows you the option to select seats and meals for yourself, select on behalf of your guests, or allow your guests to select for themselves.</p>
 
-${THREE_CHOICES_P}
+${CHOICES_CHECKLIST}
 
-${GRADIENT_BUTTON('Make selections →')}
+${GRADIENT_BUTTON('Make my selections →')}
+
+${FAQ_LINE}
+
+${GUESTS_BOX}
 
 ${BOOKER_P}
 
-<p><strong>🎬 Seat selection is now open to everyone</strong> — act quickly to secure your preferred seats. The gala is <strong>June 10th</strong>, and seats are first-come, first-served from here on out!</p>
+<p style="margin-top:18px;"><strong>🎬 Seat selection is now open to everyone</strong> — act quickly to secure your preferred seats. The gala is <strong>June 10th</strong>, and seats are first-come, first-served from here on out!</p>
 
 ${FEEDBACK_P_LATER_GROUPS}
 
