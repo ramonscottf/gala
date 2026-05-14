@@ -45,7 +45,7 @@ const GRADIENT_BUTTON = (label = 'Make my selections →') => `<table role="pres
 // one-line clarifier. The four items: movie, showtime, seats, meals.
 // Built as a nested table so it renders the same in Outlook 2016 as it
 // does in Apple Mail.
-const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1b3d;font-weight:700;">Here's what you'll pick:</p>
+const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1b3d;font-weight:700;">Here's what you'll select:</p>
 <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#ffffff;border:1px solid #d8dde8;border-radius:10px;margin:0 0 8px;">
   <tr>
     <td style="padding:14px 18px;border-bottom:1px solid #eef0f5;">
@@ -53,7 +53,7 @@ const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1
         <tr>
           <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">🎬</td>
           <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
-            <strong style="color:#0d1b3d;">Movie</strong> — four choices, two showings
+            <strong style="color:#0d1b3d;">Movie</strong>
           </td>
         </tr>
       </table>
@@ -65,7 +65,7 @@ const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1
         <tr>
           <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">🕓</td>
           <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
-            <strong style="color:#0d1b3d;">Showtime</strong> — 4:30 PM or 7:15 PM
+            <strong style="color:#0d1b3d;">Session</strong> — 4:30 PM or 7:15 PM
           </td>
         </tr>
       </table>
@@ -77,7 +77,7 @@ const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1
         <tr>
           <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">💺</td>
           <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
-            <strong style="color:#0d1b3d;">Seats</strong> — pick your exact seats in your auditorium
+            <strong style="color:#0d1b3d;">Seats</strong> — select your exact seats in the auditorium
           </td>
         </tr>
       </table>
@@ -107,9 +107,9 @@ const GUESTS_BOX = `<table role="presentation" border="0" cellpadding="0" cellsp
     <p style="margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:1.4px;color:#c8102e;text-transform:uppercase;">🎟️ Bringing guests?</p>
     <p style="margin:0 0 12px;font-size:14px;line-height:21px;color:#1a1a1a;">Three ways to do it — your call:</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:22px;color:#1a1a1a;">
-      <li style="margin-bottom:6px;"><strong style="color:#0d1b3d;">Pick everything yourself</strong> — seats and meals for your whole group.</li>
-      <li style="margin-bottom:6px;"><strong style="color:#0d1b3d;">Invite each guest by name</strong> — they get their own link to pick their seat, meal, and movie. We'll send them their own ticket.</li>
-      <li><strong style="color:#0d1b3d;">Mix &amp; match</strong> — choose some now and invite others to choose for themselves later.</li>
+      <li style="margin-bottom:6px;"><strong style="color:#0d1b3d;">Select everything yourself</strong> — seats and meals for your whole group.</li>
+      <li style="margin-bottom:6px;"><strong style="color:#0d1b3d;">Invite each guest by name</strong> — they get their own link to select their seat, meal, and movie. We'll send them their own ticket.</li>
+      <li><strong style="color:#0d1b3d;">Mix &amp; match</strong> — make some selections yourself right now and invite others to choose for themselves later.</li>
     </ul>
   </td></tr>
   <tr><td height="6" style="height:6px;line-height:6px;font-size:0;background:#0066ff;background:linear-gradient(90deg,#0066ff 0%,#c8102e 100%);" bgcolor="#0066ff">&nbsp;</td></tr>
@@ -128,8 +128,7 @@ const FEEDBACK_P_FIRST_GROUPS = `<p>We appreciate you being among the first to t
 
 const FEEDBACK_P_LATER_GROUPS = `<p>We'd love to hear your feedback as you use the new platform — every note helps us improve the experience for our guests. 🎬</p>`;
 
-const SIGN_OFF = `<p><strong>Can't wait to see you at the movies! 🎟️🍿</strong></p>
-<p style="color:#475569;font-size:13px;">— Sherry &amp; Kara</p>`;
+const SIGN_OFF = `<p><strong>Can't wait to see you at the movies! 🎟️🍿</strong></p>`;
 
 // ────────────────────────────────────────────────────────────────────
 //  PLATINUM — already sent May 11. Re-rendered here for consistency
