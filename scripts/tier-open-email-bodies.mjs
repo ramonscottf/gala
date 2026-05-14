@@ -89,7 +89,7 @@ const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1
         <tr>
           <td width="36" valign="top" style="font-size:22px;line-height:24px;padding-right:10px;">🍽️</td>
           <td valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a1a;font-size:15px;line-height:22px;">
-            <strong style="color:#0d1b3d;">Meals</strong> — French dip sandwich, GF garden salad with chicken, vegetarian, or kid's meal
+            <strong style="color:#0d1b3d;">Meals</strong> — French dip sandwich, GF green salad with grilled chicken, vegetarian, or kid's meal
           </td>
         </tr>
       </table>
