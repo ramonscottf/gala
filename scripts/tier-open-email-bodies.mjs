@@ -98,18 +98,21 @@ const CHOICES_CHECKLIST = `<p style="margin:18px 0 8px;font-size:15px;color:#0d1
 </table>`;
 
 // ─── "Bringing guests?" — delegation callout ──────────────────────
-// Soft yellow accent strip (brand yellow #ffb400 on a warm tint). Explains
-// the three ways to handle guests, in order of how often sponsors use them.
-const GUESTS_BOX = `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background:#fffaf0;border:1px solid #f4d68a;border-left:4px solid #ffb400;border-radius:10px;margin:18px 0;">
-  <tr><td style="padding:16px 20px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-    <p style="margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:1.2px;color:#8a5a00;text-transform:uppercase;">🎟️ Bringing guests?</p>
-    <p style="margin:0 0 10px;font-size:14px;line-height:21px;color:#1a1a1a;">Three ways to do it — your call:</p>
+// Brand red→blue gradient strips top + bottom, white card body. Matches
+// the masthead's neon-bar treatment so it reads as an in-email featured
+// block instead of just another paragraph.
+const GUESTS_BOX = `<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin:18px 0;border-radius:10px;overflow:hidden;border:1px solid #d8dde8;">
+  <tr><td height="6" style="height:6px;line-height:6px;font-size:0;background:#c8102e;background:linear-gradient(90deg,#c8102e 0%,#0066ff 100%);" bgcolor="#c8102e">&nbsp;</td></tr>
+  <tr><td bgcolor="#ffffff" style="background:#ffffff;padding:18px 22px 20px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+    <p style="margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:1.4px;color:#c8102e;text-transform:uppercase;">🎟️ Bringing guests?</p>
+    <p style="margin:0 0 12px;font-size:14px;line-height:21px;color:#1a1a1a;">Three ways to do it — your call:</p>
     <ul style="margin:0;padding-left:20px;font-size:14px;line-height:22px;color:#1a1a1a;">
-      <li><strong>Pick everything yourself</strong> — seats and meals for your whole group.</li>
-      <li><strong>Invite each guest by name</strong> — they get their own link to pick their seat, meal, and movie. We'll send them their own ticket.</li>
-      <li><strong>Mix &amp; match</strong> — choose some now and invite others to choose for themselves later.</li>
+      <li style="margin-bottom:6px;"><strong style="color:#0d1b3d;">Pick everything yourself</strong> — seats and meals for your whole group.</li>
+      <li style="margin-bottom:6px;"><strong style="color:#0d1b3d;">Invite each guest by name</strong> — they get their own link to pick their seat, meal, and movie. We'll send them their own ticket.</li>
+      <li><strong style="color:#0d1b3d;">Mix &amp; match</strong> — choose some now and invite others to choose for themselves later.</li>
     </ul>
   </td></tr>
+  <tr><td height="6" style="height:6px;line-height:6px;font-size:0;background:#0066ff;background:linear-gradient(90deg,#0066ff 0%,#c8102e 100%);" bgcolor="#0066ff">&nbsp;</td></tr>
 </table>`;
 
 // ─── FAQ link ─────────────────────────────────────────────────────
