@@ -1,0 +1,15 @@
+name: Skippy Capture
+
+# Calls the org-level reusable workflow.
+# Logic lives at ramonscottf/.github/.github/workflows/skippy-capture.yml
+# Phase 4.1.1 — see ramonscottf/skippy-plans
+
+on:
+  push:
+    branches: ['**']
+
+jobs:
+  capture:
+    uses: ramonscottf/.github/.github/workflows/skippy-capture.yml@main
+    secrets:
+      SKIPPY_CAPTURE_TOKEN: ${{ secrets.SKIPPY_CAPTURE_TOKEN }}
