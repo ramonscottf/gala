@@ -127,8 +127,14 @@ function PortalContainer() {
 }
 
 export default function App() {
+  // The <main> wrapper used to set height: 100dvh to lock the app-shell
+  // portal (boarding-pass card + glass tab bar managed their own scroll
+  // regions inside it). The v2 soft-website portal is a normal scrolling
+  // page — there's nothing to lock — so the wrapper just supplies the
+  // a11y landmark with min-height filling the viewport for short pages
+  // (loading/error states). Natural document scroll otherwise.
   return (
-    <main id="main-content" style={{ height: '100dvh' }}>
+    <main id="main-content" style={{ minHeight: '100dvh' }}>
       <Routes>
         <Route path="/:token" element={<PortalContainer />} />
         <Route path="/:token/seats" element={<PortalContainer />} />

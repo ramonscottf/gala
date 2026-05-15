@@ -43,16 +43,12 @@
   );
 }
 
-/* Reset against the SPA's host main element — App.jsx wraps everything
-   in <main style="height: 100dvh"> which would clip our scroll page.
-   Override on body when the v2 shell is mounted. */
-body:has(.p2-shell) {
+/* Reset against the SPA's host main element. App.jsx sets the wrapper
+   to min-height: 100dvh (no longer hard-locked to 100dvh) so the
+   document scrolls naturally. Body margin is normalized here. */
+body {
   margin: 0;
   background: var(--p2-navy-deep);
-}
-body:has(.p2-shell) #main-content {
-  height: auto !important;
-  min-height: 100dvh;
 }
 
 .p2-shell {
