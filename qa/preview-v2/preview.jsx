@@ -5,6 +5,7 @@
 // Set `?fresh=1` for a fresh sponsor (no placed seats, window not open).
 // Set `?done=1` for "all placed" state.
 
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import PortalShellV2 from '../../src/portal-v2/PortalShell.jsx';
@@ -207,15 +208,27 @@ const noopRefresh = async () => mockPortal;
 
 const initialPath = SEATS_OPEN ? '/preview-token/seats' : '/preview-token';
 
-createRoot(document.getElementById('root')).render(
-  <MemoryRouter initialEntries={[initialPath]}>
-    <PortalShellV2
-      portal={mockPortal}
-      token="preview-token"
-      theaterLayouts={null}
-      seats={{ allSelfIds: new Set(), assigned: {}, totalAssigned: 6 }}
-      onRefresh={noopRefresh}
-      openSheetOnMount={SEATS_OPEN}
-    />
-  </MemoryRouter>
-);
+function PreviewApp() {
+  const [layouts, setLayouts] = useState(null);
+  useEffect(() => {
+    fetch('/data/theater-layouts.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setLayouts)
+      .catch(() => setLayouts({}));
+  }, []);
+
+  return (
+    <MemoryRouter initialEntries={[initialPath]}>
+      <PortalShellV2
+        portal={mockPortal}
+        token="preview-token"
+        theaterLayouts={layouts}
+        seats={{ allSelfIds: new Set(), assigned: {}, totalAssigned: 6 }}
+        onRefresh={noopRefresh}
+        openSheetOnMount={SEATS_OPEN}
+      />
+    </MemoryRouter>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<PreviewApp />);

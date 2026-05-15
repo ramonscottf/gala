@@ -218,18 +218,13 @@ function Hero({ identity, seatMath, tierAccess }) {
   );
 }
 
-function StatusCard({ identity, seatMath, tierAccess, onPlace, onPlaceMore }) {
+function StatusCard({ identity, seatMath, tierAccess }) {
   const placed = seatMath?.placed || 0;
   const total = seatMath?.total || 0;
   const remaining = Math.max(0, total - placed);
   const delegated = seatMath?.delegated || 0;
   const open = tierAccess?.open === true;
   const tier = identity?.tier || 'Sponsor';
-
-  let primaryLabel;
-  if (remaining === 0 && total > 0) primaryLabel = 'Edit my seats';
-  else if (placed > 0) primaryLabel = `Place ${remaining} more`;
-  else primaryLabel = `Pick my ${total === 1 ? 'seat' : 'seats'}`;
 
   return (
     <section className="p2-section tight">
@@ -258,17 +253,11 @@ function StatusCard({ identity, seatMath, tierAccess, onPlace, onPlaceMore }) {
               </div>
               <h2>Your <span className="p2-italic-flair">block</span></h2>
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              {open ? (
-                <button className="p2-btn primary" type="button" onClick={onPlace}>
-                  {primaryLabel} →
-                </button>
-              ) : (
-                <span className="p2-chip" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                  Window not open yet
-                </span>
-              )}
-            </div>
+            {!open && (
+              <span className="p2-chip" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                Window not open yet
+              </span>
+            )}
           </div>
 
           <div className="p2-stat-grid">
@@ -299,10 +288,11 @@ function StatusCard({ identity, seatMath, tierAccess, onPlace, onPlaceMore }) {
   );
 }
 
-function TicketsSection({ tickets, seatMath, onOpenTicket, onPlaceMore }) {
+function TicketsSection({ tickets, seatMath, tierAccess, onOpenTicket, onPlaceMore }) {
   const total = seatMath?.total || 0;
   const placed = tickets.length;
   const remaining = Math.max(0, total - placed);
+  const open = tierAccess?.open === true;
 
   return (
     <section className="p2-section">
@@ -311,10 +301,25 @@ function TicketsSection({ tickets, seatMath, onOpenTicket, onPlaceMore }) {
           <div className="p2-eyebrow">Your tickets</div>
           <h2>Tickets <span className="p2-italic-flair">placed</span></h2>
         </div>
-        <p>
-          {placed} of {total} placed
-          {remaining > 0 ? <> · {remaining} still to choose</> : <> · all set</>}
-        </p>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <p style={{ margin: 0 }}>
+            {placed} of {total} placed
+            {remaining > 0 ? <> · {remaining} still to choose</> : <> · all set</>}
+          </p>
+          {open && remaining === 0 && placed > 0 && (
+            <button className="p2-btn ghost sm" type="button" onClick={onPlaceMore}>
+              Edit my seats →
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="p2-ticket-grid">
@@ -354,15 +359,14 @@ function TicketsSection({ tickets, seatMath, onOpenTicket, onPlaceMore }) {
             type="button"
             className="p2-ticket-card placeholder"
             onClick={onPlaceMore}
+            disabled={!open}
             style={
-              // When there are zero placed tickets the placeholder spans
-              // both grid columns so the page doesn't read as a half-filled
-              // table. With placed tickets present, the placeholder sits in
-              // line with them.
               tickets.length === 0 ? { gridColumn: '1 / -1' } : undefined
             }
           >
-            + Place {remaining === 1 ? 'your seat' : `${remaining} more seats`}
+            {open
+              ? `+ Place ${remaining === 1 ? 'your seat' : `${remaining} more seats`}`
+              : `${remaining} ${remaining === 1 ? 'seat' : 'seats'} waiting for your window to open`}
           </button>
         )}
       </div>
@@ -605,14 +609,13 @@ export default function PortalShellV2({
         identity={identity}
         seatMath={seatMath}
         tierAccess={tierAccess}
-        onPlace={openSeatModal}
-        onPlaceMore={openSeatModal}
       />
 
       {(tickets.length > 0 || seatMath.total > 0) && (
         <TicketsSection
           tickets={tickets}
           seatMath={seatMath}
+          tierAccess={tierAccess}
           onOpenTicket={(t) => setTicketModal(t)}
           onPlaceMore={openSeatModal}
         />

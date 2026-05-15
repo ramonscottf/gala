@@ -6,6 +6,7 @@
 //   - Assign / reassign the seat to one of their delegations
 //   - Clear the assignment (revert to "yours")
 //   - Unplace the seat entirely (releases it back to the open pool)
+//   - Text themselves the full confirmation (sponsor-only, kind=self)
 //
 // All actions go through existing API endpoints — no new server code.
 
@@ -19,9 +20,12 @@ function formatShowing(s) {
 export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, onEditSeats }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [smsNote, setSmsNote] = useState(null);
   const [assignTo, setAssignTo] = useState(ticket.raw?.delegation_id || '');
 
   const delegations = portal?.childDelegations || [];
+  const identity = portal?.identity || {};
+  const canTextSelf = identity.kind === 'sponsor' && !!identity.phone;
 
   async function unplace() {
     if (!confirm(`Release seat ${ticket.seatLabel}? It goes back to the open pool.`)) return;
@@ -71,6 +75,26 @@ export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, o
       }
       if (onRefresh) await onRefresh();
       onClose();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function textMySeats() {
+    setBusy(true);
+    setErr(null);
+    setSmsNote(null);
+    try {
+      const res = await fetch(`${config.apiBase}/api/gala/portal/${token}/sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'self' }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+      setSmsNote(`Sent to ${j.to || identity.phone}.`);
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -209,6 +233,28 @@ export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, o
               >
                 {busy ? 'Saving…' : 'Save assignment'}
               </button>
+            </div>
+          )}
+
+          {canTextSelf && (
+            <div style={{ marginTop: 22 }}>
+              <button
+                className="p2-btn ghost sm"
+                type="button"
+                disabled={busy}
+                onClick={textMySeats}
+              >
+                📱 Text my seats to me
+              </button>
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--p2-subtle)' }}>
+                Sends a full confirmation to {identity.phone}.
+              </div>
+            </div>
+          )}
+
+          {smsNote && (
+            <div className="p2-notice success" style={{ marginTop: 18 }}>
+              <p>{smsNote}</p>
             </div>
           )}
 
