@@ -20,7 +20,12 @@ import { BRAND, FONT_DISPLAY, FONT_UI } from './brand/tokens.js';
 import { usePortal } from './hooks/usePortal.js';
 import { useSeats } from './hooks/useSeats.js';
 import { useTheme } from './hooks/useTheme.js';
-import Portal from './portal/Portal.jsx';
+// Portal v2 — soft-website redesign. Pulls visual language directly from
+// the gala homepage (gala.daviskids.org/) — Fraunces serif, gradient strip
+// cards, paper-feel info pills, no app-shell. The previous Portal.jsx
+// (boarding-pass cards + iOS glass-pill tab bar) is preserved on disk for
+// reference but no longer routed to.
+import PortalShellV2 from './portal-v2/PortalShell.jsx';
 
 function isDevPrefix() {
   // No dev mirror in the gala repo — single /sponsor prefix only.
@@ -110,12 +115,11 @@ function PortalContainer() {
   }
 
   return (
-    <Portal
+    <PortalShellV2
       portal={portal.state}
       token={token}
       theaterLayouts={layouts}
       seats={seats}
-      isDev={dev}
       onRefresh={portal.refresh}
       openSheetOnMount={onSeatsRoute}
     />
