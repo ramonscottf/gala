@@ -424,6 +424,48 @@ body {
   max-width: 760px;
 }
 
+/* Event pill — combined date+venue pill for the hero. Two info blocks
+   share a single rounded card with a vertical divider. Collapses to
+   stacked layout (divider becomes horizontal) on phones so each line
+   stays readable without truncation. */
+.p2-event-pill {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 18px;
+  margin-top: 24px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-wrap: wrap;
+}
+
+.p2-event-pill > div:not(.p2-event-pill-divider) {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.p2-event-pill strong {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+
+.p2-event-pill span {
+  font-size: 13px;
+  color: var(--p2-muted);
+}
+
+.p2-event-pill-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.16);
+  align-self: stretch;
+  margin: 2px 0;
+}
+
 /* ── Status / Tier chips ────────────────────────────────────────────── */
 
 .p2-chip {
@@ -585,6 +627,52 @@ body {
   color: var(--p2-subtle);
   font-size: 18px;
   flex-shrink: 0;
+}
+
+/* Inline seat chips inside a grouped ticket card. When you've placed
+   multiple seats for the same showing, the chips list the seat labels
+   in row — H1 · F12 · G12 · G13. */
+.p2-seat-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.p2-seat-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: rgba(244, 185, 66, 0.14);
+  border: 1px solid rgba(244, 185, 66, 0.32);
+  color: var(--p2-gold);
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Group modal — per-seat row, clickable, drills to that seat's detail */
+.p2-group-seat-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--p2-rule);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.p2-group-seat-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--p2-rule-strong);
 }
 
 /* ── Movie / lineup cards ───────────────────────────────────────────── */
@@ -1049,6 +1137,16 @@ body {
   .p2-pill-row {
     grid-template-columns: 1fr;
   }
+  .p2-event-pill {
+    display: flex;
+    width: 100%;
+  }
+  .p2-event-pill-divider {
+    display: none;
+  }
+  .p2-event-pill > div:not(.p2-event-pill-divider) {
+    width: 100%;
+  }
   .p2-modal-body {
     padding: 18px;
   }
@@ -1083,4 +1181,27 @@ body {
   padding: 14px;
   border: 1px solid var(--p2-rule);
   overflow-x: auto;
+}
+
+/* The legacy SeatPickSheet renders its own bottom action bar with
+   inline styles — background: BRAND.navyDeep + borderTop. Inside the
+   v2 modal that produced a visible card-in-card rectangle behind the
+   Close and Continue buttons. The inline background can't be reached
+   from external CSS (inline beats external on equal-or-lower
+   specificity), but the selector below uses the *attribute* contains
+   matcher to target divs with the specific style fingerprint and
+   override with !important. The action bar then blends into the modal
+   floor; the existing 1px borderTop becomes a hairline content
+   divider — actually the right look. */
+.p2-modal-body div[style*="border-top"][style*="display: flex"][style*="bottom"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.p2-modal-body div[style*="border-top"][style*="display: flex"][style*="position: static"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  padding-left: 2px;
+  padding-right: 2px;
 }

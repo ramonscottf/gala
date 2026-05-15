@@ -32,6 +32,7 @@ import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../hooks/usePortal.js';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from '../portal/movieScores.js';
 import { SeatPickerModal } from './SeatPickerModal.jsx';
 import { TicketDetailModal } from './TicketDetailModal.jsx';
+import { TicketGroupModal } from './TicketGroupModal.jsx';
 import { MovieDetailModal } from './MovieDetailModal.jsx';
 import { ProfileModal } from './ProfileModal.jsx';
 import './portal-v2.css';
@@ -66,34 +67,63 @@ function tierClass(tier) {
   return (tier || '').toLowerCase();
 }
 
-// Build the per-seat ticket list from portal state.
-function buildTickets(portal) {
+// Group seat assignments into one card per (theater + showing). Visiting
+// the same showing twice means you're sitting next to yourself for the
+// same movie — should render as a single ticket with multiple seat
+// chips, not N visually-identical rows.
+function buildTicketGroups(portal) {
   const assignments = portal?.myAssignments || [];
   const showtimes = portal?.showtimes || [];
-  // Index by (theater_id, showing_number) → showtime row.
-  const showtimeKey = (tId, sNum) => `${tId}:${sNum}`;
   const stIndex = {};
   showtimes.forEach((s) => {
-    stIndex[showtimeKey(s.theater_id, s.showing_number)] = s;
+    stIndex[`${s.theater_id}:${s.showing_number}`] = s;
   });
 
-  return assignments.map((a) => {
-    const key = showtimeKey(a.theater_id, a.showing_number || 1);
-    const st = stIndex[key] || {};
-    return {
-      id: `${a.theater_id}:${a.showing_number || 1}:${a.row_label}-${a.seat_num}`,
+  const groups = new Map();
+  for (const a of assignments) {
+    const showing = a.showing_number || 1;
+    const key = `${a.theater_id}:${showing}`;
+    if (!groups.has(key)) {
+      const st = stIndex[key] || {};
+      groups.set(key, {
+        id: key,
+        theater_id: a.theater_id,
+        showing_number: showing,
+        showingLabel: formatShowing(showing),
+        movie_title: st.movie_title || 'TBD',
+        poster_url: st.poster_url,
+        seats: [],
+      });
+    }
+    const seat = {
+      id: `${key}:${a.row_label}-${a.seat_num}`,
       seatLabel: `${a.row_label}${a.seat_num}`,
       row: a.row_label,
       num: a.seat_num,
       theater_id: a.theater_id,
-      showing_number: a.showing_number || 1,
-      showingLabel: formatShowing(a.showing_number || 1),
-      movie_title: st.movie_title || 'TBD',
-      poster_url: st.poster_url,
+      showing_number: showing,
       auditorium: a.theater_id,
       guest_name: a.guest_name,
+      poster_url: stIndex[key]?.poster_url,
+      movie_title: stIndex[key]?.movie_title || 'TBD',
+      showingLabel: formatShowing(showing),
       raw: a,
     };
+    groups.get(key).seats.push(seat);
+  }
+
+  // Sort seats inside each group naturally (A1 before A2 before B1).
+  for (const g of groups.values()) {
+    g.seats.sort((a, b) => {
+      if (a.row !== b.row) return String(a.row).localeCompare(String(b.row));
+      return Number(a.num) - Number(b.num);
+    });
+  }
+
+  // Sort groups by showing (early first), then theater_id.
+  return [...groups.values()].sort((a, b) => {
+    if (a.showing_number !== b.showing_number) return a.showing_number - b.showing_number;
+    return a.theater_id - b.theater_id;
   });
 }
 
@@ -126,14 +156,16 @@ function BrandNav({ identity, onOpenProfile }) {
   );
 }
 
-function Hero({ identity, seatMath, tierAccess }) {
+function Hero({ identity, seatMath, tierAccess, onPick }) {
   const firstName = (identity?.contactName || '').split(' ')[0] || identity?.company || 'there';
   const placed = seatMath?.placed || 0;
   const total = seatMath?.total || 0;
+  const remaining = Math.max(0, total - placed);
   const daysOut = daysUntilGala();
   const isStaff = identity?.kind === 'staff';
   const isDelegate = identity?.kind === 'delegate';
   const tier = identity?.tier || (isStaff ? 'Staff' : isDelegate ? 'Guest' : 'Sponsor');
+  const open = tierAccess?.open === true;
 
   let headline;
   if (placed >= total && total > 0) {
@@ -193,6 +225,15 @@ function Hero({ identity, seatMath, tierAccess }) {
     );
   }
 
+  // Hero CTA label varies with state. Always visible when window is open
+  // so there's a clear "what to do next" near the top of the page.
+  let ctaLabel = null;
+  if (open) {
+    if (remaining === 0 && total > 0) ctaLabel = 'Edit my seats';
+    else if (placed > 0) ctaLabel = `Place ${remaining} more`;
+    else if (total > 0) ctaLabel = `Pick my ${total === 1 ? 'seat' : 'seats'}`;
+  }
+
   return (
     <section className="p2-section p2-hero">
       <div className="p2-eyebrow p2-hero-eyebrow">
@@ -200,18 +241,29 @@ function Hero({ identity, seatMath, tierAccess }) {
       </div>
       <h1>{headline}</h1>
       <p className="p2-hero-sub">{sub}</p>
-      <div className="p2-pill-row">
-        <div className="p2-info-pill">
+
+      {ctaLabel && (
+        <div className="p2-hero-actions">
+          <button className="p2-btn primary" type="button" onClick={onPick}>
+            {ctaLabel} →
+          </button>
+        </div>
+      )}
+
+      {/* Date + venue collapse into one richer pill on desktop, splits
+          on mobile via the .p2-event-pill flex layout. The Platinum
+          tier pill is gone — that info already lives in the BRONZE/
+          PLATINUM chip in the StatusCard below, no need to say it
+          twice up here. */}
+      <div className="p2-event-pill">
+        <div>
           <strong>Wednesday, June 10, 2026</strong>
           <span>{daysOut} {daysOut === 1 ? 'day' : 'days'} out</span>
         </div>
-        <div className="p2-info-pill">
+        <div className="p2-event-pill-divider" aria-hidden="true" />
+        <div>
           <strong>Megaplex at Legacy Crossing</strong>
           <span>Centerville, Utah</span>
-        </div>
-        <div className="p2-info-pill">
-          <strong>{tier} {isStaff ? 'access' : isDelegate ? 'invite' : 'sponsor'}</strong>
-          <span>{total} {total === 1 ? 'seat' : 'seats'} reserved for you</span>
         </div>
       </div>
     </section>
@@ -288,9 +340,9 @@ function StatusCard({ identity, seatMath, tierAccess }) {
   );
 }
 
-function TicketsSection({ tickets, seatMath, tierAccess, onOpenTicket, onPlaceMore }) {
+function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore }) {
   const total = seatMath?.total || 0;
-  const placed = tickets.length;
+  const placed = groups.reduce((n, g) => n + g.seats.length, 0);
   const remaining = Math.max(0, total - placed);
   const open = tierAccess?.open === true;
 
@@ -323,46 +375,78 @@ function TicketsSection({ tickets, seatMath, tierAccess, onOpenTicket, onPlaceMo
       </div>
 
       <div className="p2-ticket-grid">
-        {tickets.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className="p2-ticket-card"
-            onClick={() => onOpenTicket(t)}
-          >
-            <div
-              className="p2-ticket-poster"
-              style={
-                t.poster_url
-                  ? { backgroundImage: `url(${t.poster_url})` }
-                  : undefined
-              }
-              aria-hidden="true"
-            />
-            <div className="p2-ticket-body">
-              <div className="p2-ticket-title">
-                <span className="p2-ticket-seat">{t.seatLabel}</span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.92)' }}>
-                  {t.movie_title}
-                </span>
+        {groups.map((g) => {
+          const n = g.seats.length;
+          // Compose a short summary line about who's sitting in the group.
+          const named = g.seats.filter((s) => s.guest_name);
+          let whoLine = null;
+          if (named.length === n && named.length > 0) {
+            // Everyone has a name. If they're all the same name, "Ali Foster"
+            // — otherwise "Ali Foster + 2 others" style.
+            const uniqueNames = [...new Set(named.map((s) => s.guest_name))];
+            whoLine =
+              uniqueNames.length === 1
+                ? uniqueNames[0]
+                : `${uniqueNames[0]} + ${uniqueNames.length - 1} other${uniqueNames.length === 2 ? '' : 's'}`;
+          } else if (named.length > 0) {
+            whoLine = `${named.length} of ${n} assigned`;
+          }
+
+          return (
+            <button
+              key={g.id}
+              type="button"
+              className="p2-ticket-card"
+              onClick={() => onOpenGroup(g)}
+            >
+              <div
+                className="p2-ticket-poster"
+                style={
+                  g.poster_url ? { backgroundImage: `url(${g.poster_url})` } : undefined
+                }
+                aria-hidden="true"
+              />
+              <div className="p2-ticket-body">
+                <div className="p2-ticket-title">
+                  <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                    {g.movie_title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: 'var(--p2-subtle)',
+                      marginLeft: 'auto',
+                    }}
+                  >
+                    {n} {n === 1 ? 'seat' : 'seats'}
+                  </span>
+                </div>
+                <div className="p2-ticket-meta">
+                  {g.showingLabel} · Auditorium {g.theater_id}
+                  {whoLine ? <> · {whoLine}</> : null}
+                </div>
+                <div className="p2-seat-chip-row">
+                  {g.seats.map((s) => (
+                    <span key={s.id} className="p2-seat-chip">
+                      {s.seatLabel}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="p2-ticket-meta">
-                {t.showingLabel} · Auditorium {t.auditorium}
-                {t.guest_name ? <> · {t.guest_name}</> : null}
-              </div>
-            </div>
-            <span className="p2-ticket-arrow">→</span>
-          </button>
-        ))}
+              <span className="p2-ticket-arrow">→</span>
+            </button>
+          );
+        })}
         {remaining > 0 && (
           <button
             type="button"
             className="p2-ticket-card placeholder"
             onClick={onPlaceMore}
             disabled={!open}
-            style={
-              tickets.length === 0 ? { gridColumn: '1 / -1' } : undefined
-            }
+            style={groups.length === 0 ? { gridColumn: '1 / -1' } : undefined}
           >
             {open
               ? `+ Place ${remaining === 1 ? 'your seat' : `${remaining} more seats`}`
@@ -569,6 +653,7 @@ export default function PortalShellV2({
   const location = useLocation();
 
   const [seatModal, setSeatModal] = useState(false);
+  const [groupModal, setGroupModal] = useState(null);
   const [ticketModal, setTicketModal] = useState(null);
   const [movieModal, setMovieModal] = useState(null);
   const [profileModal, setProfileModal] = useState(false);
@@ -590,7 +675,7 @@ export default function PortalShellV2({
   const tierAccess = portal?.tierAccess || {};
   const showtimes = portal?.showtimes || [];
 
-  const tickets = useMemo(() => buildTickets(portal), [portal]);
+  const tickets = useMemo(() => buildTicketGroups(portal), [portal]);
 
   const openSeatModal = () => setSeatModal(true);
   const closeSeatModal = async () => {
@@ -603,7 +688,7 @@ export default function PortalShellV2({
     <div className="p2-shell">
       <BrandNav identity={identity} onOpenProfile={() => setProfileModal(true)} />
 
-      <Hero identity={identity} seatMath={seatMath} tierAccess={tierAccess} />
+      <Hero identity={identity} seatMath={seatMath} tierAccess={tierAccess} onPick={openSeatModal} />
 
       <StatusCard
         identity={identity}
@@ -613,10 +698,20 @@ export default function PortalShellV2({
 
       {(tickets.length > 0 || seatMath.total > 0) && (
         <TicketsSection
-          tickets={tickets}
+          groups={tickets}
           seatMath={seatMath}
           tierAccess={tierAccess}
-          onOpenTicket={(t) => setTicketModal(t)}
+          onOpenGroup={(g) => {
+            // Single-seat groups skip the group screen and go straight
+            // to the per-seat detail modal (where you can release /
+            // assign / text). Multi-seat groups land on the group
+            // modal where you can act on each seat in context.
+            if (g.seats.length === 1) {
+              setTicketModal(g.seats[0]);
+            } else {
+              setGroupModal(g);
+            }
+          }}
           onPlaceMore={openSeatModal}
         />
       )}
@@ -639,6 +734,23 @@ export default function PortalShellV2({
           onClose={closeSeatModal}
           onRefresh={onRefresh}
           onOpenMovieDetail={(m) => setMovieModal(m)}
+        />
+      )}
+      {groupModal && (
+        <TicketGroupModal
+          group={groupModal}
+          portal={portal}
+          token={token}
+          onClose={() => setGroupModal(null)}
+          onRefresh={onRefresh}
+          onOpenSeat={(seat) => {
+            setGroupModal(null);
+            setTicketModal(seat);
+          }}
+          onEditSeats={() => {
+            setGroupModal(null);
+            setSeatModal(true);
+          }}
         />
       )}
       {ticketModal && (
