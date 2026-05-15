@@ -43,12 +43,28 @@
   );
 }
 
-/* Reset against the SPA's host main element. App.jsx sets the wrapper
-   to min-height: 100dvh (no longer hard-locked to 100dvh) so the
-   document scrolls naturally. Body margin is normalized here. */
+/* The brand-layer styles (src/brand/styles.css) pin html, body, and
+   #root to height: 100dvh; overflow: hidden — the right call for the
+   old app-shell portal (where every scroll region was managed inside).
+   The v2 portal is a normal scrolling document, so we explicitly
+   release all three. These selectors match (or exceed) the brand
+   layer's specificity and load after it, so cascade order wins. */
+html,
 body {
   margin: 0;
+  padding: 0;
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  overflow-x: hidden;
   background: var(--p2-navy-deep);
+  overscroll-behavior: auto;
+}
+
+#root {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
 }
 
 .p2-shell {
@@ -62,7 +78,11 @@ body {
     radial-gradient(circle at 8% 12%, rgba(215, 40, 70, 0.26), transparent 30%),
     radial-gradient(circle at 88% 8%, rgba(98, 200, 255, 0.14), transparent 28%),
     linear-gradient(135deg, #080916 0%, #11194a 52%, #171845 100%);
-  overflow-x: hidden;
+  /* Do NOT set overflow on the shell. The window is the scroll
+     container; setting overflow-x: hidden here turns the shell into
+     its own scroll context (overflow-y becomes auto implicitly) and
+     hijacks the page scrollbar. Horizontal clipping is handled at
+     body level above. */
 }
 
 .p2-shell::before {
