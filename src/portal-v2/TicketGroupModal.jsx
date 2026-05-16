@@ -20,6 +20,7 @@ export function TicketGroupModal({
   onRefresh,
   onOpenSeat,
   onEditSeats,
+  onInviteSeat,
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -114,6 +115,8 @@ export function TicketGroupModal({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {group.seats.map((s) => {
               const dinner = s.raw?.dinner_choice;
+              const hasDelegate = !!(s.raw?.delegation_id || s.guest_name);
+              const canInvite = !hasDelegate && onInviteSeat;
               return (
                 <div key={s.id} className="p2-group-seat-row" style={{ cursor: 'default' }}>
                   <button
@@ -148,13 +151,27 @@ export function TicketGroupModal({
                       style={{
                         flex: 1,
                         fontSize: 14,
-                        color: 'rgba(255,255,255,0.92)',
+                        color: hasDelegate ? 'rgba(255,255,255,0.92)' : 'var(--p2-subtle)',
                         minWidth: 0,
+                        fontStyle: hasDelegate ? 'normal' : 'italic',
                       }}
                     >
-                      {s.guest_name ? s.guest_name : 'Yours'}
+                      {s.guest_name || 'Yours (no guest)'}
                     </span>
                   </button>
+                  {canInvite && (
+                    <button
+                      type="button"
+                      className="p2-btn ghost sm compact"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onInviteSeat(s);
+                      }}
+                      style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
+                    >
+                      + Invite
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={`p2-dinner-pill${dinner ? '' : ' empty'}`}

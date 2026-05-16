@@ -255,7 +255,7 @@ export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, o
                 <option value="">Mine (no delegate)</option>
                 {delegations.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.guest_name || d.guest_email || `Guest #${d.id}`}
+                    {d.delegateName || d.guest_name || d.email || d.guest_email || `Guest #${d.id}`}
                   </option>
                 ))}
               </select>

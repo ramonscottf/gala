@@ -38,8 +38,8 @@ const mockPortal = {
   seatMath: {
     total: 20,
     placed: 4,
-    delegated: 0,
-    available: 16,
+    delegated: 6, // Ali=2 + Aaron=4
+    available: 10,
   },
   myAssignments: [
     // One seat in Paddington (H1, Late showing, Auditorium 1) — meal picked
@@ -83,8 +83,40 @@ const mockPortal = {
     },
   ],
   myHolds: [],
-  childDelegations: [],
-  childDelegationAssignments: [],
+  childDelegations: [
+    {
+      id: 1,
+      token: 'preview-ali-token',
+      delegateName: 'Ali Foster',
+      email: 'ali@example.com',
+      phone: '801-205-6642',
+      seatsAllocated: 2,
+      seatsPlaced: 2,
+      seatsMissingDinner: 0,
+      status: 'claimed',
+      invitedAt: '2026-05-12T18:00:00Z',
+      accessedAt: '2026-05-13T09:30:00Z',
+      finalizedAt: '2026-05-13T14:22:00Z',
+    },
+    {
+      id: 2,
+      token: 'preview-aaron-token',
+      delegateName: 'Aaron Sessions',
+      email: 'aaron@example.com',
+      phone: null,
+      seatsAllocated: 4,
+      seatsPlaced: 0,
+      seatsMissingDinner: 0,
+      status: 'invited',
+      invitedAt: '2026-05-14T11:00:00Z',
+      accessedAt: null,
+      finalizedAt: null,
+    },
+  ],
+  childDelegationAssignments: [
+    { delegation_id: 1, theater_id: 8, row_label: 'D', seat_num: '11' },
+    { delegation_id: 1, theater_id: 8, row_label: 'D', seat_num: '12' },
+  ],
   allAssignments: [],
   showtimes: [
     {

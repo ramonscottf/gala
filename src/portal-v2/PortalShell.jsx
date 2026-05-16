@@ -36,6 +36,8 @@ import { TicketGroupModal, ShowingAuditoriumPills } from './TicketGroupModal.jsx
 import { MovieDetailModal } from './MovieDetailModal.jsx';
 import { ProfileModal } from './ProfileModal.jsx';
 import { CelebrationOverlay } from './CelebrationOverlay.jsx';
+import { InviteModal } from './InviteModal.jsx';
+import { DelegationManageModal } from './DelegationManageModal.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -466,10 +468,72 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
   );
 }
 
-function GroupSection({ portal }) {
+// Compute a normalized status from the delegation row. Mirrors the
+// resolveDelegationStatus helper inside the old Portal.jsx so we get
+// the same buckets without importing the whole module.
+function delegationStatus(d) {
+  if (!d) return 'unknown';
+  const raw = (d.status || '').toLowerCase();
+  if (raw === 'claimed' || raw === 'accepted' || d.claimed_at) return 'claimed';
+  if (raw === 'declined' || raw === 'revoked') return raw;
+  if (raw === 'expired') return 'expired';
+  return 'invited';
+}
+
+function DelegationStatusPillV2({ status }) {
+  const map = {
+    claimed:  { label: 'Claimed',  color: '#7fcfa0' },
+    invited:  { label: 'Invited',  color: 'var(--p2-gold)' },
+    declined: { label: 'Declined', color: 'var(--p2-red-soft)' },
+    revoked:  { label: 'Revoked',  color: 'var(--p2-subtle)' },
+    expired:  { label: 'Expired',  color: 'var(--p2-red-soft)' },
+    unknown:  { label: 'Unknown',  color: 'var(--p2-subtle)' },
+  };
+  const m = map[status] || map.unknown;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '3px 10px',
+        borderRadius: 999,
+        background: 'rgba(255,255,255,0.06)',
+        border: '1px solid rgba(255,255,255,0.18)',
+        color: m.color,
+        fontSize: 11,
+        fontWeight: 800,
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+      }}
+    >
+      <span
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: 999,
+          background: m.color,
+        }}
+      />
+      {m.label}
+    </span>
+  );
+}
+
+function GroupSection({ portal, onOpenInvite, onManageDelegation }) {
   const delegations = portal?.childDelegations || [];
-  const delegatedAssignments = portal?.childDelegationAssignments || [];
-  if (delegations.length === 0) return null;
+  const seatMath = portal?.seatMath || { total: 0, placed: 0, delegated: 0, available: 0 };
+  const tierAccess = portal?.tierAccess || {};
+  const open = tierAccess?.open === true;
+
+  // Sponsors are the only kind who can invite. If we're a delegate
+  // looking at our own portal, the group section is irrelevant.
+  const isSponsor = portal?.identity?.kind === 'sponsor';
+
+  // Show the section if there are delegations OR if the sponsor still
+  // has seats to give away (so the "Invite a guest" CTA has a home).
+  if (!isSponsor) return null;
+  if (delegations.length === 0 && seatMath.total === 0) return null;
 
   return (
     <section className="p2-section">
@@ -478,35 +542,82 @@ function GroupSection({ portal }) {
           <div className="p2-eyebrow">Your group</div>
           <h2>Guests you <span className="p2-italic-flair">invited</span></h2>
         </div>
-        <p>
-          {delegations.length} {delegations.length === 1 ? 'invite' : 'invites'} out · they pick
-          their own seats inside their portal.
-        </p>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          {delegations.length > 0 && (
+            <p style={{ margin: 0 }}>
+              {delegations.length} {delegations.length === 1 ? 'invite' : 'invites'} out
+            </p>
+          )}
+          {open && (
+            <button
+              type="button"
+              className="p2-btn primary sm"
+              onClick={() => onOpenInvite()}
+            >
+              + Invite a guest
+            </button>
+          )}
+        </div>
       </div>
-      <div className="p2-ticket-grid">
-        {delegations.map((d) => {
-          const placed = delegatedAssignments.filter((a) => a.delegation_id === d.id).length;
-          return (
-            <div key={d.id} className="p2-ticket-card" style={{ cursor: 'default' }}>
-              <div
-                className="p2-avatar"
-                style={{ width: 48, height: 48, fontSize: 14, flexShrink: 0 }}
+
+      {delegations.length === 0 ? (
+        <div
+          style={{
+            padding: '28px 22px',
+            border: '1px dashed var(--p2-rule)',
+            borderRadius: 18,
+            textAlign: 'center',
+            color: 'var(--p2-muted)',
+            fontSize: 14,
+          }}
+        >
+          No invites out yet. Tap "Invite a guest" to hand seats to someone — they'll get
+          their own portal link to pick where they sit.
+        </div>
+      ) : (
+        <div className="p2-ticket-grid">
+          {delegations.map((d) => {
+            // Production API returns camelCase: delegateName, email,
+            // phone, seatsPlaced, seatsAllocated, status. Mock preview
+            // data may use either shape — guard both.
+            const name = d.delegateName || d.guest_name || 'Unnamed guest';
+            const email = d.email || d.guest_email;
+            const phone = d.phone || d.guest_phone;
+            const placed = d.seatsPlaced ?? 0;
+            const allocated = d.seatsAllocated ?? d.seat_count ?? 0;
+            const status = delegationStatus(d);
+            return (
+              <button
+                key={d.id}
+                type="button"
+                className="p2-ticket-card"
+                onClick={() => onManageDelegation(d)}
+                style={{ textAlign: 'left' }}
               >
-                {initialsOf(d.guest_name || d.guest_email)}
-              </div>
-              <div className="p2-ticket-body">
-                <div className="p2-ticket-title" style={{ fontSize: 14 }}>
-                  {d.guest_name || 'Unnamed guest'}
+                <div
+                  className="p2-avatar"
+                  style={{ width: 48, height: 48, fontSize: 14, flexShrink: 0 }}
+                >
+                  {initialsOf(name)}
                 </div>
-                <div className="p2-ticket-meta">
-                  {placed} of {d.seat_count} placed ·{' '}
-                  {d.guest_email || d.guest_phone || 'no contact yet'}
+                <div className="p2-ticket-body">
+                  <div
+                    className="p2-ticket-title"
+                    style={{ fontSize: 14, alignItems: 'center', gap: 10 }}
+                  >
+                    <span style={{ flex: 1, minWidth: 0 }}>{name}</span>
+                    <DelegationStatusPillV2 status={status} />
+                  </div>
+                  <div className="p2-ticket-meta">
+                    {placed} of {allocated} placed · {email || phone || 'no contact yet'}
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                <span className="p2-ticket-arrow">→</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
@@ -666,6 +777,11 @@ export default function PortalShellV2({
   const [movieModal, setMovieModal] = useState(null);
   const [profileModal, setProfileModal] = useState(false);
   const [celebration, setCelebration] = useState(null);
+  // inviteModal: null | { seatPills, preselectedPills } — Mode A is
+  // open=true with no pills set; Mode B requires seatPills.
+  const [inviteModal, setInviteModal] = useState(null);
+  // delegationManageModal: the delegation record being managed
+  const [manageDelegation, setManageDelegation] = useState(null);
 
   // Deep-link `/sponsor/{token}/seats` opens the seat modal.
   useEffect(() => {
@@ -745,7 +861,11 @@ export default function PortalShellV2({
         />
       )}
 
-      <GroupSection portal={portal} />
+      <GroupSection
+        portal={portal}
+        onOpenInvite={() => setInviteModal({})}
+        onManageDelegation={(d) => setManageDelegation(d)}
+      />
 
       <LineupSection showtimes={showtimes} onOpenMovie={(m) => setMovieModal(m)} />
 
@@ -793,6 +913,29 @@ export default function PortalShellV2({
             setGroupModal(null);
             setSeatModal(true);
           }}
+          onInviteSeat={(seat) => {
+            // Open InviteModal in Mode B with the full unassigned
+            // pool as the visible pill universe but ONLY this seat
+            // preselected (entry-from-row pattern from v1). Sponsor
+            // can check additional seats from the same block before
+            // submitting.
+            const sid = `${seat.row}-${seat.num}`;
+            // Build the full giveable pool: all my placed seats with
+            // no delegation_id yet (Mode B universe).
+            const giveable = [];
+            for (const g of tickets) {
+              for (const s of g.seats) {
+                if (!s.raw?.delegation_id && !s.guest_name) {
+                  giveable.push(`${s.row}-${s.num}`);
+                }
+              }
+            }
+            setGroupModal(null);
+            setInviteModal({
+              seatPills: giveable.length > 0 ? giveable : [sid],
+              preselectedPills: [sid],
+            });
+          }}
         />
       )}
       {ticketModal && (
@@ -824,6 +967,24 @@ export default function PortalShellV2({
           seats={celebration.seats}
           movieTitle={celebration.movieTitle}
           onClose={() => setCelebration(null)}
+        />
+      )}
+      {inviteModal && (
+        <InviteModal
+          token={token}
+          available={seatMath.available || seatMath.total - seatMath.placed - seatMath.delegated}
+          seatPills={inviteModal.seatPills || null}
+          preselectedPills={inviteModal.preselectedPills || null}
+          onClose={() => setInviteModal(null)}
+          onCreated={onRefresh}
+        />
+      )}
+      {manageDelegation && (
+        <DelegationManageModal
+          delegation={manageDelegation}
+          token={token}
+          onClose={() => setManageDelegation(null)}
+          onRefresh={onRefresh}
         />
       )}
     </div>
