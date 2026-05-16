@@ -25,6 +25,7 @@ export function SeatPickerModal({
   onClose,
   onRefresh,
   onOpenMovieDetail,
+  onCommitted,
 }) {
   // Lock body scroll while open.
   useEffect(() => {
@@ -79,16 +80,17 @@ export function SeatPickerModal({
               onRefresh={onRefresh}
               onMovieDetail={onOpenMovieDetail}
               onClose={onClose}
-              onCommitted={async () => {
-                // Seats committed — refresh the portal so the page
+              onCommitted={async (placed) => {
+                // Seats committed. Refresh the portal so the page
                 // behind the modal shows the freshly placed tickets,
-                // then close. Dinner picking and delegate invitations
-                // are handled on the portal page itself (Ticket cards
-                // and the Group section) rather than a post-pick
-                // chain inside the modal. Keeps the seat picker as
-                // one focused step instead of a multi-stage wizard.
+                // then let the parent handle the celebration moment
+                // (full-screen glow overlay) before deciding to close
+                // this modal. The parent owns the celebration because
+                // the celebration spans the entire viewport, not just
+                // this modal.
                 if (onRefresh) await onRefresh();
-                onClose();
+                if (onCommitted) onCommitted(placed);
+                else onClose();
               }}
             />
           </FlowErrorProvider>

@@ -9,11 +9,13 @@ import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import PortalShellV2 from '../../src/portal-v2/PortalShell.jsx';
+import { CelebrationOverlay } from '../../src/portal-v2/CelebrationOverlay.jsx';
 
 const params = new URLSearchParams(window.location.search);
 const SEATS_OPEN = params.get('seats') === '1';
 const FRESH = params.get('fresh') === '1';
 const DONE = params.get('done') === '1';
+const CELEBRATE = params.get('celebrate') === '1';
 
 // Mock portal state — modeled on the real /api/gala/portal/{token} payload.
 const mockPortal = {
@@ -40,7 +42,7 @@ const mockPortal = {
     available: 16,
   },
   myAssignments: [
-    // One seat in Paddington (H1, Late showing, Auditorium 1)
+    // One seat in Paddington (H1, Late showing, Auditorium 1) — meal picked
     {
       theater_id: 1,
       row_label: 'H',
@@ -48,8 +50,10 @@ const mockPortal = {
       showing_number: 2,
       delegation_id: null,
       guest_name: null,
+      dinner_choice: 'frenchdip',
     },
     // Three seats together for Star Wars Late, Auditorium 8 (F12, G12, G13)
+    // — mix: one with veggie, one with salad, one still unpicked
     {
       theater_id: 8,
       row_label: 'F',
@@ -57,6 +61,7 @@ const mockPortal = {
       showing_number: 2,
       delegation_id: null,
       guest_name: null,
+      dinner_choice: 'veggie',
     },
     {
       theater_id: 8,
@@ -65,6 +70,7 @@ const mockPortal = {
       showing_number: 2,
       delegation_id: null,
       guest_name: null,
+      dinner_choice: 'salad',
     },
     {
       theater_id: 8,
@@ -73,6 +79,7 @@ const mockPortal = {
       showing_number: 2,
       delegation_id: null,
       guest_name: null,
+      dinner_choice: null,
     },
   ],
   myHolds: [],
@@ -184,6 +191,17 @@ function PreviewApp() {
       .then(setLayouts)
       .catch(() => setLayouts({}));
   }, []);
+
+  if (CELEBRATE) {
+    return (
+      <CelebrationOverlay
+        seats={['F12', 'G12', 'G13', 'H1']}
+        movieTitle="Star Wars: The Mandalorian and Grogu"
+        onClose={() => {}}
+        autoDismissMs={999999}
+      />
+    );
+  }
 
   return (
     <MemoryRouter initialEntries={[initialPath]}>

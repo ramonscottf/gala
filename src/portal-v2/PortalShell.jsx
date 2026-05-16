@@ -32,9 +32,10 @@ import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../hooks/usePortal.js';
 import { enrichMovieScores, formatRottenBadge, highestRottenScore } from '../portal/movieScores.js';
 import { SeatPickerModal } from './SeatPickerModal.jsx';
 import { TicketDetailModal } from './TicketDetailModal.jsx';
-import { TicketGroupModal } from './TicketGroupModal.jsx';
+import { TicketGroupModal, ShowingAuditoriumPills } from './TicketGroupModal.jsx';
 import { MovieDetailModal } from './MovieDetailModal.jsx';
 import { ProfileModal } from './ProfileModal.jsx';
+import { CelebrationOverlay } from './CelebrationOverlay.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -424,10 +425,17 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
                     {n} {n === 1 ? 'seat' : 'seats'}
                   </span>
                 </div>
-                <div className="p2-ticket-meta">
-                  {g.showingLabel} · Auditorium {g.theater_id}
-                  {whoLine ? <> · {whoLine}</> : null}
+                <div style={{ margin: '8px 0 4px' }}>
+                  <ShowingAuditoriumPills
+                    showingNumber={g.showing_number}
+                    auditoriumId={g.theater_id}
+                  />
                 </div>
+                {whoLine && (
+                  <div className="p2-ticket-meta" style={{ marginTop: 4 }}>
+                    {whoLine}
+                  </div>
+                )}
                 <div className="p2-seat-chip-row">
                   {g.seats.map((s) => (
                     <span key={s.id} className="p2-seat-chip">
@@ -657,6 +665,7 @@ export default function PortalShellV2({
   const [ticketModal, setTicketModal] = useState(null);
   const [movieModal, setMovieModal] = useState(null);
   const [profileModal, setProfileModal] = useState(false);
+  const [celebration, setCelebration] = useState(null);
 
   // Deep-link `/sponsor/{token}/seats` opens the seat modal.
   useEffect(() => {
@@ -676,6 +685,26 @@ export default function PortalShellV2({
   const showtimes = portal?.showtimes || [];
 
   const tickets = useMemo(() => buildTicketGroups(portal), [portal]);
+
+  // When the portal refreshes (e.g. after saving a dinner pick inside
+  // an open group modal), the groupModal state still holds a snapshot
+  // taken at open time — stale. Re-derive from the fresh tickets list
+  // keyed by group id so the modal stays in sync.
+  const liveGroup = useMemo(() => {
+    if (!groupModal) return null;
+    return tickets.find((g) => g.id === groupModal.id) || groupModal;
+  }, [groupModal, tickets]);
+
+  // Same for the single-seat detail modal — re-derive from fresh
+  // assignments so the dinner pill inside updates without close+reopen.
+  const liveTicket = useMemo(() => {
+    if (!ticketModal) return null;
+    for (const g of tickets) {
+      const found = g.seats.find((s) => s.id === ticketModal.id);
+      if (found) return found;
+    }
+    return ticketModal;
+  }, [ticketModal, tickets]);
 
   const openSeatModal = () => setSeatModal(true);
   const closeSeatModal = async () => {
@@ -734,11 +763,24 @@ export default function PortalShellV2({
           onClose={closeSeatModal}
           onRefresh={onRefresh}
           onOpenMovieDetail={(m) => setMovieModal(m)}
+          onCommitted={(placed) => {
+            // The seat picker fires this once the placed payload is
+            // committed and the portal has been refreshed. Close the
+            // picker and trigger the full-screen celebration moment.
+            // The user dismisses the overlay (auto-fades after ~4.5s
+            // or tap-anywhere) and lands back on the home page with
+            // their freshly placed tickets in view.
+            setSeatModal(false);
+            setCelebration({
+              seats: (placed?.seatIds || []).map((s) => s.replace('-', '')),
+              movieTitle: placed?.movieTitle || '',
+            });
+          }}
         />
       )}
       {groupModal && (
         <TicketGroupModal
-          group={groupModal}
+          group={liveGroup}
           portal={portal}
           token={token}
           onClose={() => setGroupModal(null)}
@@ -755,7 +797,7 @@ export default function PortalShellV2({
       )}
       {ticketModal && (
         <TicketDetailModal
-          ticket={ticketModal}
+          ticket={liveTicket}
           portal={portal}
           token={token}
           onClose={() => setTicketModal(null)}
@@ -775,6 +817,13 @@ export default function PortalShellV2({
           token={token}
           onClose={() => setProfileModal(false)}
           onRefresh={onRefresh}
+        />
+      )}
+      {celebration && (
+        <CelebrationOverlay
+          seats={celebration.seats}
+          movieTitle={celebration.movieTitle}
+          onClose={() => setCelebration(null)}
         />
       )}
     </div>

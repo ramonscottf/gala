@@ -1,31 +1,32 @@
 // TicketDetailModal — clean website-style modal for a single seat ticket.
 //
-// Shows the seat, the showing, the auditorium, and any assigned guest.
-// Lets the user:
+// Shows the seat, the showing, the auditorium, the meal selection,
+// and any assigned guest. Lets the user:
 //   - Open the seat picker focused on this seat's showing (Edit seat)
 //   - Assign / reassign the seat to one of their delegations
 //   - Clear the assignment (revert to "yours")
 //   - Unplace the seat entirely (releases it back to the open pool)
+//   - Pick or change a meal for this seat
 //   - Text themselves the full confirmation (sponsor-only, kind=self)
 //
 // All actions go through existing API endpoints — no new server code.
 
 import { useState } from 'react';
 import { config } from '../config.js';
-
-function formatShowing(s) {
-  return s === 1 ? 'Early showing · 4:30 PM' : s === 2 ? 'Late showing · 7:15 PM' : '';
-}
+import { ShowingAuditoriumPills } from './TicketGroupModal.jsx';
+import { DinnerModal, dinnerEmojiFor, dinnerLabelFor } from './DinnerModal.jsx';
 
 export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, onEditSeats }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [smsNote, setSmsNote] = useState(null);
   const [assignTo, setAssignTo] = useState(ticket.raw?.delegation_id || '');
+  const [dinnerOpen, setDinnerOpen] = useState(false);
 
   const delegations = portal?.childDelegations || [];
   const identity = portal?.identity || {};
   const canTextSelf = identity.kind === 'sponsor' && !!identity.phone;
+  const dinner = ticket.raw?.dinner_choice;
 
   async function unplace() {
     if (!confirm(`Release seat ${ticket.seatLabel}? It goes back to the open pool.`)) return;
@@ -154,40 +155,74 @@ export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, o
                 }}
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
-                <div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      letterSpacing: '0.18em',
-                      textTransform: 'uppercase',
-                      color: 'var(--p2-gold)',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {formatShowing(ticket.showing_number)}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'Fraunces, Georgia, serif',
-                      fontSize: 22,
-                      marginTop: 6,
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    {ticket.movie_title}
-                  </div>
+                <div
+                  style={{
+                    fontFamily: 'Fraunces, Georgia, serif',
+                    fontSize: 22,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {ticket.movie_title}
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span className="p2-chip">
-                    Auditorium {ticket.auditorium}
-                  </span>
-                  <span className="p2-chip">
-                    Row {ticket.row} · Seat {ticket.num}
-                  </span>
+                <ShowingAuditoriumPills
+                  showingNumber={ticket.showing_number}
+                  auditoriumId={ticket.auditorium}
+                />
+                <div style={{ fontSize: 13, color: 'var(--p2-muted)' }}>
+                  Row {ticket.row} · Seat {ticket.num}
                 </div>
               </div>
             </div>
           )}
+
+          {/* Dinner row — always present so the user knows the meal is
+              part of the ticket experience. Tap opens DinnerModal. */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '12px 14px',
+              borderRadius: 12,
+              border: '1px solid var(--p2-rule)',
+              background: 'rgba(255,255,255,0.04)',
+              marginTop: 4,
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: 'var(--p2-gold)',
+                  fontWeight: 800,
+                }}
+              >
+                Dinner
+              </div>
+              <div style={{ marginTop: 4, fontSize: 14, color: 'rgba(255,255,255,0.92)' }}>
+                {dinner ? dinnerLabelFor(dinner) : 'Not picked yet'}
+              </div>
+            </div>
+            <button
+              type="button"
+              className={`p2-dinner-pill${dinner ? '' : ' empty'}`}
+              onClick={() => setDinnerOpen(true)}
+            >
+              {dinner ? (
+                <>
+                  <span className="p2-dinner-pill-emoji">{dinnerEmojiFor(dinner)}</span>
+                  <span>Change</span>
+                </>
+              ) : (
+                <>
+                  <span className="p2-dinner-pill-emoji">🍽️</span>
+                  <span>Pick dinner</span>
+                </>
+              )}
+            </button>
+          </div>
 
           {delegations.length > 0 && (
             <div style={{ marginTop: 22 }}>
@@ -283,6 +318,15 @@ export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, o
           </button>
         </div>
       </div>
+
+      {dinnerOpen && (
+        <DinnerModal
+          seat={ticket}
+          token={token}
+          onClose={() => setDinnerOpen(false)}
+          onRefresh={onRefresh}
+        />
+      )}
     </div>
   );
 }
