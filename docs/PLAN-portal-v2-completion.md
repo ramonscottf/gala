@@ -1,9 +1,9 @@
 # Portal v2 — Feature Completion Audit & Plan
 
-**Status:** Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ · Phase 4 partial ✅ · Phases 5–8 pending
+**Status:** Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ · Phase 3.5 ✅ · Phase 4 partial ✅ · Phase 5 ✅ · Phases 6–8 pending
 **Branch:** `feat/portal-soft-website`
 **Author:** Skippy + Scott
-**Date:** May 15, 2026 — updated May 16, 2026
+**Date:** May 15, 2026 — updated May 17, 2026
 
 ---
 
