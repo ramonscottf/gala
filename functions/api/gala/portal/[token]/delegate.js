@@ -115,6 +115,129 @@ export async function onRequestPost(context) {
     return jsonOk({ ok: true, reminded: true, missing: missingCount });
   }
 
+  // ── UPDATE action ──
+  // Sponsor edits a child delegation's contact info (name, phone, email).
+  // Delegate can edit their own (resolved kind = delegation, target id ==
+  // resolved.record.id). Partial updates: omit a field to leave it
+  // untouched. Pass an empty string to clear (email/phone only — name
+  // can't be cleared because NOT NULL).
+  if (body.action === 'update') {
+    const delegation_id = body.delegation_id;
+    if (!delegation_id) return jsonError('delegation_id required', 400);
+
+    const deleg = await env.GALA_DB.prepare(
+      `SELECT * FROM sponsor_delegations WHERE id = ?`
+    ).bind(delegation_id).first();
+    if (!deleg) return jsonError('Delegation not found', 404);
+
+    // Authorization mirrors `resend`: sponsor owns the parent, OR the
+    // delegate is editing their own row.
+    let allowed = false;
+    if (resolved.kind === 'sponsor' && deleg.parent_sponsor_id === resolved.record.id && !deleg.parent_delegation_id) allowed = true;
+    else if (resolved.kind === 'delegation' && deleg.id === resolved.record.id) allowed = true;
+    else if (resolved.kind === 'delegation' && deleg.parent_delegation_id === resolved.record.id) allowed = true;
+    if (!allowed) return jsonError('Not allowed', 403);
+
+    const updates = [];
+    const binds = [];
+
+    if (body.delegate_name !== undefined) {
+      const name = String(body.delegate_name).trim();
+      if (!name) return jsonError('delegate_name cannot be empty', 400);
+      updates.push('delegate_name = ?');
+      binds.push(name);
+    }
+    if (body.delegate_email !== undefined) {
+      const email = String(body.delegate_email).trim();
+      updates.push('delegate_email = ?');
+      binds.push(email || null);
+    }
+    if (body.delegate_phone !== undefined) {
+      const phone = String(body.delegate_phone).trim();
+      updates.push('delegate_phone = ?');
+      binds.push(phone || null);
+    }
+
+    if (updates.length === 0) return jsonError('No editable fields provided', 400);
+
+    // Always bump updated_at on a real change.
+    updates.push("updated_at = datetime('now')");
+    binds.push(delegation_id);
+
+    const res = await env.GALA_DB.prepare(
+      `UPDATE sponsor_delegations SET ${updates.join(', ')} WHERE id = ?`
+    ).bind(...binds).run();
+
+    if ((res.meta?.changes || 0) === 0) {
+      return jsonError('No row updated', 500);
+    }
+
+    const fresh = await env.GALA_DB.prepare(
+      `SELECT id, token, delegate_name, delegate_email, delegate_phone,
+              seats_allocated, status, confirmed_at
+         FROM sponsor_delegations WHERE id = ?`
+    ).bind(delegation_id).first();
+
+    return jsonOk({
+      ok: true,
+      action: 'update',
+      delegation: {
+        id: fresh.id,
+        delegateName: fresh.delegate_name,
+        email: fresh.delegate_email,
+        phone: fresh.delegate_phone,
+        seatsAllocated: fresh.seats_allocated,
+        status: fresh.status,
+        confirmedAt: fresh.confirmed_at,
+      },
+    });
+  }
+
+  // ── CONFIRM action ──
+  // First-visit "Keep these seats" gate on the delegate-side receive
+  // flow. Only callable by the delegate themselves on their own row.
+  // Idempotent — re-confirming is fine, returns the existing
+  // confirmed_at timestamp. Sponsors can NOT call this on behalf of
+  // a delegate (the delegate is the one who's affirming).
+  if (body.action === 'confirm') {
+    if (resolved.kind !== 'delegation') {
+      return jsonError('Only the delegate can confirm their own seats', 403);
+    }
+
+    const delegId = resolved.record.id;
+    const existing = await env.GALA_DB.prepare(
+      `SELECT confirmed_at FROM sponsor_delegations WHERE id = ?`
+    ).bind(delegId).first();
+
+    if (existing?.confirmed_at) {
+      // Already confirmed — idempotent return
+      return jsonOk({
+        ok: true,
+        action: 'confirm',
+        confirmedAt: existing.confirmed_at,
+        wasAlreadyConfirmed: true,
+      });
+    }
+
+    await env.GALA_DB.prepare(
+      `UPDATE sponsor_delegations
+          SET confirmed_at = datetime('now'),
+              updated_at = datetime('now')
+        WHERE id = ?`
+    ).bind(delegId).run();
+
+    const fresh = await env.GALA_DB.prepare(
+      `SELECT confirmed_at FROM sponsor_delegations WHERE id = ?`
+    ).bind(delegId).first();
+
+    return jsonOk({
+      ok: true,
+      action: 'confirm',
+      confirmedAt: fresh.confirmed_at,
+      wasAlreadyConfirmed: false,
+    });
+  }
+
   // ── CREATE new delegation (default) ──
   const name = (body.delegate_name || '').trim();
   const phone = (body.delegate_phone || '').trim();

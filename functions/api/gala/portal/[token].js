@@ -64,6 +64,7 @@ export async function onRequestGet(context) {
       seatsAllocated: d.seats_allocated,
       status: d.status,
       finalizedAt: d.finalized_at,
+      confirmedAt: d.confirmed_at || null,
     };
   }
 
@@ -181,6 +182,7 @@ export async function onRequestGet(context) {
       invitedAt: d.invited_at,
       accessedAt: d.accessed_at,
       finalizedAt: d.finalized_at,
+      confirmedAt: d.confirmed_at || null,
     })),
     childDelegationAssignments,
     allAssignments: allAssignments.results || [],
