@@ -38,6 +38,7 @@ import { ProfileModal } from './ProfileModal.jsx';
 import { CelebrationOverlay } from './CelebrationOverlay.jsx';
 import { InviteModal } from './InviteModal.jsx';
 import { DelegationManageModal } from './DelegationManageModal.jsx';
+import { ReceiveOverlay } from './ReceiveOverlay.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -349,6 +350,39 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
   const remaining = Math.max(0, total - placed);
   const open = tierAccess?.open === true;
 
+  // Display modes:
+  //   'groups'   — collapsed by (theater + showing) — default. Each
+  //                card lists seat chips for that group.
+  //   'flat'     — flat list of seats, one card per seat. Useful when
+  //                a sponsor wants to see each individual ticket as
+  //                its own row (the "show me by seat" ask).
+  // Hide the toggle entirely if every group is single-seat (toggle
+  // becomes a visual no-op).
+  const hasMultiSeatGroup = groups.some((g) => g.seats.length > 1);
+  const [mode, setMode] = useState('groups');
+
+  // Flat-mode view: explode every group into one card per seat. We
+  // reuse the same TicketGroupModal-open path: each flat row points to
+  // a synthetic single-seat group so the click behavior matches.
+  const flatItems = useMemo(() => {
+    if (mode !== 'flat') return [];
+    const out = [];
+    for (const g of groups) {
+      for (const s of g.seats) {
+        out.push({
+          ...g,
+          id: s.id,
+          seats: [s], // synthetic single-seat group
+          _isFlat: true,
+          _flatSeat: s,
+        });
+      }
+    }
+    return out;
+  }, [groups, mode]);
+
+  const displayGroups = mode === 'flat' ? flatItems : groups;
+
   return (
     <section className="p2-section">
       <div className="p2-section-header">
@@ -365,6 +399,28 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
             justifyContent: 'flex-end',
           }}
         >
+          {hasMultiSeatGroup && placed > 0 && (
+            <div className="p2-view-toggle" role="tablist" aria-label="Ticket view">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'groups'}
+                className={mode === 'groups' ? 'active' : ''}
+                onClick={() => setMode('groups')}
+              >
+                My groups
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'flat'}
+                className={mode === 'flat' ? 'active' : ''}
+                onClick={() => setMode('flat')}
+              >
+                By seat
+              </button>
+            </div>
+          )}
           <p style={{ margin: 0 }}>
             {placed} of {total} placed
             {remaining > 0 ? <> · {remaining} still to choose</> : <> · all set</>}
@@ -378,14 +434,12 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
       </div>
 
       <div className="p2-ticket-grid">
-        {groups.map((g) => {
+        {displayGroups.map((g) => {
           const n = g.seats.length;
           // Compose a short summary line about who's sitting in the group.
           const named = g.seats.filter((s) => s.guest_name);
           let whoLine = null;
           if (named.length === n && named.length > 0) {
-            // Everyone has a name. If they're all the same name, "Ali Foster"
-            // — otherwise "Ali Foster + 2 others" style.
             const uniqueNames = [...new Set(named.map((s) => s.guest_name))];
             whoLine =
               uniqueNames.length === 1
@@ -424,7 +478,7 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
                       marginLeft: 'auto',
                     }}
                   >
-                    {n} {n === 1 ? 'seat' : 'seats'}
+                    {g._isFlat ? `Seat ${g._flatSeat.seatLabel}` : `${n} ${n === 1 ? 'seat' : 'seats'}`}
                   </span>
                 </div>
                 <div style={{ margin: '8px 0 4px' }}>
@@ -828,6 +882,25 @@ export default function PortalShellV2({
     // Refresh after the modal closes, in case the user placed seats.
     if (onRefresh) await onRefresh();
   };
+
+  // Receive flow gate: a delegate visiting their portal for the first
+  // time (confirmedAt is null) sees a take-over "here's what you have,
+  // keep or modify?" overlay before the normal shell. Once they
+  // confirm (or modify-then-close), the gate falls away and they see
+  // the regular portal — same view sponsors see, just scoped to their
+  // own seats and contact info.
+  const needsReceiveGate =
+    identity.kind === 'delegation' && !identity.confirmedAt;
+
+  if (needsReceiveGate) {
+    return (
+      <ReceiveOverlay
+        portal={portal}
+        token={token}
+        onConfirmed={onRefresh}
+      />
+    );
+  }
 
   return (
     <div className="p2-shell">

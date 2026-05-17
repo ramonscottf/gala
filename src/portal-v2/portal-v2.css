@@ -675,6 +675,128 @@ body {
   border-color: var(--p2-rule-strong);
 }
 
+/* ── Delegation manage modal (Phase 3.5b) ──────────────────────────── */
+
+.p2-deleg-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--p2-rule);
+  margin-bottom: 22px;
+}
+
+.p2-deleg-section {
+  margin-top: 22px;
+}
+
+.p2-deleg-section:first-of-type {
+  margin-top: 0;
+}
+
+.p2-deleg-section-title {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--p2-gold);
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.p2-deleg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.p2-deleg-field label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--p2-subtle);
+}
+
+.p2-deleg-field input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--p2-rule);
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.p2-deleg-field input:focus {
+  outline: none;
+  border-color: var(--p2-gold);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.p2-deleg-field input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.p2-btn.ghost-danger {
+  background: transparent;
+  border: 1px solid rgba(215, 40, 70, 0.4);
+  color: var(--p2-red-soft);
+}
+
+.p2-btn.ghost-danger:hover {
+  background: rgba(215, 40, 70, 0.1);
+  border-color: rgba(215, 40, 70, 0.6);
+}
+
+.p2-btn.danger {
+  background: linear-gradient(135deg, var(--p2-red) 0%, var(--p2-red-soft) 100%);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+}
+
+.p2-btn.danger:hover {
+  filter: brightness(1.08);
+}
+
+/* ── View toggle (My groups / By seat) ────────────────────────────── */
+
+.p2-view-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--p2-rule);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.p2-view-toggle button {
+  background: transparent;
+  border: none;
+  color: var(--p2-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.p2-view-toggle button:hover {
+  color: #fff;
+}
+
+.p2-view-toggle button.active {
+  background: var(--p2-gold);
+  color: var(--p2-navy-deep);
+}
+
 /* ── Showing + auditorium pill pair ──────────────────────────────────
  *
  * Two pills side-by-side: showing pill (color-coded by time of day —
@@ -1093,6 +1215,177 @@ body {
 
 .p2-celebrate.settle .p2-celebrate-hint {
   opacity: 1;
+}
+
+/* ── Receive overlay (Phase 3.5c) ───────────────────────────────────
+ * First-visit gate for delegates. Full-screen takeover, navy gradient
+ * ground (same family as celebration but no rotating rays — this is a
+ * calm "here's what you have" moment, not a celebration). Scrolls
+ * naturally if content exceeds viewport. */
+
+.p2-receive {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(215, 40, 70, 0.16), transparent 32%),
+    radial-gradient(circle at 88% 8%, rgba(98, 200, 255, 0.1), transparent 30%),
+    linear-gradient(135deg, #080916 0%, #11194a 52%, #171845 100%);
+}
+
+.p2-receive-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 56px) clamp(20px, 5vw, 40px) 60px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.p2-receive-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--p2-gold);
+  font-weight: 800;
+}
+
+.p2-receive-headline {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(38px, 6vw, 56px);
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+  margin: 0;
+}
+
+.p2-receive-sub {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--p2-muted);
+  margin: 4px 0 16px;
+  max-width: 580px;
+}
+
+.p2-receive-seats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.p2-receive-seat-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--p2-rule);
+  align-items: flex-start;
+}
+
+.p2-receive-poster {
+  width: 72px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--p2-rule);
+  flex-shrink: 0;
+}
+
+.p2-receive-seat-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.p2-receive-seat-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.p2-receive-seat-label {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 28px;
+  color: var(--p2-gold);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.p2-receive-movie {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.p2-receive-contact {
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(244, 185, 66, 0.06);
+  border: 1px solid rgba(244, 185, 66, 0.2);
+}
+
+.p2-receive-contact-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--p2-gold);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.p2-receive-contact-body {
+  font-size: 14px;
+  color: #fff;
+}
+
+.p2-receive-empty {
+  width: 100%;
+  padding: 28px 22px;
+  border: 1px dashed var(--p2-rule);
+  border-radius: 18px;
+  text-align: center;
+  color: var(--p2-muted);
+  font-size: 14px;
+}
+
+.p2-receive-actions {
+  position: sticky;
+  bottom: 16px;
+  margin-top: 24px;
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(8, 13, 40, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--p2-rule);
+  justify-content: space-between;
+}
+
+.p2-receive-actions .p2-btn {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .p2-receive-seat-card {
+    flex-direction: row;
+    padding: 14px;
+  }
+  .p2-receive-poster {
+    width: 56px;
+  }
+  .p2-receive-seat-label {
+    font-size: 24px;
+  }
 }
 
 /* ── Movie / lineup cards ───────────────────────────────────────────── */

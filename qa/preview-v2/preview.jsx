@@ -16,6 +16,7 @@ const SEATS_OPEN = params.get('seats') === '1';
 const FRESH = params.get('fresh') === '1';
 const DONE = params.get('done') === '1';
 const CELEBRATE = params.get('celebrate') === '1';
+const RECEIVE = params.get('receive') === '1';
 
 // Mock portal state — modeled on the real /api/gala/portal/{token} payload.
 const mockPortal = {
@@ -232,6 +233,61 @@ function PreviewApp() {
         onClose={() => {}}
         autoDismissMs={999999}
       />
+    );
+  }
+
+  if (RECEIVE) {
+    // Synthesize a delegate-side portal payload: identity.kind = delegation,
+    // confirmedAt = null (so the receive gate fires), 2 seats with 1 meal
+    // picked and 1 not, sponsor company shown.
+    const delegatePortal = {
+      identity: {
+        kind: 'delegation',
+        id: 1,
+        delegateName: 'Ali Foster',
+        email: 'ali@example.com',
+        phone: '801-205-6642',
+        parentCompany: 'Wicko Waypoint',
+        parentTier: 'Platinum',
+        seatsAllocated: 2,
+        status: 'invited',
+        confirmedAt: null,
+        accessedAt: null,
+      },
+      seatMath: { total: 2, placed: 2, delegated: 0, available: 0 },
+      tierAccess: { open: true, tier: 'Platinum' },
+      myAssignments: [
+        {
+          theater_id: 8,
+          row_label: 'D',
+          seat_num: '11',
+          showing_number: 2,
+          dinner_choice: 'frenchdip',
+        },
+        {
+          theater_id: 8,
+          row_label: 'D',
+          seat_num: '12',
+          showing_number: 2,
+          dinner_choice: null,
+        },
+      ],
+      myHolds: [],
+      childDelegations: [],
+      childDelegationAssignments: [],
+      allAssignments: [],
+      showtimes: mockPortal.showtimes,
+    };
+    return (
+      <MemoryRouter initialEntries={['/preview-ali-token']}>
+        <PortalShellV2
+          portal={delegatePortal}
+          token="preview-ali-token"
+          theaterLayouts={layouts}
+          seats={{ allSelfIds: new Set(), assigned: {}, totalAssigned: 0 }}
+          onRefresh={noopRefresh}
+        />
+      </MemoryRouter>
     );
   }
 
