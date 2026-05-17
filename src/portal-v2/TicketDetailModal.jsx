@@ -24,6 +24,7 @@ export function TicketDetailModal({
   onRefresh,
   onEditSeats,
   onChangeSeat,
+  onReleaseSeat,
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -313,7 +314,7 @@ export function TicketDetailModal({
             type="button"
             className="p2-btn ghost-danger sm"
             disabled={busy}
-            onClick={unplace}
+            onClick={() => onReleaseSeat && onReleaseSeat(ticket)}
           >
             Release this seat
           </button>

@@ -40,6 +40,8 @@ import { InviteModal } from './InviteModal.jsx';
 import { DelegationManageModal } from './DelegationManageModal.jsx';
 import { ReceiveOverlay } from './ReceiveOverlay.jsx';
 import { SwapSeatModal } from './SwapSeatModal.jsx';
+import { ReleaseSeatConfirm } from './ReleaseSeatConfirm.jsx';
+import { MoveGroupModal } from './MoveGroupModal.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -841,6 +843,14 @@ export default function PortalShellV2({
   // for `seat`. If returnTo is set, re-open that thing after the
   // swap modal closes (e.g. the group modal the user came from).
   const [swapSeat, setSwapSeat] = useState(null);
+  // releaseConfirm: { seats: [...], returnTo? } — confirm releasing
+  // one or many seats. The seats array shape matches the seat objects
+  // from group.seats so ReleaseSeatConfirm can render labels + meals.
+  const [releaseConfirm, setReleaseConfirm] = useState(null);
+  // moveGroup: { group, returnTo } — open the multi-seat move flow
+  // for a whole group. The group object is the full group payload
+  // from buildTicketGroups so we have movie title, poster, seats.
+  const [moveGroup, setMoveGroup] = useState(null);
 
   // Deep-link `/sponsor/{token}/seats` opens the seat modal.
   useEffect(() => {
@@ -992,11 +1002,33 @@ export default function PortalShellV2({
             setSeatModal(true);
           }}
           onChangeSeat={(seat) => {
-            // Stash the current group reference so we re-open it
-            // after the swap modal closes (commit or cancel).
             const returnGroup = groupModal;
             setGroupModal(null);
             setSwapSeat({ seat, returnTo: { kind: 'group', group: returnGroup } });
+          }}
+          onReleaseSeat={(seat) => {
+            // One-seat release. Confirm modal opens overlaid on the
+            // group modal (group modal stays mounted underneath so
+            // closing the confirm reveals the group with updated
+            // contents after refresh).
+            setReleaseConfirm({
+              seats: [seat],
+              returnTo: { kind: 'group', group: groupModal },
+            });
+          }}
+          onMoveGroup={(g) => {
+            const returnGroup = groupModal;
+            setGroupModal(null);
+            setMoveGroup({ group: g, returnTo: { kind: 'group', group: returnGroup } });
+          }}
+          onReleaseGroup={(g) => {
+            // Whole-group release. Same confirm modal, multiple seats.
+            // After confirm the group will be empty so there's nothing
+            // to return to — close the group modal as part of release.
+            setReleaseConfirm({
+              seats: g.seats,
+              returnTo: { kind: 'close-group' },
+            });
           }}
           onInviteSeat={(seat) => {
             const sid = `${seat.row}-${seat.num}`;
@@ -1031,6 +1063,16 @@ export default function PortalShellV2({
             const returnTicket = ticketModal;
             setTicketModal(null);
             setSwapSeat({ seat, returnTo: { kind: 'ticket', ticket: returnTicket } });
+          }}
+          onReleaseSeat={(seat) => {
+            // Single-seat detail release. After confirm, drop user
+            // back on home (seat is gone, ticket modal would be
+            // showing a stale reference).
+            setTicketModal(null);
+            setReleaseConfirm({
+              seats: [seat],
+              returnTo: { kind: 'close-group' }, // no return-to needed
+            });
           }}
         />
       )}
@@ -1078,25 +1120,66 @@ export default function PortalShellV2({
           seats={seats}
           onRefresh={onRefresh}
           onClose={() => {
-            // Return the user to whichever modal they came from
-            // (group or single-seat detail) so they can continue
-            // editing. The portal has refreshed by now so the seat
-            // labels in those modals reflect the new state.
             const ret = swapSeat.returnTo;
             setSwapSeat(null);
             if (ret?.kind === 'group') setGroupModal(ret.group);
-            else if (ret?.kind === 'ticket') {
-              // Look up the new seat record by finding the seat with
-              // the same id (the row/seat label that the user swapped
-              // TO will become the new "live ticket"). Easier: just
-              // re-open the group containing this seat. But group
-              // re-open is one step removed from where the user was.
-              // Best: just close — the user has already done what
-              // they came to do. They can re-enter from the home
-              // page if they want to keep going.
-              // (Choice: close without re-opening for the single-seat
-              // case. The group case re-opens because the user is
-              // likely tweaking several seats in a group.)
+          }}
+        />
+      )}
+      {releaseConfirm && (
+        <ReleaseSeatConfirm
+          seats={releaseConfirm.seats}
+          onConfirm={async () => {
+            // Group by (theater, showing) so we can call unplace once
+            // per (showing, theater) with the full seat list. Each
+            // unplace POSTs one assignment at a time inside useSeats
+            // anyway, but the grouping is cleaner.
+            const buckets = new Map();
+            for (const s of releaseConfirm.seats) {
+              const key = `${s.theater_id}:${s.showing_number || 1}`;
+              if (!buckets.has(key)) buckets.set(key, { showingNum: s.showing_number || 1, theaterId: s.theater_id, ids: [] });
+              buckets.get(key).ids.push(`${s.row}-${s.num}`);
+            }
+            for (const b of buckets.values()) {
+              const showingId = SHOWING_NUMBER_TO_ID[b.showingNum];
+              await seats.unplace(showingId, b.theaterId, b.ids);
+            }
+            if (onRefresh) await onRefresh();
+          }}
+          onClose={() => {
+            const ret = releaseConfirm.returnTo;
+            setReleaseConfirm(null);
+            // After release: if we came from a group modal that still
+            // has seats, reopen it (per-seat release path). If the
+            // group is now empty (whole-group release), don't reopen.
+            if (ret?.kind === 'group') {
+              // Re-derive the live group from fresh tickets. If it's
+              // gone (all seats released), skip the reopen.
+              const stillExists = tickets.find((g) => g.id === ret.group?.id);
+              if (stillExists && stillExists.seats.length > 0) {
+                setGroupModal(stillExists);
+              }
+            }
+            // 'close-group' returnTo: do nothing, user lands on home.
+          }}
+        />
+      )}
+      {moveGroup && (
+        <MoveGroupModal
+          group={moveGroup.group}
+          theaterLayouts={theaterLayouts}
+          portal={portal}
+          seats={seats}
+          onRefresh={onRefresh}
+          onClose={() => {
+            const ret = moveGroup.returnTo;
+            setMoveGroup(null);
+            if (ret?.kind === 'group') {
+              // Re-derive the live group from fresh tickets. The
+              // group's id is (theater + showing) so post-move it's
+              // the same id but with new seat labels.
+              const fresh = tickets.find((g) => g.id === ret.group?.id);
+              if (fresh) setGroupModal(fresh);
             }
           }}
         />

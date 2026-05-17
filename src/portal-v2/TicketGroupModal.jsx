@@ -4,7 +4,7 @@
 // lays out all seats in the group with per-seat actions plus a
 // "text my seats" action covering the whole group.
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { config } from '../config.js';
 import { DinnerModal, dinnerEmojiFor, dinnerLabelFor } from './DinnerModal.jsx';
 
@@ -22,11 +22,38 @@ export function TicketGroupModal({
   onEditSeats,
   onInviteSeat,
   onChangeSeat,
+  onReleaseSeat,
+  onMoveGroup,
+  onReleaseGroup,
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [smsNote, setSmsNote] = useState(null);
   const [dinnerSeat, setDinnerSeat] = useState(null);
+  // overflowSeat: which seat's ⋯ menu is open (null when closed).
+  const [overflowSeat, setOverflowSeat] = useState(null);
+  // groupMenu: whether the footer "Manage group ▼" menu is open.
+  const [groupMenu, setGroupMenu] = useState(false);
+  const overflowRef = useRef(null);
+  const groupMenuRef = useRef(null);
+
+  // Click-outside to close overflow + group menu.
+  useEffect(() => {
+    function onDocClick(e) {
+      if (overflowSeat && overflowRef.current && !overflowRef.current.contains(e.target)) {
+        setOverflowSeat(null);
+      }
+      if (groupMenu && groupMenuRef.current && !groupMenuRef.current.contains(e.target)) {
+        setGroupMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('touchstart', onDocClick);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('touchstart', onDocClick);
+    };
+  }, [overflowSeat, groupMenu]);
 
   const identity = portal?.identity || {};
   const canTextSelf = identity.kind === 'sponsor' && !!identity.phone;
@@ -188,6 +215,43 @@ export function TicketGroupModal({
                         </>
                       )}
                     </button>
+                    {/* ⋯ overflow — release lives here so destructive
+                        actions aren't one-thumb-away from the primary
+                        actions. */}
+                    {onReleaseSeat && (
+                      <div
+                        style={{ position: 'relative' }}
+                        ref={overflowSeat === s.id ? overflowRef : null}
+                      >
+                        <button
+                          type="button"
+                          className="p2-overflow-btn"
+                          onClick={() =>
+                            setOverflowSeat((cur) => (cur === s.id ? null : s.id))
+                          }
+                          aria-label={`More actions for ${s.seatLabel}`}
+                          aria-expanded={overflowSeat === s.id}
+                        >
+                          ⋯
+                        </button>
+                        {overflowSeat === s.id && (
+                          <div className="p2-overflow-popover" role="menu">
+                            <button
+                              type="button"
+                              className="p2-overflow-item danger"
+                              onClick={() => {
+                                setOverflowSeat(null);
+                                onReleaseSeat(s);
+                              }}
+                              role="menuitem"
+                            >
+                              <span aria-hidden="true">🗑️</span>
+                              <span>Release this seat</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -234,14 +298,64 @@ export function TicketGroupModal({
                 (portal?.seatMath?.placed || 0) -
                 (portal?.seatMath?.delegated || 0)
             );
-            if (remaining > 0) {
-              return (
-                <button type="button" className="p2-btn primary sm" onClick={onEditSeats}>
-                  + Add more seats
-                </button>
-              );
-            }
-            return null;
+            const canMove = !!onMoveGroup && group.seats.length >= 2;
+            const canReleaseGroup = !!onReleaseGroup && group.seats.length >= 2;
+            const hasGroupActions = canMove || canReleaseGroup;
+            return (
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                {hasGroupActions && (
+                  <div style={{ position: 'relative' }} ref={groupMenuRef}>
+                    <button
+                      type="button"
+                      className="p2-btn ghost sm"
+                      onClick={() => setGroupMenu((v) => !v)}
+                      aria-expanded={groupMenu}
+                    >
+                      Manage group {groupMenu ? '▾' : '▸'}
+                    </button>
+                    {groupMenu && (
+                      <div className="p2-overflow-popover p2-group-menu" role="menu">
+                        {canMove && (
+                          <button
+                            type="button"
+                            className="p2-overflow-item"
+                            onClick={() => {
+                              setGroupMenu(false);
+                              onMoveGroup(group);
+                            }}
+                            role="menuitem"
+                          >
+                            <span aria-hidden="true">⇄</span>
+                            <span>
+                              Move all {group.seats.length} seats
+                            </span>
+                          </button>
+                        )}
+                        {canReleaseGroup && (
+                          <button
+                            type="button"
+                            className="p2-overflow-item danger"
+                            onClick={() => {
+                              setGroupMenu(false);
+                              onReleaseGroup(group);
+                            }}
+                            role="menuitem"
+                          >
+                            <span aria-hidden="true">🗑️</span>
+                            <span>Release whole group</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {remaining > 0 && (
+                  <button type="button" className="p2-btn primary sm" onClick={onEditSeats}>
+                    + Add more seats
+                  </button>
+                )}
+              </div>
+            );
           })()}
         </div>
       </div>
