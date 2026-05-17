@@ -16,7 +16,15 @@ import { config } from '../config.js';
 import { ShowingAuditoriumPills } from './TicketGroupModal.jsx';
 import { DinnerModal, dinnerEmojiFor, dinnerLabelFor } from './DinnerModal.jsx';
 
-export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, onEditSeats }) {
+export function TicketDetailModal({
+  ticket,
+  portal,
+  token,
+  onClose,
+  onRefresh,
+  onEditSeats,
+  onChangeSeat,
+}) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const [smsNote, setSmsNote] = useState(null);
@@ -303,7 +311,7 @@ export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, o
         <div className="p2-modal-footer">
           <button
             type="button"
-            className="p2-btn ghost sm"
+            className="p2-btn ghost-danger sm"
             disabled={busy}
             onClick={unplace}
           >
@@ -312,9 +320,10 @@ export function TicketDetailModal({ ticket, portal, token, onClose, onRefresh, o
           <button
             type="button"
             className="p2-btn primary"
-            onClick={onEditSeats}
+            onClick={() => onChangeSeat && onChangeSeat(ticket)}
+            disabled={!onChangeSeat}
           >
-            Edit my seats →
+            ↻ Change this seat
           </button>
         </div>
       </div>

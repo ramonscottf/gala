@@ -39,6 +39,7 @@ import { CelebrationOverlay } from './CelebrationOverlay.jsx';
 import { InviteModal } from './InviteModal.jsx';
 import { DelegationManageModal } from './DelegationManageModal.jsx';
 import { ReceiveOverlay } from './ReceiveOverlay.jsx';
+import { SwapSeatModal } from './SwapSeatModal.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -836,6 +837,10 @@ export default function PortalShellV2({
   const [inviteModal, setInviteModal] = useState(null);
   // delegationManageModal: the delegation record being managed
   const [manageDelegation, setManageDelegation] = useState(null);
+  // swapSeat: { seat, returnTo? } — open the single-seat swap UX
+  // for `seat`. If returnTo is set, re-open that thing after the
+  // swap modal closes (e.g. the group modal the user came from).
+  const [swapSeat, setSwapSeat] = useState(null);
 
   // Deep-link `/sponsor/{token}/seats` opens the seat modal.
   useEffect(() => {
@@ -986,15 +991,15 @@ export default function PortalShellV2({
             setGroupModal(null);
             setSeatModal(true);
           }}
+          onChangeSeat={(seat) => {
+            // Stash the current group reference so we re-open it
+            // after the swap modal closes (commit or cancel).
+            const returnGroup = groupModal;
+            setGroupModal(null);
+            setSwapSeat({ seat, returnTo: { kind: 'group', group: returnGroup } });
+          }}
           onInviteSeat={(seat) => {
-            // Open InviteModal in Mode B with the full unassigned
-            // pool as the visible pill universe but ONLY this seat
-            // preselected (entry-from-row pattern from v1). Sponsor
-            // can check additional seats from the same block before
-            // submitting.
             const sid = `${seat.row}-${seat.num}`;
-            // Build the full giveable pool: all my placed seats with
-            // no delegation_id yet (Mode B universe).
             const giveable = [];
             for (const g of tickets) {
               for (const s of g.seats) {
@@ -1021,6 +1026,11 @@ export default function PortalShellV2({
           onEditSeats={() => {
             setTicketModal(null);
             setSeatModal(true);
+          }}
+          onChangeSeat={(seat) => {
+            const returnTicket = ticketModal;
+            setTicketModal(null);
+            setSwapSeat({ seat, returnTo: { kind: 'ticket', ticket: returnTicket } });
           }}
         />
       )}
@@ -1058,6 +1068,37 @@ export default function PortalShellV2({
           token={token}
           onClose={() => setManageDelegation(null)}
           onRefresh={onRefresh}
+        />
+      )}
+      {swapSeat && (
+        <SwapSeatModal
+          currentSeat={swapSeat.seat}
+          theaterLayouts={theaterLayouts}
+          portal={portal}
+          seats={seats}
+          onRefresh={onRefresh}
+          onClose={() => {
+            // Return the user to whichever modal they came from
+            // (group or single-seat detail) so they can continue
+            // editing. The portal has refreshed by now so the seat
+            // labels in those modals reflect the new state.
+            const ret = swapSeat.returnTo;
+            setSwapSeat(null);
+            if (ret?.kind === 'group') setGroupModal(ret.group);
+            else if (ret?.kind === 'ticket') {
+              // Look up the new seat record by finding the seat with
+              // the same id (the row/seat label that the user swapped
+              // TO will become the new "live ticket"). Easier: just
+              // re-open the group containing this seat. But group
+              // re-open is one step removed from where the user was.
+              // Best: just close — the user has already done what
+              // they came to do. They can re-enter from the home
+              // page if they want to keep going.
+              // (Choice: close without re-opening for the single-seat
+              // case. The group case re-opens because the user is
+              // likely tweaking several seats in a group.)
+            }
+          }}
         />
       )}
     </div>

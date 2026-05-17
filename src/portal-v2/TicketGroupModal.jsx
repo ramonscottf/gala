@@ -21,6 +21,7 @@ export function TicketGroupModal({
   onOpenSeat,
   onEditSeats,
   onInviteSeat,
+  onChangeSeat,
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -117,97 +118,77 @@ export function TicketGroupModal({
               const dinner = s.raw?.dinner_choice;
               const hasDelegate = !!(s.raw?.delegation_id || s.guest_name);
               const canInvite = !hasDelegate && onInviteSeat;
+              const canChange = !!onChangeSeat;
               return (
-                <div key={s.id} className="p2-group-seat-row" style={{ cursor: 'default' }}>
-                  <button
-                    type="button"
-                    onClick={() => onOpenSeat(s)}
+                <div key={s.id} className="p2-group-seat-row">
+                  <span
                     style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'inherit',
-                      font: 'inherit',
-                      cursor: 'pointer',
-                      padding: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 14,
-                      flex: 1,
-                      minWidth: 0,
+                      fontFamily: 'Fraunces, Georgia, serif',
+                      fontSize: 22,
+                      color: 'var(--p2-gold)',
+                      fontWeight: 600,
+                      minWidth: 56,
+                      flexShrink: 0,
                     }}
                   >
-                    <span
-                      style={{
-                        fontFamily: 'Fraunces, Georgia, serif',
-                        fontSize: 22,
-                        color: 'var(--p2-gold)',
-                        fontWeight: 600,
-                        minWidth: 56,
-                      }}
-                    >
-                      {s.seatLabel}
-                    </span>
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: 14,
-                        color: hasDelegate ? 'rgba(255,255,255,0.92)' : 'var(--p2-subtle)',
-                        minWidth: 0,
-                        fontStyle: hasDelegate ? 'normal' : 'italic',
-                      }}
-                    >
-                      {s.guest_name || 'Yours (no guest)'}
-                    </span>
-                  </button>
-                  {canInvite && (
+                    {s.seatLabel}
+                  </span>
+                  <span
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      color: hasDelegate ? 'rgba(255,255,255,0.92)' : 'var(--p2-subtle)',
+                      minWidth: 0,
+                      fontStyle: hasDelegate ? 'normal' : 'italic',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {s.guest_name || 'Yours (no guest)'}
+                  </span>
+                  <div className="p2-group-seat-actions">
+                    {canChange && (
+                      <button
+                        type="button"
+                        className="p2-chip-btn"
+                        onClick={() => onChangeSeat(s)}
+                        aria-label={`Change seat ${s.seatLabel}`}
+                      >
+                        <span aria-hidden="true">↻</span>
+                        <span>Change</span>
+                      </button>
+                    )}
+                    {canInvite && (
+                      <button
+                        type="button"
+                        className="p2-chip-btn"
+                        onClick={() => onInviteSeat(s)}
+                        aria-label={`Invite a guest for ${s.seatLabel}`}
+                      >
+                        <span aria-hidden="true">+</span>
+                        <span>Invite</span>
+                      </button>
+                    )}
                     <button
                       type="button"
-                      className="p2-btn ghost sm compact"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onInviteSeat(s);
-                      }}
-                      style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
+                      className={`p2-dinner-pill${dinner ? '' : ' empty'}`}
+                      onClick={() => setDinnerSeat(s)}
+                      aria-label={dinner ? `Change meal: ${dinnerLabelFor(dinner)}` : 'Pick dinner'}
                     >
-                      + Invite
+                      {dinner ? (
+                        <>
+                          <span className="p2-dinner-pill-emoji">{dinnerEmojiFor(dinner)}</span>
+                          <span>{dinnerLabelFor(dinner)}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="p2-dinner-pill-emoji">🍽️</span>
+                          <span>Pick dinner</span>
+                        </>
+                      )}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    className={`p2-dinner-pill${dinner ? '' : ' empty'}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDinnerSeat(s);
-                    }}
-                    aria-label={dinner ? `Change meal: ${dinnerLabelFor(dinner)}` : 'Pick dinner'}
-                  >
-                    {dinner ? (
-                      <>
-                        <span className="p2-dinner-pill-emoji">{dinnerEmojiFor(dinner)}</span>
-                        <span>{dinnerLabelFor(dinner)}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="p2-dinner-pill-emoji">🍽️</span>
-                        <span>Pick dinner</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onOpenSeat(s)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--p2-subtle)',
-                      fontSize: 18,
-                      cursor: 'pointer',
-                      padding: '0 4px',
-                    }}
-                    aria-label={`Open seat ${s.seatLabel}`}
-                  >
-                    →
-                  </button>
+                  </div>
                 </div>
               );
             })}
@@ -246,9 +227,22 @@ export function TicketGroupModal({
           <button type="button" className="p2-btn ghost sm" onClick={onClose}>
             Close
           </button>
-          <button type="button" className="p2-btn primary sm" onClick={onEditSeats}>
-            Edit my seats →
-          </button>
+          {(() => {
+            const remaining = Math.max(
+              0,
+              (portal?.seatMath?.total || 0) -
+                (portal?.seatMath?.placed || 0) -
+                (portal?.seatMath?.delegated || 0)
+            );
+            if (remaining > 0) {
+              return (
+                <button type="button" className="p2-btn primary sm" onClick={onEditSeats}>
+                  + Add more seats
+                </button>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
 

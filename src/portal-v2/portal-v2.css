@@ -675,6 +675,57 @@ body {
   border-color: var(--p2-rule-strong);
 }
 
+/* Actions cluster on the right side of a seat row: Change · Invite ·
+   Dinner pill. Wraps below the row's main content on narrow widths
+   so labels never get cut. */
+.p2-group-seat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* Small chip-button used inline on seat rows for Change / Invite.
+   Visually subordinate to the gold dinner pill (which carries the
+   "this seat has meaning" weight) — neutral grey, hover lights up. */
+.p2-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--p2-rule);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.p2-chip-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--p2-rule-strong);
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  /* On phones, let the actions cluster drop to its own line under
+     the seat label + name so chip labels never compress. */
+  .p2-group-seat-row {
+    flex-wrap: wrap;
+  }
+  .p2-group-seat-actions {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+}
+
 /* ── Delegation manage modal (Phase 3.5b) ──────────────────────────── */
 
 .p2-deleg-header {
@@ -795,6 +846,129 @@ body {
 .p2-view-toggle button.active {
   background: var(--p2-gold);
   color: var(--p2-navy-deep);
+}
+
+/* ── Swap seat modal (Phase 5) ──────────────────────────────────────
+ *
+ * Single-seat change UX modeled on the better cinema apps. Focused
+ * seat map for the user's current showing + auditorium, with their
+ * current seat shown as the swap source and a new selection as the
+ * swap target. From → To direction display below the map so the
+ * intent stays visible while the user scans seats.
+ */
+
+.p2-swap-modal {
+  max-width: 720px;
+}
+
+.p2-swap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  color: var(--p2-muted);
+}
+
+.p2-swap-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.p2-swap-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.p2-swap-dot.is-source {
+  background: #a8b1ff;
+  box-shadow: 0 0 0 2px rgba(168, 177, 255, 0.35);
+}
+
+.p2-swap-dot.is-target {
+  background: var(--p2-gold);
+  box-shadow: 0 0 0 2px rgba(244, 185, 66, 0.4);
+}
+
+.p2-swap-dot.is-open {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.p2-swap-dot.is-taken {
+  background: var(--p2-red);
+  opacity: 0.7;
+}
+
+.p2-swap-map-wrap {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--p2-rule);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.p2-swap-direction {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--p2-rule);
+  border-radius: 14px;
+}
+
+.p2-swap-direction-cell {
+  flex: 1;
+  min-width: 0;
+}
+
+.p2-swap-direction-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--p2-subtle);
+  margin-bottom: 4px;
+}
+
+.p2-swap-direction-seat {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--p2-gold);
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.p2-swap-direction-seat.placeholder {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--p2-subtle);
+  font-style: italic;
+}
+
+.p2-swap-arrow {
+  align-self: center;
+  font-size: 22px;
+  color: var(--p2-subtle);
+  font-weight: 800;
+}
+
+/* Mobile collapse — map needs more vertical room */
+@media (max-width: 640px) {
+  .p2-swap-direction {
+    padding: 12px;
+  }
+  .p2-swap-direction-seat {
+    font-size: 22px;
+  }
 }
 
 /* ── Showing + auditorium pill pair ──────────────────────────────────

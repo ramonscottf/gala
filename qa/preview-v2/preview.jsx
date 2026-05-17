@@ -213,6 +213,19 @@ if (DONE) {
 }
 
 const noopRefresh = async () => mockPortal;
+const stubSeats = {
+  allSelfIds: new Set(),
+  assigned: {},
+  totalAssigned: 6,
+  place: async () => {
+    console.log('[preview] seats.place — no-op');
+  },
+  unplace: async () => {
+    console.log('[preview] seats.unplace — no-op');
+  },
+  pending: false,
+  pickError: null,
+};
 
 const initialPath = SEATS_OPEN ? '/preview-token/seats' : '/preview-token';
 
@@ -297,7 +310,7 @@ function PreviewApp() {
         portal={mockPortal}
         token="preview-token"
         theaterLayouts={layouts}
-        seats={{ allSelfIds: new Set(), assigned: {}, totalAssigned: 6 }}
+        seats={stubSeats}
         onRefresh={noopRefresh}
         openSheetOnMount={SEATS_OPEN}
       />
