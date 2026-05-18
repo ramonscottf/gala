@@ -33,6 +33,7 @@ import { enrichMovieScores, formatRottenBadge, highestRottenScore } from '../por
 import { SeatPickerModal } from './SeatPickerModal.jsx';
 import { TicketDetailModal } from './TicketDetailModal.jsx';
 import { TicketGroupModal, ShowingAuditoriumPills } from './TicketGroupModal.jsx';
+import { TicketRowMenu } from './TicketRowMenu.jsx';
 import { MovieDetailModal } from './MovieDetailModal.jsx';
 // ProfileModal + FaqModal: imported as page components (FaqPage/SettingsPage)
 // below. The original modal versions stay on disk in case any other surface
@@ -355,7 +356,15 @@ function StatusCard({ identity, seatMath, tierAccess }) {
   );
 }
 
-function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore }) {
+function TicketsSection({
+  groups,
+  seatMath,
+  tierAccess,
+  onOpenGroup,
+  onPlaceMore,
+  onChangeSeats,
+  onReleaseGroup,
+}) {
   const total = seatMath?.total || 0;
   const placed = groups.reduce((n, g) => n + g.seats.length, 0);
   const delegated = seatMath?.delegated || 0;
@@ -466,58 +475,73 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
           }
 
           return (
-            <button
+            <div
               key={g.id}
-              type="button"
-              className="p2-ticket-card"
-              onClick={() => onOpenGroup(g)}
+              className="p2-ticket-card has-menu"
+              role="group"
+              aria-label={`${g.movie_title} · ${n} ${n === 1 ? 'seat' : 'seats'}`}
             >
-              <div
-                className="p2-ticket-poster"
-                style={
-                  g.poster_url ? { backgroundImage: `url(${g.poster_url})` } : undefined
-                }
-                aria-hidden="true"
-              />
-              <div className="p2-ticket-body">
-                <div className="p2-ticket-title">
-                  <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
-                    {g.movie_title}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      color: 'var(--p2-subtle)',
-                      marginLeft: 'auto',
-                    }}
-                  >
-                    {g._isFlat ? `Seat ${g._flatSeat.seatLabel}` : `${n} ${n === 1 ? 'seat' : 'seats'}`}
-                  </span>
-                </div>
-                <div style={{ margin: '8px 0 4px' }}>
-                  <ShowingAuditoriumPills
-                    showingNumber={g.showing_number}
-                    auditoriumId={g.theater_id}
-                  />
-                </div>
-                {whoLine && (
-                  <div className="p2-ticket-meta" style={{ marginTop: 4 }}>
-                    {whoLine}
-                  </div>
-                )}
-                <div className="p2-seat-chip-row">
-                  {g.seats.map((s) => (
-                    <span key={s.id} className="p2-seat-chip">
-                      {s.seatLabel}
+              <button
+                type="button"
+                className="p2-ticket-card-body"
+                onClick={() => onOpenGroup(g)}
+                aria-label="Open ticket details"
+              >
+                <div
+                  className="p2-ticket-poster"
+                  style={
+                    g.poster_url ? { backgroundImage: `url(${g.poster_url})` } : undefined
+                  }
+                  aria-hidden="true"
+                />
+                <div className="p2-ticket-body">
+                  <div className="p2-ticket-title">
+                    <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                      {g.movie_title}
                     </span>
-                  ))}
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: 'var(--p2-subtle)',
+                        marginLeft: 'auto',
+                      }}
+                    >
+                      {g._isFlat ? `Seat ${g._flatSeat.seatLabel}` : `${n} ${n === 1 ? 'seat' : 'seats'}`}
+                    </span>
+                  </div>
+                  <div style={{ margin: '8px 0 4px' }}>
+                    <ShowingAuditoriumPills
+                      showingNumber={g.showing_number}
+                      auditoriumId={g.theater_id}
+                    />
+                  </div>
+                  {whoLine && (
+                    <div className="p2-ticket-meta" style={{ marginTop: 4 }}>
+                      {whoLine}
+                    </div>
+                  )}
+                  <div className="p2-seat-chip-row">
+                    {g.seats.map((s) => (
+                      <span key={s.id} className="p2-seat-chip">
+                        {s.seatLabel}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <span className="p2-ticket-arrow">→</span>
-            </button>
+              </button>
+              <TicketRowMenu
+                onView={() => onOpenGroup(g)}
+                onChangeSeats={onChangeSeats ? () => onChangeSeats(g) : null}
+                onPickMeals={() => onOpenGroup(g)}
+                onReassign={() => onOpenGroup(g)}
+                onRelease={
+                  onReleaseGroup && !g._isFlat ? () => onReleaseGroup(g) : null
+                }
+              />
+            </div>
           );
         })}
         {remaining > 0 && (
@@ -1040,6 +1064,22 @@ export default function PortalShellV2({
                 }
               }}
               onPlaceMore={openSeatModal}
+              onChangeSeats={(g) => {
+                // From row ⋯ menu: open the seat picker pre-positioned on
+                // this group's showing.
+                if (g.seats.length === 1) {
+                  // Single-seat: route through the swap UI.
+                  setSwapSeat({ seat: g.seats[0], returnTo: { kind: 'home' } });
+                } else {
+                  setMoveGroup({ group: g, returnTo: { kind: 'home' } });
+                }
+              }}
+              onReleaseGroup={(g) => {
+                setReleaseConfirm({
+                  seats: g.seats,
+                  returnTo: { kind: 'close-group' },
+                });
+              }}
             />
           )}
 

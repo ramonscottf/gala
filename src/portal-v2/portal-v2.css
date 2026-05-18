@@ -571,6 +571,40 @@ body {
   border-color: var(--p2-rule-strong);
 }
 
+/* When a row has a ⋯ menu, the card itself is a container <div>; the
+   tappable area is .p2-ticket-card-body, and the menu sits absolutely
+   in the top-right corner. */
+.p2-ticket-card.has-menu {
+  cursor: default;
+  position: relative;
+  padding: 0;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.04);
+}
+.p2-ticket-card.has-menu:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: transparent;
+}
+.p2-ticket-card-body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  padding: 18px 52px 18px 20px;  /* right pad reserved for menu */
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 18px;
+  transition: background 0.12s ease;
+}
+.p2-ticket-card-body:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .p2-ticket-card.placeholder {
   /* Add-action affordance, not a content cage — keep an explicit
      dashed outline so the "place more seats" CTA reads as tappable. */
@@ -2893,3 +2927,78 @@ body {
   font-weight: 700;
   letter-spacing: .3px;
 }
+
+/* Ticket row ⋯ menu (Phase 5.7+ item D). Replaces inline View/Edit. */
+.p2-ticket-menu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+}
+.p2-ticket-menu-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--p2-rule);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.p2-ticket-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--p2-rule-strong);
+}
+.p2-ticket-menu-btn:active { transform: scale(0.96); }
+.p2-ticket-menu-btn:focus-visible {
+  outline: 2px solid var(--p2-blue);
+  outline-offset: 2px;
+}
+
+.p2-ticket-menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 190px;
+  background: var(--p2-navy-deep);
+  border: 1px solid var(--p2-rule-strong);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+  list-style: none;
+  margin: 0;
+  z-index: 1100;
+  animation: p2-menu-pop 0.12s ease-out;
+}
+@keyframes p2-menu-pop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.p2-ticket-menu-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 0;
+  color: #fff;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+.p2-ticket-menu-item:hover,
+.p2-ticket-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.07);
+  outline: none;
+}
+.p2-ticket-menu-item.danger { color: var(--p2-red-soft); }
+.p2-ticket-menu-item.danger:hover { background: rgba(215, 40, 70, 0.16); }
