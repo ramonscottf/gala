@@ -216,6 +216,14 @@ if (DONE) {
   mockPortal.myAssignments = mockPortal.myAssignments.slice(0, 6);
 }
 
+if (params.get('fulldeleg') === '1') {
+  // Sponsor delegated everything, placed nothing — must NOT be told
+  // to "Place 20 more"; Open should read seatMath.available (0).
+  mockPortal.identity.rsvpStatus = null;
+  mockPortal.seatMath = { total: 20, placed: 0, delegated: 20, available: 0 };
+  mockPortal.myAssignments = [];
+}
+
 if (FINALIZE || FINALIZE_BLOCK) {
   mockPortal.identity.rsvpStatus = null;
   mockPortal.seatMath = { total: 20, placed: 4, delegated: 6, available: 10 };
