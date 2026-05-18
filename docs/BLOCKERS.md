@@ -26,3 +26,26 @@ explicit permission (CLAUDE.md rule + git directives).
 
 Need from Scott/Skippy: confirm which branch should deploy to preview, or grant
 permission to fast-forward `feat/portal-soft-website` from this audit branch.
+
+## B3 — P2.1 numeric parity with v1 "Assigned" (needs Scott; NON-FATAL)
+
+v1's stat card third cell: label "ASSIGNED", sub "To guests", value
+that — in every live sample audited (Wicko 12/placed 12, Hughes
+0/placed 0, Garn 18/placed 18) — equals the PLACED count, not the
+delegated-to-guests count. v1's `assigned` therefore appears to
+duplicate `placed` (likely a v1 quirk; the authoritative source is
+the live `main` build, not this branch's dead Portal.jsx, so I can't
+confirm the exact formula here).
+
+Done now (safe, unambiguous, shipped): v2's third stat sub changed
+"To guests" → "To delegates" so a returning v1 sponsor does NOT
+equate v1's "ASSIGNED/To guests" with v2's "Delegated" row and think
+seats vanished. Their seat count is plainly under "Placed / In
+seats" (same number as v1's ASSIGNED), so nothing reads as lost.
+
+Open question for Scott: should v2 also replicate v1's exact
+"Assigned" NUMBER (= placed) under a parity label, or is v2's
+corrected model (Total/Placed/Delegated/Open, Delegated = true
+child-delegation count) the intended replacement? Replicating a
+suspected-buggy v1 number to live sponsors blind is the risk I'm not
+taking without your call. Not blocking the loop.

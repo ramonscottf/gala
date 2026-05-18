@@ -359,7 +359,7 @@ function StatusCard({ identity, seatMath, tierAccess }) {
             <div className="p2-stat">
               <div className="p2-stat-label">Delegated</div>
               <span className={`p2-stat-value ${delegated === 0 ? 'muted' : ''}`}>{delegated}</span>
-              <span className="p2-stat-sub">To guests</span>
+              <span className="p2-stat-sub">To delegates</span>
             </div>
             <div className="p2-stat">
               <div className="p2-stat-label">Open</div>

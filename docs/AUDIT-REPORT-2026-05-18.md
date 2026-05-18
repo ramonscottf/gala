@@ -98,8 +98,8 @@ Auditor: Claude Code. Method: code cross-reference `src/portal/` (v1) vs `src/po
 | P1.1 | P1 | FAQ surface missing | ✅ FaqModal fetches /api/gala/chat/faq, search + accordion, opened from help footer |
 | P1.2 | P1 | QR surface missing | ✅ TicketQrCardV2 when rsvpStatus==='completed' + QR inside ConfirmationView |
 | P1.3 | P1 | Open count ignores delegated | ✅ LIVE-verified on Hughes: Open 8 + "8 seats are yours to place" (was 20), matches v1 |
-| P2.1 | P2 | Delegated/Assigned label | ❓ (tracking — needs Scott's call on wording) |
-| P2.2 | P2 | CSS border review (gutter-cage mandate) | ❓ (needs Scott's eye — see below) |
+| P2.1 | P2 | Delegated/Assigned label | ✅ sub "To guests"→"To delegates" (kills v1↔v2 false-equivalence); deeper numeric-parity Q → BLOCKERS B3 |
+| P2.2 | P2 | CSS border review (gutter-cage mandate) | ✅ aggressive de-border: 16 cage selectors + .p2-card border:0, shadows softened; affordances (buttons, inputs, dashed CTA, pills, modal) preserved |
 
 ## Edge-case sweep (2026-05-18, live, real D1)
 
