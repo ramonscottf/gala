@@ -156,20 +156,10 @@ export function ConfirmationView({ name, token, apiBase = '', data, onClose }) {
             </p>
           </div>
 
-          <div className="p2-card stripped p2-confirm-qr">
-            <div className="p2-card-body">
-              <div className="p2-eyebrow">Your check-in QR</div>
-              <img
-                src={qrImgUrl}
-                alt="Check-in QR code"
-                width={240}
-                height={240}
-              />
-              <p className="p2-confirm-qr-hint">
-                Show this at the check-in table on June 10.
-              </p>
-            </div>
-          </div>
+          {/* QR card removed 2026-05-18 per Scott's call: QR is sponsor-scoped
+              fallback for trouble at the door, lives only in Settings
+              (hamburger → Settings). Confirmation email + SMS still carry
+              the QR; this surface stays focused on the "you're set" copy. */}
 
           <button
             type="button"

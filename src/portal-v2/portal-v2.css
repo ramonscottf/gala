@@ -2547,3 +2547,224 @@ body {
     font-size: 36px;
   }
 }
+
+/* ============================================================
+   WICKO PILL NAV — portal-v2 navy theme
+   Adapted from wicko-skills/brand/wicko-pill-nav.css (canonical
+   Foster ecosystem pattern). Hamburger always-on (mobile +
+   desktop) per Scott's spec — the drawer is the single source
+   of nav truth, not viewport-conditional.
+   ============================================================ */
+
+.p2-wpn {
+  --wpn-bg:               rgba(11, 27, 60, 0.78);
+  --wpn-bg-scrolled:      rgba(8, 13, 40, 0.94);
+  --wpn-border:           rgba(255, 255, 255, 0.10);
+  --wpn-shadow:           rgba(0, 0, 0, 0.30);
+  --wpn-shadow-scrolled:  rgba(0, 0, 0, 0.45);
+  --wpn-fg:               #ffffff;
+  --wpn-fg-soft:          rgba(255, 255, 255, 0.65);
+  --wpn-fg-strong:        #ffffff;
+  --wpn-card-bg:          #0f1639;
+  --wpn-card-shadow:      rgba(0, 0, 0, 0.55);
+  --wpn-card-divider:     rgba(255, 255, 255, 0.08);
+  --wpn-accent:           var(--p2-gold);
+  --wpn-link-font:        'Source Serif 4', Georgia, serif;
+  --wpn-pill-radius:      50px;
+  --wpn-card-radius:      18px;
+  --wpn-ease:             cubic-bezier(.16, 1, .3, 1);
+
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: calc(100% - 24px);
+  max-width: 760px;
+  background: var(--wpn-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-radius: var(--wpn-pill-radius);
+  border: 1px solid var(--wpn-border);
+  box-shadow: 0 8px 32px var(--wpn-shadow);
+  transition:
+    top .35s var(--wpn-ease),
+    background .35s var(--wpn-ease),
+    box-shadow .35s var(--wpn-ease);
+}
+.p2-wpn.is-scrolled {
+  top: max(8px, env(safe-area-inset-top));
+  background: var(--wpn-bg-scrolled);
+  box-shadow: 0 12px 40px var(--wpn-shadow-scrolled);
+}
+
+.p2-wpn .wpn__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px 8px 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.p2-wpn .wpn__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--wpn-fg);
+  min-width: 0;
+  flex: 1;
+}
+.p2-wpn .wpn__brand-icon {
+  height: 32px;
+  width: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.p2-wpn .wpn__brand-icon img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+.p2-wpn .wpn__brand-wordmark {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--p2-gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Hamburger — always visible (mobile + desktop) */
+.p2-wpn .wpn__toggle {
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  z-index: 10000;
+  position: relative;
+  flex-shrink: 0;
+}
+.p2-wpn .wpn__toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--wpn-fg);
+  margin: 5px 0;
+  transition: transform .3s, opacity .3s;
+  border-radius: 2px;
+}
+.p2-wpn .wpn__toggle.is-open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.p2-wpn .wpn__toggle.is-open span:nth-child(2) { opacity: 0; }
+.p2-wpn .wpn__toggle.is-open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* Drawer card hanging below the pill */
+.p2-wpn .wpn__links {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: var(--wpn-card-bg);
+  border-radius: var(--wpn-card-radius);
+  border: 1px solid var(--wpn-border);
+  box-shadow:
+    0 20px 60px var(--wpn-card-shadow),
+    0 4px 12px rgba(0, 0, 0, 0.30);
+  padding: 0 12px;
+  margin: 0;
+  list-style: none;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition:
+    max-height .42s var(--wpn-ease),
+    opacity   .28s ease,
+    transform .42s var(--wpn-ease),
+    padding   .42s var(--wpn-ease);
+}
+.p2-wpn .wpn__links.is-open {
+  max-height: 60vh;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  padding: 8px 12px 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.p2-wpn .wpn__links li {
+  list-style: none;
+  width: 100%;
+  text-align: center;
+  border-bottom: 1px solid var(--wpn-card-divider);
+}
+.p2-wpn .wpn__links li:last-child { border-bottom: none; }
+
+.p2-wpn .wpn__links a {
+  display: block;
+  font-family: var(--wpn-link-font);
+  font-size: 20px;
+  color: var(--wpn-fg);
+  padding: 16px 12px;
+  font-weight: 400;
+  letter-spacing: .4px;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: .85;
+  transition: opacity .2s, color .2s;
+}
+.p2-wpn .wpn__links a:hover,
+.p2-wpn .wpn__links a:focus { opacity: 1; color: var(--wpn-accent); }
+
+/* Push page content below the fixed pill */
+.p2-shell { padding-top: 76px; }
+@media (max-width: 480px) {
+  .p2-shell { padding-top: 70px; }
+  .p2-wpn .wpn__brand-wordmark { font-size: 9px; letter-spacing: 1.2px; }
+}
+
+/* Hide the deprecated p2-nav (old BrandNav) wherever it might still
+   render — defensive. Once PortalShell stops mounting it, this is a no-op. */
+.p2-nav { display: none; }
+
+/* Settings/Profile QR section — sponsor-scoped fallback for door issues.
+   Visual: centered, modest size, framed by a soft card, copy-first. */
+.p2-profile-qr {
+  margin-top: 28px;
+  padding: 20px 16px 22px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--p2-rule);
+  border-radius: 14px;
+  text-align: center;
+}
+.p2-profile-qr .p2-eyebrow {
+  margin-bottom: 6px;
+}
+.p2-profile-qr-hint {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--p2-subtle);
+  margin: 0 auto 14px;
+  max-width: 280px;
+}
+.p2-profile-qr-img {
+  display: block;
+  margin: 0 auto;
+  background: #fff;
+  padding: 8px;
+  border-radius: 10px;
+  width: 180px;
+  height: 180px;
+}

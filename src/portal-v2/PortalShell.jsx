@@ -49,6 +49,8 @@ import {
   ConfirmationView,
 } from './Finalize.jsx';
 import { HelpFooter } from './HelpFooter.jsx';
+import { WickoPillNav } from './WickoPillNav.jsx';
+import { FaqModal } from './FaqModal.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -145,30 +147,10 @@ function buildTicketGroups(portal) {
 // Atom components
 // ───────────────────────────────────────────────────────────────────────
 
-function BrandNav({ identity, onOpenProfile }) {
-  const initials = initialsOf(identity?.contactName || identity?.company);
-  return (
-    <nav className="p2-nav">
-      <div className="p2-brand">
-        <img src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation" />
-        <div className="p2-brand-mark" />
-        <div className="p2-brand-title">Annual Gala</div>
-      </div>
-      <div className="p2-nav-right">
-        <button
-          className="p2-avatar"
-          onClick={onOpenProfile}
-          title={identity?.contactName || identity?.company || 'Profile'}
-          aria-label="Open profile"
-          type="button"
-          style={{ cursor: 'pointer' }}
-        >
-          {initials}
-        </button>
-      </div>
-    </nav>
-  );
-}
+// BrandNav was the old top-left logo + "Annual Gala" + top-right SF
+// monogram. Replaced 2026-05-18 by WickoPillNav (floating pill +
+// hamburger drawer). Component removed; CSS .p2-nav is hidden by
+// portal-v2.css for defensive cleanup.
 
 function Hero({ identity, seatMath, tierAccess, onPick }) {
   const firstName = (identity?.contactName || '').split(' ')[0] || identity?.company || 'there';
@@ -266,9 +248,6 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
 
   return (
     <section className="p2-section p2-hero">
-      <div className="p2-eyebrow p2-hero-eyebrow">
-        Lights · Camera · Take Action · 2026
-      </div>
       <h1>{headline}</h1>
       <p className="p2-hero-sub">{sub}</p>
 
@@ -418,7 +397,7 @@ function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore
   const displayGroups = mode === 'flat' ? flatItems : groups;
 
   return (
-    <section className="p2-section">
+    <section className="p2-section" id="p2-tickets">
       <div className="p2-section-header">
         <div>
           <div className="p2-eyebrow">Your tickets</div>
@@ -864,6 +843,7 @@ export default function PortalShellV2({
   const [ticketModal, setTicketModal] = useState(null);
   const [movieModal, setMovieModal] = useState(null);
   const [profileModal, setProfileModal] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
   const [celebration, setCelebration] = useState(null);
   // inviteModal: null | { seatPills, preselectedPills } — Mode A is
   // open=true with no pills set; Mode B requires seatPills.
@@ -1002,7 +982,10 @@ export default function PortalShellV2({
 
   return (
     <div className="p2-shell">
-      <BrandNav identity={identity} onOpenProfile={() => setProfileModal(true)} />
+      <WickoPillNav
+        onOpenProfile={() => setProfileModal(true)}
+        onOpenFaq={() => setFaqOpen(true)}
+      />
 
       <Hero identity={identity} seatMath={seatMath} tierAccess={tierAccess} onPick={openSeatModal} />
 
@@ -1022,9 +1005,10 @@ export default function PortalShellV2({
         />
       )}
 
-      {isSponsor && isFinalized && (
-        <TicketQrCardV2 token={token} apiBase={config.apiBase} />
-      )}
+      {/* Persistent home-page QR card removed 2026-05-18 per Scott's call:
+          QR is sponsor-scoped fallback for trouble at the door, lives only
+          in Settings (accessed via the hamburger). Each group of seats is
+          the ticket. The QR moves into ProfileModal in a follow-up commit. */}
 
       {(tickets.length > 0 || seatMath.total > 0) && (
         <TicketsSection
@@ -1188,6 +1172,7 @@ export default function PortalShellV2({
           onRefresh={onRefresh}
         />
       )}
+      {faqOpen && <FaqModal onClose={() => setFaqOpen(false)} />}
       {celebration && (
         <CelebrationOverlay
           seats={celebration.seats}

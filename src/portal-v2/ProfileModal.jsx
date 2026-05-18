@@ -171,6 +171,23 @@ export function ProfileModal({ identity, token, onClose, onRefresh }) {
               <p>{err}</p>
             </div>
           )}
+
+          {/* QR moved here 2026-05-18 per Scott: troubleshooting fallback,
+              not primary check-in. Each group of seats is the ticket. */}
+          <div className="p2-profile-qr">
+            <div className="p2-eyebrow">Trouble at the door?</div>
+            <p className="p2-profile-qr-hint">
+              If anything goes sideways at check-in, show this QR. Your seats
+              are tied to your contact info above — this is a backup.
+            </p>
+            <img
+              src={`${config.apiBase}/api/gala/qr?t=${encodeURIComponent(token || '')}&size=180`}
+              alt="Check-in QR code"
+              width={180}
+              height={180}
+              className="p2-profile-qr-img"
+            />
+          </div>
         </div>
 
         <div className="p2-modal-footer">
