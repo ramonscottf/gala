@@ -1908,7 +1908,12 @@ body {
   display: flex;
   align-items: stretch;
   justify-content: center;
-  padding: 0;
+  /* Pill clearance — Scott 2026-05-18: modals must start UNDER the pill,
+     not overlap. Pill is fixed at top: max(12px, env(safe-area-inset-top))
+     and ~48px tall. 72px = 12 + 48 + 12 breathing room. env() adds the
+     iOS notch on top of that. The result is a navy strip at the top where
+     the pill floats, then the modal beneath. */
+  padding: calc(72px + env(safe-area-inset-top, 0)) 0 0;
   overflow-y: auto;
   /* Subtle fade-in only — no slide/zoom hero animations per design rules */
   animation: p2-fade 140ms ease-out;
@@ -1921,8 +1926,11 @@ body {
 
 .p2-modal {
   margin: auto;
-  width: min(880px, calc(100% - 24px));
-  max-width: 880px;
+  /* Width matches the pill (max 760px) so they vertically align — Scott
+     2026-05-18: "consistent width". Wide variant keeps its own bigger
+     max-width for content that needs it (seat picker, etc). */
+  width: min(760px, calc(100% - 24px));
+  max-width: 760px;
   background:
     radial-gradient(circle at 5% 8%, rgba(215, 40, 70, 0.18), transparent 35%),
     radial-gradient(circle at 95% 5%, rgba(98, 200, 255, 0.12), transparent 35%),
@@ -1932,7 +1940,7 @@ body {
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
   position: relative;
-  margin-top: 24px;
+  margin-top: 0;
   margin-bottom: 24px;
 }
 
@@ -3468,6 +3476,9 @@ body {
   }
   .p2-auction-burst {
     font-size: 44px;
+  }
+}
+
 /* ============================================================
    Mobile modal chrome — full-screen sheet (Phase 5.7+ post-G).
    
@@ -3488,29 +3499,31 @@ body {
    dodges the bug AND clears visual chrome competition.
    ============================================================ */
 
-/* Pill auto-hide — runs at all viewport widths. The pill has no
-   purpose while a modal is captive; the modal is the surface. */
-body:has(.p2-modal-backdrop) .p2-wpn {
-  display: none;
-}
+/* Pill stays visible while modals are open — Scott 2026-05-18 chose
+   to position modals BELOW the pill (via backdrop padding-top) rather
+   than hide the pill, since :has() pill-hide wasn't firing reliably
+   across browsers/caches anyway. The pill nav remains the persistent
+   floating chrome regardless of modal state. */
 
 @media (max-width: 640px) {
   .p2-modal-backdrop {
-    padding: 0;
+    /* Pill clearance — match desktop math + the iOS safe-area inset. */
+    padding: calc(72px + env(safe-area-inset-top, 0)) 0 0;
     overflow: hidden;            /* modal becomes the scroll surface */
     align-items: stretch;
     backdrop-filter: none;        /* dodge iOS double-blur bug */
     -webkit-backdrop-filter: none;
-    background: #0b1132;          /* solid so no see-through on mobile */
+    background: #0b1132;          /* solid so the pill strip blends with the modal */
   }
   .p2-modal {
     margin: 0;
     width: 100%;
     max-width: 100%;
-    min-height: 100vh;
-    min-height: 100dvh;          /* iOS Safari dynamic viewport */
-    max-height: 100vh;
-    max-height: 100dvh;
+    /* Modal fills the remaining viewport AFTER the pill-clearance padding. */
+    min-height: calc(100vh - 72px - env(safe-area-inset-top, 0));
+    min-height: calc(100dvh - 72px - env(safe-area-inset-top, 0));
+    max-height: calc(100vh - 72px - env(safe-area-inset-top, 0));
+    max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0));
     border-radius: 0;
     border: 0;
     box-shadow: none;
@@ -3531,12 +3544,11 @@ body:has(.p2-modal-backdrop) .p2-wpn {
     position: sticky;
     top: 0;
     z-index: 5;
-    padding: 14px 16px calc(12px) 16px;
-    padding-top: max(14px, env(safe-area-inset-top));
+    padding: 14px 16px 12px;
+    /* No more safe-area-inset-top here — the backdrop padding handles it. */
     background:
       linear-gradient(180deg, #0b1132 80%, rgba(11, 17, 50, 0) 100%);
     border-bottom: 1px solid var(--p2-rule);
-    /* Tighten the title size on mobile */
   }
   .p2-modal-header .p2-modal-title {
     font-size: 20px;
@@ -3544,7 +3556,6 @@ body:has(.p2-modal-backdrop) .p2-wpn {
   .p2-modal-body {
     padding: 16px;
     flex: 1 1 auto;
-    /* IMPORTANT: do NOT set overflow here — the modal itself scrolls */
   }
   .p2-modal-footer {
     position: sticky;

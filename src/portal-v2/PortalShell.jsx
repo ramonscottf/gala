@@ -1195,10 +1195,57 @@ export default function PortalShellV2({
               returnTo: { kind: 'close-group' },
             });
           }}
-          onGiftSeat={(seat) => {
-            const returnGroup = groupModal;
+          onGiftGroup={(g) => {
+            // Scott 2026-05-18: "manage group needs to be gift seats."
+            // Gift-the-whole-group flow: open InviteModal with every
+            // free seat in this group as a toggleable pill, all
+            // preselected. User can deselect any they don't want to
+            // gift, fills in guest details, single submit dispatches
+            // the invite to all checked seats.
+            const giveable = [];
+            for (const s of g.seats) {
+              const free = !s.raw?.delegation_id && !s.guest_name;
+              if (free) giveable.push(`${s.row}-${s.num}`);
+            }
+            // Edge case: every seat in the group already has a
+            // delegate. Fall through to InviteModal anyway so the
+            // user gets useful feedback (no giveable pills shown).
+            const pills = giveable.length > 0 ? giveable : g.seats.map((s) => `${s.row}-${s.num}`);
             setGroupModal(null);
-            setGiftSeat({ seat, returnTo: { kind: 'group', group: returnGroup } });
+            setInviteModal({
+              seatPills: pills,
+              preselectedPills: pills,
+            });
+          }}
+          onGiftSeat={(seat) => {
+            // Scott 2026-05-18: "Reassign should be gift seats and
+            // open a popup preloaded with that seat and give the
+            // option of the others in that group." Per-seat ⋯ "Gift
+            // seat" now jumps directly to InviteModal with the
+            // same-group offering. The intermediate GiftSeatModal
+            // (existing-delegate picker) is bypassed — the InviteModal
+            // is the popup Scott described.
+            const sid = `${seat.row}-${seat.num}`;
+            const sameGroupGiveable = [];
+            for (const g of tickets) {
+              const sameGroup =
+                g.theater_id === seat.theater_id &&
+                (g.showing_number || 1) === (seat.showing_number || 1);
+              if (!sameGroup) continue;
+              for (const s of g.seats) {
+                const isTarget = s.row === seat.row && s.num === seat.num;
+                const free = !s.raw?.delegation_id && !s.guest_name;
+                if (isTarget || free) {
+                  sameGroupGiveable.push(`${s.row}-${s.num}`);
+                }
+              }
+            }
+            setGroupModal(null);
+            setInviteModal({
+              seatPills:
+                sameGroupGiveable.length > 0 ? sameGroupGiveable : [sid],
+              preselectedPills: [sid],
+            });
           }}
           onInviteSeat={(seat) => {
             // Same-group filter — same theater + same showing as the

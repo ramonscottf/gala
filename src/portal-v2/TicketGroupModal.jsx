@@ -26,6 +26,7 @@ export function TicketGroupModal({
   onMoveGroup,
   onReleaseGroup,
   onGiftSeat,
+  onGiftGroup,         // Phase 5.7+ post-G — opens gift flow for the whole group at once
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -222,7 +223,7 @@ export function TicketGroupModal({
                                 role="menuitem"
                               >
                                 <span aria-hidden="true">🎁</span>
-                                <span>{hasDelegate ? 'Reassign' : 'Gift to a guest'}</span>
+                                <span>{hasDelegate ? 'Gift seat (change recipient)' : 'Gift seat'}</span>
                               </button>
                             )}
                             {onReleaseSeat && (
@@ -309,7 +310,8 @@ export function TicketGroupModal({
             );
             const canMove = !!onMoveGroup && group.seats.length >= 2;
             const canReleaseGroup = !!onReleaseGroup && group.seats.length >= 2;
-            const hasGroupActions = canMove || canReleaseGroup;
+            const canGiftGroup = !!onGiftGroup && group.seats.length >= 1;
+            const hasGroupActions = canMove || canReleaseGroup || canGiftGroup;
             return (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 {hasGroupActions && (
@@ -337,6 +339,22 @@ export function TicketGroupModal({
                             <span aria-hidden="true">⇄</span>
                             <span>
                               Move all {group.seats.length} seats
+                            </span>
+                          </button>
+                        )}
+                        {canGiftGroup && (
+                          <button
+                            type="button"
+                            className="p2-overflow-item"
+                            onClick={() => {
+                              setGroupMenu(false);
+                              onGiftGroup(group);
+                            }}
+                            role="menuitem"
+                          >
+                            <span aria-hidden="true">🎁</span>
+                            <span>
+                              Gift {group.seats.length === 1 ? 'this seat' : `${group.seats.length} seats`}
                             </span>
                           </button>
                         )}
