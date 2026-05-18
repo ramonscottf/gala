@@ -1,0 +1,259 @@
+/*
+ * qgiv-skin.css — loaded INSIDE the Qgiv iframe via Page Specific Header
+ * injection on form 1097071 in the Qgiv admin. URL referenced from Qgiv:
+ *   <link rel="stylesheet" href="https://gala.daviskids.org/qgiv-skin.css">
+ *
+ * Goals:
+ *  - Match the DEF gala portal visual language (navy ground, off-white
+ *    cards, gold/red accents, Fraunces display + Inter body).
+ *  - Hide the $0.00 price/subtotal/total lines — registration is free,
+ *    showing them is noise (Scott confirmed 2026-05-18).
+ *  - Hide any legacy auction-event banner imagery (Hogan / AFCU logos
+ *    that belong to the broader event, not this registration form).
+ *  - Soften the "Powered by Bloomerang" footer if present (the embed view
+ *    didn't show it in live testing, but defensive in case it surfaces).
+ *
+ * Discipline:
+ *  - Every selector targets a single semantic class.
+ *  - No !important unless required to override Qgiv's inline styles.
+ *  - All BEM hooks (.event-registration__*, .packages__*) were confirmed
+ *    in the live DOM walk-through 2026-05-18.
+ *  - Fonts are loaded via Google Fonts at the top — Qgiv iframe is on a
+ *    different origin from us, so self-hosted Pages fonts can't be
+ *    cross-origined easily. Using public CDN is acceptable here.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Color tokens (mirror portal-v2.css) ─────────────────────────── */
+:root {
+  --def-navy: #11194a;
+  --def-navy-deep: #080d28;
+  --def-navy-mid: #1c2760;
+  --def-gold: #f4b942;
+  --def-red: #c53030;
+  --def-paper: #f5f1e6;
+  --def-rule: rgba(255, 255, 255, 0.14);
+  --def-muted: rgba(255, 255, 255, 0.72);
+}
+
+/* ── Page chrome ─────────────────────────────────────────────────── */
+body,
+.event-registration,
+.event-registration__inner {
+  background: var(--def-navy-deep) !important;
+  color: #fff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.event-registration__header {
+  background: transparent;
+  border-bottom: 1px solid var(--def-rule);
+}
+
+/* Hide the legacy event banner (Hogan / AFCU image), keep our own
+   modal title bar as the visible header. */
+.event-registration__header img,
+.event-registration__header [class*="banner"],
+.event-registration__header [class*="logo"] {
+  display: none !important;
+}
+
+/* ── Typography ──────────────────────────────────────────────────── */
+.heading-alpha,
+.event-registration h1,
+.event-registration h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.form-section-title,
+.event-registration h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: -0.005em;
+}
+
+.event-registration p,
+.event-registration label,
+.option-label {
+  color: var(--def-muted);
+}
+
+/* ── Form controls ───────────────────────────────────────────────── */
+.event-registration input[type="text"],
+.event-registration input[type="email"],
+.event-registration input[type="tel"],
+.event-registration input[type="number"],
+.event-registration select,
+.event-registration textarea {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--def-rule);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.event-registration input:focus,
+.event-registration select:focus,
+.event-registration textarea:focus {
+  outline: none;
+  border-color: var(--def-gold);
+  box-shadow: 0 0 0 3px rgba(244, 185, 66, 0.18);
+}
+
+/* Placeholder color */
+.event-registration input::placeholder,
+.event-registration textarea::placeholder {
+  color: rgba(255, 255, 255, 0.36);
+}
+
+/* ── Primary button (Next / Submit / Continue) ──────────────────── */
+.qg-vendor-button.button.button--primary,
+.event-registration .button--primary,
+.event-registration button[type="submit"] {
+  background: linear-gradient(90deg, var(--def-gold) 0%, var(--def-red) 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: 0 4px 18px rgba(244, 185, 66, 0.22);
+}
+
+.qg-vendor-button.button.button--primary:hover,
+.event-registration .button--primary:hover,
+.event-registration button[type="submit"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(244, 185, 66, 0.32);
+}
+
+/* Secondary button (Back / Cancel) */
+.event-registration .button--secondary,
+.event-registration .button.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--def-rule);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+/* ── Hide free-registration money lines ──────────────────────────── */
+/* Scott 2026-05-18: registration is $0; these lines are noise. */
+.price-display,
+.subtotal-display,
+.total-display,
+[class*="price"][class*="display"],
+.cart-total,
+.registration-total {
+  display: none !important;
+}
+
+/* ── Soften any Bloomerang footer attribution ───────────────────── */
+.bloomerang-attribution,
+.powered-by,
+[class*="powered-by"] {
+  opacity: 0.4;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* ── Step indicator / progress ───────────────────────────────────── */
+.event-registration__steps,
+.progress-indicator,
+.step-indicator {
+  background: transparent;
+}
+
+.event-registration__steps .step.active,
+.progress-indicator .step.active {
+  color: var(--def-gold);
+}
+
+.event-registration__steps .step.complete,
+.progress-indicator .step.complete {
+  color: rgba(244, 185, 66, 0.6);
+}
+
+/* ── Modal close button (Qgiv's internal X) ──────────────────────── */
+/* We have our own X on the parent modal — Qgiv's confirmation modal
+   close should remain functional but visually quieter. */
+.modal2__close {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ── Package selector (Step 1) ───────────────────────────────────── */
+.packages-page-container,
+.packages__content {
+  background: transparent;
+}
+
+.package-option,
+.packages__item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--def-rule);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.package-option:hover,
+.packages__item:hover {
+  border-color: rgba(244, 185, 66, 0.32);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.package-option.selected,
+.packages__item.selected {
+  border-color: var(--def-gold);
+  background: rgba(244, 185, 66, 0.06);
+}
+
+/* ── Account-create step (post-registrationComplete) ─────────────── */
+/* After QGIV.registrationComplete the iframe routes to /account/create/
+   prompting for Password + Password_Confirm. Same form styling applies
+   but we add a subtle reassurance band. */
+.account-creation,
+.account-create {
+  background: transparent;
+}
+
+/* ── Links ───────────────────────────────────────────────────────── */
+.event-registration a {
+  color: var(--def-gold);
+}
+
+.event-registration a:hover {
+  color: #fff;
+}
+
+/* ── Inline validation errors ────────────────────────────────────── */
+.error-message,
+.field-error,
+.validation-error {
+  color: #ff8a8a;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* ── Helper text below inputs ────────────────────────────────────── */
+.help-text,
+.field-help {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  margin-top: 4px;
+}

@@ -115,7 +115,20 @@ export function TicketQrCardV2({ token, apiBase = '' }) {
 // Full-screen confirmation, shown right after /finalize succeeds.
 // Short-circuits the shell render (like ReceiveOverlay) so it reads
 // as a moment, not a sheet stacked on the portal.
-export function ConfirmationView({ name, token, apiBase = '', data, onClose }) {
+// AuctionRegistrationCard import — sibling file in same dir. Inline below
+// the "Thank you" copy on the confirmation screen to capture the moment
+// of highest momentum (sponsor has just locked in their seats).
+import { AuctionRegistrationCard } from './AuctionRegistrationCard.jsx';
+
+export function ConfirmationView({
+  name,
+  token,
+  apiBase = '',
+  data,
+  identity,
+  onRefresh,
+  onClose,
+}) {
   const seatCount = data?.seatCount || 0;
   const qrImgUrl = data?.qrImgUrl || qrSrcFor(token, apiBase, 260);
   const delivery = deliveryCopy(data?.email?.sent, data?.sms?.sent);
@@ -160,6 +173,21 @@ export function ConfirmationView({ name, token, apiBase = '', data, onClose }) {
               fallback for trouble at the door, lives only in Settings
               (hamburger → Settings). Confirmation email + SMS still carry
               the QR; this surface stays focused on the "you're set" copy. */}
+
+          {/* Silent-auction sign-up — dominant CTA after seats are locked.
+              Only rendered for sponsor tokens; gated internally by the card
+              based on identity.kind. */}
+          {identity?.kind === 'sponsor' && (
+            <AuctionRegistrationCard
+              identity={identity}
+              token={token}
+              apiBase={apiBase}
+              variant="confirmation"
+              onRegistered={() => {
+                if (onRefresh) onRefresh();
+              }}
+            />
+          )}
 
           <button
             type="button"

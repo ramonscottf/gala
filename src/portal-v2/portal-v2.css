@@ -3175,3 +3175,298 @@ body {
   .p2-inline-meal-label { font-size: 9px; letter-spacing: 0.02em; }
   .p2-inline-meal-seat { font-size: 20px; }
 }
+
+/* ── Silent-auction registration card + modal ─────────────────────────
+   Added 2026-05-18 (migration 012). Mirrors .p2-finalize visual pattern
+   (stripped card with gradient strip, row layout that wraps on mobile).
+   Card lives below FinalizeBanner on home; identical card renders on the
+   confirmation screen as the dominant follow-on CTA.
+   Modal is full-viewport overlay carrying the Qgiv iframe embed. */
+
+.p2-auction .p2-card-body {
+  padding: 24px 26px;
+}
+
+.p2-auction-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.p2-auction-copy {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.p2-auction-copy h2 {
+  margin: 8px 0 6px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.p2-auction-copy p {
+  margin: 0;
+  color: var(--p2-muted);
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 540px;
+}
+
+.p2-auction .p2-btn.primary {
+  flex-shrink: 0;
+}
+
+/* ✓ Registered state — green check + Givi app store buttons */
+.p2-auction-done .p2-auction-copy h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.p2-auction-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 200, 132, 0.18);
+  color: #25e094;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+  position: relative;
+  top: 3px;
+}
+
+.p2-auction-store-row {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.p2-auction-store {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  text-decoration: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  min-width: 138px;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.p2-auction-store:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.p2-auction-store-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  opacity: 0.78;
+  line-height: 1.2;
+}
+
+.p2-auction-store-name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.p2-auction-foot {
+  margin: 14px 0 0;
+  color: var(--p2-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.p2-auction-foot a {
+  color: var(--p2-gold);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.p2-auction-foot a:hover {
+  text-decoration: underline;
+}
+
+/* ── Full-screen iframe modal ───────────────────────────────────────── */
+
+.p2-auction-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100; /* above SeatPickerModal (1000) per existing convention */
+  background: var(--p2-navy-deep);
+  display: flex;
+  flex-direction: column;
+}
+
+.p2-auction-modal-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px;
+  background: rgba(8, 13, 40, 0.96);
+  border-bottom: 1px solid var(--p2-rule);
+  flex-shrink: 0;
+}
+
+.p2-auction-modal-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.p2-auction-modal-title .p2-eyebrow {
+  margin: 0;
+}
+
+.p2-auction-modal-headline {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: #fff;
+}
+
+.p2-auction-modal-close {
+  background: transparent;
+  border: 1px solid var(--p2-rule);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.p2-auction-modal-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--p2-rule-strong);
+}
+
+.p2-auction-modal-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+.p2-auction-iframe {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+  background: #fff; /* Qgiv-side skin handles dark — this is fallback */
+  min-height: 0;
+}
+
+.p2-auction-error {
+  margin: 16px 22px 0;
+}
+
+/* Success screen — replaces iframe after registrationComplete + write */
+.p2-auction-success {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 22px;
+}
+
+.p2-auction-success-inner {
+  max-width: 540px;
+  width: 100%;
+  text-align: center;
+}
+
+.p2-auction-burst {
+  font-size: 56px;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+
+.p2-auction-success-inner h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  color: #fff;
+}
+
+.p2-auction-success-lede {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--p2-muted);
+  margin: 0 0 26px;
+  max-width: 460px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.p2-auction-success-stores {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.p2-auction-success-foot {
+  font-size: 13px;
+  color: var(--p2-muted);
+  line-height: 1.5;
+  max-width: 420px;
+  margin: 0 auto 22px;
+}
+
+.p2-auction-success-cta {
+  min-width: 220px;
+}
+
+@media (max-width: 640px) {
+  .p2-auction-row {
+    gap: 14px;
+  }
+  .p2-auction-store-row {
+    width: 100%;
+  }
+  .p2-auction-store {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+  }
+  .p2-auction-modal-headline {
+    font-size: 16px;
+  }
+  .p2-auction-success-inner h2 {
+    font-size: 28px;
+  }
+  .p2-auction-burst {
+    font-size: 44px;
+  }
+}

@@ -49,6 +49,13 @@ export async function onRequestGet(context) {
       // dinners picked) → 'View' (indigo, finalized; read-only sheet).
       rsvpStatus: s.rsvp_status || null,
       rsvpCompletedAt: s.rsvp_completed_at || null,
+      // Auction-registration (migration 012). Null = unregistered; the
+      // portal renders the AuctionRegistrationCard. Timestamp = ✓ state
+      // with Givi-app download CTAs. Email/txn captured so Sherry can
+      // cross-reference Qgiv records.
+      auctionRegisteredAt: s.auction_registered_at || null,
+      auctionRegistrationEmail: s.auction_registration_email || null,
+      auctionRegistrationTxn: s.auction_registration_txn || null,
     };
   } else {
     const d = resolved.record;

@@ -51,6 +51,7 @@ import {
   TicketQrCardV2,
   ConfirmationView,
 } from './Finalize.jsx';
+import { AuctionRegistrationCard } from './AuctionRegistrationCard.jsx';
 import { HelpFooter } from './HelpFooter.jsx';
 import { WickoPillNav } from './WickoPillNav.jsx';
 import { FaqPage } from './FaqPage.jsx';
@@ -1013,6 +1014,8 @@ export default function PortalShellV2({
         token={token}
         apiBase={config.apiBase}
         data={confirmationData}
+        identity={identity}
+        onRefresh={onRefresh}
         onClose={() => setConfirmationData(null)}
       />
     );
@@ -1051,6 +1054,22 @@ export default function PortalShellV2({
               busy={finalizing}
               error={finalizeError}
               onFinalize={handleFinalize}
+            />
+          )}
+
+          {/* Silent-auction registration. Shown for sponsor tokens once
+              they've placed at least one seat — never pressures them
+              before they've engaged with seating. Renders ✓ Registered
+              state after the Qgiv embed flow completes. */}
+          {isSponsor && (seatMath?.placed || 0) > 0 && (
+            <AuctionRegistrationCard
+              identity={identity}
+              token={token}
+              apiBase={config.apiBase}
+              variant="home"
+              onRegistered={() => {
+                if (onRefresh) onRefresh();
+              }}
             />
           )}
 
