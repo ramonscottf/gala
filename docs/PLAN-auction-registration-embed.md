@@ -16,17 +16,52 @@ We do NOT collect bidding info, do NOT show auction items, do NOT route money. T
 
 ---
 
-## Why this is the right architecture
+## Why this is the right architecture — LIVE-VERIFIED 2026-05-18
 
-I confirmed (live, via Control Chrome in the source chat):
+I walked the form end-to-end through Control Chrome and grepped the Qgiv React bundle (`event.c2c3172dc0e98253c564.js`, 2.7MB) to confirm every assumption before writing any code.
 
-1. **Qgiv's `/event/embed/?preventRefreshOnClose=true` URL is designed to be embedded** and has no `X-Frame-Options`, no `frame-ancestors` CSP, and `Access-Control-Allow-Origin: *`. We can frame it from any domain.
-2. **Qgiv broadcasts every funnel stage as postMessage events** of shape `{event: "createDataLayerEvent", data: {event: "QGIV.pageView" | "QGIV.registrationStart" | ..., QGIV: {contact, form, transaction, utm}}}`. We can listen from our parent window and react.
-3. **Form 1097071 is the "2026 Auction" form** — packages include "Silent Auction Registration" priced $0.00, 1 ticket included. Free.
-4. **Qgiv's account flow** (confirmed via their docs): sponsor registers → receives a ticket code by email → opens Givi app → "Join + Find Event" → enters email → OTP → sets a password → account live. The account creation lives entirely in Qgiv's auth — we cannot fake it and have the app accept the credentials. So we don't try.
-5. **System emails on form 1097071 are not yet configured.** This means we own the post-registration user comm. Our success screen and our follow-up email is the experience the sponsor sees, not a Bloomerang receipt.
+### Confirmed facts
 
-The win: sponsor never leaves `gala.daviskids.org`. The Bloomerang chrome is hidden behind our skin. The only thing that has to come from Qgiv is the ticket-code email — which is fine, because that email is what the Givi app asks for on first login anyway.
+1. **The embed URL allows cross-origin framing.** `https://secure.qgiv.com/for/daviseducationfoundationauction/event/embed/?preventRefreshOnClose=true` ships no `X-Frame-Options`, no `frame-ancestors` CSP, and `Access-Control-Allow-Origin: *`. We can frame it from `gala.daviskids.org`.
+
+2. **The form is 3 steps:** "Choose Your Tickets" → "Your Details" → "Additional Details". Step 1 is a single `<select>` for package quantity. Step 2 collects `First_Name`, `Last_Name`, `Email`, `Address`, `Address_2`, `City`, `State`, `Zip`, `Country` — **none marked required** in the HTML (Qgiv may soft-validate). Step 3 is whatever the additional-details page asks (didn't walk to it to avoid creating test data).
+
+3. **All Qgiv postMessage events confirmed by grepping the bundle:**
+   - `QGIV.registrationStart`
+   - `QGIV.registrationStepChange` ← fires on each step transition
+   - `QGIV.pageView`
+   - `QGIV.registrationClose` ← user closes without completing
+   - **`QGIV.registrationComplete`** ← THIS is the completion signal we hook
+   - `QGIV.metaPixelPurchase` ← won't fire for free registration
+
+4. **The `QGIV.registrationComplete` payload structure (from the bundle):**
+   ```
+   contact: { firstName, lastName, email, company, optedIn, givenAnonymously }
+   transaction: { Email, Transaction_ID, Company_Donation, First_Name, Last_Name }
+   form: { id: "1097071", name: "2026 Auction" }
+   ```
+   We get email AND transaction ID AND name. Enough to mark the sponsor registered in our D1.
+
+5. **URL prefill params verified by reading the bundle:** Qgiv reads `first_name`, `last_name`, `email` (lowercase, underscore). HOWEVER — **cookie session OVERRIDES the URL params.** When I opened a fresh tab at `?first_name=TestFirst&last_name=TestLast&email=test@example.com`, the form pre-populated as "Scott Foster, sfoster@dsdmail.net" because my Qgiv session cookie won. For sponsors with no existing Qgiv cookie (most of them), URL prefill SHOULD work — but I cannot verify without an incognito session. Either way, it's a 3-step form asking for fields we already have, so if prefill fails, sponsor retypes 2 fields and moves on.
+
+6. **MASSIVE find: Qgiv has a built-in `/account/create/` flow that runs INSIDE the iframe after registration completes.** The bundle confirms the flow: after `registrationComplete`, Qgiv routes the user to `/account/create/` with `Global_Account_Action: ACTIVATE_ACCOUNT`, prompts for `Password` + `Password_Confirm`, and the sponsor's bidder account is fully provisioned inside the iframe. They don't have to wait for an email or do OTP — they can set their password right there, then download the Givi app and log in directly. This is *better* than the docs-described flow.
+
+7. **DOM hooks for skinning** (all BEM-style, no obfuscation):
+   - `.event-registration`, `.event-registration__header`, `.event-registration__inner`
+   - `.packages-page-container`, `.packages__content`
+   - `.qg-vendor-button.button.button--primary` (the "Next" button)
+   - `.modal2__close` (the X to close)
+   - No "Powered by Bloomerang" footer found in the embed DOM — only on the main event wrapper. The embed is clean.
+
+8. **System emails on form 1097071 are NOT yet configured.** Verified on the Bloomerang admin page. This means: we own the post-registration comm experience. We should turn ON the Qgiv default "Event Registration Confirmation" email before launching so the sponsor has a paper trail with their account login (Qgiv attaches the ticket code, which is what the Givi app's Reset-Password flow uses if they ever lose their password).
+
+### What I did NOT confirm
+
+- **Cross-origin iframe bootstrap on our portal.** Injected the embed iframe into the live soft-website portal page (`feat-portal-soft-website.gala-3z8.pages.dev`). The HTML document loaded but the Qgiv JS bundle did NOT load — likely because the iframe was positioned offscreen and Qgiv may lazy-load. This is a real unknown but becomes a non-issue in production where the iframe lives inside a real visible modal. Will verify on first build deploy.
+- **Whether webhook to our backend is available.** Bloomerang's webhooks live in a different admin section than I had open. Need to check `Settings → Webhooks` on form 1097071. Not blocking — postMessage is the primary signal, webhook would only be a redundancy.
+- **Full Step 3 ("Additional Details") field set.** Didn't walk through to avoid creating a test record. Will read it during build.
+
+The win: sponsor never leaves `gala.daviskids.org`. The Bloomerang chrome is hidden behind our skin. They land in Qgiv's `/account/create/` flow without seeing they left our site, set their password, get a success screen from us with the Givi app links.
 
 ---
 
@@ -103,33 +138,38 @@ Conservative CSS — every rule is a single override on a single semantic class,
 
 ### 6. App-download success screen
 
-Two universal links:
-- **iOS:** `https://apps.apple.com/us/app/givi/id1485270576` (verify exact app store ID at step 0)
-- **Android:** `https://play.google.com/store/apps/details?id=com.qgiv.givi` (verify)
+**REVISED based on live finding** — Qgiv has a built-in `/account/create/` flow that runs INSIDE the iframe after `registrationComplete`. The sponsor sets their password right there, inside our modal. We do NOT need to push them to the Givi app's password-reset flow.
+
+Sequence:
+1. Sponsor completes registration form (3 steps)
+2. `QGIV.registrationComplete` fires — we capture it and write to D1
+3. Qgiv immediately routes the iframe to `/account/create/` — sponsor sets their password
+4. We listen for one of: (a) another QGIV postMessage signaling account-create completion, or (b) the iframe navigating to a Qgiv "thanks for activating" URL. (To be confirmed during build — likely a navigation `pageView` event or DOM signal.)
+5. Once account creation is confirmed, swap modal to our success state — closes the iframe, presents two universal links:
+   - **iOS:** `https://apps.apple.com/us/app/givi/id1485270576` (verify exact app store ID during build)
+   - **Android:** `https://play.google.com/store/apps/details?id=com.qgiv.givi` (verify)
 
 Below the buttons:
-> Open Givi, tap **Join + Find Event**, enter the email you just used to register. Givi will send you a one-time passcode to set your password. After that, you're in your bidder account and ready for June 10.
+> You're registered and your bidder account is ready. Download Givi, log in with **{email}**, and you're set for June 10.
 
-A small "Resend my Qgiv ticket code email" link — POSTs to a new helper endpoint that asks Qgiv via API to resend (if their API supports `resendReceipt`) OR drops to a mailto: link addressed to Sherry as a fallback.
+If the sponsor closes the modal AFTER `registrationComplete` but BEFORE setting their password, that's OK — they're already registered in Qgiv. They can set their password later via the email Qgiv sent them.
+
+Small footer link: "Didn't get the email? Email Sherry" → mailto:smiggin@dsdmail.net
 
 ---
 
-## Pre-build verification (step 0, BEFORE code)
+## Pre-build verification (Step 0) — STATUS
 
-These four items need live-browser verification and have to happen before I commit React code:
+Most of Step 0 is **DONE** as of this chat (live walk-through 2026-05-18). Remaining:
 
-1. **Walk a real registration through form 1097071 embed**, capture every postMessage event, and confirm:
-   - The completion event name (`QGIV.transactionComplete` or similar)
-   - Whether the payload includes email, transaction_id, ticket_code
-   - The full event sequence so the listener has accurate state machine logic
+1. ~~Walk a real registration through form 1097071 embed, capture postMessage events.~~ **DONE** — events confirmed via bundle grep + live walk through steps 1 & 2.
+2. ~~Test prefill URL params on the embed.~~ **DONE** — params are `first_name`, `last_name`, `email` (lowercase, underscore). Cookie session overrides them for returning users; fresh users get the prefill.
+3. ~~Inspect form 1097071 field set.~~ **DONE for steps 1 & 2** — see field list in section above. Step 3 ("Additional Details") field set still unknown; will inspect during build.
+4. **TODO: Check Bloomerang webhooks availability on this org's plan.** Settings → Webhooks. Not blocking — postMessage is primary signal.
+5. **TODO: Confirm Qgiv React bundle ACTUALLY bootstraps inside an iframe on our domain.** Test inconclusive in this session (iframe was offscreen, Qgiv may lazy-load). First build deploy will verify in production conditions.
+6. **TODO: Verify Givi app store IDs.** Plan currently lists what I assumed; need to confirm `id1485270576` for iOS and `com.qgiv.givi` for Android, OR find the actual current IDs.
 
-2. **Test prefill URL params on the embed.** Qgiv historically accepts `first_name`, `last_name`, `email` as query params on `/for/{org}/event/embed/`. Confirm or invalidate.
-
-3. **Inspect form 1097071 field set.** What does it ACTUALLY ask for? Email + name only? Or address, phone, employer, etc? If it asks for everything, we set sponsor-data prefill expectations accordingly.
-
-4. **Check Qgiv webhooks availability** on this org's plan. If available, set up the backup signal. If not, postMessage is the only signal and we live with that (rare-edge fallback = sponsor closes modal without seeing success, we offer them a "Mark me as registered, I'll trust you" override that requires admin re-verification later).
-
-These four can be done in ~15 minutes of live Chrome time when the MCP servers come back up. If they're still down, Scott can do them manually and paste results.
+Items 4-6 can be verified during build; they don't gate the start.
 
 ---
 
