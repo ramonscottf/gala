@@ -65,14 +65,15 @@ export async function resendInvite(sponsorId) {
   });
 }
 
-// ── Marketing catch-up ─────────────────────────────────────────────────────
-// Powers the "Resend a marketing piece" tab in the sponsor Composer.
-// Lists every marketing send that has actually been fired (so admin can
-// see what's already gone out) and fires a replay to one sponsor.
+// ── Marketing pipeline / catch-up ──────────────────────────────────────────
+// Powers the "Catch-up" tab in the sponsor Composer. Loads the full
+// pipeline schedule (all 5 phases, every send, fired + scheduled) so the
+// admin can both replay an already-fired touchpoint AND pre-deliver one
+// that hasn't gone out yet.
 
-export async function loadCatchUpSends() {
-  const data = await fetchJson('/api/gala/marketing-catch-up-list');
-  return data.sends || [];
+export async function loadMarketingPipeline() {
+  const data = await fetchJson('/api/gala/marketing-pipeline');
+  return data.phases || [];
 }
 
 export async function sendCatchUp(sponsorId, sendId) {
