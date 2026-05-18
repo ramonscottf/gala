@@ -20,7 +20,12 @@ import { BRAND, FONT_DISPLAY, FONT_UI } from './brand/tokens.js';
 import { usePortal } from './hooks/usePortal.js';
 import { useSeats } from './hooks/useSeats.js';
 import { useTheme } from './hooks/useTheme.js';
-import Portal from './portal/Portal.jsx';
+// Portal v2 — soft-website redesign. Pulls visual language directly from
+// the gala homepage (gala.daviskids.org/) — Fraunces serif, gradient strip
+// cards, paper-feel info pills, no app-shell. The previous Portal.jsx
+// (boarding-pass cards + iOS glass-pill tab bar) is preserved on disk for
+// reference but no longer routed to.
+import PortalShellV2 from './portal-v2/PortalShell.jsx';
 
 function isDevPrefix() {
   // No dev mirror in the gala repo — single /sponsor prefix only.
@@ -110,12 +115,11 @@ function PortalContainer() {
   }
 
   return (
-    <Portal
+    <PortalShellV2
       portal={portal.state}
       token={token}
       theaterLayouts={layouts}
       seats={seats}
-      isDev={dev}
       onRefresh={portal.refresh}
       openSheetOnMount={onSeatsRoute}
     />
@@ -123,11 +127,19 @@ function PortalContainer() {
 }
 
 export default function App() {
+  // The <main> wrapper used to set height: 100dvh to lock the app-shell
+  // portal (boarding-pass card + glass tab bar managed their own scroll
+  // regions inside it). The v2 soft-website portal is a normal scrolling
+  // page — there's nothing to lock — so the wrapper just supplies the
+  // a11y landmark with min-height filling the viewport for short pages
+  // (loading/error states). Natural document scroll otherwise.
   return (
-    <main id="main-content" style={{ height: '100dvh' }}>
+    <main id="main-content" style={{ minHeight: '100dvh' }}>
       <Routes>
         <Route path="/:token" element={<PortalContainer />} />
         <Route path="/:token/seats" element={<PortalContainer />} />
+        <Route path="/:token/faq" element={<PortalContainer />} />
+        <Route path="/:token/settings" element={<PortalContainer />} />
         <Route
           path="*"
           element={

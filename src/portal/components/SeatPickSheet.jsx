@@ -36,6 +36,7 @@ import { SHOWING_NUMBER_TO_ID, formatBadgeFor } from '../../hooks/usePortal.js';
 import { formatShowTime } from '../Portal.jsx';
 import { enrichMovieScores, formatRottenBadge } from '../movieScores.js';
 import { useFlowError } from './FlowError.jsx';
+import { DINNER_OPTIONS } from '../../portal-v2/DinnerModal.jsx';
 
 const SEAT_TYPE_ORDER = ['luxury', 'standard', 'dbox', 'loveseat', 'wheelchair', 'companion'];
 
@@ -363,6 +364,15 @@ export default function SeatPickSheet({
   // "default to placed-seats location" effect when supplied.
   initialShowingNumber = null,
   initialMovieId = null,
+  // Phase 5.7+ item G (Scott 2026-05-18) — fold meal selection into
+  // the seat picker itself. When true:
+  //   - a meal-picker row renders per selected seat below the seat map
+  //   - Commit is gated on every selected seat having a meal assigned
+  //   - after seats.place() succeeds, meals are saved via /pick
+  //     action=set_dinner for each seat before onCommitted fires
+  // When false (default): v1 behavior unchanged. PostPickDinnerSheet
+  // still picks meals separately.
+  foldMeals = false,
 }) {
   const compact = variant === 'sheet';
   const showtimes = portal?.showtimes || [];
@@ -571,6 +581,10 @@ export default function SeatPickSheet({
   const theaterMeta = theaterChoices.find((t) => t.theaterId === theaterId);
 
   const [sel, setSel] = useState(new Set());
+  // Phase 5.7+ item G — per-seat meal selections when foldMeals=true.
+  // Keyed by seat id like 'F-12'; value is the dinner_choice id (one of
+  // 'frenchdip' / 'salad' / 'veggie' / 'kids'). Stays empty when foldMeals=false.
+  const [mealBySeatId, setMealBySeatId] = useState({});
   // Mode toggle from the wizard — kept per spec note that it's still
   // useful but moved to bottom of the sheet, near the CTA.
   const [mode, setMode] = useState('place');
@@ -614,6 +628,14 @@ export default function SeatPickSheet({
       else filtered.forEach((id) => n.delete(id));
       return n;
     });
+    // Prune meal map for any seat that was just deselected (foldMeals path).
+    if (foldMeals && op !== 'add') {
+      setMealBySeatId((prev) => {
+        const next = { ...prev };
+        filtered.forEach((id) => { delete next[id]; });
+        return next;
+      });
+    }
   };
 
   const tryAuto = () => {
@@ -641,10 +663,51 @@ export default function SeatPickSheet({
       return;
     }
 
+    // Phase 5.7+ item G — when meals are folded in, every selected seat
+    // must have a meal picked before commit fires.
+    if (foldMeals) {
+      const missing = seatIds.filter((id) => !mealBySeatId[id]);
+      if (missing.length > 0) {
+        const labels = missing.map((id) => id.replace('-', '')).join(', ');
+        const msg = `Pick a meal for every seat — still need: ${labels}.`;
+        setError(msg);
+        return;
+      }
+    }
+
     setCommitting(true);
     setError(null);
     try {
       await seats.place(showingId, theaterId, seatIds);
+
+      // Phase 5.7+ item G — save meals immediately after place succeeds.
+      // Each meal is its own /pick action=set_dinner call; we fire them
+      // in parallel and tolerate any individual failure quietly (the
+      // sponsor can edit the per-seat dinner pill afterwards). Refresh
+      // catches the saved values regardless.
+      if (foldMeals) {
+        const showingNum = showingNumber;
+        await Promise.allSettled(
+          seatIds.map((sid) => {
+            const choice = mealBySeatId[sid];
+            if (!choice) return Promise.resolve();
+            const [row, num] = sid.split('-');
+            return fetch(`${apiBase}/api/gala/portal/${token}/pick`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'set_dinner',
+                theater_id: theaterId,
+                showing_number: showingNum,
+                row_label: row,
+                seat_num: Number(num),
+                dinner_choice: choice,
+              }),
+            });
+          })
+        );
+      }
+
       // Hand off to host so PostPickSheet can open with these
       // freshly-placed seats. Pass the movie + showing context too so
       // PostPickSheet can render the success header without a re-lookup.
@@ -666,9 +729,13 @@ export default function SeatPickSheet({
           // showing field in scope.
           dinnerTime: showingsRich.find((s) => s.number === showingNumber)?.dinnerTime || '',
           theaterName: theatersById[theaterId]?.name || `Theater ${theaterId}`,
+          // Phase 5.7+ item G — tell host meals are already saved so
+          // PostPickDinnerSheet can be skipped.
+          mealsAlreadySaved: foldMeals,
         });
       }
       setSel(new Set());
+      setMealBySeatId({});
     } catch (e) {
       const msg = e?.message || 'Could not place seats';
       // Common cause of commit failure: the user's seat-map data is
@@ -1321,10 +1388,12 @@ export default function SeatPickSheet({
       {/* Auditorium picker — between breadcrumb and seat map. Three
           states:
             - 0 choices: hide (defensive; shouldn't happen)
-            - 1 choice: informational pill ("Auditorium 7 · Standard")
-            - >1 choices: scrollable row of tappable chips, current
-              selection highlighted. This makes flipping aud cheap
-              when the seats in one are bad. */}
+            - 1 choice: informational pill ("Aud 7 · Standard")
+            - >1 choices: scrollable row of tappable capsule pills,
+              same shape as the seat-type guide below. Compact so it
+              doesn't dominate the top of the picker. Scott
+              2026-05-18: "those same small pills like the seat
+              types are. would look cleaner, narrower." */}
       {theaterChoices.length > 0 && (
         <div
           data-testid="step3-aud-picker"
@@ -1349,13 +1418,18 @@ export default function SeatPickSheet({
             <div
               data-testid="auditorium-chip-static"
               style={{
-                padding: '10px 14px',
-                borderRadius: 10,
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${BRAND.rule}`,
-                color: 'rgba(255,255,255,0.85)',
-                fontSize: 13,
-                fontWeight: 700,
+                display: 'inline-flex',
+                alignSelf: 'flex-start',
+                alignItems: 'center',
+                gap: 6,
+                padding: '5px 12px',
+                borderRadius: 99,
+                background: 'rgba(255,255,255,0.05)',
+                boxShadow: `inset 0 0 0 1px ${BRAND.rule}`,
+                color: 'rgba(255,255,255,0.92)',
+                fontSize: 12,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
               }}
             >
               {(theatersById[theaterId]?.name || `Auditorium ${theaterId}`).replace(/^Auditorium\s+/i, 'Aud ')}
@@ -1370,7 +1444,7 @@ export default function SeatPickSheet({
               className="no-scrollbar"
               style={{
                 display: 'flex',
-                gap: 8,
+                gap: 6,
                 overflowX: 'auto',
                 paddingBottom: 4,
                 scrollSnapType: 'x proximity',
@@ -1389,33 +1463,36 @@ export default function SeatPickSheet({
                       all: 'unset',
                       cursor: 'pointer',
                       flexShrink: 0,
-                      scrollSnapAlign: 'center',
-                      padding: '10px 14px',
-                      borderRadius: 10,
+                      scrollSnapAlign: 'start',
+                      // Same capsule shape as SeatTypeGuide pills
+                      padding: '5px 12px',
+                      borderRadius: 99,
                       background: active
-                        ? 'rgba(244,185,66,0.10)'
-                        : 'rgba(255,255,255,0.04)',
-                      border: `1.5px solid ${active ? BRAND.gold : BRAND.rule}`,
+                        ? 'rgba(244,185,66,0.14)'
+                        : 'rgba(255,255,255,0.05)',
+                      boxShadow: active
+                        ? `inset 0 0 0 1.5px ${BRAND.gold}`
+                        : `inset 0 0 0 1px ${BRAND.rule}`,
                       color: '#fff',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      gap: 2,
-                      transition: 'border 0.18s ease, background 0.18s ease',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      whiteSpace: 'nowrap',
+                      transition: 'box-shadow 0.18s ease, background 0.18s ease',
                     }}
                   >
                     <span>{audName}</span>
                     {c.format && (
                       <span
                         style={{
-                          fontSize: 10,
+                          fontSize: 11,
                           color: BRAND.mute,
-                          fontWeight: 600,
+                          fontWeight: 500,
                         }}
                       >
-                        {c.format}
+                        · {c.format}
                       </span>
                     )}
                   </button>
@@ -1550,6 +1627,45 @@ export default function SeatPickSheet({
               {id.replace('-', '')}
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Phase 5.7+ item G — inline meal picker per selected seat.
+          Renders only when foldMeals=true and seats are selected. */}
+      {foldMeals && sel.size > 0 && mode === 'place' && (
+        <div className="p2-inline-meals">
+          <div className="p2-inline-meals-header">
+            <span className="p2-eyebrow">Pick a meal for each seat</span>
+            <span className="p2-inline-meals-count">
+              {Object.keys(mealBySeatId).filter((k) => sel.has(k) && mealBySeatId[k]).length}
+              {' / '}{sel.size}{' set'}
+            </span>
+          </div>
+          {[...sel].sort().map((id) => {
+            const chosen = mealBySeatId[id];
+            return (
+              <div key={id} className="p2-inline-meal-row">
+                <span className="p2-inline-meal-seat">{id.replace('-', '')}</span>
+                <div className="p2-inline-meal-options">
+                  {DINNER_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`p2-inline-meal-opt${chosen === opt.id ? ' active' : ''}`}
+                      onClick={() =>
+                        setMealBySeatId((prev) => ({ ...prev, [id]: opt.id }))
+                      }
+                      aria-pressed={chosen === opt.id}
+                      title={opt.desc}
+                    >
+                      <span className="p2-inline-meal-emoji" aria-hidden="true">{opt.emoji}</span>
+                      <span className="p2-inline-meal-label">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -1705,23 +1821,36 @@ export default function SeatPickSheet({
           </Btn>
         )}
         {step === 3 ? (
-          <Btn
-            kind="primary"
-            size="lg"
-            full
-            disabled={mode !== 'place' || !sel.size || committing}
-            onClick={commit}
-            icon={<Icon name="arrowR" size={16} />}
-            testId="seat-pick-commit"
-          >
-            {committing
-              ? 'Placing…'
-              : sel.size
-                ? `Commit ${sel.size} seat${sel.size === 1 ? '' : 's'}`
-                : mode === 'assign'
-                  ? 'Reassign mode'
-                  : 'Pick seats to commit'}
-          </Btn>
+          (() => {
+            // Phase 5.7+ item G — meals-required gate when foldMeals.
+            const missingMeals =
+              foldMeals && mode === 'place' && sel.size > 0
+                ? [...sel].filter((id) => !mealBySeatId[id]).length
+                : 0;
+            const disabled =
+              mode !== 'place' || !sel.size || committing || missingMeals > 0;
+            return (
+              <Btn
+                kind="primary"
+                size="lg"
+                full
+                disabled={disabled}
+                onClick={commit}
+                icon={<Icon name="arrowR" size={16} />}
+                testId="seat-pick-commit"
+              >
+                {committing
+                  ? 'Placing…'
+                  : missingMeals > 0
+                    ? `Pick ${missingMeals} more meal${missingMeals === 1 ? '' : 's'}`
+                    : sel.size
+                      ? `Commit ${sel.size} seat${sel.size === 1 ? '' : 's'}`
+                      : mode === 'assign'
+                        ? 'Reassign mode'
+                        : 'Pick seats to commit'}
+              </Btn>
+            );
+          })()
         ) : (
           /* Phase 5.13 — on steps 1 and 2 the right-side primary
              becomes a Continue button. Step 1 advances to 2 when a

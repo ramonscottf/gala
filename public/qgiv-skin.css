@@ -1,0 +1,263 @@
+/*
+ * qgiv-skin.css — DEF gala portal skin for Qgiv form 1097071.
+ *
+ * Paste-in via Qgiv admin:
+ *   Form 1097071 → Advanced → Global Page Settings → Additional Header Content:
+ *   <link rel="stylesheet" href="https://gala.daviskids.org/qgiv-skin.css">
+ *
+ * Safety contract:
+ *   EVERY rule in this file is scoped under `.event-registration` as a
+ *   descendant ancestor. That class is the wrapper Qgiv puts around the
+ *   ENTIRE registration flow — confirmed via live DOM walk 2026-05-18.
+ *   It does NOT appear on the Auction Home Page (/event/), the items
+ *   list, the donation form, or any of the other surfaces that load
+ *   this same global CSS. If you ever see this CSS affect a page
+ *   outside the registration form, that's a bug — find the rule that's
+ *   missing its `.event-registration ` prefix and add it.
+ *
+ *   No `[class*=...]` substring wildcards. Exact class names only.
+ *   No html/body color or background overrides. Only the registration
+ *   form's own elements are touched.
+ *
+ * Class names referenced here, all confirmed in live DOM:
+ *   .event-registration                  — form root
+ *   .event-registration__header          — the "2026 Lights..." band
+ *   .event-registration__summary-aside   — the "Your Summary" sidebar
+ *   .event-registration__inner           — body wrapper
+ *   .event-registration__content         — main column wrapper
+ *   .event-summary, .event-summary__content
+ *   .button.button--primary, .button--large
+ *   .qg-vendor-button
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Form root — navy ground, edge-to-edge ────────────────────────── */
+.event-registration {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(215, 40, 70, 0.10), transparent 40%),
+    radial-gradient(circle at 88% 6%, rgba(98, 200, 255, 0.08), transparent 40%),
+    linear-gradient(140deg, #0b1132 0%, #141d50 100%) !important;
+  color: #fff !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.event-registration *,
+.event-registration *::before,
+.event-registration *::after {
+  font-family: inherit !important;
+}
+
+/* ── Kill Qgiv's event-title header band ──────────────────────────── */
+/* The "2026 Lights, Camera, ACTION! Silent Auction" + date subtitle —
+   we have our own modal chrome (gradient strip + close X), this
+   duplicates the context. */
+.event-registration .event-registration__header {
+  display: none !important;
+}
+
+/* ── Kill the "Your Summary" sidebar ──────────────────────────────── */
+/* Free registration ($0 / Subtotal / Total = Free) — adds no value. */
+.event-registration .event-registration__summary-aside,
+.event-registration .event-summary {
+  display: none !important;
+}
+
+/* ── Reclaim the layout once the sidebar is hidden ────────────────── */
+.event-registration .event-registration__inner,
+.event-registration .event-registration__content {
+  background: transparent !important;
+  max-width: 720px !important;
+  margin: 0 auto !important;
+  padding: 32px 24px 48px !important;
+}
+
+/* Force every grid column in the registration to full width — the
+   sidebar's column would have otherwise pinched the form to 50%. */
+.event-registration .col,
+.event-registration .col--xl-6,
+.event-registration .col--xl-12 {
+  flex: 1 1 100% !important;
+  max-width: 100% !important;
+}
+
+/* ── Typography ───────────────────────────────────────────────────── */
+.event-registration h1,
+.event-registration h2,
+.event-registration h3 {
+  font-family: 'Fraunces', Georgia, serif !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+  letter-spacing: -0.01em;
+}
+
+.event-registration h2 {
+  font-size: 28px !important;
+  margin: 0 0 24px !important;
+}
+
+.event-registration h3 {
+  font-size: 20px !important;
+  margin: 0 0 12px !important;
+}
+
+.event-registration label {
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Form inputs ──────────────────────────────────────────────────── */
+.event-registration input[type="text"],
+.event-registration input[type="email"],
+.event-registration input[type="tel"],
+.event-registration input[type="number"],
+.event-registration input[type="password"],
+.event-registration select,
+.event-registration textarea {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+  padding: 12px 14px !important;
+  font-size: 15px !important;
+  font-family: inherit !important;
+  width: 100% !important;
+  box-sizing: border-box;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.event-registration input::placeholder,
+.event-registration textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.event-registration input:focus,
+.event-registration select:focus,
+.event-registration textarea:focus {
+  outline: none !important;
+  border-color: #f4b942 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Select dropdown — re-style the native arrow */
+.event-registration select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(255,255,255,0.6)' d='M5 6L0 0h10z'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 10px 6px !important;
+  padding-right: 36px !important;
+}
+
+.event-registration select option {
+  background: #0b1132 !important;
+  color: #fff !important;
+}
+
+/* ── Buttons — Next / Continue / Submit ───────────────────────────── */
+.event-registration .button.button--primary,
+.event-registration button.button--primary,
+.event-registration .qg-vendor-button.button--primary {
+  background: linear-gradient(90deg, #f4b942 0%, #c53030 100%) !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  padding: 14px 32px !important;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: 0 8px 20px rgba(197, 48, 48, 0.3);
+}
+
+.event-registration .button.button--primary:hover,
+.event-registration button.button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(197, 48, 48, 0.4);
+}
+
+/* Secondary / Remove buttons */
+.event-registration .button.button--text,
+.event-registration .button--link,
+.event-registration a.button {
+  color: #f4b942 !important;
+  background: transparent !important;
+  border: 0 !important;
+  font-weight: 500 !important;
+  text-decoration: none;
+}
+
+/* ── Cards / list items (e.g., "Silent Auction Registration" row) ── */
+.event-registration .ticket-option,
+.event-registration .registration-item,
+.event-registration .form-section {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-radius: 14px !important;
+  padding: 20px !important;
+  margin-bottom: 16px !important;
+}
+
+/* ── Footer chrome ────────────────────────────────────────────────── */
+.event-registration .event-registration__footer,
+.event-registration .powered-by {
+  display: none !important;
+}
+
+/* The "Transaction is secure" line lives in an unclassed <small> tag.
+   CSS can't target it without a class. The qgiv-skin.js companion
+   handles that via text-content matching. */
+
+/* ── Links ────────────────────────────────────────────────────────── */
+.event-registration a {
+  color: #f4b942 !important;
+}
+
+.event-registration a:hover {
+  color: #ffd07a !important;
+}
+
+/* ── Tables (some Qgiv forms use them for summary lines) ──────────── */
+.event-registration table {
+  background: transparent !important;
+  color: #fff !important;
+}
+
+.event-registration th,
+.event-registration td {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  color: inherit !important;
+  background: transparent !important;
+}
+
+/* ── Tooltips, validation messages, microcopy ─────────────────────── */
+.event-registration .help-text,
+.event-registration .tooltip,
+.event-registration .form-help {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 13px !important;
+}
+
+.event-registration .error,
+.event-registration .validation-error,
+.event-registration .has-error .form-help {
+  color: #ff6b6b !important;
+}
+
+/* ── Mobile tweaks ────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .event-registration .event-registration__inner,
+  .event-registration .event-registration__content {
+    padding: 24px 16px 36px !important;
+  }
+  .event-registration h2 {
+    font-size: 24px !important;
+  }
+}
