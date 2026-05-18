@@ -15,6 +15,7 @@ import {
   jsonOk,
 } from '../../_sponsor_portal.js';
 import { sendSMS, sendEmail } from '../../_notify.js';
+import { buildConfirmationSms } from '../../_confirmation_sms.js';
 
 export async function onRequestPost(context) {
   const { env, params, request } = context;
@@ -236,6 +237,61 @@ export async function onRequestPost(context) {
       confirmedAt: fresh.confirmed_at,
       wasAlreadyConfirmed: false,
     });
+  }
+
+  // ── PUSH TICKETS action ──
+  // Sponsor-facing: send the delegate a confirmation-style SMS + email
+  // summarising the seats already placed under their delegation. Distinct
+  // from `resend` (which re-sends the invite-to-pick-seats link). This is
+  // the "let them see what I selected for them" path Scott rebuilt on
+  // May 18 2026 after the Jason→Norris SMS thread exposed the gap.
+  if (body.action === 'push_tickets') {
+    const delegation_id = body.delegation_id;
+    if (!delegation_id) return jsonError('delegation_id required', 400);
+
+    const deleg = await env.GALA_DB.prepare(
+      `SELECT * FROM sponsor_delegations WHERE id = ?`
+    ).bind(delegation_id).first();
+    if (!deleg) return jsonError('Delegation not found', 404);
+
+    // Authorization mirrors `resend`: sponsor owns parent, OR caller is
+    // the delegate's parent delegation. Delegates can also push their
+    // own (handy from the self-view, even if the UI hides it today).
+    let allowed = false;
+    if (resolved.kind === 'sponsor' && deleg.parent_sponsor_id === resolved.record.id && !deleg.parent_delegation_id) allowed = true;
+    else if (resolved.kind === 'delegation' && deleg.parent_delegation_id === resolved.record.id) allowed = true;
+    else if (resolved.kind === 'delegation' && deleg.id === resolved.record.id) allowed = true;
+    if (!allowed) return jsonError('Not allowed', 403);
+
+    // Refuse if nothing to push — better to surface the empty state in
+    // UI than send a confusing "you have 0 seats" message.
+    const placed = await env.GALA_DB.prepare(
+      `SELECT COUNT(*) AS n FROM seat_assignments WHERE delegation_id = ?`
+    ).bind(delegation_id).first();
+    if (!placed?.n) {
+      return jsonError('No seats placed yet — nothing to push', 400);
+    }
+
+    const parent = await env.GALA_DB.prepare(
+      `SELECT company FROM sponsors WHERE id = ?`
+    ).bind(deleg.parent_sponsor_id).first();
+    const parentCompany = parent?.company || 'Davis Education Foundation';
+
+    const inviterName = resolved.kind === 'sponsor'
+      ? [resolved.record.first_name, resolved.record.last_name].filter(Boolean).join(' ').trim() || resolved.record.company
+      : resolved.record.delegate_name;
+
+    const portalUrl = `https://gala.daviskids.org/sponsor/${deleg.token}`;
+    context.waitUntil(sendDelegationTicketPush(env, {
+      delegationId: deleg.id,
+      email: deleg.delegate_email,
+      phone: deleg.delegate_phone,
+      name: deleg.delegate_name,
+      parentCompany,
+      inviterName,
+      portalUrl,
+    }));
+    return jsonOk({ ok: true, pushed: true, seats: placed.n });
   }
 
   // ── CREATE new delegation (default) ──
@@ -506,6 +562,82 @@ async function sendDinnerReminder(env, opts) {
       const r = results[1].status === 'fulfilled' ? results[1].value : null;
       await env.GALA_DB.prepare(
         `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error) VALUES (?, 'sms', ?, ?, ?)`
+      ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown')).run();
+    }
+  } catch {}
+}
+
+// ───── Push tickets to delegate ─────
+// Sends a confirmation-style SMS + email summarising the seats this
+// delegate has placed, plus a "Manage my seats" link back to their
+// portal. Triggered by the sponsor from the Manage Invite modal — the
+// "let them see what I selected for them" path Scott rebuilt on
+// May 18 2026 after the Jason→Norris SMS thread exposed the gap.
+//
+// Reuses buildConfirmationSms (the same builder finalize.js + sms.js
+// use) so the SMS body is byte-for-byte the format delegates see when
+// they self-finalize. One source of truth for the 🎬 GALA · 2026 card.
+async function sendDelegationTicketPush(env, opts) {
+  const { delegationId, email, phone, name, parentCompany, inviterName, portalUrl } = opts;
+
+  const smsBody = await buildConfirmationSms(env, {
+    kind: 'delegation',
+    recordId: delegationId,
+    company: parentCompany,
+    token: portalUrl.split('/').pop(),
+  });
+
+  const subject = `Your seats for the DEF Gala 2026`;
+  const html = `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:32px 20px;">
+  <div style="border-radius:18px;box-shadow:0 1px 2px rgba(11,27,60,0.06),0 10px 30px rgba(11,27,60,0.12),0 20px 48px rgba(11,27,60,0.08);overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#122a57 0%,#1f4484 100%);padding:30px 30px 22px;border-top:3px solid #CB262C;">
+      <div style="color:#ffc24d;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:6px;">Davis Education Foundation</div>
+      <h1 style="color:#fff;font-size:22px;margin:0;font-weight:700;">Your gala seats · June 10</h1>
+      <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:4px 0 0;">Megaplex Theatres at Legacy Crossing</p>
+    </div>
+    <div style="background:#ffffff;padding:34px 30px;">
+      <p style="color:#0b1b3c;font-size:17px;margin:0 0 12px;font-weight:600;">Hi ${escapeHtml(name)},</p>
+      <p style="color:#1e293b;font-size:15px;line-height:1.6;margin:0 0 16px;">
+        <strong>${escapeHtml(inviterName)}</strong>${parentCompany && parentCompany !== 'Davis Education Foundation' ? ` from <strong>${escapeHtml(parentCompany)}</strong>` : ''} wanted to make sure you have your seat details for the Davis Education Foundation Gala on June 10, 2026.
+      </p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin:18px 0;font-family:ui-monospace,SFMono-Regular,monospace;font-size:13px;line-height:1.6;color:#0b1b3c;white-space:pre-wrap;">${escapeHtml(smsBody)}</div>
+      <p style="text-align:center;margin:24px 0;">
+        <a href="${portalUrl}" style="display:inline-block;background:linear-gradient(135deg,#CB262C,#a01f24);color:#fff;padding:14px 32px;border-radius:50px;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 12px 32px rgba(203,38,44,0.25);">Manage my seats →</a>
+      </p>
+      <p style="color:#64748b;font-size:13px;text-align:center;margin:16px 0 0;">
+        Or open this URL in your browser:<br/>
+        <a href="${portalUrl}" style="color:#CB262C;word-break:break-all;">${portalUrl}</a>
+      </p>
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:28px 0 16px;"/>
+      <p style="color:#94a3b8;font-size:11px;margin:0;text-align:center;">
+        Davis Education Foundation · Gala 2026 · June 10, 2026<br/>
+        Questions? Reply to this email or contact <a href="mailto:gala@daviskids.org" style="color:#CB262C;">gala@daviskids.org</a>
+      </p>
+    </div>
+  </div>
+</div>
+</body></html>`;
+
+  const results = await Promise.allSettled([
+    email ? sendEmail(env, { to: email, subject, html, replyTo: env.GALA_ADMIN_EMAIL }) : Promise.resolve(null),
+    phone ? sendSMS(env, phone, smsBody) : Promise.resolve(null),
+  ]);
+
+  // Log to sponsor_invites — distinct channel labels so admin can tell
+  // ticket pushes apart from the original invites and dinner reminders.
+  try {
+    if (email) {
+      const r = results[0].status === 'fulfilled' ? results[0].value : null;
+      await env.GALA_DB.prepare(
+        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, subject, status, error) VALUES (?, 'email-push', ?, ?, ?, ?)`
+      ).bind(delegationId, email, subject, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown')).run();
+    }
+    if (phone) {
+      const r = results[1].status === 'fulfilled' ? results[1].value : null;
+      await env.GALA_DB.prepare(
+        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error) VALUES (?, 'sms-push', ?, ?, ?)`
       ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown')).run();
     }
   } catch {}

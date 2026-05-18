@@ -1497,6 +1497,8 @@ export default function PortalShellV2({
           token={token}
           onClose={() => setManageDelegation(null)}
           onRefresh={onRefresh}
+          assignments={portal?.childDelegationAssignments}
+          showtimes={portal?.showtimes}
         />
       )}
       {swapSeat && (
