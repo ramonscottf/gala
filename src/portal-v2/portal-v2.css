@@ -432,17 +432,30 @@ body {
    stays readable without truncation. */
 .p2-event-pill {
   display: inline-flex;
+  flex-direction: column;
   align-items: stretch;
-  gap: 18px;
+  gap: 14px;
   margin-top: 24px;
   padding: 14px 20px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.06);
   border: 0;
+}
+
+/* Each row holds the date OR venue text on the left and a small
+   action pill on the right (Add to calendar / Directions). Scott
+   2026-05-18 from the road: "two pills oriented right". */
+.p2-event-pill-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
   flex-wrap: wrap;
 }
 
-.p2-event-pill > div:not(.p2-event-pill-divider) {
+.p2-event-pill-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -462,10 +475,35 @@ body {
 }
 
 .p2-event-pill-divider {
-  width: 1px;
+  height: 1px;
+  width: 100%;
   background: rgba(255, 255, 255, 0.16);
-  align-self: stretch;
-  margin: 2px 0;
+}
+
+.p2-event-pill-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+.p2-event-pill-action:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.p2-event-pill-action:active {
+  transform: scale(0.97);
 }
 
 /* ── Status / Tier chips ────────────────────────────────────────────── */
@@ -511,6 +549,62 @@ body {
 .p2-stat {
   border-top: 1px solid var(--p2-rule);
   padding-top: 14px;
+}
+
+/* Tappable variant of .p2-stat — button reset + hover state. Scott
+   2026-05-18: stats become entry points to their actions
+   (placed → tickets section, invited → invite flow,
+   available → seat picker). */
+.p2-stat-tappable {
+  all: unset;
+  display: block;
+  text-align: left;
+  cursor: pointer;
+  border-top: 1px solid var(--p2-rule);
+  padding-top: 14px;
+  padding-right: 8px;
+  position: relative;
+  border-radius: 8px;
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+.p2-stat-tappable:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.p2-stat-tappable:active {
+  transform: scale(0.985);
+}
+.p2-stat-tappable:focus-visible {
+  outline: 2px solid var(--p2-gold);
+  outline-offset: 4px;
+}
+.p2-stat-tappable .p2-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.p2-stat-arrow {
+  font-size: 11px;
+  color: var(--p2-muted);
+  font-weight: 600;
+  opacity: 0;
+  transform: translateX(-2px);
+  transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease;
+}
+.p2-stat-tappable:hover .p2-stat-arrow,
+.p2-stat-tappable:focus-visible .p2-stat-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--p2-gold);
+}
+/* Always show arrow for the primary action (AVAILABLE with seats to
+   place) since that's the next step the sponsor needs to take. */
+.p2-stat-tappable.is-primary .p2-stat-arrow {
+  opacity: 1;
+  color: var(--p2-gold);
+  transform: translateX(0);
+}
+.p2-stat-tappable.is-primary .p2-stat-label {
+  color: var(--p2-gold);
 }
 
 .p2-stat-label {
@@ -2260,10 +2354,7 @@ body {
     display: flex;
     width: 100%;
   }
-  .p2-event-pill-divider {
-    display: none;
-  }
-  .p2-event-pill > div:not(.p2-event-pill-divider) {
+  .p2-event-pill-row {
     width: 100%;
   }
   .p2-modal-body {

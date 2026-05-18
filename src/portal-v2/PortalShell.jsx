@@ -270,23 +270,81 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
           on mobile via the .p2-event-pill flex layout. The Platinum
           tier pill is gone — that info already lives in the BRONZE/
           PLATINUM chip in the StatusCard below, no need to say it
-          twice up here. */}
+          twice up here.
+
+          Phase 5.7+ post-walk (Scott 2026-05-18 from the road):
+          adds two small action pills — "Add to calendar" next to
+          the date, "Directions" next to the venue. Both oriented
+          right via space-between on the row. */}
       <div className="p2-event-pill">
-        <div>
-          <strong>Wednesday, June 10, 2026</strong>
-          <span>{daysOut} {daysOut === 1 ? 'day' : 'days'} out</span>
+        <div className="p2-event-pill-row">
+          <div className="p2-event-pill-text">
+            <strong>Wednesday, June 10, 2026</strong>
+            <span>{daysOut} {daysOut === 1 ? 'day' : 'days'} out</span>
+          </div>
+          <button
+            type="button"
+            className="p2-event-pill-action"
+            onClick={() => {
+              // Floating local time — the gala happens at this clock time
+              // wherever the calendar app interprets it. Avoids tz quirks.
+              const ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Davis Education Foundation//Gala 2026//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'BEGIN:VEVENT',
+                'UID:def-gala-2026@daviskids.org',
+                `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
+                'DTSTART:20260610T173000',
+                'DTEND:20260610T220000',
+                'SUMMARY:DEF Gala 2026 — Lights · Camera · Take Action',
+                'LOCATION:Megaplex at Legacy Crossing\\, Centerville\\, UT',
+                'DESCRIPTION:Davis Education Foundation Gala 2026.\\nFilm showings at 4:30 PM (Early) and 7:15 PM (Late).\\nSilent auction bidding opens at 6:30 PM in the lobby.',
+                'URL:https://gala.daviskids.org',
+                'END:VEVENT',
+                'END:VCALENDAR',
+              ].join('\r\n');
+              const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'def-gala-2026.ics';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              setTimeout(() => URL.revokeObjectURL(url), 2000);
+            }}
+            aria-label="Add to calendar"
+          >
+            <span aria-hidden="true">📅</span>
+            <span>Add to calendar</span>
+          </button>
         </div>
         <div className="p2-event-pill-divider" aria-hidden="true" />
-        <div>
-          <strong>Megaplex at Legacy Crossing</strong>
-          <span>Centerville, Utah</span>
+        <div className="p2-event-pill-row">
+          <div className="p2-event-pill-text">
+            <strong>Megaplex at Legacy Crossing</strong>
+            <span>Centerville, Utah</span>
+          </div>
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent('Megaplex at Legacy Crossing, Centerville, UT')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p2-event-pill-action"
+            aria-label="Get directions"
+          >
+            <span aria-hidden="true">📍</span>
+            <span>Directions</span>
+          </a>
         </div>
       </div>
     </section>
   );
 }
 
-function StatusCard({ identity, seatMath, tierAccess }) {
+function StatusCard({ identity, seatMath, tierAccess, onPlace, onInvite, onScrollToTickets }) {
   const placed = seatMath?.placed || 0;
   const total = seatMath?.total || 0;
   const delegated = seatMath?.delegated || 0;
@@ -297,6 +355,12 @@ function StatusCard({ identity, seatMath, tierAccess }) {
   const open = tierAccess?.open === true;
   const tier = identity?.tier || 'Sponsor';
 
+  // Each stat (except TOTAL, which is purely informational) is a
+  // tap target. Scott 2026-05-18 from the road: "add some
+  // interactivity and more depth to that very first thing you see."
+  //   PLACED         → scroll to the tickets section below
+  //   INVITED GUESTS → open the invite-someone-new flow
+  //   AVAILABLE      → open the seat picker (primary action)
   return (
     <section className="p2-section tight">
       <div className="p2-card stripped">
@@ -337,21 +401,45 @@ function StatusCard({ identity, seatMath, tierAccess }) {
               <span className="p2-stat-value">{total}</span>
               <span className="p2-stat-sub">Your block</span>
             </div>
-            <div className="p2-stat">
-              <div className="p2-stat-label">Placed</div>
+            <button
+              type="button"
+              className={`p2-stat p2-stat-tappable ${placed === 0 ? 'is-empty' : ''}`}
+              onClick={() => onScrollToTickets && onScrollToTickets()}
+              aria-label={`${placed} placed — view tickets`}
+            >
+              <div className="p2-stat-label">
+                Placed
+                <span className="p2-stat-arrow" aria-hidden="true">↘</span>
+              </div>
               <span className={`p2-stat-value ${placed === 0 ? 'muted' : ''}`}>{placed}</span>
               <span className="p2-stat-sub">In seats</span>
-            </div>
-            <div className="p2-stat">
-              <div className="p2-stat-label">Delegated</div>
+            </button>
+            <button
+              type="button"
+              className={`p2-stat p2-stat-tappable ${delegated === 0 ? 'is-empty' : ''}`}
+              onClick={() => onInvite && onInvite()}
+              aria-label={`${delegated} invited guests — invite someone`}
+            >
+              <div className="p2-stat-label">
+                Invited guests
+                <span className="p2-stat-arrow" aria-hidden="true">→</span>
+              </div>
               <span className={`p2-stat-value ${delegated === 0 ? 'muted' : ''}`}>{delegated}</span>
-              <span className="p2-stat-sub">To delegates</span>
-            </div>
-            <div className="p2-stat">
-              <div className="p2-stat-label">Open</div>
+              <span className="p2-stat-sub">On your list</span>
+            </button>
+            <button
+              type="button"
+              className={`p2-stat p2-stat-tappable ${remaining === 0 ? 'is-empty' : 'is-primary'}`}
+              onClick={() => onPlace && onPlace()}
+              aria-label={`${remaining} available — pick seats`}
+            >
+              <div className="p2-stat-label">
+                Available
+                <span className="p2-stat-arrow" aria-hidden="true">→</span>
+              </div>
               <span className={`p2-stat-value ${remaining === 0 ? 'muted' : ''}`}>{remaining}</span>
               <span className="p2-stat-sub">To place</span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -1050,6 +1138,14 @@ export default function PortalShellV2({
             identity={identity}
             seatMath={seatMath}
             tierAccess={tierAccess}
+            onPlace={openSeatModal}
+            onInvite={() => setInviteModal({})}
+            onScrollToTickets={() => {
+              const el = document.getElementById('p2-tickets');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }}
           />
 
           {showFinalizeBanner && (
