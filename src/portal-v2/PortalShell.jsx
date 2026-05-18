@@ -248,7 +248,7 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
   } else {
     sub = (
       <>
-        {total} {total === 1 ? 'seat is' : 'seats are'} yours to place. Pick the showtime, the
+        {remaining} {remaining === 1 ? 'seat is' : 'seats are'} yours to place. Pick the showtime, the
         auditorium, and the seats — you can split your block across films if you want.
       </>
     );
