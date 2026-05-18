@@ -58,7 +58,7 @@ export async function onRequestGet({ request, env }) {
   let liveBySendId = new Map();
   try {
     const res = await db.prepare(
-      `SELECT send_id, channel, audience, subject, body
+      `SELECT send_id, channel, audience, subject, body, title
          FROM marketing_sends
         WHERE send_id IN (${placeholders})`
     ).bind(...sendIds).all();
@@ -71,20 +71,21 @@ export async function onRequestGet({ request, env }) {
   }
 
   // 3. Compose the response. Priority for each field:
-  //    title:    SENDS[id].title  → 'Send ' + id (last resort)
+  //    title:    live.title  → SENDS[id].title  → 'Send ' + id (last resort)
   //    audience: live.audience  → SENDS[id].audience  → 'Unknown'
   //    subject:  live.subject  → SENDS[id].subject  → ''
   //    channel:  live.channel  → SENDS[id].type  → 'email'
   //
-  // We deliberately read `title` from the registry only — `marketing_sends`
-  // doesn't store a separate human title (only subject/body). The in-code
-  // title field is the canonical human label.
+  // `marketing_sends.title` is the canonical human label (matches what the
+  // marketing-flow dashboard shows — e.g. "Save the Date — Flavor A",
+  // "Platinum Opens — May 11"). SENDS[id].title is a back-compat fallback
+  // for any legacy in-code entry; in practice live wins.
   const sends = logRows.map(r => {
     const reg = SENDS[r.send_id] || null;
     const live = liveBySendId.get(r.send_id) || null;
     return {
       sendId: r.send_id,
-      title: reg?.title || `Send ${r.send_id}`,
+      title: live?.title || reg?.title || `Send ${r.send_id}`,
       channel: (live?.channel || reg?.type || 'email').toLowerCase(),
       audience: live?.audience || reg?.audience || 'Unknown',
       subject: live?.subject || reg?.subject || '',
