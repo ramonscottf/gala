@@ -3468,5 +3468,92 @@ body {
   }
   .p2-auction-burst {
     font-size: 44px;
+/* ============================================================
+   Mobile modal chrome — full-screen sheet (Phase 5.7+ post-G).
+   
+   Scott 2026-05-18: "opening up in cards on mobile is making
+   navigation hard. can't scroll well. cards are nice on desktop,
+   but mobile is making it hard to navigate."
+   
+   Same content tree as desktop. Only the chrome changes:
+   - Edge-to-edge sheet, no card margins/border/radius
+   - Single scroll container (the modal itself), not nested scroll
+   - Header sticky at top, footer sticky at bottom with safe-area
+   - Safe-area insets honored top + bottom (iOS notch / home bar)
+   
+   Also hides the floating Wicko pill when ANY modal is open. The
+   pill's backdrop-filter stacks badly over the modal's blur on
+   iOS Safari — renders as a solid black box (Scott's screenshot
+   2026-05-18). Removing the pill from layout when a modal is open
+   dodges the bug AND clears visual chrome competition.
+   ============================================================ */
+
+/* Pill auto-hide — runs at all viewport widths. The pill has no
+   purpose while a modal is captive; the modal is the surface. */
+body:has(.p2-modal-backdrop) .p2-wpn {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .p2-modal-backdrop {
+    padding: 0;
+    overflow: hidden;            /* modal becomes the scroll surface */
+    align-items: stretch;
+    backdrop-filter: none;        /* dodge iOS double-blur bug */
+    -webkit-backdrop-filter: none;
+    background: #0b1132;          /* solid so no see-through on mobile */
+  }
+  .p2-modal {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;          /* iOS Safari dynamic viewport */
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: 0;
+    box-shadow: none;
+    overflow-y: auto;             /* single scroll container */
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+  }
+  .p2-modal.wide {
+    width: 100%;
+    max-width: 100%;
+  }
+  /* Hide the gradient strip on top — it competes with the sticky header */
+  .p2-modal.stripped::before {
+    display: none;
+  }
+  .p2-modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 14px 16px calc(12px) 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    background:
+      linear-gradient(180deg, #0b1132 80%, rgba(11, 17, 50, 0) 100%);
+    border-bottom: 1px solid var(--p2-rule);
+    /* Tighten the title size on mobile */
+  }
+  .p2-modal-header .p2-modal-title {
+    font-size: 20px;
+  }
+  .p2-modal-body {
+    padding: 16px;
+    flex: 1 1 auto;
+    /* IMPORTANT: do NOT set overflow here — the modal itself scrolls */
+  }
+  .p2-modal-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background:
+      linear-gradient(0deg, #0b1132 80%, rgba(11, 17, 50, 0) 100%);
+    border-top: 1px solid var(--p2-rule);
   }
 }
