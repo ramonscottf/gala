@@ -1,259 +1,596 @@
 /*
- * qgiv-skin.css — loaded INSIDE the Qgiv iframe via Page Specific Header
- * injection on form 1097071 in the Qgiv admin. URL referenced from Qgiv:
+ * qgiv-skin.css — paste contents into Qgiv admin:
+ *   Form 1097071 → Advanced tab → Global Page Settings → Custom CSS
+ *
+ * OR load via Additional Header Content with:
  *   <link rel="stylesheet" href="https://gala.daviskids.org/qgiv-skin.css">
  *
- * Goals:
- *  - Match the DEF gala portal visual language (navy ground, off-white
- *    cards, gold/red accents, Fraunces display + Inter body).
- *  - Hide the $0.00 price/subtotal/total lines — registration is free,
- *    showing them is noise (Scott confirmed 2026-05-18).
- *  - Hide any legacy auction-event banner imagery (Hogan / AFCU logos
- *    that belong to the broader event, not this registration form).
- *  - Soften the "Powered by Bloomerang" footer if present (the embed view
- *    didn't show it in live testing, but defensive in case it surfaces).
+ * Goal: make every Qgiv registration page indistinguishable from a portal
+ * card. Same navy ground, same Fraunces/Inter typography, same pill inputs,
+ * same gradient buttons. Kill every piece of Qgiv chrome that competes:
+ * event banner/header, "Your Summary" sidebar, step indicator vendor look,
+ * "Powered by Bloomerang" footer, "Transaction is secure" mini-footer.
  *
- * Discipline:
- *  - Every selector targets a single semantic class.
- *  - No !important unless required to override Qgiv's inline styles.
- *  - All BEM hooks (.event-registration__*, .packages__*) were confirmed
- *    in the live DOM walk-through 2026-05-18.
- *  - Fonts are loaded via Google Fonts at the top — Qgiv iframe is on a
- *    different origin from us, so self-hosted Pages fonts can't be
- *    cross-origined easily. Using public CDN is acceptable here.
+ * Built defensively — uses BEM hooks confirmed in the live DOM walk
+ * 2026-05-18 PLUS broad attribute selectors as fallback for AJAX-added
+ * elements whose exact class names may shift across Qgiv releases.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap');
 
-/* ── Color tokens (mirror portal-v2.css) ─────────────────────────── */
-:root {
+/* ── Design tokens (mirror src/portal-v2/portal-v2.css) ───────────── */
+:root,
+.event-registration,
+body {
   --def-navy: #11194a;
   --def-navy-deep: #080d28;
   --def-navy-mid: #1c2760;
+  --def-navy-soft: #242f68;
   --def-gold: #f4b942;
   --def-red: #c53030;
-  --def-paper: #f5f1e6;
   --def-rule: rgba(255, 255, 255, 0.14);
+  --def-rule-strong: rgba(255, 255, 255, 0.22);
   --def-muted: rgba(255, 255, 255, 0.72);
+  --def-faint: rgba(255, 255, 255, 0.5);
+  --def-gradient: linear-gradient(90deg, var(--def-gold) 0%, var(--def-red) 100%);
 }
 
-/* ── Page chrome ─────────────────────────────────────────────────── */
+/* ── Page chrome — navy ground, edge-to-edge ──────────────────────── */
+html,
 body,
 .event-registration,
-.event-registration__inner {
+.event-registration__inner,
+.event-registration__content,
+.page-content,
+.page-content-inner,
+[class*="page-wrapper"],
+[class*="main-content"] {
   background: var(--def-navy-deep) !important;
-  color: #fff;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-image: radial-gradient(circle at 12% 8%, rgba(215, 40, 70, 0.10), transparent 40%),
+                    radial-gradient(circle at 88% 6%, rgba(98, 200, 255, 0.08), transparent 40%) !important;
+  color: #fff !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.event-registration__header {
-  background: transparent;
-  border-bottom: 1px solid var(--def-rule);
+body {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Hide the legacy event banner (Hogan / AFCU image), keep our own
-   modal title bar as the visible header. */
-.event-registration__header img,
-.event-registration__header [class*="banner"],
-.event-registration__header [class*="logo"] {
+/* ── Kill Qgiv form-level header chrome ─────────────────────────────
+   The "2026 Lights, Camera, ACTION! Silent Auction" + date band that
+   appears above the form content. Duplicated by our own modal context —
+   wipe it. */
+.event-registration__header,
+.event-header,
+.event-banner,
+.registration-event-header,
+[class*="event-registration__header"],
+[class*="event-banner"] {
   display: none !important;
 }
 
-/* ── Typography ──────────────────────────────────────────────────── */
-.heading-alpha,
-.event-registration h1,
-.event-registration h2 {
-  font-family: 'Fraunces', Georgia, serif;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: #fff;
+/* Kill any Qgiv-provided form heading / event title block */
+.event-title,
+.event-description,
+.event-date-range,
+.registration-window,
+.registration-dates,
+[class*="event-title"],
+[class*="event-date"],
+[class*="registration-window"] {
+  display: none !important;
 }
 
+/* ── Kill the "Your Summary" sidebar ────────────────────────────────
+   For a free registration this is just $0 / Subtotal / Total noise.
+   Scott confirmed 2026-05-18: hide. */
+.summary,
+.summary-panel,
+.your-summary,
+.cart-summary,
+.event-registration__sidebar,
+.registration-summary,
+[class*="summary-panel"],
+[class*="cart-summary"],
+[class*="__sidebar"],
+[class*="registration-summary"],
+aside[class*="summary"] {
+  display: none !important;
+}
+
+/* And reclaim the space the sidebar left behind */
+.event-registration__main,
+.event-registration__body,
+.event-registration__form,
+.registration-form,
+[class*="event-registration__main"],
+[class*="registration-form"] {
+  width: 100% !important;
+  max-width: 720px !important;
+  margin: 0 auto !important;
+  padding: 32px 24px 48px !important;
+  background: transparent !important;
+}
+
+/* ── Kill the "Powered by Bloomerang" + "Transaction is secure" foot ─ */
+.bloomerang-attribution,
+.powered-by,
+.qgiv-attribution,
+.secure-transaction,
+.transaction-secure,
+[class*="powered-by"],
+[class*="bloomerang-attribution"],
+[class*="secure-transaction"],
+.event-registration__footer,
+[class*="event-registration__footer"] {
+  display: none !important;
+}
+
+/* ── Step indicator — restyle to match our portal ─────────────────── */
+.event-registration__steps,
+.progress-indicator,
+.step-indicator,
+.registration-steps,
+[class*="step-indicator"],
+[class*="progress-indicator"] {
+  background: transparent !important;
+  padding: 0 0 8px !important;
+  margin: 0 auto 12px !important;
+  max-width: 720px !important;
+  display: flex !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+[class*="step-indicator"] [class*="step"],
+[class*="progress-indicator"] [class*="step"] {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--def-faint) !important;
+  font-size: 12px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+[class*="step"].active,
+[class*="step"][class*="--active"],
+[class*="step"][class*="-current"] {
+  color: var(--def-gold) !important;
+}
+
+[class*="step"].complete,
+[class*="step"][class*="--complete"],
+[class*="step"][class*="-done"] {
+  color: rgba(244, 185, 66, 0.6) !important;
+}
+
+/* Generic dot/circle step indicator */
+[class*="step"] [class*="circle"],
+[class*="step"] [class*="dot"] {
+  background: var(--def-navy-mid) !important;
+  border: 1px solid var(--def-rule) !important;
+}
+
+[class*="step"].active [class*="circle"],
+[class*="step"].active [class*="dot"] {
+  background: var(--def-gold) !important;
+  border-color: var(--def-gold) !important;
+  box-shadow: 0 0 0 4px rgba(244, 185, 66, 0.18) !important;
+}
+
+/* ── Typography ──────────────────────────────────────────────────── */
+h1, h2, h3,
+.heading-alpha,
+.heading-beta,
+.event-registration h1,
+.event-registration h2,
+.event-registration h3,
+.form-page-title,
+[class*="form-page-title"],
+[class*="page-heading"] {
+  font-family: 'Fraunces', Georgia, serif !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  color: #fff !important;
+  margin: 0 0 8px !important;
+  line-height: 1.15 !important;
+}
+
+h1, .heading-alpha, .form-page-title { font-size: 34px !important; }
+h2, .heading-beta { font-size: 24px !important; }
+h3 { font-size: 18px !important; font-weight: 500 !important; }
+
+/* Section labels above field groups ("What's your name?", "Let's get your details") */
 .form-section-title,
-.event-registration h3 {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: -0.005em;
+.field-group-heading,
+[class*="field-group"] [class*="title"],
+[class*="section-heading"] {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  letter-spacing: 0.005em !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  margin: 24px 0 12px !important;
+  text-transform: none !important;
 }
 
 .event-registration p,
 .event-registration label,
-.option-label {
-  color: var(--def-muted);
+.option-label,
+.form-field-label,
+[class*="field-label"],
+[class*="form-label"] {
+  color: var(--def-muted) !important;
+  font-size: 13px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
 }
 
-/* ── Form controls ───────────────────────────────────────────────── */
-.event-registration input[type="text"],
-.event-registration input[type="email"],
-.event-registration input[type="tel"],
-.event-registration input[type="number"],
-.event-registration select,
-.event-registration textarea {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--def-rule);
-  color: #fff;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-family: inherit;
-  font-size: 15px;
+/* Field helper text under inputs */
+.help-text,
+.field-help,
+.field-description,
+.input-helper,
+[class*="help-text"],
+[class*="field-help"] {
+  color: var(--def-faint) !important;
+  font-size: 12px !important;
+  margin-top: 4px !important;
+  font-style: normal !important;
 }
 
-.event-registration input:focus,
-.event-registration select:focus,
-.event-registration textarea:focus {
-  outline: none;
-  border-color: var(--def-gold);
-  box-shadow: 0 0 0 3px rgba(244, 185, 66, 0.18);
+/* ── Form inputs — pill / rounded, navy fill, gold focus ─────────── */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input[type="url"],
+select,
+textarea {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--def-rule) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease !important;
+  box-shadow: none !important;
 }
 
-/* Placeholder color */
-.event-registration input::placeholder,
-.event-registration textarea::placeholder {
-  color: rgba(255, 255, 255, 0.36);
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--def-rule-strong) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* ── Primary button (Next / Submit / Continue) ──────────────────── */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: var(--def-gold) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 3px rgba(244, 185, 66, 0.18) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.36) !important;
+}
+
+select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23f4b942' d='M6 8L0 0h12z'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 12px !important;
+  padding-right: 36px !important;
+}
+
+/* Required-field error tint — soften their aggressive red border */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"],
+input.invalid,
+select.invalid,
+textarea.invalid,
+input.error {
+  border-color: rgba(255, 138, 138, 0.7) !important;
+  background: rgba(255, 138, 138, 0.06) !important;
+}
+
+.error-message,
+.field-error,
+.validation-error,
+.input-error,
+[class*="error-message"],
+[class*="field-error"] {
+  color: #ff8a8a !important;
+  font-size: 12px !important;
+  margin-top: 6px !important;
+  font-weight: 500 !important;
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* ── Buttons — primary gradient, secondary ghost ─────────────────── */
+button,
+.button,
+.qg-vendor-button,
+input[type="submit"],
+button[type="submit"] {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  cursor: pointer !important;
+  transition: transform 0.12s ease, box-shadow 0.16s ease, filter 0.12s ease !important;
+}
+
+.button--primary,
+.qg-vendor-button.button--primary,
 .qg-vendor-button.button.button--primary,
-.event-registration .button--primary,
-.event-registration button[type="submit"] {
-  background: linear-gradient(90deg, var(--def-gold) 0%, var(--def-red) 100%);
-  color: #fff;
-  border: 0;
-  border-radius: 999px;
-  padding: 12px 28px;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  box-shadow: 0 4px 18px rgba(244, 185, 66, 0.22);
+button.primary,
+button[type="submit"],
+input[type="submit"],
+[class*="button--primary"] {
+  background: var(--def-gradient) !important;
+  color: #fff !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  padding: 12px 30px !important;
+  box-shadow: 0 4px 18px rgba(197, 48, 48, 0.22) !important;
 }
 
-.qg-vendor-button.button.button--primary:hover,
-.event-registration .button--primary:hover,
-.event-registration button[type="submit"]:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 22px rgba(244, 185, 66, 0.32);
+.button--primary:hover,
+button[type="submit"]:hover,
+[class*="button--primary"]:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 22px rgba(197, 48, 48, 0.32) !important;
+  filter: brightness(1.05) !important;
 }
 
-/* Secondary button (Back / Cancel) */
-.event-registration .button--secondary,
-.event-registration .button.secondary {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--def-rule);
-  color: #fff;
-  border-radius: 999px;
-  padding: 10px 22px;
-  font-family: inherit;
-  font-weight: 500;
+.button--primary:active,
+button[type="submit"]:active {
+  transform: translateY(0) !important;
+  filter: brightness(0.96) !important;
 }
 
-/* ── Hide free-registration money lines ──────────────────────────── */
-/* Scott 2026-05-18: registration is $0; these lines are noise. */
+.button--primary:disabled,
+button[type="submit"]:disabled,
+button[disabled] {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Secondary / Back button */
+.button--secondary,
+.button.secondary,
+button.secondary,
+[class*="button--secondary"],
+.back-button,
+[class*="back-button"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--def-rule) !important;
+  color: #fff !important;
+  border-radius: 999px !important;
+  padding: 12px 24px !important;
+}
+
+.button--secondary:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+  border-color: var(--def-rule-strong) !important;
+}
+
+/* Plain text-link Back */
+a.back-link,
+.back-link,
+[class*="back-link"] {
+  color: var(--def-gold) !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+}
+
+a.back-link:hover {
+  text-decoration: underline !important;
+}
+
+/* Form action bar (Back / Next) */
+.form-actions,
+.button-row,
+[class*="form-actions"],
+[class*="button-row"],
+[class*="action-row"] {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 32px !important;
+  padding-top: 24px !important;
+  border-top: 1px solid var(--def-rule) !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+}
+
+/* ── Generic links ───────────────────────────────────────────────── */
+a {
+  color: var(--def-gold) !important;
+}
+
+a:hover {
+  color: #fff !important;
+}
+
+/* ── Hide free-registration money lines (defense in depth) ────────── */
 .price-display,
 .subtotal-display,
 .total-display,
-[class*="price"][class*="display"],
 .cart-total,
-.registration-total {
+.registration-total,
+.cart-item-price,
+.line-total,
+[class*="price-display"],
+[class*="subtotal"],
+[class*="total-display"],
+[class*="cart-total"] {
   display: none !important;
 }
 
-/* ── Soften any Bloomerang footer attribution ───────────────────── */
-.bloomerang-attribution,
-.powered-by,
-[class*="powered-by"] {
-  opacity: 0.4;
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  text-align: center;
-  padding: 12px 0;
-}
-
-/* ── Step indicator / progress ───────────────────────────────────── */
-.event-registration__steps,
-.progress-indicator,
-.step-indicator {
-  background: transparent;
-}
-
-.event-registration__steps .step.active,
-.progress-indicator .step.active {
-  color: var(--def-gold);
-}
-
-.event-registration__steps .step.complete,
-.progress-indicator .step.complete {
-  color: rgba(244, 185, 66, 0.6);
-}
-
-/* ── Modal close button (Qgiv's internal X) ──────────────────────── */
-/* We have our own X on the parent modal — Qgiv's confirmation modal
-   close should remain functional but visually quieter. */
-.modal2__close {
-  color: rgba(255, 255, 255, 0.72);
+/* ── Hide vendor breadcrumb / event-meta widgets ─────────────────── */
+.breadcrumb,
+.event-meta,
+[class*="breadcrumb"],
+[class*="event-meta"] {
+  display: none !important;
 }
 
 /* ── Package selector (Step 1) ───────────────────────────────────── */
 .packages-page-container,
-.packages__content {
-  background: transparent;
+.packages__content,
+.package-list,
+[class*="packages-page"] {
+  background: transparent !important;
+  padding: 0 !important;
 }
 
 .package-option,
-.packages__item {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--def-rule);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
+.packages__item,
+.package-card,
+[class*="package-option"],
+[class*="packages__item"] {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid var(--def-rule) !important;
+  border-radius: 14px !important;
+  padding: 18px 20px !important;
+  margin-bottom: 12px !important;
+  transition: border-color 0.12s ease, background 0.12s ease !important;
 }
 
 .package-option:hover,
 .packages__item:hover {
-  border-color: rgba(244, 185, 66, 0.32);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(244, 185, 66, 0.32) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
 }
 
 .package-option.selected,
-.packages__item.selected {
-  border-color: var(--def-gold);
-  background: rgba(244, 185, 66, 0.06);
+.packages__item.selected,
+[class*="package"][class*="selected"] {
+  border-color: var(--def-gold) !important;
+  background: rgba(244, 185, 66, 0.06) !important;
 }
 
-/* ── Account-create step (post-registrationComplete) ─────────────── */
-/* After QGIV.registrationComplete the iframe routes to /account/create/
-   prompting for Password + Password_Confirm. Same form styling applies
-   but we add a subtle reassurance band. */
+/* ── Confirmation / Account-create / "You're registered" screens ─── */
+.confirmation,
+.confirmation-page,
+.registration-confirmation,
 .account-creation,
-.account-create {
+.account-create,
+.thank-you,
+[class*="confirmation"],
+[class*="thank-you"],
+[class*="account-create"] {
+  background: transparent !important;
+  color: #fff !important;
+}
+
+/* Kill the big blue check icon — we render our own success state in the
+   portal once postMessage fires. Hide their inline check. */
+.confirmation .icon,
+.confirmation-icon,
+[class*="confirmation"] [class*="icon"][class*="check"],
+[class*="thank-you"] [class*="icon"] {
+  display: none !important;
+}
+
+/* Hide "View Auction Items" / "Manage Ticket" / "Add to Calendar" /
+   "Print" buttons on the confirmation step — auction items are out of
+   scope for the v1 pre-event flow. Our own success card replaces all
+   of this once postMessage fires. */
+[class*="view-auction-items"],
+[class*="auction-items-link"],
+.manage-ticket,
+.print-receipt,
+.add-to-calendar,
+[class*="manage-ticket"],
+[class*="add-to-calendar"],
+[class*="print-receipt"] {
+  display: none !important;
+}
+
+/* ── Modal-close button Qgiv injects (X in top-right) ────────────── */
+.modal2__close,
+.modal-close,
+[class*="modal-close"],
+[class*="modal2__close"] {
+  color: rgba(255, 255, 255, 0.6) !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.event-registration__close,
+[class*="event-registration__close"] {
+  display: none !important;
+}
+
+/* ── Scrollbars (subtle) ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
   background: transparent;
 }
-
-/* ── Links ───────────────────────────────────────────────────────── */
-.event-registration a {
-  color: var(--def-gold);
+::-webkit-scrollbar-thumb {
+  background: var(--def-rule);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--def-rule-strong);
 }
 
-.event-registration a:hover {
-  color: #fff;
+/* ── Tighter spacing for the form column ─────────────────────────── */
+.form-field,
+.field-wrap,
+[class*="form-field"],
+[class*="field-wrap"] {
+  margin-bottom: 16px !important;
 }
 
-/* ── Inline validation errors ────────────────────────────────────── */
-.error-message,
-.field-error,
-.validation-error {
-  color: #ff8a8a;
-  font-size: 13px;
-  margin-top: 4px;
+/* Two-column row (City / State / Zip) */
+.field-row,
+.fields-row,
+.input-group,
+[class*="field-row"],
+[class*="input-group"] {
+  display: grid !important;
+  gap: 12px !important;
 }
 
-/* ── Helper text below inputs ────────────────────────────────────── */
-.help-text,
-.field-help {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
-  margin-top: 4px;
+@media (min-width: 540px) {
+  .field-row.cols-2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .field-row.cols-3 {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .event-registration__main,
+  .event-registration__form {
+    padding: 24px 18px 40px !important;
+  }
+  h1, .heading-alpha { font-size: 26px !important; }
+  h2, .heading-beta { font-size: 20px !important; }
 }

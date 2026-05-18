@@ -3312,7 +3312,11 @@ body {
   text-decoration: underline;
 }
 
-/* ── Full-screen iframe modal ───────────────────────────────────────── */
+/* ── Full-screen iframe modal — seamless chrome ─────────────────────
+   No header bar — just a 3px gold→red gradient strip at the top (same
+   accent every portal card carries) and a floating X. When the iframe
+   has the qgiv-skin applied, its navy ground bleeds edge-to-edge with
+   our modal background, eliminating the visible iframe seam. */
 
 .p2-auction-modal {
   position: fixed;
@@ -3321,58 +3325,45 @@ body {
   background: var(--p2-navy-deep);
   display: flex;
   flex-direction: column;
+  animation: p2-fade 140ms ease-out;
 }
 
-.p2-auction-modal-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 22px;
-  background: rgba(8, 13, 40, 0.96);
-  border-bottom: 1px solid var(--p2-rule);
+.p2-auction-modal-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--p2-gold), var(--p2-red));
+  z-index: 2;
   flex-shrink: 0;
 }
 
-.p2-auction-modal-title {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.p2-auction-modal-title .p2-eyebrow {
-  margin: 0;
-}
-
-.p2-auction-modal-headline {
-  font-family: "Fraunces", Georgia, serif;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  color: #fff;
-}
-
 .p2-auction-modal-close {
-  background: transparent;
-  border: 1px solid var(--p2-rule);
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--p2-rule-strong);
+  background: rgba(8, 13, 40, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: #fff;
   font-size: 22px;
   line-height: 1;
   padding: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .p2-auction-modal-close:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(8, 13, 40, 0.92);
   border-color: var(--p2-rule-strong);
 }
 
@@ -3388,8 +3379,9 @@ body {
   flex: 1 1 auto;
   width: 100%;
   border: 0;
-  background: #fff; /* Qgiv-side skin handles dark — this is fallback */
+  background: transparent; /* iframe content paints its own navy via qgiv-skin */
   min-height: 0;
+  color-scheme: dark;
 }
 
 .p2-auction-error {
@@ -3468,8 +3460,12 @@ body {
     flex: 1 1 calc(50% - 5px);
     min-width: 0;
   }
-  .p2-auction-modal-headline {
-    font-size: 16px;
+  .p2-auction-modal-close {
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
   }
   .p2-auction-success-inner h2 {
     font-size: 28px;

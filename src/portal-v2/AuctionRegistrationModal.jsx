@@ -76,6 +76,22 @@ export function AuctionRegistrationModal({
       const eventName =
         typeof data === 'string' ? data : data.event || data.type || '';
 
+      // Debug logger — captures EVERY message from Qgiv so we can see
+      // exactly what event names + payload shapes ship. Enable by adding
+      // ?debug=auction to the portal URL. Output appears in DevTools
+      // console; nothing reaches users.
+      if (
+        typeof window !== 'undefined' &&
+        window.location?.search?.includes('debug=auction')
+      ) {
+        try {
+          // eslint-disable-next-line no-console
+          console.log('[qgiv]', evt.origin, eventName || '(no event name)', data);
+        } catch {
+          // ignore — never let logging crash the handler
+        }
+      }
+
       if (!eventName || typeof eventName !== 'string') return;
 
       // The Qgiv embed signals its desired height on resize. We mostly
@@ -214,24 +230,23 @@ export function AuctionRegistrationModal({
       aria-modal="true"
       aria-label="Register to bid in the silent auction"
     >
-      <div className="p2-auction-modal-bar">
-        <div className="p2-auction-modal-title">
-          <span className="p2-eyebrow">Silent auction</span>
-          <span className="p2-auction-modal-headline">
-            {stage === 'complete'
-              ? "✓ You're registered"
-              : 'Register to bid'}
-          </span>
-        </div>
-        <button
-          type="button"
-          className="p2-auction-modal-close"
-          onClick={handleCloseWithPoll}
-          aria-label="Close"
-        >
-          ×
-        </button>
-      </div>
+      {/* Gradient strip — matches the same 3px gold→red rule that lives
+          on every other portal card via .p2-card.stripped::before. Ties
+          the iframe content to the portal visually without a chrome bar. */}
+      <div className="p2-auction-modal-strip" aria-hidden="true" />
+
+      {/* Floating close button — matches .p2-modal-close pattern used
+          across the portal. Sits above the iframe at top-right with a
+          subtle backdrop so it stays legible regardless of what scrolls
+          underneath. */}
+      <button
+        type="button"
+        className="p2-modal-close p2-auction-modal-close"
+        onClick={handleCloseWithPoll}
+        aria-label="Close registration"
+      >
+        ×
+      </button>
 
       {stage === 'complete' ? (
         <AuctionRegistrationSuccess
