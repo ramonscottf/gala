@@ -17,6 +17,10 @@ const FRESH = params.get('fresh') === '1';
 const DONE = params.get('done') === '1';
 const CELEBRATE = params.get('celebrate') === '1';
 const RECEIVE = params.get('receive') === '1';
+// Pre-finalize sponsor (placed seats, not yet finalized) → FinalizeBanner.
+const FINALIZE = params.get('finalize') === '1';
+// Same but with a seat missing a dinner → banner's blocked state.
+const FINALIZE_BLOCK = params.get('finalizeblock') === '1';
 
 // Mock portal state — modeled on the real /api/gala/portal/{token} payload.
 const mockPortal = {
@@ -210,6 +214,20 @@ if (FRESH) {
 if (DONE) {
   mockPortal.seatMath = { total: 6, placed: 6, delegated: 0, available: 0 };
   mockPortal.myAssignments = mockPortal.myAssignments.slice(0, 6);
+}
+
+if (FINALIZE || FINALIZE_BLOCK) {
+  mockPortal.identity.rsvpStatus = null;
+  mockPortal.seatMath = { total: 20, placed: 4, delegated: 6, available: 10 };
+  mockPortal.myAssignments = mockPortal.myAssignments.map((a, i) => ({
+    ...a,
+    // FINALIZE: every seat fed → banner is actionable.
+    // FINALIZE_BLOCK: leave the last seat unfed → blocked state.
+    dinner_choice:
+      FINALIZE_BLOCK && i === mockPortal.myAssignments.length - 1
+        ? null
+        : a.dinner_choice || 'salad',
+  }));
 }
 
 const noopRefresh = async () => mockPortal;

@@ -43,6 +43,12 @@ import { SwapSeatModal } from './SwapSeatModal.jsx';
 import { ReleaseSeatConfirm } from './ReleaseSeatConfirm.jsx';
 import { MoveGroupModal } from './MoveGroupModal.jsx';
 import { GiftSeatModal } from './GiftSeatModal.jsx';
+import {
+  FinalizeBanner,
+  TicketQrCardV2,
+  ConfirmationView,
+} from './Finalize.jsx';
+import { HelpFooter } from './HelpFooter.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -895,6 +901,41 @@ export default function PortalShellV2({
     return ticketModal;
   }, [ticketModal, tickets]);
 
+  // P0.1 — finalize trigger. v2 imported useFinalize but never called
+  // it, so sponsors who placed seats never received the confirmation
+  // email/SMS/QR. Wire the hook and surface a persistent CTA.
+  const {
+    finalize,
+    finalizing,
+    error: finalizeError,
+    confirmationData,
+    setConfirmationData,
+  } = useFinalize({ apiBase: config.apiBase, token, onRefresh });
+
+  const isSponsor = identity?.kind === 'sponsor';
+  const isFinalized = identity?.rsvpStatus === 'completed';
+  // Server (/finalize) 400s with meals_required unless every placed
+  // seat has a dinner_choice — mirror it so the user gets immediate
+  // feedback instead of a failed POST.
+  const missingDinner = useMemo(
+    () =>
+      (portal?.myAssignments || []).filter(
+        (a) => !a.dinner_choice && a.dinner_choice !== 0,
+      ).length,
+    [portal],
+  );
+  const showFinalizeBanner =
+    isSponsor && !isFinalized && (seatMath?.placed || 0) > 0;
+
+  const handleFinalize = async () => {
+    if (missingDinner > 0) return; // banner already explains why
+    try {
+      await finalize();
+    } catch {
+      // finalizeError surfaces in the banner; user retries
+    }
+  };
+
   const openSeatModal = () => setSeatModal(true);
   const closeSeatModal = async () => {
     setSeatModal(false);
@@ -921,6 +962,20 @@ export default function PortalShellV2({
     );
   }
 
+  // Post-finalize: short-circuit the shell with the confirmation
+  // moment (QR + delivery copy), mirroring v1 ConfirmationScreen.
+  if (confirmationData) {
+    return (
+      <ConfirmationView
+        name={identity?.contactName || identity?.company}
+        token={token}
+        apiBase={config.apiBase}
+        data={confirmationData}
+        onClose={() => setConfirmationData(null)}
+      />
+    );
+  }
+
   return (
     <div className="p2-shell">
       <BrandNav identity={identity} onOpenProfile={() => setProfileModal(true)} />
@@ -932,6 +987,20 @@ export default function PortalShellV2({
         seatMath={seatMath}
         tierAccess={tierAccess}
       />
+
+      {showFinalizeBanner && (
+        <FinalizeBanner
+          placed={seatMath?.placed || 0}
+          missingDinner={missingDinner}
+          busy={finalizing}
+          error={finalizeError}
+          onFinalize={handleFinalize}
+        />
+      )}
+
+      {isSponsor && isFinalized && (
+        <TicketQrCardV2 token={token} apiBase={config.apiBase} />
+      )}
 
       {(tickets.length > 0 || seatMath.total > 0) && (
         <TicketsSection
@@ -962,6 +1031,8 @@ export default function PortalShellV2({
       <LineupSection showtimes={showtimes} onOpenMovie={(m) => setMovieModal(m)} />
 
       <NightOfSection />
+
+      <HelpFooter />
 
       <Footer />
 
