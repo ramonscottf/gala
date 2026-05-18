@@ -1371,6 +1371,135 @@ body {
   line-height: 1;
 }
 
+/* ─── Delegate ticket rows (inside DelegationManageModal) ─────────
+   Compact summary of a single placed seat. Each row has a small
+   16:24 poster on the left, two text rows on the right, and a
+   dinner pill that wraps to a second visual block on narrow phones.
+   Designed to read like a movie-theater stub at a glance. */
+.p2-deleg-ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.p2-deleg-ticket {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.p2-deleg-ticket-poster {
+  width: 32px;
+  height: 48px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background-color: var(--p2-navy-deep);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Fallback when there's no poster: small navy chip with initials of
+   the movie. The ::after carries the chip itself so we don't have
+   to render extra DOM. */
+.p2-deleg-ticket-poster.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.05em;
+}
+
+.p2-deleg-ticket-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.p2-deleg-ticket-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--p2-text, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.p2-deleg-ticket-showing {
+  font-size: 12px;
+  color: var(--p2-subtle);
+  font-weight: 500;
+}
+
+.p2-deleg-ticket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--p2-subtle);
+  margin-top: 4px;
+}
+
+.p2-deleg-ticket-meta-sep {
+  opacity: 0.5;
+}
+
+.p2-deleg-ticket-seat {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--p2-text, rgba(255, 255, 255, 0.92));
+}
+
+/* Static (non-button) dinner pill used inside the delegate ticket
+   row — same visual language as .p2-dinner-pill but without the
+   cursor/hover affordance, since this list is read-only. */
+.p2-deleg-ticket .p2-dinner-pill-static {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(244, 185, 66, 0.16);
+  border: 1px solid rgba(244, 185, 66, 0.36);
+  color: var(--p2-gold);
+  font-size: 11px;
+  font-weight: 700;
+}
+.p2-deleg-ticket .p2-dinner-pill-static.empty {
+  background: rgba(215, 40, 70, 0.1);
+  border-color: rgba(215, 40, 70, 0.34);
+  color: var(--p2-red-soft);
+}
+
+/* SPLIT BLOCK flag — gold tinted pill rendered next to the
+   "Their tickets" section heading when a delegation's seats span
+   more than one (theater, showing) pair. */
+.p2-split-block-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(244, 185, 66, 0.14);
+  border: 1px solid rgba(244, 185, 66, 0.4);
+  color: var(--p2-gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 /* Dinner option tiles inside the DinnerModal — 2x2 grid on desktop,
    single column on mobile. Selected tile shows the gold ring + a
    subtle gold fill, mirroring the seat-chip + seat-picker selection

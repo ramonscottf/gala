@@ -303,16 +303,14 @@ export function DelegationManageModal({
                 style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
               >
                 <span>Their tickets</span>
-                {isSplit && <SplitBlockPill />}
+                {isSplit && <span className="p2-split-block-pill">Split block</span>}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className="p2-deleg-ticket-list">
                 {myAssignments.map((a, i) => (
                   <TicketLine
                     key={`${a.theater_id}:${a.showing_number}:${a.row_label}:${a.seat_num}:${i}`}
                     assignment={a}
                     showtime={showtimeLookup.get(`${a.theater_id}:${a.showing_number}`)}
-                    index={i}
-                    total={myAssignments.length}
                   />
                 ))}
               </div>
@@ -480,15 +478,15 @@ function DelegationStatusInline({ status }) {
 }
 
 // Compact one-line ticket summary inside the Manage Invite modal.
-// Layout (single row, wraps gracefully on narrow phones):
+// Layout (responsive — meta row wraps on narrow phones):
 //
-//   ┌──────────────────────────────────────────────────────────────┐
-//   │ The Pursuit · Late Show 8:45 PM                              │
-//   │ Theater 3 · F12 · 🥖 Hot French Dip                          │
-//   └──────────────────────────────────────────────────────────────┘
+//   ┌──┐  The Pursuit
+//   │  │  Late Show · 8:45 PM
+//   └──┘  Theater 3 · F12 · [🥖 Hot French Dip]
 //
-// Falls back gracefully when the showtime lookup misses (stale data,
-// admin reassignment): shows the raw theater id + row/seat.
+// Poster thumbnail uses thumbnail_url → poster_url → 2-letter movie
+// initials chip. Falls back to "Aud {N}" labelling when the showtime
+// lookup misses (stale data, admin reassignment).
 function TicketLine({ assignment, showtime }) {
   const movieTitle = showtime?.movie_title || `Theater ${assignment.theater_id}`;
   const showStart = showtime?.show_start || null;
@@ -503,80 +501,49 @@ function TicketLine({ assignment, showtime }) {
   const dinnerLabel = dinnerLabelFor(dinnerId);
   const dinnerEmoji = dinnerEmojiFor(dinnerId);
 
+  // Prefer the smaller thumbnail when available — it's already sized
+  // for chip-scale rendering. Fall back to the full poster.
+  const posterUrl = showtime?.thumbnail_url || showtime?.poster_url || null;
+  const movieInitials = movieTitle
+    .split(/\s+/)
+    .filter((w) => w && w[0] && /[A-Za-z0-9]/.test(w[0]))
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('') || '?';
+
   return (
-    <div
-      style={{
-        padding: '12px 14px',
-        borderRadius: 12,
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 4,
-        fontSize: 13,
-        lineHeight: 1.45,
-      }}
-    >
-      <div style={{ fontWeight: 700, color: 'var(--p2-text, #fff)' }}>
-        {movieTitle}
-        <span style={{ color: 'var(--p2-subtle)', fontWeight: 500 }}>
-          {' · '}
-          {showingLabel}
-          {showStart ? ` ${showStart}` : ''}
-        </span>
-      </div>
+    <div className="p2-deleg-ticket">
       <div
-        style={{
-          color: 'var(--p2-subtle)',
-          fontSize: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          flexWrap: 'wrap',
-        }}
+        className={`p2-deleg-ticket-poster${posterUrl ? '' : ' empty'}`}
+        style={posterUrl ? { backgroundImage: `url(${posterUrl})` } : undefined}
+        aria-hidden="true"
       >
-        <span>{theaterLabel}</span>
-        <span style={{ opacity: 0.5 }}>·</span>
-        <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace', letterSpacing: '0.04em' }}>
-          {seatLabel}
-        </span>
-        {dinnerLabel ? (
-          <>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <span>
-              {dinnerEmoji} {dinnerLabel}
+        {!posterUrl && movieInitials}
+      </div>
+      <div className="p2-deleg-ticket-body">
+        <div className="p2-deleg-ticket-title" title={movieTitle}>{movieTitle}</div>
+        <div className="p2-deleg-ticket-showing">
+          {showingLabel}
+          {showStart ? ` · ${showStart}` : ''}
+        </div>
+        <div className="p2-deleg-ticket-meta">
+          <span>{theaterLabel}</span>
+          <span className="p2-deleg-ticket-meta-sep">·</span>
+          <span className="p2-deleg-ticket-seat">{seatLabel}</span>
+          <span className="p2-deleg-ticket-meta-sep">·</span>
+          {dinnerLabel ? (
+            <span className="p2-dinner-pill-static">
+              <span aria-hidden="true">{dinnerEmoji}</span>
+              <span>{dinnerLabel}</span>
             </span>
-          </>
-        ) : (
-          <>
-            <span style={{ opacity: 0.5 }}>·</span>
-            <span style={{ color: 'var(--p2-gold)' }}>Meal not chosen</span>
-          </>
-        )}
+          ) : (
+            <span className="p2-dinner-pill-static empty">
+              <span aria-hidden="true">🍽️</span>
+              <span>Meal not chosen</span>
+            </span>
+          )}
+        </div>
       </div>
     </div>
-  );
-}
-
-function SplitBlockPill() {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding: '2px 8px',
-        borderRadius: 999,
-        background: 'rgba(244, 185, 66, 0.12)',
-        border: '1px solid rgba(244, 185, 66, 0.4)',
-        color: 'var(--p2-gold)',
-        fontSize: 10,
-        fontWeight: 800,
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-      }}
-    >
-      Split block
-    </span>
   );
 }
