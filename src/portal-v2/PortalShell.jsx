@@ -710,7 +710,7 @@ function LineupSection({ showtimes, onOpenMovie }) {
     <section className="p2-section wide-pad">
       <div className="p2-section-header">
         <div>
-          <div className="p2-eyebrow">The lineup</div>
+          <div className="p2-eyebrow">The lineup<span className="p2-eyebrow-swipehint" aria-hidden="true"> — swipe →</span></div>
           <h2>Four films, two <span className="p2-italic-flair">showtimes</span>.</h2>
         </div>
         <p>

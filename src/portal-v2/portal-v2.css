@@ -2104,9 +2104,6 @@ body {
   .p2-ticket-grid {
     grid-template-columns: 1fr;
   }
-  .p2-movie-grid {
-    grid-template-columns: 1fr;
-  }
   .p2-info-grid {
     grid-template-columns: 1fr;
   }
@@ -2116,6 +2113,42 @@ body {
   .p2-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Lineup horizontal rail on mobile — 2-2.5 cards visible at 390px, swipe
+   with momentum and snap to card start. Above 640px the grid takes over. */
+@media (max-width: 640px) {
+  .p2-movie-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 18px 16px;
+    margin: 0 -18px;
+    scroll-padding-left: 18px;
+  }
+  .p2-movie-grid::-webkit-scrollbar { display: none; }
+
+  .p2-movie-card {
+    scroll-snap-align: start;
+    flex: 0 0 72%;   /* 2 full + ~half peek at 390px */
+    max-width: 260px;
+    min-width: 220px;
+  }
+  .p2-movie-media { min-height: 168px; }
+  .p2-movie-body p {
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+@media (min-width: 641px) and (max-width: 920px) {
+  .p2-movie-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -2816,4 +2849,14 @@ body {
   border-radius: 10px;
   width: 180px;
   height: 180px;
+}
+
+/* Swipe hint shown only on mobile (where the rail kicks in) */
+.p2-eyebrow-swipehint { display: none; }
+@media (max-width: 640px) {
+  .p2-eyebrow-swipehint {
+    display: inline;
+    opacity: .62;
+    font-weight: 600;
+  }
 }
