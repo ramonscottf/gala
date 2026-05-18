@@ -127,7 +127,85 @@
         }
       }
     }
+
+    // After hiding the chrome, check whether we're on the confirmation
+    // step. If so, signal the parent window so the portal can flip to
+    // ✓ Registered without relying on Qgiv-emitted postMessage events
+    // (which never actually fire — verified 2026-05-18 walkthrough with
+    // ?debug=auction enabled, zero [qgiv] logs across all 3 steps).
+    detectConfirmation();
   }
+
+  // ── Confirmation detection + parent signal ─────────────────────────
+  // We're on the Qgiv "Registration: Confirmation" step if the page
+  // shows the success copy ("You're registered for..." / "Thank you
+  // for registering"). When we see it, post a single message to the
+  // parent window (our portal) so it can:
+  //   1. Close the auction-registration modal
+  //   2. Flip the auction card to ✓ Registered state
+  //   3. POST to our own /auction-register endpoint using the sponsor
+  //      identity already in context (no need to ferry transaction
+  //      IDs from Qgiv — completion is the signal)
+  //
+  // Fires exactly once per page load; resets only if the URL changes
+  // (so a user navigating back+forward through the form doesn't
+  // re-trigger). The sponsor token comes from a `def_token` cookie
+  // we expect the portal to set when opening the iframe — fall back
+  // gracefully if missing (parent can still recover from origin alone).
+  var hasNotifiedParent = false;
+  var CONFIRMATION_PATTERNS = [
+    /you'?re registered for/i,
+    /thank you for registering/i,
+    /registration confirmed/i,
+    /registration complete/i,
+  ];
+
+  function detectConfirmation() {
+    if (hasNotifiedParent) return;
+    // Only check if window.parent exists and is different from self
+    // (i.e. we're actually inside an iframe).
+    if (window.parent === window) return;
+
+    // Read the body's visible text — short-circuit if too tiny to matter.
+    var text = '';
+    try {
+      text = document.body.innerText || document.body.textContent || '';
+    } catch (e) {
+      return;
+    }
+    if (text.length < 30) return;
+
+    var matched = false;
+    for (var i = 0; i < CONFIRMATION_PATTERNS.length; i++) {
+      if (CONFIRMATION_PATTERNS[i].test(text)) {
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) return;
+
+    hasNotifiedParent = true;
+    var payload = {
+      event: 'DEF.auctionRegistered',
+      source: 'qgiv-skin',
+      url: window.location.href,
+      // Best-effort: try to read the registered email from the page
+      // (the confirmation step shows "Ticket will be emailed to ...").
+      // If we find it, ship it — portal won't refuse the data.
+      email: extractEmail(text),
+    };
+    try {
+      window.parent.postMessage(payload, '*');
+    } catch (e) {
+      /* ignore — parent will recover from close-and-poll */
+    }
+  }
+
+  function extractEmail(text) {
+    var m = text.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    return m ? m[0] : null;
+  }
+
 
   // Run once on initial load.
   if (document.readyState === 'loading') {

@@ -140,6 +140,31 @@ export function AuctionRegistrationModal({
         return;
       }
 
+      // Confirmation-page signal from qgiv-skin.js. Qgiv itself never
+      // emits postMessage from this embed (verified 2026-05-18 walk —
+      // zero [qgiv] logs with ?debug=auction). Instead, the skin script
+      // we inject runs inside the iframe, detects the "You're registered
+      // for..." text on the confirmation step, and posts this event.
+      // We treat it as authoritative completion — the Qgiv backend has
+      // already recorded the registration by the time the user reaches
+      // that step.
+      if (eventName === 'DEF.auctionRegistered') {
+        if (completedRef.current) return; // already handled
+        completedRef.current = true;
+        const result = {
+          email: data.email || identity?.email || '',
+          // We don't have the Qgiv transaction ID from this signal — the
+          // confirmation page doesn't expose it in the DOM. Stamp our own
+          // server-side ID so the row is uniquely identifiable; reconcile
+          // with Qgiv records post-event via export if needed.
+          transaction_id: `qgiv-skin-${Date.now()}`,
+          registered_at: new Date().toISOString(),
+        };
+        setCompletedPayload(result);
+        postRegistration(result);
+        return;
+      }
+
       if (eventName === 'QGIV.registrationClose') {
         // User closed the iframe via Qgiv's own close button before
         // completing. Treat the same as our X — close the modal.
