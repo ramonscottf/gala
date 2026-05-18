@@ -42,6 +42,7 @@ import { ReceiveOverlay } from './ReceiveOverlay.jsx';
 import { SwapSeatModal } from './SwapSeatModal.jsx';
 import { ReleaseSeatConfirm } from './ReleaseSeatConfirm.jsx';
 import { MoveGroupModal } from './MoveGroupModal.jsx';
+import { GiftSeatModal } from './GiftSeatModal.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -851,6 +852,9 @@ export default function PortalShellV2({
   // for a whole group. The group object is the full group payload
   // from buildTicketGroups so we have movie title, poster, seats.
   const [moveGroup, setMoveGroup] = useState(null);
+  // giftSeat: { seat, returnTo } — open the gift-this-seat picker
+  // showing existing delegations or an invite-someone-new path.
+  const [giftSeat, setGiftSeat] = useState(null);
 
   // Deep-link `/sponsor/{token}/seats` opens the seat modal.
   useEffect(() => {
@@ -1022,13 +1026,15 @@ export default function PortalShellV2({
             setMoveGroup({ group: g, returnTo: { kind: 'group', group: returnGroup } });
           }}
           onReleaseGroup={(g) => {
-            // Whole-group release. Same confirm modal, multiple seats.
-            // After confirm the group will be empty so there's nothing
-            // to return to — close the group modal as part of release.
             setReleaseConfirm({
               seats: g.seats,
               returnTo: { kind: 'close-group' },
             });
+          }}
+          onGiftSeat={(seat) => {
+            const returnGroup = groupModal;
+            setGroupModal(null);
+            setGiftSeat({ seat, returnTo: { kind: 'group', group: returnGroup } });
           }}
           onInviteSeat={(seat) => {
             const sid = `${seat.row}-${seat.num}`;
@@ -1175,9 +1181,39 @@ export default function PortalShellV2({
             const ret = moveGroup.returnTo;
             setMoveGroup(null);
             if (ret?.kind === 'group') {
-              // Re-derive the live group from fresh tickets. The
-              // group's id is (theater + showing) so post-move it's
-              // the same id but with new seat labels.
+              const fresh = tickets.find((g) => g.id === ret.group?.id);
+              if (fresh) setGroupModal(fresh);
+            }
+          }}
+        />
+      )}
+      {giftSeat && (
+        <GiftSeatModal
+          seat={giftSeat.seat}
+          portal={portal}
+          token={token}
+          onRefresh={onRefresh}
+          onInviteNew={(seat) => {
+            // User chose Invite someone new from the gift picker.
+            // Pop open the InviteModal preselected with just this seat.
+            const sid = `${seat.row}-${seat.num}`;
+            const giveable = [];
+            for (const g of tickets) {
+              for (const s of g.seats) {
+                if (!s.raw?.delegation_id && !s.guest_name) {
+                  giveable.push(`${s.row}-${s.num}`);
+                }
+              }
+            }
+            setInviteModal({
+              seatPills: giveable.length > 0 ? giveable : [sid],
+              preselectedPills: [sid],
+            });
+          }}
+          onClose={() => {
+            const ret = giftSeat.returnTo;
+            setGiftSeat(null);
+            if (ret?.kind === 'group') {
               const fresh = tickets.find((g) => g.id === ret.group?.id);
               if (fresh) setGroupModal(fresh);
             }

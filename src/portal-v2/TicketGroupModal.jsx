@@ -25,6 +25,7 @@ export function TicketGroupModal({
   onReleaseSeat,
   onMoveGroup,
   onReleaseGroup,
+  onGiftSeat,
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
@@ -175,49 +176,9 @@ export function TicketGroupModal({
                     {s.guest_name || 'Yours (no guest)'}
                   </span>
                   <div className="p2-group-seat-actions">
-                    {canChange && (
-                      <button
-                        type="button"
-                        className="p2-chip-btn"
-                        onClick={() => onChangeSeat(s)}
-                        aria-label={`Change seat ${s.seatLabel}`}
-                      >
-                        <span aria-hidden="true">↻</span>
-                        <span>Change</span>
-                      </button>
-                    )}
-                    {canInvite && (
-                      <button
-                        type="button"
-                        className="p2-chip-btn"
-                        onClick={() => onInviteSeat(s)}
-                        aria-label={`Invite a guest for ${s.seatLabel}`}
-                      >
-                        <span aria-hidden="true">+</span>
-                        <span>Invite</span>
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className={`p2-dinner-pill${dinner ? '' : ' empty'}`}
-                      onClick={() => setDinnerSeat(s)}
-                      aria-label={dinner ? `Change meal: ${dinnerLabelFor(dinner)}` : 'Pick dinner'}
-                    >
-                      {dinner ? (
-                        <>
-                          <span className="p2-dinner-pill-emoji">{dinnerEmojiFor(dinner)}</span>
-                          <span>{dinnerLabelFor(dinner)}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="p2-dinner-pill-emoji">🍽️</span>
-                          <span>Pick dinner</span>
-                        </>
-                      )}
-                    </button>
-                    {/* ⋯ overflow — release lives here so destructive
-                        actions aren't one-thumb-away from the primary
-                        actions. */}
+                    {/* ⋯ overflow comes FIRST in the cluster — secondary
+                        utility actions (release, future advanced) live
+                        here so primary actions read cleanly. */}
                     {onReleaseSeat && (
                       <div
                         style={{ position: 'relative' }}
@@ -252,6 +213,50 @@ export function TicketGroupModal({
                         )}
                       </div>
                     )}
+                    {canChange && (
+                      <button
+                        type="button"
+                        className="p2-chip-btn"
+                        onClick={() => onChangeSeat(s)}
+                        aria-label={`Change seat ${s.seatLabel}`}
+                      >
+                        <span aria-hidden="true">↻</span>
+                        <span>Change</span>
+                      </button>
+                    )}
+                    {onGiftSeat && (
+                      <button
+                        type="button"
+                        className="p2-chip-btn"
+                        onClick={() => onGiftSeat(s)}
+                        aria-label={
+                          hasDelegate
+                            ? `Reassign ${s.seatLabel}`
+                            : `Gift ${s.seatLabel} to a guest`
+                        }
+                      >
+                        <span aria-hidden="true">🎁</span>
+                        <span>{hasDelegate ? 'Reassign' : 'Gift'}</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className={`p2-dinner-pill${dinner ? '' : ' empty'}`}
+                      onClick={() => setDinnerSeat(s)}
+                      aria-label={dinner ? `Change meal: ${dinnerLabelFor(dinner)}` : 'Pick dinner'}
+                    >
+                      {dinner ? (
+                        <>
+                          <span className="p2-dinner-pill-emoji">{dinnerEmojiFor(dinner)}</span>
+                          <span>{dinnerLabelFor(dinner)}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="p2-dinner-pill-emoji">🍽️</span>
+                          <span>Pick dinner</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               );
