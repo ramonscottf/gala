@@ -49,3 +49,17 @@ corrected model (Total/Placed/Delegated/Open, Delegated = true
 child-delegation count) the intended replacement? Replicating a
 suspected-buggy v1 number to live sponsors blind is the risk I'm not
 taking without your call. Not blocking the loop.
+
+### B3 update (2026-05-18, API ground truth)
+
+Fetched the SHARED endpoint both portals use,
+`/api/gala/portal/sxnhcj7axdrllaku` (Wicko): the payload has NO
+`assigned` field. `seatMath = {total:20, placed:12, delegated:0,
+available:8}`. v1's "ASSIGNED 12" is therefore computed client-side
+in the v1 bundle and tracks the PLACED count (myAssignments.length),
+not delegated. Replicating v1's number in v2 would render the same
+"12" under both "Placed" and "Assigned" — carrying a v1 quirk into
+v2's corrected model. Recommendation: keep v2's model
+(Total/Placed/Delegated/Open) + the shipped "To delegates" wording;
+do NOT duplicate Placed. Final call is Scott's; shipped state is safe
+and truthful in the meantime.
