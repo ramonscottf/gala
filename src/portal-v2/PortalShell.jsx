@@ -547,15 +547,6 @@ function TicketsSection({
             {placed} of {total} placed
             {remaining > 0 ? <> · {remaining} still to choose</> : <> · all set</>}
           </p>
-          {open && remaining > 0 && (
-            <button
-              className="p2-btn primary sm"
-              type="button"
-              onClick={onPlaceMore}
-            >
-              Place {remaining === 1 ? '1 more' : `${remaining} more`} →
-            </button>
-          )}
           {open && remaining === 0 && placed > 0 && (
             <button className="p2-btn ghost sm" type="button" onClick={onPlaceMore}>
               Edit my seats →
@@ -661,9 +652,15 @@ function TicketsSection({
             disabled={!open}
             style={groups.length === 0 ? { gridColumn: '1 / -1' } : undefined}
           >
-            {open
-              ? `+ Place ${remaining === 1 ? 'your seat' : `${remaining} more seats`}`
-              : `${remaining} ${remaining === 1 ? 'seat' : 'seats'} waiting for your window to open`}
+            {open ? (
+              <span className="p2-ticket-placeholder-pill">
+                Place {remaining === 1 ? '1 more' : `${remaining} more`} →
+              </span>
+            ) : (
+              <span>
+                {remaining} {remaining === 1 ? 'seat' : 'seats'} waiting for your window to open
+              </span>
+            )}
           </button>
         )}
       </div>
