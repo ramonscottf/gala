@@ -52,6 +52,7 @@ import {
   ConfirmationView,
 } from './Finalize.jsx';
 import { AuctionRegistrationCard } from './AuctionRegistrationCard.jsx';
+import { AuctionRegistrationModal } from './AuctionRegistrationModal.jsx';
 import { HelpFooter } from './HelpFooter.jsx';
 import { WickoPillNav } from './WickoPillNav.jsx';
 import { FaqPage } from './FaqPage.jsx';
@@ -884,6 +885,10 @@ export default function PortalShellV2({
   const bumpToast = (kind, message) =>
     setToast({ kind, message, key: Date.now() });
   const [celebration, setCelebration] = useState(null);
+  // auctionModalOpen — shell-level mount of the Qgiv registration
+  // modal. Triggered from the celebration overlay's "Register for the
+  // auction" CTA so we can fire it AFTER the seats are placed.
+  const [auctionModalOpen, setAuctionModalOpen] = useState(false);
   // inviteModal: null | { seatPills, preselectedPills } — Mode A is
   // open=true with no pills set; Mode B requires seatPills.
   const [inviteModal, setInviteModal] = useState(null);
@@ -1139,12 +1144,18 @@ export default function PortalShellV2({
           onClose={closeSeatModal}
           onRefresh={onRefresh}
           onOpenMovieDetail={(m) => setMovieModal(m)}
+          // If seatModal is an object with movieId, the picker opens
+          // preloaded to that film — Scott 2026-05-18: "Select seats
+          // for this film" button drops into the seat picker flow
+          // already on the right movie.
+          initialMovieId={typeof seatModal === 'object' && seatModal ? seatModal.movieId : null}
+          initialShowingNumber={typeof seatModal === 'object' && seatModal ? seatModal.showingNumber : null}
           onCommitted={(placed) => {
             // The seat picker fires this once the placed payload is
             // committed and the portal has been refreshed. Close the
             // picker and trigger the full-screen celebration moment.
-            // The user dismisses the overlay (auto-fades after ~4.5s
-            // or tap-anywhere) and lands back on the home page with
+            // The user dismisses the overlay (8s auto-fade or
+            // tap-anywhere) and lands back on the home page with
             // their freshly placed tickets in view.
             setSeatModal(false);
             setCelebration({
@@ -1309,6 +1320,16 @@ export default function PortalShellV2({
           allShowtimes={showtimes}
           theaterLayouts={theaterLayouts}
           onClose={() => setMovieModal(null)}
+          onSelectSeats={(m) => {
+            // Scott 2026-05-18: "drop right into the flow of the
+            // showtime page for that movie." Close the detail modal
+            // and open the seat picker preloaded to this film. The
+            // picker handles the wizard's MOVIE → TIME → SEATS path
+            // with movie step pre-completed.
+            const movieId = m.movie_id || m.id;
+            setMovieModal(null);
+            setSeatModal({ movieId });
+          }}
         />
       )}
       {/* ProfileModal + FaqModal mounts removed 2026-05-18 — Settings and FAQ
@@ -1318,6 +1339,40 @@ export default function PortalShellV2({
           seats={celebration.seats}
           movieTitle={celebration.movieTitle}
           onClose={() => setCelebration(null)}
+          onRegisterAuction={
+            // Only show the auction CTA for sponsors who haven't
+            // registered yet. For delegates, staff, or already-registered
+            // sponsors, leave the prop undefined so the button is hidden.
+            isSponsor && !identity?.auctionRegisteredAt
+              ? () => {
+                  setCelebration(null);
+                  setAuctionModalOpen(true);
+                }
+              : undefined
+          }
+        />
+      )}
+      {auctionModalOpen && (
+        <AuctionRegistrationModal
+          embedUrl={(() => {
+            const params = new URLSearchParams();
+            if (identity?.contactName) {
+              const [first, ...rest] = identity.contactName.trim().split(/\s+/);
+              if (first) params.set('first_name', first);
+              if (rest.length) params.set('last_name', rest.join(' '));
+            }
+            if (identity?.email) params.set('email', identity.email);
+            params.set('preventRefreshOnClose', 'true');
+            return `https://secure.qgiv.com/for/daviseducationfoundationauction/event/embed/?${params.toString()}`;
+          })()}
+          token={token}
+          apiBase={config.apiBase}
+          identity={identity}
+          onClose={() => setAuctionModalOpen(false)}
+          onRegistered={() => {
+            setAuctionModalOpen(false);
+            if (onRefresh) onRefresh();
+          }}
         />
       )}
       {inviteModal && (

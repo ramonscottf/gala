@@ -26,6 +26,8 @@ export function SeatPickerModal({
   onRefresh,
   onOpenMovieDetail,
   onCommitted,
+  initialMovieId = null,
+  initialShowingNumber = null,
 }) {
   // Lock body scroll while open.
   useEffect(() => {
@@ -78,6 +80,8 @@ export function SeatPickerModal({
               apiBase={config.apiBase}
               variant="modal"
               foldMeals={true}
+              initialMovieId={initialMovieId}
+              initialShowingNumber={initialShowingNumber}
               onRefresh={onRefresh}
               onMovieDetail={onOpenMovieDetail}
               onClose={onClose}

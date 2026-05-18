@@ -14,7 +14,7 @@ function showingLabel(num) {
   return num === 1 ? 'Early · 4:30 PM' : num === 2 ? 'Late · 7:15 PM' : '';
 }
 
-export function MovieDetailModal({ movie, allShowtimes = [], theaterLayouts = null, onClose }) {
+export function MovieDetailModal({ movie, allShowtimes = [], theaterLayouts = null, onClose, onSelectSeats }) {
   const rt = formatRottenBadge(movie);
   const streamUid = movie.stream_uid || movie.streamUid;
   const trailerUrl = streamUid
@@ -43,6 +43,21 @@ export function MovieDetailModal({ movie, allShowtimes = [], theaterLayouts = nu
         return (a.theater_id || 0) - (b.theater_id || 0);
       });
   }, [movie, allShowtimes]);
+
+  // Group showtimes by showing_number so each row is one showtime with
+  // all auditoriums listed inline as small pills (Scott 2026-05-18:
+  // "Early 4:30, auditorium 8, 9 — one line. Late 7:15, auditorium 5, 8").
+  const showtimeGroups = useMemo(() => {
+    const map = new Map();
+    for (const s of filmShowtimes) {
+      const k = s.showing_number || 1;
+      if (!map.has(k)) {
+        map.set(k, { showingNumber: k, theaters: [] });
+      }
+      map.get(k).theaters.push(s);
+    }
+    return [...map.values()].sort((a, b) => a.showingNumber - b.showingNumber);
+  }, [filmShowtimes]);
 
   return (
     <div
@@ -154,22 +169,47 @@ export function MovieDetailModal({ movie, allShowtimes = [], theaterLayouts = nu
             </p>
 
             {/* Schedule block — ALWAYS renders for every film, including
-                Pending-state. Phase 5.7+ item C. */}
-            {filmShowtimes.length > 0 && (
+                Pending-state. Grouped by showtime (Scott 2026-05-18):
+                each showing gets one row; the auditoriums for that
+                showing are listed inline as small pills on the same
+                line. Example:  "Early · 4:30 PM   [Aud 8]  [Aud 9]"
+                                "Late  · 7:15 PM   [Aud 5]  [Aud 8]" */}
+            {showtimeGroups.length > 0 && (
               <div className="p2-movie-schedule">
                 <div className="p2-eyebrow">Schedule</div>
                 <div className="p2-movie-schedule-grid">
-                  {filmShowtimes.map((s, i) => (
+                  {showtimeGroups.map((g) => (
                     <div
-                      key={`${s.theater_id}-${s.showing_number || 1}-${i}`}
+                      key={`grp-${g.showingNumber}`}
                       className="p2-movie-schedule-row"
                     >
                       <span className="p2-pill p2-pill-showing">
-                        {showingLabel(s.showing_number)}
+                        {showingLabel(g.showingNumber)}
                       </span>
-                      <span className="p2-pill p2-pill-aud">
-                        {theaterNameById[s.theater_id] || `Auditorium ${s.theater_id}`}
-                      </span>
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 6,
+                          alignItems: 'center',
+                        }}
+                      >
+                        {g.theaters.map((s) => {
+                          const name =
+                            theaterNameById[s.theater_id] ||
+                            `Auditorium ${s.theater_id}`;
+                          // Compact label: "Aud 8" instead of "Auditorium 8"
+                          const compact = name.replace(/^Auditorium\s+/i, 'Aud ');
+                          return (
+                            <span
+                              key={`${g.showingNumber}-${s.theater_id}`}
+                              className="p2-pill p2-pill-aud"
+                            >
+                              {compact}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -200,12 +240,29 @@ export function MovieDetailModal({ movie, allShowtimes = [], theaterLayouts = nu
         </div>
 
         <div className="p2-modal-footer">
-          <span style={{ color: 'var(--p2-subtle)', fontSize: 13 }}>
-            Pick seats for this film when your selection window opens.
-          </span>
-          <button type="button" className="p2-btn ghost sm" onClick={onClose}>
-            Close
-          </button>
+          {onSelectSeats ? (
+            <>
+              <button type="button" className="p2-btn ghost sm" onClick={onClose}>
+                Close
+              </button>
+              <button
+                type="button"
+                className="p2-btn primary"
+                onClick={() => onSelectSeats(movie)}
+              >
+                Select seats for this film →
+              </button>
+            </>
+          ) : (
+            <>
+              <span style={{ color: 'var(--p2-subtle)', fontSize: 13 }}>
+                Pick seats for this film when your selection window opens.
+              </span>
+              <button type="button" className="p2-btn ghost sm" onClick={onClose}>
+                Close
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

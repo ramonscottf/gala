@@ -1388,10 +1388,12 @@ export default function SeatPickSheet({
       {/* Auditorium picker — between breadcrumb and seat map. Three
           states:
             - 0 choices: hide (defensive; shouldn't happen)
-            - 1 choice: informational pill ("Auditorium 7 · Standard")
-            - >1 choices: scrollable row of tappable chips, current
-              selection highlighted. This makes flipping aud cheap
-              when the seats in one are bad. */}
+            - 1 choice: informational pill ("Aud 7 · Standard")
+            - >1 choices: scrollable row of tappable capsule pills,
+              same shape as the seat-type guide below. Compact so it
+              doesn't dominate the top of the picker. Scott
+              2026-05-18: "those same small pills like the seat
+              types are. would look cleaner, narrower." */}
       {theaterChoices.length > 0 && (
         <div
           data-testid="step3-aud-picker"
@@ -1416,13 +1418,18 @@ export default function SeatPickSheet({
             <div
               data-testid="auditorium-chip-static"
               style={{
-                padding: '10px 14px',
-                borderRadius: 10,
-                background: 'rgba(255,255,255,0.04)',
-                border: `1px solid ${BRAND.rule}`,
-                color: 'rgba(255,255,255,0.85)',
-                fontSize: 13,
-                fontWeight: 700,
+                display: 'inline-flex',
+                alignSelf: 'flex-start',
+                alignItems: 'center',
+                gap: 6,
+                padding: '5px 12px',
+                borderRadius: 99,
+                background: 'rgba(255,255,255,0.05)',
+                boxShadow: `inset 0 0 0 1px ${BRAND.rule}`,
+                color: 'rgba(255,255,255,0.92)',
+                fontSize: 12,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
               }}
             >
               {(theatersById[theaterId]?.name || `Auditorium ${theaterId}`).replace(/^Auditorium\s+/i, 'Aud ')}
@@ -1437,7 +1444,7 @@ export default function SeatPickSheet({
               className="no-scrollbar"
               style={{
                 display: 'flex',
-                gap: 8,
+                gap: 6,
                 overflowX: 'auto',
                 paddingBottom: 4,
                 scrollSnapType: 'x proximity',
@@ -1456,33 +1463,36 @@ export default function SeatPickSheet({
                       all: 'unset',
                       cursor: 'pointer',
                       flexShrink: 0,
-                      scrollSnapAlign: 'center',
-                      padding: '10px 14px',
-                      borderRadius: 10,
+                      scrollSnapAlign: 'start',
+                      // Same capsule shape as SeatTypeGuide pills
+                      padding: '5px 12px',
+                      borderRadius: 99,
                       background: active
-                        ? 'rgba(244,185,66,0.10)'
-                        : 'rgba(255,255,255,0.04)',
-                      border: `1.5px solid ${active ? BRAND.gold : BRAND.rule}`,
+                        ? 'rgba(244,185,66,0.14)'
+                        : 'rgba(255,255,255,0.05)',
+                      boxShadow: active
+                        ? `inset 0 0 0 1.5px ${BRAND.gold}`
+                        : `inset 0 0 0 1px ${BRAND.rule}`,
                       color: '#fff',
-                      fontSize: 13,
-                      fontWeight: 700,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      gap: 2,
-                      transition: 'border 0.18s ease, background 0.18s ease',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      whiteSpace: 'nowrap',
+                      transition: 'box-shadow 0.18s ease, background 0.18s ease',
                     }}
                   >
                     <span>{audName}</span>
                     {c.format && (
                       <span
                         style={{
-                          fontSize: 10,
+                          fontSize: 11,
                           color: BRAND.mute,
-                          fontWeight: 600,
+                          fontWeight: 500,
                         }}
                       >
-                        {c.format}
+                        · {c.format}
                       </span>
                     )}
                   </button>
