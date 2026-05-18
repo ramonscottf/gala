@@ -250,44 +250,50 @@ export function AuctionRegistrationModal({
 
   return (
     <div
-      className="p2-auction-modal"
+      className="p2-auction-modal-backdrop"
       role="dialog"
       aria-modal="true"
       aria-label="Register to bid in the silent auction"
+      onClick={(e) => {
+        // Click-outside-card-to-close, matching the rest of the portal
+        // modal family. The card itself stops propagation below.
+        if (e.target === e.currentTarget) handleCloseWithPoll();
+      }}
     >
-      {/* Gradient strip — matches the same 3px gold→red rule that lives
-          on every other portal card via .p2-card.stripped::before. Ties
-          the iframe content to the portal visually without a chrome bar. */}
-      <div className="p2-auction-modal-strip" aria-hidden="true" />
-
-      {/* Floating close button — matches .p2-modal-close pattern used
-          across the portal. Sits above the iframe at top-right with a
-          subtle backdrop so it stays legible regardless of what scrolls
-          underneath. */}
-      <button
-        type="button"
-        className="p2-modal-close p2-auction-modal-close"
-        onClick={handleCloseWithPoll}
-        aria-label="Close registration"
+      <div
+        className="p2-auction-modal-card"
+        onClick={(e) => e.stopPropagation()}
       >
-        ×
-      </button>
+        {/* 3px gold→red gradient strip across the top — same rule every
+            other portal card carries (matches .p2-modal.stripped::before). */}
+        <div className="p2-auction-modal-strip" aria-hidden="true" />
 
-      {stage === 'complete' ? (
-        <AuctionRegistrationSuccess
-          email={completedPayload?.email || identity?.email}
-          onClose={onClose}
-        />
-      ) : (
-        <div className="p2-auction-modal-body">
-          {stage === 'error' && (
-            <div className="p2-notice red p2-auction-error">
-              <p>{errorMsg}</p>
-              <p>
-                Your Qgiv account was created but we couldn't sync it to your
-                portal. Email{' '}
-                <a href="mailto:smiggin@dsdmail.net">smiggin@dsdmail.net</a>{' '}
-                and we'll mark you as registered manually.
+        {/* Floating X — uses the .p2-modal-close pattern shared with the
+            Group Ticket / Gift Seat / Delegate / Dinner modals. */}
+        <button
+          type="button"
+          className="p2-modal-close p2-auction-modal-close"
+          onClick={handleCloseWithPoll}
+          aria-label="Close registration"
+        >
+          ×
+        </button>
+
+        {stage === 'complete' ? (
+          <AuctionRegistrationSuccess
+            email={completedPayload?.email || identity?.email}
+            onClose={onClose}
+          />
+        ) : (
+          <div className="p2-auction-modal-body">
+            {stage === 'error' && (
+              <div className="p2-notice red p2-auction-error">
+                <p>{errorMsg}</p>
+                <p>
+                  Your Qgiv account was created but we couldn't sync it to your
+                  portal. Email{' '}
+                  <a href="mailto:smiggin@dsdmail.net">smiggin@dsdmail.net</a>{' '}
+                  and we'll mark you as registered manually.
               </p>
             </div>
           )}
@@ -303,6 +309,7 @@ export function AuctionRegistrationModal({
           />
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -3344,20 +3344,48 @@ body {
   text-decoration: underline;
 }
 
-/* ── Full-screen iframe modal — seamless chrome ─────────────────────
-   No header bar — just a 3px gold→red gradient strip at the top (same
-   accent every portal card carries) and a floating X. When the iframe
-   has the qgiv-skin applied, its navy ground bleeds edge-to-edge with
-   our modal background, eliminating the visible iframe seam. */
+/* ── Auction registration modal — floating card pattern ─────────────
+   Matches the .p2-modal / .p2-modal-backdrop pattern used by every
+   other modal in the portal (Group Ticket, Gift Seat, Delegate,
+   Dinner). Same dimmed backdrop with blur, same 880px floating navy
+   card, same 3px gold→red strip, same 38px round X button. The
+   iframe lives inside the card and scrolls internally. When the Qgiv
+   side has the skin CSS loaded, the iframe's navy ground bleeds
+   seamlessly with the card's navy gradient — no visible iframe seam. */
 
-.p2-auction-modal {
+.p2-auction-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1100; /* above SeatPickerModal (1000) per existing convention */
-  background: var(--p2-navy-deep);
+  z-index: 1100; /* above SeatPickerModal (1000), matches modal convention */
+  background: rgba(8, 13, 40, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0;
+  overflow-y: auto;
+  animation: p2-fade 140ms ease-out;
+}
+
+.p2-auction-modal-card {
+  margin: auto;
+  width: min(880px, calc(100% - 24px));
+  max-width: 880px;
+  background:
+    radial-gradient(circle at 5% 8%, rgba(215, 40, 70, 0.18), transparent 35%),
+    radial-gradient(circle at 95% 5%, rgba(98, 200, 255, 0.12), transparent 35%),
+    linear-gradient(140deg, #0b1132 0%, #141d50 100%);
+  border: 1px solid var(--p2-rule-strong);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 24px;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
-  animation: p2-fade 140ms ease-out;
+  height: min(900px, calc(100vh - 48px));
 }
 
 .p2-auction-modal-strip {
@@ -3367,36 +3395,15 @@ body {
   right: 0;
   height: 3px;
   background: linear-gradient(90deg, var(--p2-gold), var(--p2-red));
-  z-index: 2;
-  flex-shrink: 0;
+  z-index: 3;
 }
 
 .p2-auction-modal-close {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  z-index: 3;
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  border: 1px solid var(--p2-rule-strong);
-  background: rgba(8, 13, 40, 0.78);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  font-size: 22px;
-  line-height: 1;
-  padding: 0;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.12s ease, border-color 0.12s ease;
-}
-
-.p2-auction-modal-close:hover {
-  background: rgba(8, 13, 40, 0.92);
-  border-color: var(--p2-rule-strong);
+  top: 14px;
+  right: 14px;
+  z-index: 4;
+  /* matches .p2-modal-close — 38x38 round button with subtle backdrop */
 }
 
 .p2-auction-modal-body {
@@ -3411,7 +3418,7 @@ body {
   flex: 1 1 auto;
   width: 100%;
   border: 0;
-  background: transparent; /* iframe content paints its own navy via qgiv-skin */
+  background: transparent; /* Qgiv-side skin paints its own navy bg */
   min-height: 0;
   color-scheme: dark;
 }
@@ -3491,6 +3498,13 @@ body {
   .p2-auction-store {
     flex: 1 1 calc(50% - 5px);
     min-width: 0;
+  }
+  .p2-auction-modal-card {
+    width: calc(100% - 12px);
+    margin-top: 12px;
+    margin-bottom: 12px;
+    height: min(900px, calc(100vh - 24px));
+    border-radius: 18px;
   }
   .p2-auction-modal-close {
     top: 12px;
