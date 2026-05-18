@@ -97,7 +97,7 @@ Auditor: Claude Code. Method: code cross-reference `src/portal/` (v1) vs `src/po
 | P0.2 | P0 | Help footer missing | ✅ HelpFooter (persistent, sms:+18018106642) above brand footer |
 | P1.1 | P1 | FAQ surface missing | ✅ FaqModal fetches /api/gala/chat/faq, search + accordion, opened from help footer |
 | P1.2 | P1 | QR surface missing | ✅ TicketQrCardV2 when rsvpStatus==='completed' + QR inside ConfirmationView |
-| P1.3 | P1 | Open count ignores delegated | ✅ Hero/StatusCard/TicketsSection use seatMath.available (delegation-aware) |
+| P1.3 | P1 | Open count ignores delegated | ✅ LIVE-verified on Hughes: Open 8 + "8 seats are yours to place" (was 20), matches v1 |
 | P2.1 | P2 | Delegated/Assigned label | ❓ (tracking — needs Scott's call on wording) |
 | P2.2 | P2 | CSS border review (gutter-cage mandate) | ❓ (needs Scott's eye — see below) |
 
