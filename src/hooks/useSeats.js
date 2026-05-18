@@ -160,21 +160,26 @@ export function useSeats(portal, token, refresh) {
 }
 
 /**
- * Check whether a proposed batch of seat IDs would leave any single empty
+ * Check whether a proposed batch of seat IDs would CREATE a new single-empty
  * seat sandwiched between two occupied seats in the same row. Returns
  * either { ok: true } or { ok: false, row, orphan, theaterId }.
  *
- * The check models the post-commit state of every affected row: every seat
- * already finalized OR held (by anyone) in this theater, plus every seat
- * about to be committed in this batch. Pre-flight only — the server has
- * its own check in pick.js as a backstop for non-SPA clients.
+ * Matches the server-side checkOrphanCreation in pick.js: for each seat in
+ * the BATCH, look at ±2 in the same row. If a bracket seat exists and the
+ * gap seat (bracket+claiming)/2 is empty, the batch would orphan that gap.
  *
+ * IMPORTANT: pre-existing orphans elsewhere in the theater (left by other
+ * sponsors) MUST NOT block this batch. Only the seats this batch is
+ * claiming get checked. Bug fix May 18 2026 — Blake Branham / Big West Oil
+ * hit this when an unrelated row already had a sandwiched single seat.
+ *
+ * Pre-flight only — the server has its own check in pick.js as a backstop.
  * Same row only — gaps at row ends are fine.
  */
 export function checkBatchOrphans(portal, theaterId, batchSeatIds) {
   if (!portal || !batchSeatIds?.length) return { ok: true };
 
-  // Collect every seat in this theater that's already taken or held.
+  // Build the post-commit "taken" set so within-batch checks see batch peers.
   const taken = new Set();
   const collect = (arr) => {
     (arr || []).forEach((r) => {
@@ -186,26 +191,21 @@ export function checkBatchOrphans(portal, theaterId, batchSeatIds) {
   collect(portal.myHolds);
   collect(portal.allAssignments);
   collect(portal.otherHolds);
-
-  // Add the batch to the picture.
   batchSeatIds.forEach((id) => taken.add(id));
 
-  // Group by row_label, store seat numbers as ints.
-  const rows = new Map();
-  taken.forEach((id) => {
+  // For each seat THIS BATCH claims, check ±2 in its row only. If a bracket
+  // is taken and the gap between is empty, the batch created that orphan.
+  for (const id of batchSeatIds) {
     const dash = id.indexOf('-');
     const row = id.slice(0, dash);
-    const num = parseInt(id.slice(dash + 1), 10);
-    if (!rows.has(row)) rows.set(row, []);
-    rows.get(row).push(num);
-  });
-
-  // Walk each row sorted; any 2-step gap means a single empty seat is wedged.
-  for (const [row, nums] of rows) {
-    nums.sort((a, b) => a - b);
-    for (let i = 0; i < nums.length - 1; i++) {
-      if (nums[i + 1] - nums[i] === 2) {
-        return { ok: false, row, orphan: nums[i] + 1, theaterId };
+    const claiming = parseInt(id.slice(dash + 1), 10);
+    if (!Number.isFinite(claiming)) continue;
+    for (const bracket of [claiming - 2, claiming + 2]) {
+      if (bracket < 1) continue;
+      if (!taken.has(`${row}-${bracket}`)) continue;
+      const gapSeat = (bracket + claiming) / 2;
+      if (!taken.has(`${row}-${gapSeat}`)) {
+        return { ok: false, row, orphan: gapSeat, theaterId };
       }
     }
   }
