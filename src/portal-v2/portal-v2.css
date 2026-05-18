@@ -289,49 +289,11 @@ body {
   margin-top: 28px;
 }
 
-/* Phase 5.7+ post-G (Scott 2026-05-18): CTA + date/venue pill on the
-   same horizontal row. On desktop the pill is capped at ~1/3 of the
-   row and sits against the right edge; the CTA stays at the left.
-   On narrow screens the pill wraps to its own line. The row owns the
-   vertical rhythm so the children reset their margin-top inside it. */
-.p2-hero-cta-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-top: 28px;
-}
-.p2-hero-cta-row .p2-hero-actions {
-  margin-top: 0;
-  flex-shrink: 0;
-}
-.p2-hero-cta-row .p2-event-pill {
-  margin-top: 0;
-  flex: 0 1 33.333%;
-  max-width: 33.333%;
-  min-width: 280px;
-  margin-left: auto; /* hug the right edge when CTA is narrower than 2/3 */
-  display: flex;
-}
-@media (max-width: 900px) {
-  .p2-hero-cta-row .p2-event-pill {
-    flex: 0 1 50%;
-    max-width: 50%;
-  }
-}
-@media (max-width: 700px) {
-  .p2-hero-cta-row {
-    gap: 18px;
-  }
-  .p2-hero-cta-row .p2-event-pill {
-    width: 100%;
-    flex: 1 1 100%;
-    max-width: 100%;
-    margin-left: 0;
-  }
-}
+/* Phase 5.7+ post-G (Scott 2026-05-18): tried wrapping the CTA + date
+   pill in a .p2-hero-cta-row for side-by-side layout. The 1/3-right-edge
+   variant created too much dead space; reverted to original left-stacked
+   layout. The wrapper class is gone; CTA and pill stack naturally as
+   block-level children of .p2-hero. */
 
 /* ── Buttons ────────────────────────────────────────────────────────── */
 

@@ -189,7 +189,7 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
     );
   } else if (isDelegate) {
     headline = (
-      <>Pick your <span className="p2-italic-flair">seat</span>, {firstName}.</>
+      <>Select your <span className="p2-italic-flair">seat</span>, {firstName}.</>
     );
   } else {
     headline = (
@@ -250,7 +250,7 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
     if (remaining === 0 && placed > 0) ctaLabel = 'Edit my seats';
     else if (remaining === 0) ctaLabel = null; // fully delegated — nothing to place
     else if (placed > 0) ctaLabel = `Place ${remaining} more`;
-    else if (total > 0) ctaLabel = `Pick my ${total === 1 ? 'seat' : 'seats'}`;
+    else if (total > 0) ctaLabel = `Select my ${total === 1 ? 'seat' : 'seats'}`;
   }
 
   return (
@@ -258,30 +258,28 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
       <h1>{headline}</h1>
       <p className="p2-hero-sub">{sub}</p>
 
-      {/* Phase 5.7+ post-G (Scott 2026-05-18): CTA on the left, date/venue
-          card on the right, same vertical level. Wraps on narrow viewports
-          via the .p2-hero-cta-row flex layout. If ctaLabel is null (e.g.
-          fully delegated, no seats to place) the pill takes the full row. */}
-      <div className="p2-hero-cta-row">
-        {ctaLabel && (
-          <div className="p2-hero-actions">
-            <button className="p2-btn primary" type="button" onClick={onPick}>
-              {ctaLabel} →
-            </button>
-          </div>
-        )}
+      {ctaLabel && (
+        <div className="p2-hero-actions">
+          <button className="p2-btn primary" type="button" onClick={onPick}>
+            {ctaLabel} →
+          </button>
+        </div>
+      )}
 
-        {/* Date + venue collapse into one richer pill on desktop, splits
-            on mobile via the .p2-event-pill flex layout. The Platinum
-            tier pill is gone — that info already lives in the BRONZE/
-            PLATINUM chip in the StatusCard below, no need to say it
-            twice up here.
+      {/* Date + venue card sits on its own row below the CTA, left-aligned.
+          Phase 5.7+ post-G (Scott 2026-05-18): originally tried wrapping
+          this in a .p2-hero-cta-row flex container to put it next to the
+          CTA on desktop. The 1/3-width-right-edge version created too
+          much dead space; reverted to original left-stacked layout per
+          Scott's call. The Platinum tier pill is gone — that info
+          already lives in the BRONZE/PLATINUM chip in the StatusCard
+          below, no need to say it twice up here.
 
-            Phase 5.7+ post-walk (Scott 2026-05-18 from the road):
-            adds two small action pills — "Add to calendar" next to
-            the date, "Directions" next to the venue. Both oriented
-            right via space-between on the row. */}
-        <div className="p2-event-pill">
+          Phase 5.7+ post-walk (Scott 2026-05-18 from the road):
+          adds two small action pills — "Add to calendar" next to
+          the date, "Directions" next to the venue. Both oriented
+          right via space-between on the row. */}
+      <div className="p2-event-pill">
         <div className="p2-event-pill-row">
           <div className="p2-event-pill-text">
             <strong>Wednesday, June 10, 2026</strong>
@@ -344,7 +342,6 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
             <span>Directions</span>
           </a>
         </div>
-      </div>
       </div>
     </section>
   );

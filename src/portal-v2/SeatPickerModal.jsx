@@ -58,7 +58,7 @@ export function SeatPickerModal({
           <div>
             <div className="p2-modal-eyebrow">Seat selection</div>
             <div className="p2-modal-title">
-              Pick your <span style={{ fontStyle: 'italic', color: 'var(--p2-gold)' }}>seats</span>
+              Select your <span style={{ fontStyle: 'italic', color: 'var(--p2-gold)' }}>seats</span>
             </div>
           </div>
           <button
