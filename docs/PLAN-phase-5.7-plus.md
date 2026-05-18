@@ -261,3 +261,54 @@ Post-walk Round 3 — Scott's four polish items, all real wins.
 - Static fallback text retained when `onSelectSeats` prop isn't passed (defensive).
 
 **Build:** Sponsor bundle `main-Ddng_mGF.js` (97.6KB, +2KB) + `main-Bv1InLr4.css` (51.4KB, +0.4KB).
+
+---
+
+## Home polish — calendar + directions pills + tappable stats — 2026-05-18 (commit `183da9c`)
+
+Round 4 — Scott's "on the way to drop Charles at school" pass. Interactivity + depth on the home page's first screen.
+
+**Event pill — two action pills oriented right**
+
+The date + venue card gets two pill-shaped buttons aligned right per row:
+```
+Wednesday, June 10, 2026      [📅 Add to calendar]
+24 days out
+── divider ──
+Megaplex at Legacy Crossing   [📍 Directions]
+Centerville, Utah
+```
+
+- **Add to calendar** generates an ICS file inline (no server round-trip), downloads `def-gala-2026.ics`. Floating local time so calendar apps show the same clock time regardless of where the sponsor is when they import. Event: Wed June 10 2026, 5:30 PM – 10:00 PM, *DEF Gala 2026 — Lights · Camera · Take Action*, at *Megaplex at Legacy Crossing, Centerville, UT*. Description notes Early (4:30 PM) / Late (7:15 PM) showings + 6:30 PM auction bidding.
+- **Directions** links to the Google Maps universal URL (`maps/dir/?api=1&destination=...`) — deep-links into native Maps on iOS / Android, opens in browser on desktop. `target=_blank rel=noopener noreferrer`.
+
+CSS rewrite: `.p2-event-pill` now flex-column; new `.p2-event-pill-row` (flex row, space-between, flex-wrap), `.p2-event-pill-text` (text column), `.p2-event-pill-action` (pill button with hover/active states). Divider becomes a horizontal hairline between rows on both desktop AND mobile (was hidden on mobile previously). Old `> div:not(.divider)` selector retired in favor of explicit classes.
+
+**Stat grid — tappable buttons with renames**
+
+| Label | Was | Tap action |
+|---|---|---|
+| TOTAL | TOTAL | (none — informational) |
+| PLACED | PLACED | scroll to Tickets section |
+| **INVITED GUESTS** | DELEGATED | open invite-someone-new flow |
+| **AVAILABLE** | OPEN | open seat picker (primary) |
+
+Each tappable stat is a real `<button>` with proper `aria-label` ("3 placed — view tickets" etc.). Visual cues:
+
+- Hover/focus → subtle background tint + `→` arrow indicator slides in
+- Focus-visible → 2px gold outline for keyboard a11y
+- Active → 0.985 scale (tap feedback)
+- **AVAILABLE always shows its arrow + gold label color** since it's the primary next-step action
+
+Sublabels: "On your list" for invited guests, "To place" for available.
+
+`StatusCard` signature now takes `onPlace, onInvite, onScrollToTickets` callbacks. PortalShell wires:
+- `onPlace` → `openSeatModal()`
+- `onInvite` → `setInviteModal({})` (Mode A — no preselected seats)
+- `onScrollToTickets` → `document.getElementById('p2-tickets').scrollIntoView({behavior:'smooth'})`
+
+`TicketsSection` already had `id='p2-tickets'` so the scroll target was already there.
+
+**Rebase note:** another Claude session shipped auction modal commits (`79c6a29`, `337ec96`) in parallel. Reset-and-replay path: reset to their origin, re-applied source changes, rebuilt fresh. Their auction-modal floating-card refactor is preserved on top.
+
+**Build:** Sponsor `main-DxV9t5oZ.js` (100.4KB, +3KB) + `main-C8VzCrOt.css` (53KB, +1.5KB).
