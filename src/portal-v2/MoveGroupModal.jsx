@@ -26,6 +26,7 @@ export function MoveGroupModal({
   onClose,
   onRefresh,
   onCommitted,
+  onSuccess,       // optional: parent toast callback (kind, message)
 }) {
   const N = group.seats.length;
   const [target, setTarget] = useState([]); // [seatId, ...] of new block
@@ -171,6 +172,7 @@ export function MoveGroupModal({
       }
       if (onRefresh) await onRefresh();
       if (onCommitted) onCommitted({ from: oldIds, to: target });
+      if (onSuccess) onSuccess('success', `Moved ${N} ${N === 1 ? 'seat' : 'seats'}.`);
       onClose();
     } catch (e) {
       setErr(e.message);

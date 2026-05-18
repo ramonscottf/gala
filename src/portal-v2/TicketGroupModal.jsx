@@ -176,10 +176,10 @@ export function TicketGroupModal({
                     {s.guest_name || 'Yours (no guest)'}
                   </span>
                   <div className="p2-group-seat-actions">
-                    {/* ⋯ overflow comes FIRST in the cluster — secondary
-                        utility actions (release, future advanced) live
-                        here so primary actions read cleanly. */}
-                    {onReleaseSeat && (
+                    {/* ⋯ overflow holds Change + Reassign/Gift + Release
+                        (Scott 2026-05-18 — keeps each row to a single ⋯
+                        plus the meal pill, no inline chip clutter). */}
+                    {(onReleaseSeat || canChange || onGiftSeat) && (
                       <div
                         style={{ position: 'relative' }}
                         ref={overflowSeat === s.id ? overflowRef : null}
@@ -197,47 +197,51 @@ export function TicketGroupModal({
                         </button>
                         {overflowSeat === s.id && (
                           <div className="p2-overflow-popover" role="menu">
-                            <button
-                              type="button"
-                              className="p2-overflow-item danger"
-                              onClick={() => {
-                                setOverflowSeat(null);
-                                onReleaseSeat(s);
-                              }}
-                              role="menuitem"
-                            >
-                              <span aria-hidden="true">🗑️</span>
-                              <span>Release this seat</span>
-                            </button>
+                            {canChange && (
+                              <button
+                                type="button"
+                                className="p2-overflow-item"
+                                onClick={() => {
+                                  setOverflowSeat(null);
+                                  onChangeSeat(s);
+                                }}
+                                role="menuitem"
+                              >
+                                <span aria-hidden="true">↻</span>
+                                <span>Change seat</span>
+                              </button>
+                            )}
+                            {onGiftSeat && (
+                              <button
+                                type="button"
+                                className="p2-overflow-item"
+                                onClick={() => {
+                                  setOverflowSeat(null);
+                                  onGiftSeat(s);
+                                }}
+                                role="menuitem"
+                              >
+                                <span aria-hidden="true">🎁</span>
+                                <span>{hasDelegate ? 'Reassign' : 'Gift to a guest'}</span>
+                              </button>
+                            )}
+                            {onReleaseSeat && (
+                              <button
+                                type="button"
+                                className="p2-overflow-item danger"
+                                onClick={() => {
+                                  setOverflowSeat(null);
+                                  onReleaseSeat(s);
+                                }}
+                                role="menuitem"
+                              >
+                                <span aria-hidden="true">🗑️</span>
+                                <span>Release this seat</span>
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
-                    {canChange && (
-                      <button
-                        type="button"
-                        className="p2-chip-btn"
-                        onClick={() => onChangeSeat(s)}
-                        aria-label={`Change seat ${s.seatLabel}`}
-                      >
-                        <span aria-hidden="true">↻</span>
-                        <span>Change</span>
-                      </button>
-                    )}
-                    {onGiftSeat && (
-                      <button
-                        type="button"
-                        className="p2-chip-btn"
-                        onClick={() => onGiftSeat(s)}
-                        aria-label={
-                          hasDelegate
-                            ? `Reassign ${s.seatLabel}`
-                            : `Gift ${s.seatLabel} to a guest`
-                        }
-                      >
-                        <span aria-hidden="true">🎁</span>
-                        <span>{hasDelegate ? 'Reassign' : 'Gift'}</span>
-                      </button>
                     )}
                     <button
                       type="button"

@@ -55,6 +55,7 @@ import { HelpFooter } from './HelpFooter.jsx';
 import { WickoPillNav } from './WickoPillNav.jsx';
 import { FaqPage } from './FaqPage.jsx';
 import { SettingsPage } from './SettingsPage.jsx';
+import { Toast } from './Toast.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -487,13 +488,16 @@ function TicketsSection({
                 onClick={() => onOpenGroup(g)}
                 aria-label="Open ticket details"
               >
-                <div
-                  className="p2-ticket-poster"
-                  style={
-                    g.poster_url ? { backgroundImage: `url(${g.poster_url})` } : undefined
-                  }
-                  aria-hidden="true"
-                />
+                <div className="p2-ticket-poster" aria-hidden="true">
+                  {g.poster_url && (
+                    <img
+                      src={g.poster_url}
+                      alt=""
+                      className="p2-ticket-poster-img"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
                 <div className="p2-ticket-body">
                   <div className="p2-ticket-title">
                     <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
@@ -871,6 +875,13 @@ export default function PortalShellV2({
   const [movieModal, setMovieModal] = useState(null);
   // profileModal/faqOpen state removed 2026-05-18 — Settings and FAQ are
   // now real pages routed via /:token/settings and /:token/faq, not modals.
+
+  // Toast — non-blocking success/error confirmation. setToast({...}) to show,
+  // self-dismisses after 3s. bumpToast(kind, message) is the helper used
+  // by modals (passed as onSuccess prop) and by inline action handlers.
+  const [toast, setToast] = useState(null);
+  const bumpToast = (kind, message) =>
+    setToast({ kind, message, key: Date.now() });
   const [celebration, setCelebration] = useState(null);
   // inviteModal: null | { seatPills, preselectedPills } — Mode A is
   // open=true with no pills set; Mode B requires seatPills.
@@ -1171,18 +1182,28 @@ export default function PortalShellV2({
             setGiftSeat({ seat, returnTo: { kind: 'group', group: returnGroup } });
           }}
           onInviteSeat={(seat) => {
+            // Same-group filter — same theater + same showing as the
+            // seat being invited. Preselect the target; other free
+            // seats in the group are togglable. Scott 2026-05-18.
             const sid = `${seat.row}-${seat.num}`;
-            const giveable = [];
+            const sameGroupGiveable = [];
             for (const g of tickets) {
+              const sameGroup =
+                g.theater_id === seat.theater_id &&
+                (g.showing_number || 1) === (seat.showing_number || 1);
+              if (!sameGroup) continue;
               for (const s of g.seats) {
-                if (!s.raw?.delegation_id && !s.guest_name) {
-                  giveable.push(`${s.row}-${s.num}`);
+                const isTarget = s.row === seat.row && s.num === seat.num;
+                const free = !s.raw?.delegation_id && !s.guest_name;
+                if (isTarget || free) {
+                  sameGroupGiveable.push(`${s.row}-${s.num}`);
                 }
               }
             }
             setGroupModal(null);
             setInviteModal({
-              seatPills: giveable.length > 0 ? giveable : [sid],
+              seatPills:
+                sameGroupGiveable.length > 0 ? sameGroupGiveable : [sid],
               preselectedPills: [sid],
             });
           }}
@@ -1241,6 +1262,7 @@ export default function PortalShellV2({
           preselectedPills={inviteModal.preselectedPills || null}
           onClose={() => setInviteModal(null)}
           onCreated={onRefresh}
+          onSuccess={bumpToast}
         />
       )}
       {manageDelegation && (
@@ -1258,6 +1280,7 @@ export default function PortalShellV2({
           portal={portal}
           seats={seats}
           onRefresh={onRefresh}
+          onSuccess={bumpToast}
           onClose={() => {
             const ret = swapSeat.returnTo;
             setSwapSeat(null);
@@ -1284,22 +1307,29 @@ export default function PortalShellV2({
               await seats.unplace(showingId, b.theaterId, b.ids);
             }
             if (onRefresh) await onRefresh();
+            const n = releaseConfirm.seats.length;
+            bumpToast('success', `Released ${n} ${n === 1 ? 'seat' : 'seats'}.`);
           }}
           onClose={() => {
             const ret = releaseConfirm.returnTo;
             setReleaseConfirm(null);
-            // After release: if we came from a group modal that still
-            // has seats, reopen it (per-seat release path). If the
-            // group is now empty (whole-group release), don't reopen.
             if (ret?.kind === 'group') {
-              // Re-derive the live group from fresh tickets. If it's
-              // gone (all seats released), skip the reopen.
+              // Per-seat release inside group modal: re-derive group
+              // from fresh tickets. If still has seats, reopen the
+              // modal so user can continue. If empty, close it.
               const stillExists = tickets.find((g) => g.id === ret.group?.id);
               if (stillExists && stillExists.seats.length > 0) {
                 setGroupModal(stillExists);
+              } else {
+                setGroupModal(null);
               }
+            } else if (ret?.kind === 'close-group') {
+              // Whole-group release. Previously a no-op which left the
+              // group modal mounted with stale data — release looked
+              // like nothing happened to Scott. Fix: actually close
+              // it. User lands on home with a success toast.
+              setGroupModal(null);
             }
-            // 'close-group' returnTo: do nothing, user lands on home.
           }}
         />
       )}
@@ -1310,6 +1340,7 @@ export default function PortalShellV2({
           portal={portal}
           seats={seats}
           onRefresh={onRefresh}
+          onSuccess={bumpToast}
           onClose={() => {
             const ret = moveGroup.returnTo;
             setMoveGroup(null);
@@ -1326,20 +1357,35 @@ export default function PortalShellV2({
           portal={portal}
           token={token}
           onRefresh={onRefresh}
+          onSuccess={bumpToast}
           onInviteNew={(seat) => {
             // User chose Invite someone new from the gift picker.
-            // Pop open the InviteModal preselected with just this seat.
+            // Open InviteModal with the other seats in the SAME GROUP
+            // (same theater + same showing) as toggleable pills, with
+            // the originally-targeted seat preselected. Per Scott
+            // 2026-05-18: "default to one, but offer the other seats
+            // in that movie/showtime/auditorium."
             const sid = `${seat.row}-${seat.num}`;
-            const giveable = [];
+            const sameGroupGiveable = [];
             for (const g of tickets) {
+              const sameGroup =
+                g.theater_id === seat.theater_id &&
+                (g.showing_number || 1) === (seat.showing_number || 1);
+              if (!sameGroup) continue;
               for (const s of g.seats) {
-                if (!s.raw?.delegation_id && !s.guest_name) {
-                  giveable.push(`${s.row}-${s.num}`);
+                // include seats that are unassigned OR the target seat
+                // itself (which gets preselected). Skip seats already
+                // delegated to someone else.
+                const isTarget = s.row === seat.row && s.num === seat.num;
+                const free = !s.raw?.delegation_id && !s.guest_name;
+                if (isTarget || free) {
+                  sameGroupGiveable.push(`${s.row}-${s.num}`);
                 }
               }
             }
             setInviteModal({
-              seatPills: giveable.length > 0 ? giveable : [sid],
+              seatPills:
+                sameGroupGiveable.length > 0 ? sameGroupGiveable : [sid],
               preselectedPills: [sid],
             });
           }}
@@ -1351,6 +1397,15 @@ export default function PortalShellV2({
               if (fresh) setGroupModal(fresh);
             }
           }}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          key={toast.key}
+          kind={toast.kind}
+          message={toast.message}
+          onDone={() => setToast(null)}
         />
       )}
     </div>

@@ -33,6 +33,7 @@ export function GiftSeatModal({
   onClose,
   onRefresh,
   onInviteNew,    // callback to open InviteModal preselected with this seat
+  onSuccess,      // optional: parent toast callback (kind, message)
 }) {
   const delegations = portal?.childDelegations || [];
   const currentAssignment = seat.raw?.delegation_id || null;
@@ -66,6 +67,14 @@ export function GiftSeatModal({
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
       if (onRefresh) await onRefresh();
+      if (onSuccess) {
+        const target = delegations.find((d) => d.id === delegationId);
+        if (delegationId && target) {
+          onSuccess('success', `${seat.seatLabel} sent to ${target.delegate_name || 'guest'}.`);
+        } else if (!delegationId) {
+          onSuccess('success', `${seat.seatLabel} returned to you.`);
+        }
+      }
       onClose();
     } catch (e) {
       setErr(e.message);

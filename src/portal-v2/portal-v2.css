@@ -618,14 +618,22 @@ body {
 }
 
 .p2-ticket-poster {
-  width: 56px;
-  aspect-ratio: 2 / 3;
+  width: 64px;
+  height: 96px;
   border-radius: 8px;
-  background-size: cover;
-  background-position: center;
   flex-shrink: 0;
-  border: 0;
   background-color: var(--p2-navy-deep);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.p2-ticket-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: var(--p2-navy-deep);
 }
 
 .p2-ticket-body {
@@ -3002,3 +3010,65 @@ body {
 }
 .p2-ticket-menu-item.danger { color: var(--p2-red-soft); }
 .p2-ticket-menu-item.danger:hover { background: rgba(215, 40, 70, 0.16); }
+
+/* ============================================================
+   Toast — top-anchored success/error confirmation, auto-dismiss.
+   Phase 5.7+ post-walk: every destructive/save action surfaces
+   a toast on completion so the user sees that the thing happened.
+   ============================================================ */
+.p2-toast {
+  position: fixed;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px 12px 14px;
+  border-radius: 999px;
+  background: var(--p2-panel-solid);
+  border: 1px solid var(--p2-rule-strong);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  max-width: calc(100% - 32px);
+  animation: p2-toast-in 0.22s cubic-bezier(.16, 1, .3, 1);
+}
+@keyframes p2-toast-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.p2-toast-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.p2-toast-success .p2-toast-icon {
+  background: rgba(127, 207, 160, 0.22);
+  color: #7fcfa0;
+  border: 1px solid rgba(127, 207, 160, 0.55);
+}
+.p2-toast-error .p2-toast-icon {
+  background: rgba(215, 40, 70, 0.22);
+  color: var(--p2-red-soft);
+  border: 1px solid rgba(215, 40, 70, 0.55);
+}
+.p2-toast-msg {
+  color: rgba(255, 255, 255, 0.94);
+}
+@media (max-width: 480px) {
+  .p2-toast {
+    top: 78px;
+    font-size: 13px;
+    padding: 10px 14px 10px 12px;
+  }
+}

@@ -29,6 +29,7 @@ export function InviteModal({
   preselectedPills = null, // which pills start checked in Mode B
   onClose,
   onCreated,
+  onSuccess,               // optional: parent toast callback (kind, message)
 }) {
   useEffect(() => {
     const onKey = (e) => {
@@ -80,6 +81,10 @@ export function InviteModal({
             preselectedPills={preselectedPills}
             onCreated={async (d) => {
               if (onCreated) await onCreated(d);
+              if (onSuccess) {
+                const name = d?.delegate_name || d?.name || 'guest';
+                onSuccess('success', `Invite sent to ${name}.`);
+              }
               onClose();
             }}
             onClose={onClose}

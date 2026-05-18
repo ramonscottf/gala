@@ -32,6 +32,7 @@ export function SwapSeatModal({
   onClose,
   onRefresh,
   onCommitted,        // optional: parent reaction (e.g. close parent modal)
+  onSuccess,          // optional: parent toast callback (kind, message)
 }) {
   const [target, setTarget] = useState(null); // seatId like "K-3"
   const [pending, setPending] = useState(false);
@@ -131,6 +132,7 @@ export function SwapSeatModal({
       }
       if (onRefresh) await onRefresh();
       if (onCommitted) onCommitted({ from: currentSeatId, to: target });
+      if (onSuccess) onSuccess('success', `Seat changed to ${target.replace('-', '')}.`);
       onClose();
     } catch (e) {
       setErr(e.message);
