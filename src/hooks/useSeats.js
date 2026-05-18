@@ -70,6 +70,18 @@ export function useSeats(portal, token, refresh) {
   const callPick = useCallback(
     async (action, showingId, theaterId, ids) => {
       const showing_number = SHOWING_ID_TO_NUMBER[showingId];
+      // Build the full batch's seat list once so every parallel POST can
+      // pass it as `inflight`. The server's per-seat orphan check treats
+      // these as already-occupied, eliminating the race where the E3
+      // check and the E4 check each say the other would be orphaned
+      // because neither is in the DB yet. Bug fix May 18 2026 (Aud 4 E
+      // row breadwinner case — Scott reported "leave seat 3 alone …
+      // leave seat 4 alone" while batch-placing E3+E4 with E1,E2,E5,E6
+      // already taken by other sponsors).
+      const inflight = ids.map((id) => {
+        const dash = id.indexOf('-');
+        return { row: id.slice(0, dash), num: id.slice(dash + 1) };
+      });
       const calls = ids.map((id) => {
         const dash = id.indexOf('-');
         const row_label = id.slice(0, dash);
@@ -83,6 +95,7 @@ export function useSeats(portal, token, refresh) {
             showing_number,
             row_label,
             seat_num,
+            inflight,
           }),
         });
       });

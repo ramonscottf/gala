@@ -71,7 +71,17 @@ async function resolveShowingNumber(env, theater_id, providedShowingNumber) {
 // Orphan check — see top-of-file comments in the prior revision for full
 // rationale. All queries scoped to (theater_id, showing_number) so the
 // early and late showings of the same theater are independent universes.
-async function checkOrphanCreation(env, theater_id, showing_number, row_label, claimingSeat) {
+//
+// inflightSet (optional): Set<number> of seat_nums in the SAME row being
+// claimed by the same actor in the same client batch. The client fires
+// N parallel POST /pick finalize calls (one per seat) and includes the
+// full batch's seat_nums in each request's body.inflight so each
+// per-seat check can treat its batch peers as already-occupied. Without
+// this, a batch like {E3, E4} with brackets at E1/E2/E5/E6 race-orphans
+// itself: the E3 check sees E5 taken and E4-not-yet-in-DB → orphan at 4;
+// the E4 check sees E2 taken and E3-not-yet-in-DB → orphan at 3. Both
+// 409, both falsely. Bug fix May 18 2026 — Aud 4 row E breadwinner case.
+async function checkOrphanCreation(env, theater_id, showing_number, row_label, claimingSeat, inflightSet) {
   const claiming = parseInt(claimingSeat, 10);
   const candidates = [claiming - 2, claiming + 2];
   const rs = await env.GALA_DB.prepare(
@@ -88,10 +98,22 @@ async function checkOrphanCreation(env, theater_id, showing_number, row_label, c
     theater_id, showing_number, row_label, candidates[0], candidates[1],
   ).all();
   const bracketed = new Set((rs.results || []).map(r => r.n));
+  // In-flight batch peers also act as brackets — a batch like {E1, E3}
+  // with no DB neighbors should still detect that placing E1 and E3
+  // would orphan E2 between them.
+  if (inflightSet) {
+    for (const c of candidates) {
+      if (inflightSet.has(c)) bracketed.add(c);
+    }
+  }
 
   for (const bracket of candidates) {
     if (!bracketed.has(bracket)) continue;
     const gapSeat = (bracket + claiming) / 2;
+    // The claimer can't orphan themselves
+    if (gapSeat === claiming) continue;
+    // Batch peer fills the gap — same actor, same atomic batch, ok
+    if (inflightSet && inflightSet.has(gapSeat)) continue;
     const gapOccupied = await env.GALA_DB.prepare(
       `SELECT 1 FROM seat_assignments
         WHERE theater_id = ? AND showing_number = ? AND row_label = ?
@@ -250,15 +272,38 @@ export async function onRequestPost(context) {
   ).bind(theater_id, showing_number, row_label, seat_num, token).first();
   if (heldByOther) return jsonError('Seat is currently held by another sponsor', 409);
 
+  // Build the in-flight batch set once for the request — used by the
+  // batch-aware orphan check. Each parallel /pick call includes the full
+  // batch's seat_nums (for the same row only) in body.inflight, so each
+  // per-seat check can treat its batch peers as already-occupied.
+  const inflightSet = new Set();
+  if (Array.isArray(body.inflight)) {
+    for (const entry of body.inflight) {
+      if (!entry) continue;
+      const r = String(entry.row || entry.row_label || '');
+      if (r !== row_label) continue;
+      const n = parseInt(entry.num ?? entry.seat_num, 10);
+      if (Number.isFinite(n)) inflightSet.add(n);
+    }
+  }
+  // The claimer is always in the in-flight set
+  const claimerN = parseInt(seat_num, 10);
+  if (Number.isFinite(claimerN)) inflightSet.add(claimerN);
+
   // ───── HOLD ─────
   if (action === 'hold') {
     const partnerSeat = await getLoveseatPartner(env, request, theater_id, row_label, seat_num);
     const seatsToHold = partnerSeat
       ? [{ row: row_label, num: seat_num }, { row: row_label, num: partnerSeat }]
       : [{ row: row_label, num: seat_num }];
+    // Loveseat partner is also part of the same atomic batch
+    if (partnerSeat) {
+      const pn = parseInt(partnerSeat, 10);
+      if (Number.isFinite(pn)) inflightSet.add(pn);
+    }
 
     for (const s of seatsToHold) {
-      const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num);
+      const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num, inflightSet);
       if (!orphanCheck.ok) {
         return jsonError(
           `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
@@ -356,8 +401,15 @@ export async function onRequestPost(context) {
       }
     }
 
+    // Loveseat partner is also part of the same atomic batch — fold it
+    // into inflightSet so the per-seat check treats it as occupied.
+    if (partnerSeat) {
+      const pn = parseInt(partnerSeat, 10);
+      if (Number.isFinite(pn)) inflightSet.add(pn);
+    }
+
     for (const s of seatsToFinalize) {
-      const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num);
+      const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num, inflightSet);
       if (!orphanCheck.ok) {
         return jsonError(
           `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
