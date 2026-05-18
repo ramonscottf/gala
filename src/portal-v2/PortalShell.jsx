@@ -174,7 +174,15 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
   const firstName = (identity?.contactName || '').split(' ')[0] || identity?.company || 'there';
   const placed = seatMath?.placed || 0;
   const total = seatMath?.total || 0;
-  const remaining = Math.max(0, total - placed);
+  const delegated = seatMath?.delegated || 0;
+  // Seats THIS sponsor still has to place — delegated seats are no
+  // longer theirs to place. Server already computes this; falling
+  // back to the formula keeps parity if the field is ever absent.
+  // (Was `total - placed`, which told a fully-delegating sponsor to
+  // "Place 20 more" when v1 correctly showed 8 / their real open.)
+  const remaining =
+    seatMath?.available ?? Math.max(0, total - placed - delegated);
+  const fullyResolved = remaining === 0 && total > 0;
   const daysOut = daysUntilGala();
   const isStaff = identity?.kind === 'staff';
   const isDelegate = identity?.kind === 'delegate';
@@ -182,7 +190,7 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
   const open = tierAccess?.open === true;
 
   let headline;
-  if (placed >= total && total > 0) {
+  if (fullyResolved && placed > 0) {
     headline = (
       <>Your <span className="p2-italic-flair">night</span> is set.</>
     );
@@ -201,18 +209,25 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
   }
 
   let sub;
-  if (placed >= total && total > 0) {
+  if (fullyResolved && placed > 0) {
     sub = (
       <>
-        All {total} {total === 1 ? 'seat is' : 'seats are'} placed. Edit your tickets, assign
-        delegate guests, or peek at the lineup below.
+        All your seats are placed. Edit your tickets, assign delegate guests,
+        or peek at the lineup below.
+      </>
+    );
+  } else if (fullyResolved && delegated > 0) {
+    sub = (
+      <>
+        All {total} {total === 1 ? 'seat is' : 'seats are'} with your guests —
+        they'll pick their own. Manage delegates or peek at the lineup below.
       </>
     );
   } else if (placed > 0) {
     sub = (
       <>
         {placed} of {total} {total === 1 ? 'seat' : 'seats'} placed.{' '}
-        {total - placed} still to go — pick when you're ready.
+        {remaining} still to go — pick when you're ready.
       </>
     );
   } else if (!tierAccess?.open && tierAccess?.opensAt) {
@@ -243,7 +258,8 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
   // so there's a clear "what to do next" near the top of the page.
   let ctaLabel = null;
   if (open) {
-    if (remaining === 0 && total > 0) ctaLabel = 'Edit my seats';
+    if (remaining === 0 && placed > 0) ctaLabel = 'Edit my seats';
+    else if (remaining === 0) ctaLabel = null; // fully delegated — nothing to place
     else if (placed > 0) ctaLabel = `Place ${remaining} more`;
     else if (total > 0) ctaLabel = `Pick my ${total === 1 ? 'seat' : 'seats'}`;
   }
@@ -287,8 +303,11 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
 function StatusCard({ identity, seatMath, tierAccess }) {
   const placed = seatMath?.placed || 0;
   const total = seatMath?.total || 0;
-  const remaining = Math.max(0, total - placed);
   const delegated = seatMath?.delegated || 0;
+  // Open = seats the sponsor still has to place themselves. Must
+  // exclude delegated seats (parity with v1's OPEN stat).
+  const remaining =
+    seatMath?.available ?? Math.max(0, total - placed - delegated);
   const open = tierAccess?.open === true;
   const tier = identity?.tier || 'Sponsor';
 
@@ -357,7 +376,12 @@ function StatusCard({ identity, seatMath, tierAccess }) {
 function TicketsSection({ groups, seatMath, tierAccess, onOpenGroup, onPlaceMore }) {
   const total = seatMath?.total || 0;
   const placed = groups.reduce((n, g) => n + g.seats.length, 0);
-  const remaining = Math.max(0, total - placed);
+  const delegated = seatMath?.delegated || 0;
+  // Seats the sponsor still has to place (delegation-aware) — parity
+  // with v1. Was `total - placed`, which over-counted by the number
+  // of delegated seats.
+  const remaining =
+    seatMath?.available ?? Math.max(0, total - placed - delegated);
   const open = tierAccess?.open === true;
 
   // Display modes:

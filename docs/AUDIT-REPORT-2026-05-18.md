@@ -61,6 +61,23 @@ Auditor: Claude Code. Method: code cross-reference `src/portal/` (v1) vs `src/po
 - Fix: show QR inside the post-finalize confirmation view AND as a persistent
   card once `identity.rsvpStatus === 'completed'`.
 
+**P1.3 — v2 "Open / to place" count ignores delegated seats. CONFIRMED + FIXED.**
+- Found live on Hughes General Contractors (`8z9351iu5hrzzomr`, 0 placed,
+  delegated): v1 shows `OPEN 8` / "8 of 8 still to place"; v2 showed
+  `OPEN 20` and "+ Place 20 more seats" / "Pick my seats".
+- Root cause: `Hero`, `StatusCard`, `TicketsSection` all computed
+  `remaining = Math.max(0, total - placed)`, ignoring delegated seats.
+  The server already returns the correct `seatMath.available`
+  (`total - placed - delegated`); the seat picker (line ~1177) already
+  used it, but the home displays did not.
+- A partially/fully-delegating sponsor was perpetually nagged to place
+  seats that aren't theirs to place, and the "your night is set" state
+  was unreachable for them.
+- Fix: all three now use `seatMath.available` (fallback to the
+  delegation-aware formula). Headline/sub/CTA gate on the corrected
+  count; added a "all N seats are with your guests" state for the
+  fully-delegated (placed 0) case so copy isn't wrong.
+
 ### P2 — Polish / verify
 
 **P2.1 — Status card "Delegated" label semantics differ from v1 "Assigned".**
@@ -80,6 +97,7 @@ Auditor: Claude Code. Method: code cross-reference `src/portal/` (v1) vs `src/po
 | P0.2 | P0 | Help footer missing | ✅ HelpFooter (persistent, sms:+18018106642) above brand footer |
 | P1.1 | P1 | FAQ surface missing | ✅ FaqModal fetches /api/gala/chat/faq, search + accordion, opened from help footer |
 | P1.2 | P1 | QR surface missing | ✅ TicketQrCardV2 when rsvpStatus==='completed' + QR inside ConfirmationView |
+| P1.3 | P1 | Open count ignores delegated | ✅ Hero/StatusCard/TicketsSection use seatMath.available (delegation-aware) |
 | P2.1 | P2 | Delegated/Assigned label | ❓ (tracking — needs Scott's call on wording) |
 
 ## Verification (2026-05-18)
@@ -93,11 +111,36 @@ screenshotted at 390px + 1440px — no page errors, no horizontal scroll:
 - `pv-finalized-d` — TicketQrCardV2 + persistent HelpFooter ✓
 - `pv-faq-d` — FaqModal chrome (gradient strip, search, accordion, footer) ✓
 
-Live-deploy verification of these on the audit branch is blocked on CF
-creds + branch-deploy mapping — see docs/BLOCKERS.md (B1, B2). The
-offline harness uses real component code with mock portal payloads, so
-this proves render correctness; it does not exercise the live
-`/finalize`, `/api/gala/qr`, or `/api/gala/chat/faq` round-trips
-(those were verified to exist/respond independently: faq endpoint
-returns 200 + 34 entries; qr + finalize are the same endpoints v1
-uses in production).
+### LIVE verification (blockers since cleared)
+
+`feat/portal-soft-website` fast-forwarded to `9c8744f` (Scott's
+explicit permission). CF API confirms Pages deploy `26183721`
+(branch `feat/portal-soft-website`) status **success** @ 00:58Z.
+Screenshotted the live preview vs v1 production on real D1 data,
+390px + 1440px:
+
+- Wicko Waypoint (`sxnhcj7axdrllaku`, rsvp_status=completed):
+  `TicketQrCardV2` renders a **real scannable QR** from `/api/gala/qr`
+  + persistent HelpFooter. P1.2 ✅ P0.2 ✅ live.
+- Garn Development (`ew23vcs3lgrzuikc`, rsvp_status NULL, 18 placed,
+  0 missing dinner): `FinalizeBanner` renders in actionable state
+  ("18 seats placed … I'm done — send it"). P0.1 ✅ live. (Did NOT
+  tap finalize — that fires a real email/SMS to a live sponsor.)
+- FaqModal: `/api/gala/chat/faq` live-confirmed 200 + 34 entries;
+  modal opens from the now-live HelpFooter. P1.1 ✅.
+
+Parity note: v1 does **not** surface any finalize CTA on its home
+screen (it's buried in the post-pick flow). v2's persistent banner is
+strictly better — mission objective ("v2 strictly ≥ v1") met for this
+surface.
+
+### P2.1 detail (still needs Scott)
+
+Confirmed again on Garn: v1 stat reads `ASSIGNED 18` (= seats placed
+to attendees); v2 reads `DELEGATED 0` (= seats handed to child
+delegations). Different metrics, both arguably correct, but a sponsor
+glancing at both portals sees "18" vs "0" and may think v2 lost their
+seats. Recommend either (a) rename v2 "Delegated" → keep, but add an
+"Assigned/Placed" parity or (b) confirm v2's four-stat model
+(Total/Placed/Delegated/Open) is the intended replacement. Needs
+Scott's wording call — not fixing blind.
