@@ -2599,9 +2599,10 @@ body {
 }
 
 .p2-wpn .wpn__inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 8px 10px 8px 16px;
   position: relative;
   z-index: 2;
@@ -2610,11 +2611,9 @@ body {
 .p2-wpn .wpn__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
   text-decoration: none;
   color: var(--wpn-fg);
   min-width: 0;
-  flex: 1;
 }
 .p2-wpn .wpn__brand-icon {
   height: 32px;
@@ -2629,16 +2628,21 @@ body {
   object-fit: contain;
   display: block;
 }
-.p2-wpn .wpn__brand-wordmark {
-  font-size: 10px;
+
+/* Wordmark — centered in the middle grid cell */
+.p2-wpn .wpn__wordmark {
+  justify-self: center;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1.6px;
+  letter-spacing: 1.8px;
   text-transform: uppercase;
   color: var(--p2-gold);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  text-align: center;
+  pointer-events: none;
 }
 
 /* Hamburger — always visible (mobile + desktop) */
@@ -2728,16 +2732,61 @@ body {
 .p2-wpn .wpn__links a:hover,
 .p2-wpn .wpn__links a:focus { opacity: 1; color: var(--wpn-accent); }
 
+/* Drawer card spans all 3 grid columns of the pill */
+.p2-wpn .wpn__inner > .wpn__links {
+  grid-column: 1 / -1;
+}
+
 /* Push page content below the fixed pill */
 .p2-shell { padding-top: 76px; }
+@media (max-width: 600px) {
+  .p2-wpn .wpn__wordmark { font-size: 10px; letter-spacing: 1.4px; }
+}
 @media (max-width: 480px) {
   .p2-shell { padding-top: 70px; }
-  .p2-wpn .wpn__brand-wordmark { font-size: 9px; letter-spacing: 1.2px; }
+  .p2-wpn .wpn__wordmark { font-size: 9px; letter-spacing: 1.0px; }
+}
+@media (max-width: 380px) {
+  /* Very narrow phones: drop wordmark visually but keep it for SR via aria-hidden=false elsewhere.
+     With aria-hidden=true (as set in JSX), it's already a11y-neutral. */
+  .p2-wpn .wpn__wordmark { display: none; }
 }
 
 /* Hide the deprecated p2-nav (old BrandNav) wherever it might still
    render — defensive. Once PortalShell stops mounting it, this is a no-op. */
 .p2-nav { display: none; }
+
+/* ============================================================
+   Sub-pages (FAQ / Settings) — real routed pages, not modals.
+   ============================================================ */
+.p2-page {
+  /* Same .p2-section padding inherited; just makes selectors specific. */
+}
+.p2-back-link {
+  background: none;
+  border: none;
+  color: var(--p2-muted);
+  font-size: 13px;
+  letter-spacing: .3px;
+  cursor: pointer;
+  padding: 6px 0;
+  margin-bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+}
+.p2-back-link:hover { color: var(--p2-ink); }
+
+.p2-settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--p2-rule);
+}
 
 /* Settings/Profile QR section — sponsor-scoped fallback for door issues.
    Visual: centered, modest size, framed by a soft card, copy-first. */

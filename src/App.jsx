@@ -138,6 +138,8 @@ export default function App() {
       <Routes>
         <Route path="/:token" element={<PortalContainer />} />
         <Route path="/:token/seats" element={<PortalContainer />} />
+        <Route path="/:token/faq" element={<PortalContainer />} />
+        <Route path="/:token/settings" element={<PortalContainer />} />
         <Route
           path="*"
           element={

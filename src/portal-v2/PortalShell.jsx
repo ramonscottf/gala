@@ -34,7 +34,9 @@ import { SeatPickerModal } from './SeatPickerModal.jsx';
 import { TicketDetailModal } from './TicketDetailModal.jsx';
 import { TicketGroupModal, ShowingAuditoriumPills } from './TicketGroupModal.jsx';
 import { MovieDetailModal } from './MovieDetailModal.jsx';
-import { ProfileModal } from './ProfileModal.jsx';
+// ProfileModal + FaqModal: imported as page components (FaqPage/SettingsPage)
+// below. The original modal versions stay on disk in case any other surface
+// (booker, admin) needs the popup pattern.
 import { CelebrationOverlay } from './CelebrationOverlay.jsx';
 import { InviteModal } from './InviteModal.jsx';
 import { DelegationManageModal } from './DelegationManageModal.jsx';
@@ -50,7 +52,8 @@ import {
 } from './Finalize.jsx';
 import { HelpFooter } from './HelpFooter.jsx';
 import { WickoPillNav } from './WickoPillNav.jsx';
-import { FaqModal } from './FaqModal.jsx';
+import { FaqPage } from './FaqPage.jsx';
+import { SettingsPage } from './SettingsPage.jsx';
 import './portal-v2.css';
 
 // ───────────────────────────────────────────────────────────────────────
@@ -315,7 +318,7 @@ function StatusCard({ identity, seatMath, tierAccess }) {
                   </span>
                 )}
               </div>
-              <h2>Your <span className="p2-italic-flair">block</span></h2>
+              <h2>Your tickets <span className="p2-italic-flair">to the gala</span></h2>
             </div>
             {!open && (
               <span className="p2-chip" style={{ background: 'rgba(255,255,255,0.05)' }}>
@@ -842,8 +845,8 @@ export default function PortalShellV2({
   const [groupModal, setGroupModal] = useState(null);
   const [ticketModal, setTicketModal] = useState(null);
   const [movieModal, setMovieModal] = useState(null);
-  const [profileModal, setProfileModal] = useState(false);
-  const [faqOpen, setFaqOpen] = useState(false);
+  // profileModal/faqOpen state removed 2026-05-18 — Settings and FAQ are
+  // now real pages routed via /:token/settings and /:token/faq, not modals.
   const [celebration, setCelebration] = useState(null);
   // inviteModal: null | { seatPills, preselectedPills } — Mode A is
   // open=true with no pills set; Mode B requires seatPills.
@@ -980,67 +983,79 @@ export default function PortalShellV2({
     );
   }
 
+  // Route-aware view swap. Hamburger items navigate to real pages;
+  // home content only renders on the bare /:token path.
+  const path = location.pathname || '';
+  const isFaqPage = path.endsWith('/faq');
+  const isSettingsPage = path.endsWith('/settings');
+  const isSubPage = isFaqPage || isSettingsPage;
+
   return (
     <div className="p2-shell">
-      <WickoPillNav
-        onOpenProfile={() => setProfileModal(true)}
-        onOpenFaq={() => setFaqOpen(true)}
-      />
+      <WickoPillNav token={token} />
 
-      <Hero identity={identity} seatMath={seatMath} tierAccess={tierAccess} onPick={openSeatModal} />
-
-      <StatusCard
-        identity={identity}
-        seatMath={seatMath}
-        tierAccess={tierAccess}
-      />
-
-      {showFinalizeBanner && (
-        <FinalizeBanner
-          placed={seatMath?.placed || 0}
-          missingDinner={missingDinner}
-          busy={finalizing}
-          error={finalizeError}
-          onFinalize={handleFinalize}
-        />
+      {isFaqPage && <FaqPage token={token} />}
+      {isSettingsPage && (
+        <SettingsPage identity={identity} token={token} onRefresh={onRefresh} />
       )}
 
-      {/* Persistent home-page QR card removed 2026-05-18 per Scott's call:
-          QR is sponsor-scoped fallback for trouble at the door, lives only
-          in Settings (accessed via the hamburger). Each group of seats is
-          the ticket. The QR moves into ProfileModal in a follow-up commit. */}
+      {!isSubPage && (
+        <>
+          <Hero identity={identity} seatMath={seatMath} tierAccess={tierAccess} onPick={openSeatModal} />
 
-      {(tickets.length > 0 || seatMath.total > 0) && (
-        <TicketsSection
-          groups={tickets}
-          seatMath={seatMath}
-          tierAccess={tierAccess}
-          onOpenGroup={(g) => {
-            // Single-seat groups skip the group screen and go straight
-            // to the per-seat detail modal (where you can release /
-            // assign / text). Multi-seat groups land on the group
-            // modal where you can act on each seat in context.
-            if (g.seats.length === 1) {
-              setTicketModal(g.seats[0]);
-            } else {
-              setGroupModal(g);
-            }
-          }}
-          onPlaceMore={openSeatModal}
-        />
+          <StatusCard
+            identity={identity}
+            seatMath={seatMath}
+            tierAccess={tierAccess}
+          />
+
+          {showFinalizeBanner && (
+            <FinalizeBanner
+              placed={seatMath?.placed || 0}
+              missingDinner={missingDinner}
+              busy={finalizing}
+              error={finalizeError}
+              onFinalize={handleFinalize}
+            />
+          )}
+
+          {/* Persistent home-page QR card removed 2026-05-18 per Scott's
+              call: QR lives only in Settings (page, not modal). Each group
+              of seats IS the ticket. */}
+
+          {(tickets.length > 0 || seatMath.total > 0) && (
+            <TicketsSection
+              groups={tickets}
+              seatMath={seatMath}
+              tierAccess={tierAccess}
+              onOpenGroup={(g) => {
+                // Single-seat groups skip the group screen and go straight
+                // to the per-seat detail modal (where you can release /
+                // assign / text). Multi-seat groups land on the group
+                // modal where you can act on each seat in context.
+                if (g.seats.length === 1) {
+                  setTicketModal(g.seats[0]);
+                } else {
+                  setGroupModal(g);
+                }
+              }}
+              onPlaceMore={openSeatModal}
+            />
+          )}
+
+          <GroupSection
+            portal={portal}
+            onOpenInvite={() => setInviteModal({})}
+            onManageDelegation={(d) => setManageDelegation(d)}
+          />
+
+          <LineupSection showtimes={showtimes} onOpenMovie={(m) => setMovieModal(m)} />
+
+          <NightOfSection />
+
+          <HelpFooter />
+        </>
       )}
-
-      <GroupSection
-        portal={portal}
-        onOpenInvite={() => setInviteModal({})}
-        onManageDelegation={(d) => setManageDelegation(d)}
-      />
-
-      <LineupSection showtimes={showtimes} onOpenMovie={(m) => setMovieModal(m)} />
-
-      <NightOfSection />
-
-      <HelpFooter />
 
       <Footer />
 
@@ -1164,15 +1179,8 @@ export default function PortalShellV2({
       {movieModal && (
         <MovieDetailModal movie={movieModal} onClose={() => setMovieModal(null)} />
       )}
-      {profileModal && (
-        <ProfileModal
-          identity={identity}
-          token={token}
-          onClose={() => setProfileModal(false)}
-          onRefresh={onRefresh}
-        />
-      )}
-      {faqOpen && <FaqModal onClose={() => setFaqOpen(false)} />}
+      {/* ProfileModal + FaqModal mounts removed 2026-05-18 — Settings and FAQ
+          are now routed pages, not modals. See FaqPage / SettingsPage. */}
       {celebration && (
         <CelebrationOverlay
           seats={celebration.seats}
