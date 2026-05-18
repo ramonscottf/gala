@@ -77,6 +77,7 @@ export function SeatPickerModal({
               seats={seats}
               apiBase={config.apiBase}
               variant="modal"
+              foldMeals={true}
               onRefresh={onRefresh}
               onMovieDetail={onOpenMovieDetail}
               onClose={onClose}
