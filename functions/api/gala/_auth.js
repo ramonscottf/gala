@@ -2,6 +2,17 @@ const COOKIE_NAME = 'gala_session';
 const MAX_AGE_SEC = 2592000; // 30 days
 
 export async function createSession(secret) {
+  // Defensive: createSession() is called from login.js after a preflight,
+  // but if any other code path ever calls it without a secret, fail loud
+  // instead of letting WebCrypto throw an opaque DataError. Earlier this
+  // surfaced as HTTP 500 with no log trail and looked exactly like a
+  // typo'd password to the admin.
+  if (!secret || typeof secret !== 'string' || secret.length === 0) {
+    throw new Error(
+      'createSession() called without a valid GALA_DASH_SECRET. ' +
+      'Check Cloudflare Pages env vars and redeploy.'
+    );
+  }
   const ts = String(Date.now());
   const key = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode(secret),
