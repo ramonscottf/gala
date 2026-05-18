@@ -1,9 +1,25 @@
 # Portal v2 — Feature Completion Audit & Plan
 
-**Status:** Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ · Phase 3.5 ✅ · Phase 4 partial ✅ · Phase 5 ✅ · Phases 6–8 pending
+**Status:** Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ · Phase 3.5 ✅ · Phase 4 partial ✅ · Phase 5 ✅ · Phase 5.5 (Gift) ✅ · Phase 5.6 (parity-fix) pending · Phase 5.7 (visual rail redesign) pending · Phases 6–8 pending
 **Branch:** `feat/portal-soft-website`
 **Author:** Skippy + Scott
 **Date:** May 15, 2026 — updated May 17, 2026
+
+---
+
+## 🚨 PARITY GAP FINDINGS (audit run May 17, 2026)
+
+A v1→v2 audit surfaced four real gaps that aren't on the existing phase plan. These need an explicit phase:
+
+**P5.6.1 — `/finalize` "I'm done, send my confirmation" trigger.** v1 had this. v2 has nothing. The /finalize endpoint sends the QR + summary email + SMS to the sponsor. Without it, sponsors pick seats but never get a confirmation summary. Gala is June 10. Severity: **HIGH**. The pick endpoint does NOT send any email/SMS — finalize is the only path.
+
+**P5.6.2 — "Need help? Text Scott Foster — 801-810-6642" footer.** v1 had this on every screen. v2 has zero help/support surface. Severity: **HIGH** (when sponsors get confused on gala night they need to know who to call).
+
+**P5.6.3 — FAQ / Night Of surface.** v1 had a whole FAQ tab pulling /api/gala/chat/faq (34 entries across 7 categories, search + accordion). v2 has nothing. NightOfContent.jsx component still exists and could be ported as a modal. Severity: **MEDIUM** (the public /faq page also exists at daviskids.org/faq, but in-portal access matters).
+
+**P5.6.4 — QR code per sponsor.** v1's TicketQrCard. Already on Phase 6 roadmap so not "lost" — just flagged.
+
+**P5.7 — Mobile horizontal-rail redesign.** Per Scott's May 17 ask: Tickets section, Lineup section, Night Of section should be horizontal-scrolling rails (peek-next-card visible at right edge, snap-paged, no borders on cards). Modeled on Manchester United app refresh. Big visual lift, multi-session work, queued AFTER parity-fix.
 
 ---
 
