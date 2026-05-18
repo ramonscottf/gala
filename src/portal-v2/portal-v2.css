@@ -3494,7 +3494,17 @@ body {
   top: 14px;
   right: 14px;
   z-index: 4;
-  /* matches .p2-modal-close — 38x38 round button with subtle backdrop */
+  /* The Qgiv iframe paints a white background inside the card, so the
+     default .p2-modal-close white-on-transparent styling becomes invisible
+     here. Override with solid navy so the X is visible whether the iframe
+     has loaded (white bg behind) or not (navy card bg behind). */
+  background: rgba(13, 27, 61, 0.92);
+  border-color: rgba(13, 27, 61, 0.95);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+.p2-auction-modal-close:hover {
+  background: rgba(13, 27, 61, 1);
 }
 
 .p2-auction-modal-body {
