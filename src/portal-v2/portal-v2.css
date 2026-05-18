@@ -289,6 +289,39 @@ body {
   margin-top: 28px;
 }
 
+/* Phase 5.7+ post-G (Scott 2026-05-18): CTA + date/venue pill on the
+   same horizontal row. On desktop the pill grows to fill remaining
+   space next to the button. On narrow screens the pill wraps to its
+   own line. The row owns the vertical rhythm so the children reset
+   their margin-top inside it. */
+.p2-hero-cta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+.p2-hero-cta-row .p2-hero-actions {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+.p2-hero-cta-row .p2-event-pill {
+  margin-top: 0;
+  flex: 1 1 360px;
+  min-width: 280px;
+  display: flex; /* override .p2-event-pill inline-flex so flex children get full width */
+}
+@media (max-width: 700px) {
+  .p2-hero-cta-row {
+    gap: 18px;
+  }
+  .p2-hero-cta-row .p2-event-pill {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
 /* ── Buttons ────────────────────────────────────────────────────────── */
 
 .p2-btn {
@@ -2068,6 +2101,16 @@ body {
   position: relative;
   margin-top: 0;
   margin-bottom: 24px;
+  /* Phase 5.7+ post-G (Scott 2026-05-18): cap modal height so internal
+     body scrolls instead of pushing the footer off-screen. Without this
+     the MovieDetailModal's trailer iframe + schedule + synopsis would
+     extend past the viewport and the "Select seats for this film" button
+     in the footer became unreachable. 96px = 72px pill clearance (top
+     padding on backdrop) + 24px bottom margin. */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 96px);
+  max-height: calc(100dvh - 96px); /* dvh handles mobile browser chrome */
 }
 
 .p2-modal.stripped::before {
@@ -2091,6 +2134,7 @@ body {
   gap: 20px;
   padding: 22px 24px 18px;
   border-bottom: 1px solid var(--p2-rule);
+  flex-shrink: 0; /* header stays pinned when body scrolls */
 }
 
 .p2-modal-eyebrow {
@@ -2132,6 +2176,10 @@ body {
 
 .p2-modal-body {
   padding: 24px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0; /* required for flex children to actually scroll */
+  -webkit-overflow-scrolling: touch;
 }
 
 .p2-modal-footer {
@@ -2142,6 +2190,7 @@ body {
   padding: 18px 24px 22px;
   border-top: 1px solid var(--p2-rule);
   flex-wrap: wrap;
+  flex-shrink: 0; /* footer always visible — primary CTA lives here */
 }
 
 /* ── Stepper inside seat modal ──────────────────────────────────────── */
