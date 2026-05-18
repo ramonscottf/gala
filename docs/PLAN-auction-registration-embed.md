@@ -188,11 +188,27 @@ Items 4-6 can be verified during build; they don't gate the start.
 
 ---
 
-## Cohort rollout
+## Cohort rollout — UPDATED 2026-05-18
 
-- **Silver (today, 3 sponsors):** First batch to receive the email inviting them to the portal. Card is live in their experience. We watch the 3 transactions land in Qgiv to verify the postMessage handler works in the wild.
-- **Bronze (Wednesday, ~20 sponsors):** Polished version with whatever we learn from Silver. Higher volume = better signal on edge cases.
-- **General sponsors after Bronze:** roll out to all remaining tiers as scheduled.
+**Silver is being pushed back** so Scott can beta-test the auction-registration flow himself before any sponsor sees it. The build has to be in his hands and walked end-to-end before Silver invites go out.
+
+Sequence:
+1. **Build complete + deployed to preview** (`feat-portal-soft-website.gala-3z8.pages.dev`)
+2. **Scott beta-tests** — walks his own portal as Wicko sponsor 89 (token `sxnhcj7axdrllaku`), registers a fresh Qgiv account using a test email, confirms postMessage flow + D1 write + success screen + Givi app deep-link all work
+3. **Silver invite emails go out** (3 sponsors) — first real cohort
+4. **Bronze invites Wednesday** (~20 sponsors) — second cohort, polished with Silver learnings
+5. **General sponsors after Bronze**
+
+The auction-registration feature MUST be in Bronze. It is the priority for that email batch. Silver shifting is fine; Bronze shifting is not.
+
+## Locked answers from Scott (2026-05-18 chat)
+
+These were open questions when the plan was first written. Scott confirmed in chat:
+
+1. **Free registration, anyone can register.** No sponsor-tier gating. Hide the $0.00 price line via CSS — it's a Bloomerang formality, not info we need the sponsor to see.
+2. **Card placement = confirmation screen + persistent on main page after first seat placed.** No earlier pressure to register. Get them focused on seats first, then push for registration.
+3. **Scope = registration only.** No item browsing on our site, no bidding UI. Bidding lives in the Givi app on night-of (June 10). All we're doing is creating the Qgiv account 3 weeks early so the app is installed and logged in before the gala.
+4. **"Powered by Bloomerang" attribution** — moot. Embed iframe has no Powered-by footer (confirmed live). Nothing to hide.
 
 ---
 
@@ -208,6 +224,4 @@ Items 4-6 can be verified during build; they don't gate the start.
 
 ## Open questions for Scott (does not block start)
 
-1. **"Powered by Bloomerang" attribution** — Qgiv's TOS likely requires it visible somewhere. Confirm whether we can hide it entirely or just soften it.
-2. **Success-screen copy tone** — current draft is informational ("Check your email for your ticket code"). Want it warmer? More excited? "You're in! 🎬 See you June 10."
-3. **Modal close behavior mid-registration** — if sponsor closes the modal halfway through, do we (a) show a confirmation "are you sure," (b) silently close and let them try again later, or (c) auto-save their progress (Qgiv may handle this itself — to verify).
+All previously open questions answered in chat 2026-05-18 — see "Locked answers from Scott" section above. No remaining blockers.
