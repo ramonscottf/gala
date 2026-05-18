@@ -1177,7 +1177,12 @@ export default function PortalShellV2({
         />
       )}
       {movieModal && (
-        <MovieDetailModal movie={movieModal} onClose={() => setMovieModal(null)} />
+        <MovieDetailModal
+          movie={movieModal}
+          allShowtimes={showtimes}
+          theaterLayouts={theaterLayouts}
+          onClose={() => setMovieModal(null)}
+        />
       )}
       {/* ProfileModal + FaqModal mounts removed 2026-05-18 — Settings and FAQ
           are now routed pages, not modals. See FaqPage / SettingsPage. */}

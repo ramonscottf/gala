@@ -1,14 +1,48 @@
 // MovieDetailModal — page-style modal showing the trailer + full synopsis.
 // Lifted look-and-feel from the homepage's movie cards.
+//
+// 2026-05-18 — schedule block added (Phase 5.7+ item C). The Early/Late
+// × Auditorium grid renders for EVERY film, including those in "Pending"
+// state. Previously the modal had no schedule at all; the chat doc and
+// Scott's walk both flagged that even pending films should show the
+// time + auditorium so sponsors can plan around them.
 
+import { useMemo } from 'react';
 import { formatRottenBadge } from '../portal/movieScores.js';
 
-export function MovieDetailModal({ movie, onClose }) {
+function showingLabel(num) {
+  return num === 1 ? 'Early · 4:30 PM' : num === 2 ? 'Late · 7:15 PM' : '';
+}
+
+export function MovieDetailModal({ movie, allShowtimes = [], theaterLayouts = null, onClose }) {
   const rt = formatRottenBadge(movie);
   const streamUid = movie.stream_uid || movie.streamUid;
   const trailerUrl = streamUid
     ? `https://customer-iy642ze20tq7w2hz.cloudflarestream.com/${streamUid}/iframe?autoplay=false&muted=false&loop=false&controls=true&preload=metadata`
     : movie.trailer_url || movie.trailerUrl;
+
+  // Build a map of theater_id → display name so we can render auditorium
+  // labels alongside each Early/Late slot for this film.
+  const theaterNameById = useMemo(() => {
+    const m = {};
+    const list = theaterLayouts?.theaters || [];
+    list.forEach((t) => { m[t.id] = t.name || `Auditorium ${t.id}`; });
+    return m;
+  }, [theaterLayouts]);
+
+  // Every showtime for THIS movie, sorted Early → Late then by theater.
+  const filmShowtimes = useMemo(() => {
+    const id = movie.movie_id || movie.id;
+    return (allShowtimes || [])
+      .filter((s) => (s.movie_id || s.id) === id)
+      .slice()
+      .sort((a, b) => {
+        if (a.showing_number !== b.showing_number) {
+          return (a.showing_number || 0) - (b.showing_number || 0);
+        }
+        return (a.theater_id || 0) - (b.theater_id || 0);
+      });
+  }, [movie, allShowtimes]);
 
   return (
     <div
@@ -118,6 +152,29 @@ export function MovieDetailModal({ movie, onClose }) {
             >
               {movie.synopsis || 'Synopsis unavailable.'}
             </p>
+
+            {/* Schedule block — ALWAYS renders for every film, including
+                Pending-state. Phase 5.7+ item C. */}
+            {filmShowtimes.length > 0 && (
+              <div className="p2-movie-schedule">
+                <div className="p2-eyebrow">Schedule</div>
+                <div className="p2-movie-schedule-grid">
+                  {filmShowtimes.map((s, i) => (
+                    <div
+                      key={`${s.theater_id}-${s.showing_number || 1}-${i}`}
+                      className="p2-movie-schedule-row"
+                    >
+                      <span className="p2-pill p2-pill-showing">
+                        {showingLabel(s.showing_number)}
+                      </span>
+                      <span className="p2-pill p2-pill-aud">
+                        {theaterNameById[s.theater_id] || `Auditorium ${s.theater_id}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {trailerUrl && (
               <div

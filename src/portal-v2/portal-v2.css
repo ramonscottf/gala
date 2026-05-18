@@ -2860,3 +2860,36 @@ body {
     font-weight: 600;
   }
 }
+
+/* MovieDetailModal — schedule block (Phase 5.7+ item C).
+   Renders Early/Late × Auditorium pills for every film, even Pending. */
+.p2-movie-schedule {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--p2-rule);
+}
+.p2-movie-schedule .p2-eyebrow { margin-bottom: 10px; }
+.p2-movie-schedule-grid {
+  display: grid;
+  gap: 8px;
+}
+.p2-movie-schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.p2-pill-showing {
+  background: rgba(74, 125, 240, 0.18);
+  border: 1px solid rgba(74, 125, 240, 0.46);
+  color: #cad7ff;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+.p2-pill-aud {
+  background: rgba(244, 185, 66, 0.16);
+  border: 1px solid rgba(244, 185, 66, 0.46);
+  color: var(--p2-gold);
+  font-weight: 700;
+  letter-spacing: .3px;
+}
