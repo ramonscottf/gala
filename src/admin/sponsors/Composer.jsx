@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { loadCatchUpSends, sendCatchUp } from './api.js';
+import { loadMarketingPipeline, sendCatchUp } from './api.js';
 
 // Composer modal — opens from the sponsor card's "Compose email" /
 // "Compose text" buttons. Two modes:
@@ -186,7 +186,10 @@ function CustomMode({ channel, subject, setSubject, body, setBody, charCount, sm
 }
 
 function ReplayMode({ sponsor, onClose, onSent }) {
-  const [sends, setSends] = useState(null); // null = loading
+  // pipeline: null = loading; [] = nothing to show; otherwise array of
+  // { phase, title, range, color, desc, sends: [...] } phases (email-only,
+  // with empty phases stripped out).
+  const [pipeline, setPipeline] = useState(null);
   const [err, setErr] = useState(null);
   const [confirming, setConfirming] = useState(null); // { send } or null
   const [busy, setBusy] = useState(false);
@@ -194,14 +197,25 @@ function ReplayMode({ sponsor, onClose, onSent }) {
 
   useEffect(() => {
     let cancelled = false;
-    loadCatchUpSends()
-      .then(list => {
+    loadMarketingPipeline()
+      .then(phases => {
         if (cancelled) return;
-        // Default: email only. SMS catch-up isn't supported yet (see endpoint).
-        setSends(list.filter(s => s.channel === 'email'));
+        // Filter to email only — SMS catch-up to sponsors is intentionally
+        // blocked by the send endpoint (no sponsor SMS opt-in flag in
+        // schema yet; TCPA forbids guessing). Drop phases that have no
+        // remaining sends so the UI doesn't show empty section headers.
+        const filtered = phases
+          .map(p => ({
+            ...p,
+            sends: (p.sends || []).filter(
+              s => (s.channel || '').toLowerCase() === 'email'
+            ),
+          }))
+          .filter(p => p.sends.length > 0);
+        setPipeline(filtered);
       })
       .catch(e => {
-        if (!cancelled) setErr(e.message || 'Failed to load sends');
+        if (!cancelled) setErr(e.message || 'Failed to load marketing pipeline');
       });
     return () => { cancelled = true; };
   }, []);
@@ -211,13 +225,11 @@ function ReplayMode({ sponsor, onClose, onSent }) {
     setBusy(true);
     setResult(null);
     try {
-      const res = await sendCatchUp(sponsor.id, confirming.send.sendId);
+      const res = await sendCatchUp(sponsor.id, confirming.send.id);
       setResult({
         ok: true,
         message: `Sent "${confirming.send.title}" to ${res.recipient}.`,
       });
-      // Brief pause so user sees the green toast, then close — the
-      // parent's onCatchUpSent callback fires refresh + its own toast.
       setTimeout(() => {
         if (typeof onSent === 'function') onSent(confirming.send);
         onClose();
@@ -244,20 +256,20 @@ function ReplayMode({ sponsor, onClose, onSent }) {
           fontSize: 13,
         }}
       >
-        Couldn't load marketing sends: {err}
+        Couldn't load marketing pipeline: {err}
       </div>
     );
   }
 
-  if (sends === null) {
+  if (pipeline === null) {
     return (
       <div style={{ padding: '20px 0', color: 'var(--def-light)', fontSize: 13, textAlign: 'center' }}>
-        Loading sent marketing pieces…
+        Loading marketing pipeline…
       </div>
     );
   }
 
-  if (sends.length === 0) {
+  if (pipeline.length === 0) {
     return (
       <div
         style={{
@@ -269,35 +281,50 @@ function ReplayMode({ sponsor, onClose, onSent }) {
           textAlign: 'center',
         }}
       >
-        No marketing pieces have been sent yet. Use the Custom message tab
+        No email marketing pieces are configured. Use the Custom message tab
         for a one-off email.
       </div>
     );
   }
 
-  // Highlight rows whose audience matches this sponsor's tier (soft hint —
-  // doesn't change behavior, just helps admin pick the right row faster).
-  const sponsorTier = (sponsor.sponsorship_tier || '').toLowerCase();
-  const tierMatches = (audience) => {
-    if (!sponsorTier) return false;
-    return (audience || '').toLowerCase().includes(sponsorTier);
+  const sponsorTier = (sponsor.sponsorship_tier || '').toLowerCase().trim();
+
+  // Three-bucket tier classifier:
+  //   'match' — audience explicitly targets this sponsor's tier
+  //   'broad' — audience targets everyone (or a non-tier-specific group
+  //             like "Confirmed Buyers", "Non-finalized", "Walk-up")
+  //   'off'   — audience targets a different specific tier
+  // Off-tier rows are dimmed (opacity 0.55) but still sendable per spec.
+  const classifyTier = (audience) => {
+    const a = (audience || '').toLowerCase();
+    if (sponsorTier && a.includes(sponsorTier)) return 'match';
+    // Audiences that apply broadly to anyone receive no dim.
+    if (/everyone|all confirmed|all opt|broader|non-finalized|prior buyers|walk-up/i.test(a)) {
+      return 'broad';
+    }
+    // If the audience names a *specific* tier and it isn't this sponsor's
+    // tier, dim it.
+    if (/platinum|gold|silver|bronze/i.test(a)) return 'off';
+    // Unknown audience shape → don't dim (failure mode is "show too much",
+    // never "hide a real send").
+    return 'broad';
   };
 
   return (
     <>
       <div style={{ fontSize: 12, color: 'var(--def-muted)', marginBottom: 10 }}>
-        Pick a marketing email that's already gone out. We'll send the exact
-        same copy (with this sponsor's portal link) and log it on their
-        timeline.
+        Replay a marketing email that's already been sent, or pre-deliver one
+        that's scheduled. Either way this sponsor gets the exact copy
+        (with their portal link baked in) and the send is logged on their timeline.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto', marginBottom: 12 }}>
-        {sends.map(s => (
-          <ReplayRow
-            key={s.sendId}
-            send={s}
-            matchesTier={tierMatches(s.audience)}
-            onSend={() => setConfirming({ send: s })}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: 460, overflowY: 'auto', marginBottom: 12, paddingRight: 4 }}>
+        {pipeline.map(phase => (
+          <PhaseGroup
+            key={phase.phase}
+            phase={phase}
+            classifyTier={classifyTier}
+            onSend={send => setConfirming({ send })}
             disabled={busy}
           />
         ))}
@@ -336,19 +363,68 @@ function ReplayMode({ sponsor, onClose, onSent }) {
   );
 }
 
-function ReplayRow({ send, matchesTier, onSend, disabled }) {
-  const date = send.lastSentAt
-    ? new Date(send.lastSentAt.replace(' ', 'T') + (send.lastSentAt.includes('Z') ? '' : 'Z'))
-    : null;
-  const dateLabel = date
-    ? date.toLocaleString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        timeZone: 'America/Denver',
-      })
-    : '—';
+function PhaseGroup({ phase, classifyTier, onSend, disabled }) {
+  // Soft-tinted phase header band: left border in the phase color (matching
+  // the Marketing tab pills), background at ~6% of the same color so the
+  // section reads as a unit. Range shown in muted text on the right.
+  return (
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: 10,
+          padding: '7px 12px',
+          marginBottom: 6,
+          borderLeft: `4px solid ${phase.color}`,
+          background: phase.color + '14', // ~8% opacity
+          borderRadius: '0 var(--def-radius-sm) var(--def-radius-sm) 0',
+        }}
+      >
+        <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--def-navy)' }}>
+          Phase {phase.phase} — {phase.title}
+        </span>
+        <span style={{ fontSize: 11, color: 'var(--def-muted)', marginLeft: 'auto' }}>
+          {phase.range}
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {phase.sends.map(s => (
+          <ReplayRow
+            key={s.id}
+            send={s}
+            tier={classifyTier(s.audience)}
+            onSend={() => onSend(s)}
+            disabled={disabled}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+function ReplayRow({ send, tier, onSend, disabled }) {
+  // 'tier' is 'match' | 'broad' | 'off'. Off-tier rows are visually dimmed
+  // per spec — admin can still send to them, the dim is a soft hint.
+  const fired = !!send.firstSentAt;
+  const matches = tier === 'match';
+  const offTier = tier === 'off';
+
+  // Date label:
+  //   fired:   "Sent May 14, 9:21 AM" — uses real send timestamp
+  //   not yet: "Scheduled May 28 · 6:00 AM" — pipeline-declared date/time
+  let dateLabel = '—';
+  if (fired && send.lastSentAt) {
+    const d = new Date(send.lastSentAt.replace(' ', 'T') + (send.lastSentAt.includes('Z') ? '' : 'Z'));
+    dateLabel = 'Sent ' + d.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/Denver',
+    });
+  } else if (send.date) {
+    dateLabel = 'Scheduled ' + send.date + (send.time ? ' · ' + send.time : '');
+  }
 
   return (
     <div
@@ -358,9 +434,10 @@ function ReplayRow({ send, matchesTier, onSend, disabled }) {
         gap: 12,
         padding: '12px 14px',
         background: '#fff',
-        border: `1px solid ${matchesTier ? 'var(--def-navy)' : 'var(--def-border)'}`,
+        border: `1px solid ${matches ? 'var(--def-navy)' : 'var(--def-border)'}`,
         borderRadius: 'var(--def-radius-sm)',
-        boxShadow: matchesTier ? '0 0 0 1px #0d1b3d18' : 'none',
+        boxShadow: matches ? '0 0 0 1px #0d1b3d18' : 'none',
+        opacity: offTier ? 0.55 : 1,
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -368,7 +445,38 @@ function ReplayRow({ send, matchesTier, onSend, disabled }) {
           <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--def-navy)' }}>
             {send.title}
           </span>
-          {matchesTier && (
+          {fired ? (
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                padding: '2px 7px',
+                borderRadius: 8,
+                background: 'var(--def-success-soft)',
+                color: 'var(--def-success)',
+                textTransform: 'uppercase',
+                letterSpacing: 0.4,
+              }}
+            >
+              ✓ Sent
+            </span>
+          ) : (
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                padding: '2px 7px',
+                borderRadius: 8,
+                background: 'var(--def-bg-soft)',
+                color: 'var(--def-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: 0.4,
+              }}
+            >
+              Scheduled
+            </span>
+          )}
+          {matches && (
             <span
               style={{
                 fontSize: 9,
@@ -384,11 +492,32 @@ function ReplayRow({ send, matchesTier, onSend, disabled }) {
               Matches tier
             </span>
           )}
+          {offTier && (
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                padding: '2px 7px',
+                borderRadius: 8,
+                background: 'var(--def-bg-soft)',
+                color: 'var(--def-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: 0.4,
+                border: '1px solid var(--def-border)',
+              }}
+            >
+              Different tier
+            </span>
+          )}
         </div>
         <div style={{ fontSize: 11, color: 'var(--def-muted)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <span>📧 {send.audience}</span>
-          <span>·</span>
-          <span>{send.totalSent} sent</span>
+          {fired && (
+            <>
+              <span>·</span>
+              <span>{send.actualSent || 0} sent</span>
+            </>
+          )}
           <span>·</span>
           <span>{dateLabel}</span>
         </div>
@@ -404,7 +533,7 @@ function ReplayRow({ send, matchesTier, onSend, disabled }) {
         disabled={disabled}
         style={{ flexShrink: 0 }}
       >
-        Send to this sponsor
+        {fired ? 'Send to this sponsor' : 'Pre-deliver'}
       </button>
     </div>
   );
@@ -423,15 +552,18 @@ function ConfirmDialog({ send, sponsor, busy, onCancel, onConfirm }) {
         style={{ maxWidth: 440 }}
       >
         <div className="gs-modal-h">
-          <div className="gs-modal-title">Send "{send.title}"?</div>
+          <div className="gs-modal-title">
+            {send.firstSentAt ? `Send "${send.title}"?` : `Pre-deliver "${send.title}"?`}
+          </div>
           {!busy && (
             <button className="gs-modal-close" onClick={onCancel}>×</button>
           )}
         </div>
         <div style={{ fontSize: 13, color: 'var(--def-text)', lineHeight: 1.55, marginBottom: 16 }}>
-          We'll send the exact same email that {send.audience} received
-          {send.lastSentAt ? ' previously' : ''} — with {sponsor.first_name || sponsor.company}'s
-          portal link baked in — to:
+          {send.firstSentAt
+            ? <>We'll send the exact same email that <strong>{send.audience}</strong> already received — with {sponsor.first_name || sponsor.company}'s portal link baked in — to:</>
+            : <>This email is scheduled to go to <strong>{send.audience}</strong>{send.date ? ` on ${send.date}` : ''}. We'll pre-deliver it to {sponsor.first_name || sponsor.company} right now — with their portal link baked in — to:</>
+          }
           <div
             style={{
               marginTop: 10,
@@ -447,8 +579,10 @@ function ConfirmDialog({ send, sponsor, busy, onCancel, onConfirm }) {
             {sponsor.email}
           </div>
           <div style={{ marginTop: 10, fontSize: 12, color: 'var(--def-muted)' }}>
-            This is a real send. There's no undo. The send will be logged on
-            this sponsor's timeline.
+            {send.firstSentAt
+              ? `This is a real send. There's no undo. The send will be logged on this sponsor's timeline.`
+              : `Heads-up: this sponsor will receive this email before everyone else. When the scheduled bulk send fires${send.date ? ' on ' + send.date : ''}, they'll likely receive it again unless you exclude them at that time. The send will be logged on this sponsor's timeline.`
+            }
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -461,7 +595,7 @@ function ConfirmDialog({ send, sponsor, busy, onCancel, onConfirm }) {
             disabled={busy}
             autoFocus
           >
-            {busy ? 'Sending…' : 'Yes, send it'}
+            {busy ? 'Sending…' : (send.firstSentAt ? 'Yes, send it' : 'Yes, pre-deliver')}
           </button>
         </div>
       </div>

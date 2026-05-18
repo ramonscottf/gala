@@ -62,46 +62,67 @@ export async function onRequestPost({ request, env }) {
     );
   }
 
-  // ── 2. Load send copy (same priority chain as marketing-test.js) ───────
-  const baseSend = SENDS[sendId];
-  if (!baseSend) {
-    return jsonError(`Unknown sendId: ${sendId}`, 404);
-  }
-
-  let send = baseSend;
+  // ── 2. Load send copy. DB-first since marketing_sends is the canonical
+  //      source for the pipeline (admin can edit copy live), and there are
+  //      DB rows that don't have entries in the in-code SENDS registry
+  //      (e.g. s11n, s12n added after registry was frozen). Fall back to
+  //      SENDS only for legacy IDs that haven't been migrated to the DB.
+  //      Failure mode if neither has it → 404 "Unknown sendId".
+  let send = null;
   try {
     const live = await db.prepare(
-      `SELECT subject, body, channel, audience
+      `SELECT subject, body, channel, audience, title
          FROM marketing_sends
         WHERE send_id = ?`
     ).bind(sendId).first();
-    if (live && (live.subject || live.body)) {
+    if (live) {
       send = {
-        ...baseSend,
-        subject: live.subject || baseSend.subject,
-        body: live.body || baseSend.body,
-        audience: live.audience || baseSend.audience,
-        // marketing_sends.channel is the canonical channel; baseSend.type
-        // is the in-code default.
-        type: (live.channel || baseSend.type || 'email').toLowerCase(),
+        subject:  live.subject  || '',
+        body:     live.body     || '',
+        audience: live.audience || 'Unknown',
+        type:    (live.channel  || 'email').toLowerCase(),
+        title:    live.title    || sendId,
       };
-    } else {
-      // Legacy fallback to marketing_edits (kept until that tool retires).
-      const legacy = await db.prepare(
-        `SELECT subject_override, body_override
-           FROM marketing_edits
-          WHERE send_id = ?`
-      ).bind(sendId).first();
-      if (legacy && (legacy.subject_override || legacy.body_override)) {
-        send = {
-          ...baseSend,
-          subject: legacy.subject_override || baseSend.subject,
-          body: legacy.body_override || baseSend.body,
-        };
-      }
     }
   } catch (e) {
-    console.error('Override fetch failed, falling back to in-code:', e.message);
+    console.error('marketing_sends lookup failed (non-fatal, will try SENDS):', e.message);
+  }
+
+  // Legacy fallback: SENDS in-code registry (for IDs not migrated to DB).
+  if (!send) {
+    const baseSend = SENDS[sendId];
+    if (!baseSend) {
+      return jsonError(`Unknown sendId: ${sendId}`, 404);
+    }
+    send = { ...baseSend };
+  }
+
+  // marketing_edits is the older legacy override store — still consulted
+  // in case a copy edit lives there. The DB-first path above already has
+  // the live copy, so this only kicks in for SENDS-only sends.
+  try {
+    const legacy = await db.prepare(
+      `SELECT subject_override, body_override
+         FROM marketing_edits
+        WHERE send_id = ?`
+    ).bind(sendId).first();
+    if (legacy && (legacy.subject_override || legacy.body_override)) {
+      send = {
+        ...send,
+        subject: legacy.subject_override || send.subject,
+        body:    legacy.body_override    || send.body,
+      };
+    }
+  } catch (e) {
+    console.error('marketing_edits lookup failed (non-fatal):', e.message);
+  }
+
+  // Need subject+body to actually fire something.
+  if (!send.subject && !send.body) {
+    return jsonError(
+      `Send ${sendId} has no subject or body — edit it in marketing-flow before sending`,
+      400
+    );
   }
 
   // ── 3. Channel-specific preflight ──────────────────────────────────────
@@ -133,7 +154,7 @@ export async function onRequestPost({ request, env }) {
   // ── 5. Send ────────────────────────────────────────────────────────────
   const runId = 'catchup-' + crypto.randomUUID();
   const sentBy = 'admin-catchup';
-  const audienceLabel = 'Catch-up: ' + (send.audience || baseSend.audience || 'Unknown');
+  const audienceLabel = 'Catch-up: ' + (send.audience || 'Unknown');
   const bodyPreview = stripHtml(bodyForRecipient).slice(0, 200);
   const recipientName = displayName(sponsor);
 
