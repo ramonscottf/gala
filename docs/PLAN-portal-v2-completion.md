@@ -1,5 +1,8 @@
 # Portal v2 — Feature Completion Audit & Plan
 
+> **2026-05-18 update** — Phases 1–5 shipped, parity audit closed via CC (`docs/AUDIT-REPORT-2026-05-18.md`). Phase 5.6 (parity audit) ✅. Post-walk findings now tracked in [`PLAN-phase-5.7-plus.md`](PLAN-phase-5.7-plus.md) — header + lineup rail + tickets ⋯ menu + QR repositioning + seat/meal unification.
+
+
 **Status:** Phase 1 ✅ · Phase 2 ✅ · Phase 3 ✅ · Phase 3.5 ✅ · Phase 4 partial ✅ · Phase 5 ✅ · Phase 5.5 (Gift) ✅ · Phase 5.6 (parity-fix) pending · Phase 5.7 (visual rail redesign) pending · Phases 6–8 pending
 **Branch:** `feat/portal-soft-website`
 **Author:** Skippy + Scott
