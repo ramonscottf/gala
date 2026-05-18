@@ -118,3 +118,50 @@ No item flips to ✅ Live until Scott walks the deployed change on his phone.
 **Status hygiene:** Items B, C, F-partial-fixes still need Scott's phone walk before flipping to ✅ Live. Items A, D walked already. Items C, E (E confirmed visible in screenshots) walking later.
 
 **Live preview:** `https://feat-portal-soft-website.gala-3z8.pages.dev/sponsor/sxnhcj7axdrllaku`
+
+---
+
+## Item G shipped — 2026-05-18 (commit `531f045`)
+
+Folded meal selection into the seat picker, closing the last open item in Phase 5.7+.
+
+**Design — opt-in on the shared SeatPickSheet:**
+- New `foldMeals` prop on `SeatPickSheet` (default `false`). v1 unchanged.
+- v2's `SeatPickerModal` passes `foldMeals={true}`.
+- New `mealBySeatId` state map keyed by seat id (e.g. `'F-12'` → `'frenchdip'`).
+
+**UX:**
+- Inline meal-picker block renders below the seat chip row when `foldMeals && sel.size > 0`.
+- One row per selected seat with the 4 dinner tiles (🥖 / 🥗 / 🌱 / 🧒) as tappable buttons.
+- Active state: gold ring + gold-tint background.
+- Header line shows live "X / N set" progress.
+- Commit button gates on every selected seat having a meal — label flips to "Pick N more meals" until done.
+- Deselecting a seat prunes its meal from the map.
+
+**Commit flow:**
+- After `seats.place()` succeeds, meals save in parallel via `Promise.allSettled` over the existing `/pick action=set_dinner` endpoint.
+- Failures tolerated quietly — sponsor can still edit each seat's dinner pill from the group modal afterwards; refresh catches whatever did save.
+- `onCommitted` payload gains `mealsAlreadySaved: true` so any v1 PostPickDinnerSheet host knows to skip the stacked sheet.
+
+**Source:**
+- `src/portal/components/SeatPickSheet.jsx` — prop, state, commit hook, inline UI block, Commit gate. ~90 lines added.
+- `src/portal-v2/SeatPickerModal.jsx` — one-line prop pass.
+- `src/portal-v2/portal-v2.css` — ~95 lines of `.p2-inline-meal*` styles. 4-up tile grid that holds at 390px viewport (tightened padding/font sizes below 480px).
+- `DINNER_OPTIONS` reused from `src/portal-v2/DinnerModal.jsx` — one source of truth.
+
+**Build:** 3 vite targets clean. Sponsor bundle `main-BVymp7oP.js` (86KB, +1.6) · `SeatPickSheet-DWGLD325.js` (181KB, +5).
+
+## Phase 5.7+ — closed
+
+All 7 items shipped to preview (`feat/portal-soft-website`). Awaiting Scott's full walk across the post-walk fixes + item G before flipping to ✅ Live on prod. After that: PR to `main`, verify deploy at `gala.daviskids.org`, mark Phase 5.7+ ✅ Live.
+
+| Item | Commit | Status |
+|---|---|---|
+| A. Wicko pill nav + hamburger drawer | `ede2aa3` | ✅ Code shipped, walked |
+| B. Lineup horizontal scroll-snap rail (mobile) | `4ffb556` | ✅ Code shipped |
+| C. Movie modal schedule for every film | `249f0d1` | ✅ Code shipped |
+| D. Ticket row ⋯ menu | `c7a9044` | ✅ Code shipped, walked |
+| E. Seat labels on ticket rows | `c7a9044` | ✅ Already rendering |
+| F. QR repositioning to Settings | `ede2aa3` | ✅ Code shipped, walked |
+| G. Meal selection in seat picker | `531f045` | ✅ Code shipped |
+| Post-walk fixes (release bug · toasts · posters · group modal cleanup · same-group invite) | `bd13ee0` | ✅ Code shipped |
