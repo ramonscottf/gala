@@ -99,6 +99,34 @@ Auditor: Claude Code. Method: code cross-reference `src/portal/` (v1) vs `src/po
 | P1.2 | P1 | QR surface missing | ✅ TicketQrCardV2 when rsvpStatus==='completed' + QR inside ConfirmationView |
 | P1.3 | P1 | Open count ignores delegated | ✅ Hero/StatusCard/TicketsSection use seatMath.available (delegation-aware) |
 | P2.1 | P2 | Delegated/Assigned label | ❓ (tracking — needs Scott's call on wording) |
+| P2.2 | P2 | CSS border review (gutter-cage mandate) | ❓ (needs Scott's eye — see below) |
+
+## Edge-case sweep (2026-05-18, live, real D1)
+
+No console/page errors, no horizontal scroll at 390px or 1440px:
+
+- **Fresh / window-not-open (Bronze, Aetna `6reylk7anku1e44s`)** —
+  correct "window opens …" copy, OPEN 12, no pick CTA, no finalize
+  banner. PASS.
+- **Delegate, 0 seats yet (Lindquist delegate `iVhBCEeFvt7u`)** —
+  v2 ReceiveOverlay (a v2 improvement v1 lacks) gracefully shows
+  "No seats have been assigned to you yet." Finalize banner correctly
+  suppressed for delegates (isSponsor gate). PASS.
+- **Fully delegated (Hughes `8z9351iu5hrzzomr`, 0 placed / 12 deleg)** —
+  drove out P1.3; post-fix v2 shows OPEN 8 (matches v1), no false
+  "place 20" nag. PASS.
+
+## P2.2 — CSS border review (needs Scott)
+
+46 `border:` + 16 `box-shadow:` decls in portal-v2.css. The dominant
+pattern is `1px solid var(--p2-rule)` (white @ 0.14α) on `.p2-card`
+/modals — the design-system primitive shipped through Phases 1–5. The
+new parity components (`.p2-help/.p2-finalize/.p2-qr-card`) reuse
+`.p2-card`, so they're consistent with the approved look, not new
+cages. A blanket "strip borders" pass without Scott's eye is churn
+risk and re-litigates already-shipped design. Recommend Scott does a
+visual gutter-cage pass on the live preview; I'll execute specific
+calls. Not changing blind.
 
 ## Verification (2026-05-18)
 
