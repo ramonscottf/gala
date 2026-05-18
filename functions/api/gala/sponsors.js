@@ -306,6 +306,21 @@ export async function onRequestPost(context) {
     );
   }
 
+  // Generate an rsvp_token so the new sponsor is eligible for invites,
+  // marketing sends, catch-up, and the seat-picker portal. Matches the
+  // existing 16-char [a-z0-9] format used elsewhere in production
+  // (see sample tokens in sponsors table). Without this, any sponsor
+  // added via the admin UI is stranded — send-invites, marketing-test,
+  // and marketing-catch-up-send all gate on rsvp_token IS NOT NULL.
+  const rsvpToken = (() => {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    let t = '';
+    for (const b of bytes) t += alphabet[b % 36];
+    return t;
+  })();
+
   // Insert
   let result;
   try {
@@ -315,8 +330,9 @@ export async function onRequestPost(context) {
          sponsorship_tier, seats_purchased, amount_paid, payment_status,
          street_address, city, state, zip,
          logo_url, website_url, notes,
+         rsvp_token, rsvp_status,
          created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))`
     ).bind(
       company,
       norm(body.first_name),
@@ -334,6 +350,7 @@ export async function onRequestPost(context) {
       norm(body.logo_url),
       norm(body.website_url),
       norm(body.notes),
+      rsvpToken,
     ).run();
   } catch (e) {
     return jsonError(`Insert failed: ${e.message}`, 500);
