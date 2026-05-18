@@ -224,3 +224,40 @@ Post-walk Round 2 feedback: pill wasn't hiding (`:has()` rule didn't fire in Sco
 - A rebase artifact left `.p2-auction-burst` `@media` block unclosed — my mobile-chrome block was inserted inside it. Build emitted a CSS syntax warning. Properly closed now. Build clean.
 
 **Build:** Sponsor bundle `main-DUwpGJw7.js` (96KB, +9KB for new gift-flow logic) + `main-CDSyjqqJ.css` (51KB).
+
+---
+
+## Celebration auction CTA + aud pills + grouped schedule + select-seats button — 2026-05-18 (commit `18af510`)
+
+Post-walk Round 3 — Scott's four polish items, all real wins.
+
+**1. Celebration overlay holds longer + auction CTA**
+- `autoDismissMs` default 4500 → 8000ms. Sponsors wanted time to read the seat labels lighting up.
+- New optional `onRegisterAuction` prop. When wired, renders **"Register for the auction →"** button between the seat labels and the "Tap anywhere to continue" hint.
+- Button uses the red→blue gradient (`var(--p2-red)` → `var(--p2-blue)`). Fades in at 1400ms (settle phase); hint pushed to 2200ms delay.
+- PortalShell mounts `AuctionRegistrationModal` at shell level (separate from the `AuctionRegistrationCard` mount on home). Handler: closes celebration, opens auction modal. Embed URL built inline with `first_name / last_name / email` prefill (mirrors `buildEmbedUrl`).
+- CTA gated to sponsors who aren't already registered.
+
+**2. Auditorium picker → capsule pills (seat picker step 3)**
+- Was two-line cards: "Aud 4 / Standard". Now single-line capsule pills matching the seat-type guide below (Luxury Recliner / Loveseat / Wheelchair / Companion).
+- `border-radius: 99`, padding `5px 12px`, font-size 12, font-weight 600. Active state: inset gold `box-shadow`.
+- Label format: "Aud 4 · Standard" inline. Scott: *"cleaner, narrower, bring up the top a little."*
+
+**3. Movie detail schedule — grouped by showtime**
+- Mandalorian/Grogu had four rows: Early-Aud8, Early-Aud9, Late-Aud5, Late-Aud8.
+- Now grouped by `showing_number`. One row per showing with all auditoriums inline as small "Aud N" pills:
+  ```
+  Early · 4:30 PM   [Aud 8]  [Aud 9]
+  Late  · 7:15 PM   [Aud 5]  [Aud 8]
+  ```
+- New `showtimeGroups` `useMemo` (Map keyed by showing_number, sorted ascending).
+
+**4. "Select seats for this film →" button**
+- Footer text *"Pick seats for this film when your selection window opens."* replaced with a primary button.
+- Click closes the detail modal and opens the seat picker preloaded to that film. Drops the user straight into the wizard with MOVIE step pre-completed.
+- `MovieDetailModal` gains `onSelectSeats` prop. PortalShell wires it: `setMovieModal(null) + setSeatModal({ movieId })`.
+- `seatModal` state now accepts `true` (open with no preload) OR `{ movieId, showingNumber? }` (open preloaded). Backwards-compatible — existing `setSeatModal(true)` calls still work.
+- `initialMovieId + initialShowingNumber` threaded through `SeatPickerModal` to `SeatPickSheet` (which already supported them).
+- Static fallback text retained when `onSelectSeats` prop isn't passed (defensive).
+
+**Build:** Sponsor bundle `main-Ddng_mGF.js` (97.6KB, +2KB) + `main-Bv1InLr4.css` (51.4KB, +0.4KB).
