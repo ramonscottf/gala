@@ -198,3 +198,29 @@ Solves two problems simultaneously:
 **Scope:** applies to every v2 modal — SeatPicker, TicketGroup, TicketDetail, Invite, Gift, Move, Swap, Release confirm, Movie detail, Delegation manage, Dinner, Profile, Faq-legacy. All share `.p2-modal-backdrop` + `.p2-modal` base. One CSS change covers all. `TicketRowMenu` uses `.p2-ticket-menu` (popover, not backdrop) — pill stays visible for menu opens, as intended.
 
 **Build:** CSS-only delta. 3 vite targets clean. Deploy `4361cd2b` ✅, bundles `main-AMIHTh6C.js` + `main-xfFpB-a4.css` (50.8KB).
+
+---
+
+## Pill clearance + width match + Gift seats — 2026-05-18 (commit `27a6cfb`)
+
+Post-walk Round 2 feedback: pill wasn't hiding (`:has()` rule didn't fire in Scott's browser), and Manage group needs a Gift action.
+
+**Modal positioning (no more pill collision):**
+- Dropped the `:has()` pill-hide approach — wasn't reliable across browsers/caches.
+- New approach: pill stays visible always, modals position **below** it via `.p2-modal-backdrop` `padding-top: calc(72px + env(safe-area-inset-top, 0))`. The math: 12px pill top offset + ~48px pill height + 12px breathing, plus iOS notch.
+- On mobile the backdrop becomes a solid navy strip at the top where the pill floats, modal fills `100dvh - 72px - safe-area`.
+
+**Width consistency:**
+- Scott: *"consistent width"*. Pill is 760px max. Modals were 880px.
+- `.p2-modal` `max-width: 760px` (down from 880). Pill + modals now vertically align.
+- `.wide` variant unchanged at 1080px — seat picker needs the room for the seat map.
+
+**Gift seats action:**
+- **Per-seat ⋯ menu:** "Reassign" / "Gift to a guest" → unified label **"Gift seat"** (and "Gift seat (change recipient)" when a delegate is already assigned). Per-seat Gift now jumps DIRECTLY to InviteModal with the same-group toggle preselecting that seat — bypasses the intermediate GiftSeatModal picker per Scott's spec: *"open a popup preloaded with that seat and give the option of the others in that group."*
+- **Manage group dropdown:** new **"Gift {N} seats"** option between Move and Release. Opens InviteModal with every free seat in the group as a toggleable pill, all preselected. User can deselect any, fills guest details, single submit dispatches to every checked seat.
+- TicketGroupModal gains `onGiftGroup` prop; PortalShell wires it (filters `g.seats` to non-delegated, sets `seatPills + preselectedPills` both to that list).
+
+**Incidental fix:**
+- A rebase artifact left `.p2-auction-burst` `@media` block unclosed — my mobile-chrome block was inserted inside it. Build emitted a CSS syntax warning. Properly closed now. Build clean.
+
+**Build:** Sponsor bundle `main-DUwpGJw7.js` (96KB, +9KB for new gift-flow logic) + `main-CDSyjqqJ.css` (51KB).
