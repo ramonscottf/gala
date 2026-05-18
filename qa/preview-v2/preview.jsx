@@ -216,6 +216,14 @@ if (DONE) {
   mockPortal.myAssignments = mockPortal.myAssignments.slice(0, 6);
 }
 
+if (params.get('partdeleg') === '1') {
+  // Delegated part of block, placed none — sub must say the
+  // placeable count (available 8), not total (20).
+  mockPortal.identity.rsvpStatus = null;
+  mockPortal.seatMath = { total: 20, placed: 0, delegated: 12, available: 8 };
+  mockPortal.myAssignments = [];
+}
+
 if (params.get('fulldeleg') === '1') {
   // Sponsor delegated everything, placed nothing — must NOT be told
   // to "Place 20 more"; Open should read seatMath.available (0).
