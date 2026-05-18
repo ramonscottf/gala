@@ -35,19 +35,52 @@
 (function () {
   'use strict';
 
+  // ── Activation gate ────────────────────────────────────────────────
+  // Only activate the skin if we're inside an iframe. The auction home
+  // page is loaded directly in a browser tab (window.parent === window);
+  // the embed registration is loaded inside our portal modal iframe
+  // (window.parent !== window). Gating on iframe context guarantees the
+  // standalone marketing pages are never touched, even though the CSS
+  // file itself is loaded globally via Additional Header Content.
+  //
+  // The CSS file's rules are ALL prefixed with `body.qgiv-skin-active`,
+  // so they're inert until this script flips that class on. If the
+  // script doesn't run (e.g. CSP blocks it), the page just falls back
+  // to vanilla Qgiv — no broken state.
+  //
+  // Verified 2026-05-18: prior global-paste broke the auction home
+  // page because [class*="..."] wildcards in the CSS over-matched
+  // widget classes like auction-event-title and __sidebar. Iframe
+  // gating + body-class scoping fixes both vectors at once.
+  if (window.parent === window) {
+    return;
+  }
+
+  function activate() {
+    if (document.body && !document.body.classList.contains('qgiv-skin-active')) {
+      document.body.classList.add('qgiv-skin-active');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', activate);
+  } else {
+    activate();
+  }
+
   // Patterns to find and hide. Each entry: [matcher, max_chars_in_match].
   // The max-chars guard prevents hiding entire pages when a target string
   // happens to appear inside long body copy.
+  //
+  // Kept intentionally narrow — we'd rather have a slightly ugly form than
+  // a broken one. Anything we'd want to hide for polish but could over-
+  // match is left in CSS where we have proper selector control. The JS
+  // here only kills text patterns that are genuinely unique to Qgiv's
+  // registration chrome.
   var KILL_PATTERNS = [
     { match: /powered by\s+bloomerang/i, maxLen: 80 },
     { match: /^\s*powered by\s*$/i,       maxLen: 30 },
     { match: /transaction is secure/i,    maxLen: 80 },
-    // Event date-range like "Monday, 5/18/2026 - Wednesday, 6/10/2026"
-    {
-      match: /^\s*\w+,\s+\d{1,2}\/\d{1,2}\/\d{4}\s*-\s*\w+,\s+\d{1,2}\/\d{1,2}\/\d{4}\s*$/,
-      maxLen: 80,
-    },
-    // Confirmation-step extras
+    // Confirmation-step extras — out of scope for our pre-event v1 flow
     { match: /^\s*view auction items?\s*$/i, maxLen: 30 },
     { match: /^\s*manage ticket\s*$/i,       maxLen: 30 },
     { match: /^\s*add to my calendar\s*$/i,  maxLen: 40 },
