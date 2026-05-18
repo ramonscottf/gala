@@ -165,3 +165,36 @@ All 7 items shipped to preview (`feat/portal-soft-website`). Awaiting Scott's fu
 | F. QR repositioning to Settings | `ede2aa3` | ✅ Code shipped, walked |
 | G. Meal selection in seat picker | `531f045` | ✅ Code shipped |
 | Post-walk fixes (release bug · toasts · posters · group modal cleanup · same-group invite) | `bd13ee0` | ✅ Code shipped |
+
+---
+
+## Mobile modal chrome shipped — 2026-05-18 (commit `fd32356`)
+
+Post-G feedback from Scott walking item G on iPhone: *"opening up in cards on mobile is making navigation hard. can't scroll well. cards are nice on desktop, but mobile is making it hard to navigate. should we rethink the cards? i don't want to deviate mobile and desktop too much."*
+
+**The play:** full-screen the modal chrome on mobile, keep the card chrome on desktop. Same content tree underneath. Responsive-chrome, not divergent-UX. Stripe / Linear / GitHub pattern.
+
+**Mobile (≤640px) — pure CSS overrides:**
+- `.p2-modal-backdrop` drops padding + overflow (modal becomes scroll surface), drops `backdrop-filter` (dodges iOS double-blur bug), solid navy background.
+- `.p2-modal` edge-to-edge: 100% width, no margins, no border-radius, no shadow. `100dvh` height (iOS Safari dynamic viewport). `overflow-y: auto` + flex column. **All modals scroll as one container — kills the nested-scroll problem.**
+- `.p2-modal.stripped::before` (gradient top strip) hidden on mobile — conflicts with sticky header background.
+- `.p2-modal-header` sticky top with `padding-top: max(14px, env(safe-area-inset-top))` for iOS notch / Dynamic Island. Title size dropped to 20px so "Pick your seats" fits.
+- `.p2-modal-body` `padding: 16px`, `flex: 1 1 auto`, **no overflow declared** (modal owns the scroll).
+- `.p2-modal-footer` sticky bottom with `padding-bottom: max(12px, env(safe-area-inset-bottom))` for home indicator.
+- Linear-gradient fade on header/footer backgrounds — content fades into them on scroll instead of hard-cutting.
+
+**Desktop (>640px) — unchanged.** Card chrome, backdrop blur, centered 880px max-width.
+
+**Pill auto-hide — one `:has()` rule, fires at all viewport widths:**
+```css
+body:has(.p2-modal-backdrop) .p2-wpn { display: none; }
+```
+Solves two problems simultaneously:
+1. iOS Safari renders the pill's `backdrop-filter: blur(20px) saturate(160%)` as a **solid black rounded rectangle** when it stacks over the modal's own `backdrop-filter: blur(8px)` — visible top-left of Scott's screenshot.
+2. The pill has no purpose while a modal is captive (the modal IS the surface). Removing it from layout when ANY modal is mounted clears visual chrome competition.
+
+`:has()` is supported on iOS Safari 15.4+ (April 2022), well past device floor.
+
+**Scope:** applies to every v2 modal — SeatPicker, TicketGroup, TicketDetail, Invite, Gift, Move, Swap, Release confirm, Movie detail, Delegation manage, Dinner, Profile, Faq-legacy. All share `.p2-modal-backdrop` + `.p2-modal` base. One CSS change covers all. `TicketRowMenu` uses `.p2-ticket-menu` (popover, not backdrop) — pill stays visible for menu opens, as intended.
+
+**Build:** CSS-only delta. 3 vite targets clean. Deploy `4361cd2b` ✅, bundles `main-AMIHTh6C.js` + `main-xfFpB-a4.css` (50.8KB).
