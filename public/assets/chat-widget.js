@@ -108,7 +108,7 @@
 
   const css = `
     .gx-bubble-btn {
-      position: fixed; right: 16px; bottom: 16px; z-index: 999998;
+      position: fixed; right: 16px; bottom: 24px; z-index: 999998;
       width: 90px; height: 90px;
       background: transparent; border: 0; padding: 0; cursor: pointer;
       filter: drop-shadow(0 6px 14px rgba(13,27,61,0.28));
@@ -188,7 +188,7 @@
     .gx-bubble-btn .gx-think-dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes gxDotPulse { 0%, 100% { opacity: 0.3; transform: scale(0.7); } 50% { opacity: 1; transform: scale(1); } }
     @media (max-width: 480px) {
-      .gx-bubble-btn { width: 78px; height: 78px; right: 12px; bottom: 12px; }
+      .gx-bubble-btn { width: 78px; height: 78px; right: 12px; bottom: 104px; }
     }
     @media (prefers-reduced-motion: reduce) {
       .gx-booker, .gx-booker.gx-bob, .gx-booker.gx-wave,
@@ -196,10 +196,76 @@
       .gx-expr { transition: opacity 0s !important; }
     }
 
+    /* First-time discoverability hint — speech bubble next to Booker that
+       fades in on first page load, holds for ~7s, then fades out. Stored
+       in localStorage so it doesn't replay across sessions or page changes.
+       Sits to the LEFT of Booker pointing at him with a small tail. */
+    .gx-hint {
+      position: fixed;
+      right: 116px;       /* desktop: Booker is 90px wide @ right:16 → bubble sits to his left */
+      bottom: 56px;       /* aligns near Booker's face */
+      z-index: 999998;
+      max-width: 220px;
+      background: #fff;
+      color: #0b1b3c;
+      padding: 10px 14px 11px;
+      border-radius: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 600;
+      box-shadow: 0 8px 22px rgba(13,27,61,0.22), 0 0 0 1px rgba(13,27,61,0.04);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px) scale(0.96);
+      transition: opacity 280ms ease, transform 280ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    }
+    .gx-hint.gx-hint-show {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .gx-hint .gx-hint-emoji {
+      display: inline-block; margin-right: 6px;
+    }
+    .gx-hint::after {
+      /* Tail pointing right toward Booker */
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -7px;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      transform: translateY(-50%) rotate(45deg);
+      border-radius: 2px;
+      box-shadow: 2px -2px 4px -2px rgba(13,27,61,0.10);
+    }
+    /* Gentle pulse animation for the bubble while visible — draws eyes without
+       being obnoxious. Subtle: scales between 1 and 1.03 over ~2.4s. */
+    .gx-hint.gx-hint-show {
+      animation: gxHintPulse 2.6s ease-in-out 1.2s 2;
+    }
+    @keyframes gxHintPulse {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-2px) scale(1.025); }
+    }
+    @media (max-width: 480px) {
+      .gx-hint {
+        right: 102px;     /* mobile Booker: 78px wide @ right:12 → bubble to his left */
+        bottom: 140px;    /* mobile Booker sits at bottom:104 + 78 height = ~145; align near face */
+        max-width: 180px;
+        font-size: 12.5px;
+        padding: 9px 12px 10px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gx-hint.gx-hint-show { animation: none; }
+    }
+
     .gx-panel {
-      position: fixed; right: 16px; bottom: 118px; z-index: 999999;
+      position: fixed; right: 16px; bottom: 126px; z-index: 999999;
       width: 380px; max-width: calc(100vw - 24px);
-      height: 540px; max-height: calc(100vh - 140px);
+      height: 540px; max-height: calc(100vh - 160px);
       background: ${T.panelBg}; border-radius: 16px; overflow: hidden;
       box-shadow: 0 16px 48px rgba(10,37,64,0.28);
       display: flex; flex-direction: column;
@@ -236,7 +302,7 @@
     .gx-mode-banner { font-size: 12px; padding: 6px 14px; text-align: center; background: ${GREY}; color: #4b5563; border-bottom: 1px solid #e5e9f0; }
     .gx-mode-banner.gx-live { background: #fff4e5; color: #92400e; }
     @media (max-width: 480px) {
-      .gx-panel { right: 8px; bottom: 100px; width: calc(100vw - 16px); height: calc(100vh - 120px); }
+      .gx-panel { right: 8px; bottom: 190px; width: calc(100vw - 16px); height: calc(100vh - 210px); }
     }
   `;
 
@@ -335,6 +401,38 @@
   window.galaBookerSetExpression = setBookerExpression;
   window.galaBookerSetState = setBookerState;
 
+  // First-time discoverability hint — small speech bubble next to Booker that
+  // tells new visitors he's the way to get answers. Suppressed on subsequent
+  // visits via localStorage. Also dismisses when the user opens the chat.
+  const hint = document.createElement('div');
+  hint.className = 'gx-hint';
+  hint.setAttribute('role', 'note');
+  hint.setAttribute('aria-hidden', 'true');
+  hint.innerHTML = '<span class="gx-hint-emoji" aria-hidden="true">👋</span>Got questions? I&rsquo;m Booker — tap me.';
+  document.body.appendChild(hint);
+
+  let hintShown = false;
+  let hintHideTimer = null;
+  function showHintIfNew() {
+    try {
+      if (localStorage.getItem('gxBookerHinted') === '1') return;
+    } catch (_) { /* private mode → still show, just won't persist */ }
+    setTimeout(() => {
+      hint.classList.add('gx-hint-show');
+      hintShown = true;
+      hintHideTimer = setTimeout(dismissHint, 7000);
+    }, 1400);
+  }
+  function dismissHint() {
+    if (!hintShown) return;
+    hint.classList.remove('gx-hint-show');
+    hintShown = false;
+    if (hintHideTimer) { clearTimeout(hintHideTimer); hintHideTimer = null; }
+    try { localStorage.setItem('gxBookerHinted', '1'); } catch (_) {}
+    setTimeout(() => { if (hint.parentNode) hint.parentNode.removeChild(hint); }, 400);
+  }
+  showHintIfNew();
+
 
   let state = {
     open: false, threadId: null, mode: 'ai',
@@ -425,6 +523,7 @@
   }
 
   btn.addEventListener('click', () => {
+    if (hintShown) dismissHint();
     if (!state.open) {
       setBookerExpression('big-smile');  // greet on open
       autoStart();                        // open or resume the chat session
