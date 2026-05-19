@@ -1265,6 +1265,361 @@ body[data-color-mode="sponsor"] .seat--split {
   color: white;
 }
 
+/* ═══ Tier-3 admin visibility ═══════════════════════════════════
+   Assignments grouping toggle, Verify (read-only) mode, Overview
+   modal showing every auditorium at once, and print styles for a
+   paper backup at the door. */
+
+/* Assignments header now hosts a tiny toggle next to the title.
+   "By seat" is the original flat list; "By sponsor" groups every
+   assignment by company name so the admin can see each sponsor's
+   block in one place. */
+.assignment-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.assignment-list__header h3 {
+  margin: 0;
+}
+.assignment-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--card-alt);
+  border: 1px solid var(--border);
+}
+.assignment-toggle__pill {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 3px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.assignment-toggle__pill:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.assignment-toggle__pill.active {
+  background: var(--gala-red);
+  color: white;
+}
+
+/* Sponsor-grouped assignments — collapsible sections, one per
+   sponsor in the active auditorium. Header shows the sponsor name,
+   seat count, and a split-block warning if applicable. */
+.assign-sponsor-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.assign-sponsor-group__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--card-alt);
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.assign-sponsor-group__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.assign-sponsor-group__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.assign-sponsor-group__count {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.assign-sponsor-group__warn {
+  font-size: 0.65rem;
+  color: #92400E;
+  background: #FEF3C7;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+.assign-sponsor-group__body {
+  padding: 4px 0;
+}
+.assign-sponsor-group__body .assignment-list__seat {
+  margin-right: 6px;
+}
+.assign-sponsor-group.collapsed .assign-sponsor-group__body {
+  display: none;
+}
+.assign-sponsor-group__caret {
+  font-size: 0.75rem;
+  color: var(--muted);
+  transition: transform 0.18s ease;
+}
+.assign-sponsor-group.collapsed .assign-sponsor-group__caret {
+  transform: rotate(-90deg);
+}
+
+/* Verify mode — body-level lockout that disables seat clicks,
+   forces color-by-sponsor, and shows a banner at the top of the
+   chart area. Designed for Sherry's pre-gala review pass: see
+   everything, touch nothing. */
+body[data-verify-mode] .seat:not(.blocked) {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+body[data-verify-mode] .sponsor-card,
+body[data-verify-mode] .queue-filter__pill,
+body[data-verify-mode] #selection-bar {
+  pointer-events: none !important;
+  opacity: 0.55;
+}
+body[data-verify-mode] .verify-banner {
+  display: flex;
+}
+.verify-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin: 0 0 12px;
+  background: #FEF3C7;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  color: #92400E;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.verify-banner__close {
+  border: 1px solid #92400E;
+  background: transparent;
+  color: #92400E;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.verify-banner__close:hover {
+  background: #92400E;
+  color: white;
+}
+
+/* Top-bar utility buttons — Overview, Verify mode, Print. Inline
+   group sitting next to the existing Export/Clear/Movies buttons. */
+.admin-utility-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-utility-btn {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.admin-utility-btn:hover {
+  background: var(--card-alt);
+  border-color: var(--border-strong);
+}
+.admin-utility-btn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: white;
+}
+
+/* Overview modal — full-screen scrim with a grid of auditorium
+   cards. Each card summarizes one auditorium: who has seats, how
+   many, with split-block badges. Click → jump the picker. */
+.overview-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9000;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 24px;
+  overflow-y: auto;
+}
+.overview-scrim.open {
+  display: flex;
+}
+.overview-modal {
+  background: var(--bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 1200px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.overview-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.overview-modal__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.overview-modal__sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.overview-modal__close {
+  border: 1px solid var(--border);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.overview-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+.overview-card:hover {
+  border-color: var(--gala-red);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.overview-card__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.overview-card__progress {
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.overview-card__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gala-red), var(--gala-red-light));
+  border-radius: 999px;
+}
+.overview-card__stats {
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+}
+.overview-card__sponsors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.overview-card__sp {
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--card-alt);
+  color: var(--text-secondary);
+}
+.overview-card__sp-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.overview-card__warn {
+  font-size: 0.66rem;
+  color: #92400E;
+  font-weight: 700;
+}
+
+/* Print styles — paper backup at the door. Hides every chrome
+   element and shows the chart + a per-sponsor breakdown. Each
+   sponsor's color is preserved with print-color-adjust. */
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    padding: 24px;
+    background: white;
+    color: black;
+  }
+  .queue-panel, .sidebar, .top-bar, #bulk-banner, #selection-bar,
+  .picker, .verify-banner, .color-toggle, .legend {
+    display: none !important;
+  }
+  /* Keep sponsor colors visible on paper. */
+  .seat.assigned[style*="--sponsor-color"] {
+    background: var(--sponsor-color) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .seat--split {
+    outline: 2px solid #F59E0B !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
 /* ═══ Toast notifications ═══ */
 .toast-container {
   position: fixed; bottom: 24px; right: 24px;
@@ -1748,6 +2103,11 @@ body[data-color-mode="sponsor"] .seat--split {
   </div>
   <div class="top-bar__controls">
     <button class="btn" id="manage-movies-btn" title="Assign movies to auditoriums, search TMDB, edit library" style="background:linear-gradient(135deg,#CB262C,#A01F24);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(203,38,44,0.25);">🎬 Movies &amp; Auditoriums</button>
+    <span class="admin-utility-group" role="group" aria-label="Visibility tools">
+      <button type="button" class="admin-utility-btn" id="overview-btn" title="See every auditorium at a glance">🗺 Overview</button>
+      <button type="button" class="admin-utility-btn" id="verify-btn" title="Read-only review mode — chart is locked, all sponsors colored, no accidental clicks">👁 Verify</button>
+      <button type="button" class="admin-utility-btn" id="print-btn" title="Print current auditorium chart">🖨 Print</button>
+    </span>
     <button class="btn btn-secondary" id="export-btn">Export</button>
     <button class="btn btn-secondary" id="clear-btn">Clear</button>
   </div>
@@ -1827,6 +2187,10 @@ body[data-color-mode="sponsor"] .seat--split {
 
   <!-- ═══ CENTER: CHART AREA ═══ -->
   <div class="chart-area">
+    <div class="verify-banner" id="verify-banner">
+      <span>👁 <strong>Verify mode</strong> — chart is locked for review. Color-by-sponsor is on, splits are highlighted. Toggle off to make changes.</span>
+      <button type="button" class="verify-banner__close" id="verify-banner-close">Exit verify mode</button>
+    </div>
     <div id="bulk-banner" class="bulk-banner">
       <button class="bulk-banner__close" id="bulk-exit">Cancel</button>
       <div id="bulk-banner-text">Placement mode active</div>
@@ -1890,7 +2254,13 @@ body[data-color-mode="sponsor"] .seat--split {
       </div>
     </div>
 
-    <h3>Assignments</h3>
+    <div class="assignment-list__header">
+      <h3>Assignments</h3>
+      <div class="assignment-toggle" role="group" aria-label="Group assignments">
+        <button type="button" class="assignment-toggle__pill active" data-group="seat" aria-pressed="true">By seat</button>
+        <button type="button" class="assignment-toggle__pill" data-group="sponsor" aria-pressed="false">By sponsor</button>
+      </div>
+    </div>
     <ul class="assignment-list" id="assignment-list">
       <li style="color: var(--text-muted); justify-content: center;">Click a seat to assign</li>
     </ul>
@@ -1899,6 +2269,22 @@ body[data-color-mode="sponsor"] .seat--split {
 
 <!-- Tooltip -->
 <div class="seat-tooltip" id="tooltip"></div>
+
+<!-- Tier-3: Overview modal — every auditorium at a glance.
+     Rendered into #overview-grid by renderOverview(). Click any
+     auditorium card to jump the picker there + close. -->
+<div class="overview-scrim" id="overview-scrim" aria-hidden="true">
+  <div class="overview-modal" role="dialog" aria-modal="true" aria-labelledby="overview-title">
+    <div class="overview-modal__header">
+      <div>
+        <h2 class="overview-modal__title" id="overview-title">Venue overview</h2>
+        <p class="overview-modal__sub" id="overview-sub">Every auditorium at a glance — click any card to jump.</p>
+      </div>
+      <button type="button" class="overview-modal__close" id="overview-close">Close</button>
+    </div>
+    <div class="overview-grid" id="overview-grid"></div>
+  </div>
+</div>
 
 <!-- Toast container -->
 <div class="toast-container" id="toast-container"></div>
@@ -2293,6 +2679,40 @@ async function init() {
   loadVenueAssignments().then(() => {
     renderIssuesList();  // updates the Issues count badge even when view is sponsors
     if (typeof renderSponsorQueue === 'function') renderSponsorQueue();  // re-render to show footprint chips
+  });
+
+  // Tier-3 admin visibility: wire Assignments grouping toggle,
+  // Verify mode, Overview modal, and Print.
+  document.querySelectorAll('.assignment-toggle__pill').forEach(p => {
+    p.addEventListener('click', () => setAssignmentGrouping(p.dataset.group));
+  });
+  const verifyBtn = document.getElementById('verify-btn');
+  if (verifyBtn) verifyBtn.addEventListener('click', () => setVerifyMode(!verifyMode));
+  const verifyClose = document.getElementById('verify-banner-close');
+  if (verifyClose) verifyClose.addEventListener('click', () => setVerifyMode(false));
+  const overviewBtn = document.getElementById('overview-btn');
+  if (overviewBtn) overviewBtn.addEventListener('click', openOverview);
+  const overviewClose = document.getElementById('overview-close');
+  if (overviewClose) overviewClose.addEventListener('click', closeOverview);
+  const overviewScrim = document.getElementById('overview-scrim');
+  if (overviewScrim) {
+    overviewScrim.addEventListener('click', (e) => {
+      if (e.target === overviewScrim) closeOverview();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('overview-scrim')?.classList.contains('open')) {
+      closeOverview();
+    }
+  });
+  const printBtn = document.getElementById('print-btn');
+  if (printBtn) printBtn.addEventListener('click', () => {
+    // Make sure we're in sponsor color mode so the print rules
+    // pick up the right colors. Restore on print-done.
+    const prev = colorMode;
+    if (prev !== 'sponsor') setColorMode('sponsor');
+    window.print();
+    if (prev !== 'sponsor') setTimeout(() => setColorMode(prev), 100);
   });
 }
 
@@ -2773,6 +3193,220 @@ function renderIssuesList() {
         .forEach(el => el.classList.remove('seat--sponsor-hover'));
     });
   });
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Tier-3 admin visibility helpers (2026-05-18)
+   ────────────────────────────────────────────────────────────── */
+
+let assignmentGrouping = 'seat';   // 'seat' | 'sponsor'
+let verifyMode = false;
+const collapsedSponsorGroups = new Set();  // sponsor IDs to collapse in by-sponsor view
+
+function setAssignmentGrouping(group) {
+  if (group !== 'seat' && group !== 'sponsor') return;
+  assignmentGrouping = group;
+  document.querySelectorAll('.assignment-toggle__pill').forEach(p => {
+    const on = p.dataset.group === group;
+    p.classList.toggle('active', on);
+    p.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  if (typeof updateAssignmentList === 'function') updateAssignmentList();
+}
+
+/* Render assignments grouped by sponsor instead of flat-by-seat.
+   Each group collapses on click; remembered in collapsedSponsorGroups
+   so toggling auditoriums doesn't lose state. Shows the per-sponsor
+   color swatch (tier-1 hash) and a split-block warning. */
+function renderAssignmentsBySponsor(entries) {
+  const list = document.getElementById('assignment-list');
+  if (!list) return;
+  // Group by sponsor_id (null sponsor_id seats — rare — bucket as "Unassigned sponsor")
+  const groups = new Map(); // sponsor_id|null → [[seatKey, val], ...]
+  for (const [key, val] of entries) {
+    const sid = (val && typeof val === 'object' && val.sponsor_id) || null;
+    if (!groups.has(sid)) groups.set(sid, []);
+    groups.get(sid).push([key, val]);
+  }
+  // Sort groups: assigned sponsors alphabetical, null last
+  const sortedGroups = [...groups.entries()].sort((a, b) => {
+    if (a[0] === null) return 1;
+    if (b[0] === null) return -1;
+    const na = allSponsors.find(s => s.id === a[0])?.company || '';
+    const nb = allSponsors.find(s => s.id === b[0])?.company || '';
+    return na.localeCompare(nb);
+  });
+
+  list.innerHTML = sortedGroups.map(([sid, items]) => {
+    const sp = sid ? allSponsors.find(s => s.id === sid) : null;
+    const name = sp?.company || (sid ? `Sponsor #${sid}` : 'No sponsor link');
+    const swatch = sp ? sponsorColor(sp.company) : '#94A3B8';
+    const isCollapsed = collapsedSponsorGroups.has(sid);
+    const isSplit = sid && splitSponsorIds.has(sid);
+    // Per-seat rows inside the group
+    const rows = items.map(([key, val]) => {
+      const parts = key.split(':');
+      const seatLabel = `${parts[1]}${parts[2]}`;
+      const dinner = (typeof val === 'object' && val) ? (val.dinner_choice || '') : '';
+      const opts = ['<option value="">— dinner —</option>']
+        .concat(DINNER_OPTIONS.map(o =>
+          `<option value="${o.id}"${o.id === dinner ? ' selected' : ''}>${o.short}</option>`
+        ))
+        .join('');
+      const guestName = typeof val === 'string' ? val : (val?.guest_name || '');
+      return `<li style="padding-left:28px;">
+        <span><span class="assignment-list__seat">${seatLabel}</span> ${escapeHtml(guestName)}</span>
+        <span class="assignment-list__actions">
+          <select class="assignment-list__dinner" data-key="${key}" aria-label="Dinner for ${seatLabel}">${opts}</select>
+          <button class="assignment-list__remove" data-key="${key}" title="Remove">&times;</button>
+        </span>
+      </li>`;
+    }).join('');
+    return `<div class="assign-sponsor-group ${isCollapsed ? 'collapsed' : ''}" data-sponsor-id="${sid || ''}">
+      <div class="assign-sponsor-group__header">
+        <span class="assign-sponsor-group__caret">▾</span>
+        <span class="assign-sponsor-group__swatch" style="background:${swatch};"></span>
+        <span class="assign-sponsor-group__name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+        ${isSplit ? `<span class="assign-sponsor-group__warn">⚠ split</span>` : ''}
+        <span class="assign-sponsor-group__count">${items.length}</span>
+      </div>
+      <ul class="assign-sponsor-group__body" style="list-style:none; padding:0; margin:0;">${rows}</ul>
+    </div>`;
+  }).join('');
+
+  // Wire collapse toggles
+  list.querySelectorAll('.assign-sponsor-group__header').forEach(h => {
+    h.addEventListener('click', () => {
+      const group = h.closest('.assign-sponsor-group');
+      const sid = group.dataset.sponsorId ? Number(group.dataset.sponsorId) : null;
+      group.classList.toggle('collapsed');
+      if (group.classList.contains('collapsed')) collapsedSponsorGroups.add(sid);
+      else collapsedSponsorGroups.delete(sid);
+    });
+  });
+  // Wire dinner dropdowns + remove buttons (same handlers as flat view)
+  list.querySelectorAll('.assignment-list__dinner').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const key = sel.dataset.key;
+      const parts = key.split(':');
+      const newVal = sel.value;
+      if (assignments[key] && typeof assignments[key] === 'object') {
+        assignments[key].dinner_choice = newVal;
+      }
+      cacheToLocalStorage();
+      const ok = await adminSetDinnerChoice(Number(parts[0]), parts[1], parts[2], newVal);
+      if (!ok) {
+        sel.value = (assignments[key] && assignments[key].dinner_choice) || '';
+        alert('Could not save dinner choice. Make sure the seat is fully assigned (not just held).');
+        return;
+      }
+      updateAssignmentList();
+    });
+  });
+}
+
+/* Verify mode toggle — locks the chart, forces color-by-sponsor,
+   shows a banner. Sherry's pre-gala "see everything, touch nothing"
+   review pass. Banner has its own exit button. */
+function setVerifyMode(on) {
+  verifyMode = !!on;
+  document.body.toggleAttribute('data-verify-mode', verifyMode);
+  document.getElementById('verify-btn').classList.toggle('active', verifyMode);
+  if (verifyMode && colorMode !== 'sponsor') setColorMode('sponsor');
+}
+
+/* Overview modal — every auditorium at a glance. For each
+   auditorium, group venueAssignments by sponsor and show a card
+   with the top sponsors, split warnings, and a capacity progress
+   bar. Card click → jump the picker and close. */
+function renderOverview() {
+  const grid = document.getElementById('overview-grid');
+  const sub = document.getElementById('overview-sub');
+  if (!grid || !theaterData) return;
+  // Stats per (theater, showing) bucket — for now we collapse the
+  // showing dimension and show totals across both showings, since
+  // the picker reveals showing context already. Per-showing splits
+  // still show as warnings.
+  const bookable = theaterData.theaters.filter(t => !t.staging);
+  const splits = detectVenueSplitBlocks();
+  const splitsByTheater = new Map();
+  for (const d of splits) {
+    if (!splitsByTheater.has(d.theaterId)) splitsByTheater.set(d.theaterId, []);
+    splitsByTheater.get(d.theaterId).push(d);
+  }
+  if (sub) {
+    const totalSplits = splits.length;
+    sub.textContent = totalSplits === 0
+      ? 'Every auditorium at a glance — click any card to jump.'
+      : `Every auditorium at a glance — ${totalSplits} split block${totalSplits === 1 ? '' : 's'} flagged across the venue.`;
+  }
+  grid.innerHTML = bookable.map(t => {
+    // Count seats per sponsor in this theater (across both showings)
+    const sponsorCounts = new Map();
+    let totalAssigned = 0;
+    for (const a of Object.values(venueAssignments)) {
+      if (a.theater_id !== t.id) continue;
+      totalAssigned++;
+      if (!a.sponsor_id) continue;
+      sponsorCounts.set(a.sponsor_id, (sponsorCounts.get(a.sponsor_id) || 0) + 1);
+    }
+    const sponsors = [...sponsorCounts.entries()]
+      .map(([id, n]) => ({ id, n, sponsor: allSponsors.find(s => s.id === id) }))
+      .filter(x => x.sponsor)
+      .sort((a, b) => b.n - a.n);
+    const totalSeats = t.totalSeats || 0;
+    const pct = totalSeats > 0 ? Math.round((totalAssigned / totalSeats) * 100) : 0;
+    const theaterSplits = splitsByTheater.get(t.id) || [];
+    const chips = sponsors.slice(0, 10).map(x => {
+      const isSplit = theaterSplits.some(s => s.sponsorId === x.id);
+      return `<span class="overview-card__sp" title="${escapeHtml(x.sponsor.company)} — ${x.n} seat${x.n === 1 ? '' : 's'}${isSplit ? ' (split block)' : ''}">
+        <span class="overview-card__sp-swatch" style="background:${sponsorColor(x.sponsor.company)}; ${isSplit ? 'outline: 1.5px solid #F59E0B;' : ''}"></span>
+        ${escapeHtml(x.sponsor.company.length > 18 ? x.sponsor.company.slice(0, 17) + '…' : x.sponsor.company)} · ${x.n}
+      </span>`;
+    }).join('');
+    const more = sponsors.length > 10 ? `<span class="overview-card__sp" style="opacity:0.65;">+${sponsors.length - 10} more</span>` : '';
+    return `<button type="button" class="overview-card" data-theater="${t.id}">
+      <div class="overview-card__title">
+        <span>Auditorium ${t.id}</span>
+        ${theaterSplits.length ? `<span class="overview-card__warn">⚠ ${theaterSplits.length} split${theaterSplits.length === 1 ? '' : 's'}</span>` : ''}
+      </div>
+      <div class="overview-card__progress">
+        <div class="overview-card__progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="overview-card__stats">
+        <span><strong>${totalAssigned}</strong> / ${totalSeats} placed</span>
+        <span>${sponsors.length} sponsor${sponsors.length === 1 ? '' : 's'}</span>
+      </div>
+      <div class="overview-card__sponsors">${chips}${more}</div>
+    </button>`;
+  }).join('');
+  // Wire card clicks → jump + close
+  grid.querySelectorAll('.overview-card').forEach(card => {
+    card.addEventListener('click', async () => {
+      const tid = Number(card.dataset.theater);
+      if (!tid) return;
+      pickerState.currentTheaterId = tid;
+      if (USE_API) await loadAssignmentsFromAPI(tid);
+      renderTheater(tid);
+      if (typeof buildPicker === 'function') buildPicker();
+      closeOverview();
+      setTimeout(() => {
+        const chart = document.getElementById('theater-map');
+        if (chart) chart.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    });
+  });
+}
+function openOverview() {
+  renderOverview();
+  const scrim = document.getElementById('overview-scrim');
+  scrim.classList.add('open');
+  scrim.setAttribute('aria-hidden', 'false');
+}
+function closeOverview() {
+  const scrim = document.getElementById('overview-scrim');
+  scrim.classList.remove('open');
+  scrim.setAttribute('aria-hidden', 'true');
 }
 
 function renderLegend() {
@@ -3323,6 +3957,13 @@ function updateAssignmentList() {
 
   if (!entries.length) {
     list.innerHTML = '<li style="color: var(--text-muted); justify-content: center;">Click a seat to assign</li>';
+    return;
+  }
+
+  // Tier-3: when grouping toggle is set to 'sponsor', render the
+  // by-sponsor collapsible view instead of the flat by-seat list.
+  if (assignmentGrouping === 'sponsor') {
+    renderAssignmentsBySponsor(entries);
     return;
   }
 
