@@ -41,7 +41,7 @@ export async function onRequestGet(context) {
       phone: s.phone,
       tier: normalizeSponsorTier(s.sponsorship_tier) || s.sponsorship_tier,
       seatsPurchased: s.seats_purchased,
-      logoUrl: s.logo_url || null,
+      logoUrl: s.logo_white_url || s.logo_url || null,
       // Phase 5.3 — Tickets-tab CTA state machine. The sponsor's
       // rsvp_status flips to 'completed' on /finalize. Surfacing it
       // here lets the client decide which pill to render: 'Select

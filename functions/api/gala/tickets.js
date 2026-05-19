@@ -31,7 +31,7 @@ function rowToTicket(r) {
     contact: [contactFirst, contactLast].filter(Boolean).join(' '),
     contactFirst,
     contactLast,
-    logoUrl: r.logo_url || '',
+    logoUrl: r.logo_white_url || r.logo_url || '',
     websiteUrl: r.website_url || '',
   };
 }
@@ -68,7 +68,7 @@ export async function onRequestGet(context) {
     const { results } = await env.GALA_DB.prepare(
       `SELECT id, company, first_name, last_name, email, phone,
               sponsorship_tier, seats_purchased, amount_paid, payment_status,
-              logo_url, website_url
+              logo_url, logo_white_url, website_url
        FROM sponsors
        WHERE archived_at IS NULL
        ORDER BY company COLLATE NOCASE`

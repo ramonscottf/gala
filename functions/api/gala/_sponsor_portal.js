@@ -33,7 +33,7 @@ export async function resolveToken(env, token) {
   // Otherwise, check delegation token
   const deleg = await env.GALA_DB.prepare(
     `SELECT d.*, s.company AS parent_company, s.sponsorship_tier AS parent_tier,
-            s.logo_url AS parent_logo_url
+            COALESCE(s.logo_white_url, s.logo_url) AS parent_logo_url
        FROM sponsor_delegations d
        JOIN sponsors s ON s.id = d.parent_sponsor_id
       WHERE d.token = ?${archiveSupported ? ' AND s.archived_at IS NULL' : ''}`

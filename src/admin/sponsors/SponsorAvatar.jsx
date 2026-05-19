@@ -7,7 +7,7 @@ import React, { useState } from 'react';
  */
 export function SponsorAvatar({ sponsor }) {
   const [errored, setErrored] = useState(false);
-  const url = sponsor.logo_url;
+  const url = sponsor.logo_white_url || sponsor.logo_url;
   const name = sponsor.company || '';
   const monogram = makeMonogram(name);
 
