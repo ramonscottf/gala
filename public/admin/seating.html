@@ -1620,6 +1620,154 @@ body[data-verify-mode] .verify-banner {
   }
 }
 
+/* ═══ Mobile polish for Tier-1/2/3 admin visibility ═══════════════
+   2026-05-18 evening. The existing @media (max-width: 900px) and
+   480px blocks already do the heavy lifting (column stack, chart
+   auto-scale, sidebar wrap). This block targets the buttons,
+   pills, and modal we added tonight — none of which were sized
+   for thumb-tappable use. CSS-only, additive, no layout rebuilds. */
+
+@media (max-width: 720px) {
+  /* The top-bar controls were already a flex row; with our new
+     🗺 Overview / 👁 Verify / 🖨 Print buttons there are now six
+     buttons trying to share one row. Let the utility group take
+     its own line so we get two clean rows instead of a wrap mess.
+     The visual-tools group spans full width and the three buttons
+     split it evenly. */
+  .top-bar__controls {
+    flex-wrap: wrap;
+  }
+  .admin-utility-group {
+    flex: 0 0 100%;
+    justify-content: stretch;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .admin-utility-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 8px;
+    font-size: 0.74rem;
+    justify-content: center;
+  }
+
+  /* Touch-friendly padding on the Color By + Assignments grouping +
+     queue-tab pills. Default desktop padding (3-4px vertical) is too
+     tight for thumbs. */
+  .color-toggle {
+    padding: 4px;
+    margin-right: 0;
+  }
+  .color-toggle__pill,
+  .assignment-toggle__pill {
+    padding: 7px 12px;
+    font-size: 0.72rem;
+  }
+  .color-toggle__label {
+    font-size: 0.66rem;
+    padding: 0 4px;
+  }
+  .queue-tab {
+    padding: 10px 10px;
+    font-size: 0.78rem;
+  }
+
+  /* Verify banner — wrap so the exit button drops below the
+     sentence instead of clipping on a 375px screen. */
+  .verify-banner {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+  .verify-banner > span {
+    flex: 1 1 100%;
+  }
+  .verify-banner__close {
+    flex: 1;
+    margin-top: 4px;
+    padding: 8px 14px;
+  }
+
+  /* Overview modal — drop scrim padding and force single-column
+     grid so each auditorium card has room to breathe. The card's
+     sponsor chips were unreadable when squeezed into a 130px
+     column. */
+  .overview-scrim {
+    padding: 8px;
+    align-items: flex-start;
+  }
+  .overview-modal {
+    padding: 18px 16px;
+    border-radius: 12px;
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+    gap: 14px;
+  }
+  .overview-modal__title { font-size: 1.05rem; }
+  .overview-modal__sub { font-size: 0.78rem; }
+  .overview-modal__close {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+  .overview-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .overview-card {
+    padding: 13px 14px;
+  }
+
+  /* Footprint chips — bigger touch target. Important for the
+     "tap to jump to that aud" workflow which is the primary
+     mobile use case (browsing sponsors, jumping between auds). */
+  .footprint-chip {
+    padding: 5px 10px;
+    font-size: 0.7rem;
+  }
+
+  /* Issues panel cards stack their Jump button below the detail
+     block instead of squeezing it on the right. Easier to read AND
+     bigger tap target. */
+  .issue-card {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 11px 12px;
+  }
+  .issue-card__body {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .issue-card__jump {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+  }
+
+  /* Sponsor-grouped Assignments — give the group header more height
+     so it's clearly tappable as a collapse target. */
+  .assign-sponsor-group__header {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra-narrow phone polish on top of the 720px block above. */
+  .admin-utility-btn {
+    /* Drop the labels, keep just the emoji icon on very narrow
+       screens so all three fit comfortably. The title attribute
+       still carries the long-form name for accessibility. */
+    font-size: 0.95rem;
+    padding: 9px 0;
+  }
+  .admin-utility-btn .admin-utility-label {
+    display: none;
+  }
+  .color-toggle__label {
+    display: none;
+  }
+  .overview-card__title { font-size: 0.9rem; }
+  .overview-card__sp { font-size: 0.62rem; }
+}
+
 /* ═══ Toast notifications ═══ */
 .toast-container {
   position: fixed; bottom: 24px; right: 24px;
@@ -2104,9 +2252,9 @@ body[data-verify-mode] .verify-banner {
   <div class="top-bar__controls">
     <button class="btn" id="manage-movies-btn" title="Assign movies to auditoriums, search TMDB, edit library" style="background:linear-gradient(135deg,#CB262C,#A01F24);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(203,38,44,0.25);">🎬 Movies &amp; Auditoriums</button>
     <span class="admin-utility-group" role="group" aria-label="Visibility tools">
-      <button type="button" class="admin-utility-btn" id="overview-btn" title="See every auditorium at a glance">🗺 Overview</button>
-      <button type="button" class="admin-utility-btn" id="verify-btn" title="Read-only review mode — chart is locked, all sponsors colored, no accidental clicks">👁 Verify</button>
-      <button type="button" class="admin-utility-btn" id="print-btn" title="Print current auditorium chart">🖨 Print</button>
+      <button type="button" class="admin-utility-btn" id="overview-btn" title="See every auditorium at a glance">🗺 <span class="admin-utility-label">Overview</span></button>
+      <button type="button" class="admin-utility-btn" id="verify-btn" title="Read-only review mode — chart is locked, all sponsors colored, no accidental clicks">👁 <span class="admin-utility-label">Verify</span></button>
+      <button type="button" class="admin-utility-btn" id="print-btn" title="Print current auditorium chart">🖨 <span class="admin-utility-label">Print</span></button>
     </span>
     <button class="btn btn-secondary" id="export-btn">Export</button>
     <button class="btn btn-secondary" id="clear-btn">Clear</button>
