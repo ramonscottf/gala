@@ -964,6 +964,48 @@ function LineupSection({ showtimes, onOpenMovie }) {
   );
 }
 
+function FlipCard({ kicker, frontTitle, frontSummary, heroVariant, photoClass = '', backKicker, backTitle, backBody, backMeta }) {
+  const [flipped, setFlipped] = useState(false);
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setFlipped((v) => !v);
+    }
+  };
+  return (
+    <div
+      className={`p2-flip${flipped ? ' is-flipped' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-pressed={flipped}
+      aria-label={`${frontTitle} — tap to ${flipped ? 'hide' : 'see'} details`}
+      onClick={() => setFlipped((v) => !v)}
+      onKeyDown={onKeyDown}
+    >
+      <div className="p2-flip-inner">
+        <div className="p2-flip-face p2-flip-face--front">
+          <div>
+            <div className="kicker" style={{ color: 'var(--p2-gold)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 900 }}>{kicker}</div>
+            <h3 style={{ marginTop: 10, marginBottom: 0, fontSize: 22 }}>{frontTitle}</h3>
+            <p style={{ margin: '8px 0 0', color: 'var(--p2-muted)', fontSize: 14 }}>{frontSummary}</p>
+          </div>
+          <span className="p2-flip-hint">Tap for more</span>
+        </div>
+        <div className="p2-flip-face p2-flip-face--back">
+          <div className={`p2-flip-hero p2-flip-hero--${heroVariant} ${photoClass}`} aria-hidden="true" />
+          <div className="p2-flip-body">
+            <div className="kicker">{backKicker}</div>
+            <h3>{backTitle}</h3>
+            <p>{backBody}</p>
+            {backMeta && <div className="p2-flip-meta">{backMeta}</div>}
+            <div className="p2-flip-back-hint">Tap to flip back</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NightOfSection() {
   return (
     <section className="p2-section">
@@ -978,22 +1020,43 @@ function NightOfSection() {
         </p>
       </div>
       <div className="p2-info-grid">
-        <div className="p2-info-card">
-          <div className="kicker">Location</div>
-          <h3>Legacy Crossing</h3>
-          <p>
-            Megaplex Theatres at Legacy Crossing in Centerville. DEF check-in and theater
-            assignments on site.
-          </p>
-        </div>
-        <div className="p2-info-card">
-          <div className="kicker">Dinner</div>
-          <h3>Chef-curated</h3>
-          <p>
-            Plated dinner before each showing. Dietary notes and special asks live in
-            your guest portal.
-          </p>
-        </div>
+        <FlipCard
+          kicker="Location"
+          frontTitle="Legacy Crossing"
+          frontSummary="Megaplex Theatres at Legacy Crossing in Centerville. DEF check-in and theater assignments on site."
+          heroVariant="theater"
+          backKicker="The venue"
+          backTitle="A house built for the night"
+          backBody="Fully reclining luxury seating throughout — heated, leather, fold-up arm. Several auditoriums have box-style suites with privacy partitions and loveseat recliners. Reserved seats so you can land without rushing, lobby kept immaculate, and parking sits steps from the door."
+          backMeta={(
+            <>
+              <span>1075 W Legacy Crossing Blvd · Centerville, UT</span>
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=Megaplex+at+Legacy+Crossing%2C+Centerville%2C+UT"
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Directions →
+              </a>
+            </>
+          )}
+        />
+        <FlipCard
+          kicker="Dinner"
+          frontTitle="Chef-curated"
+          frontSummary="Plated dinner before each showing. Dietary notes and special asks live in your guest portal."
+          heroVariant="dinner"
+          backKicker="On the menu"
+          backTitle="Plated, paced to your showing"
+          backBody="The kitchen builds a coursed menu the night of — the kind of finishing touches that don't usually show up at a fundraiser. Hot French dip, a green salad with grilled chicken (GF), a vegetarian plate, and a kids option. Dietary asks route through your portal directly to the kitchen and your seat."
+          backMeta={(
+            <>
+              <span>Doors 4:00 PM · Dinner before each show</span>
+              <span className="link">In your portal</span>
+            </>
+          )}
+        />
         <div className="p2-info-card">
           <div className="kicker">Tickets</div>
           <h3>Private links</h3>

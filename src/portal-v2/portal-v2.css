@@ -2238,6 +2238,297 @@ body {
   font-size: 14px;
 }
 
+/* ── Flip-capable info cards (2026-05-18) ───────────────────────────────
+   Used by the Location and Dinner tiles in NightOfSection. Tap to flip
+   reveals a richer "talked-up" hero on the back: themed illustration,
+   address/directions for Location, plating notes for Dinner. The Tickets
+   tile stays flat to preserve rhythm in the row.
+
+   Implementation:
+   - .p2-flip is a button. The 3D transform lives on .p2-flip-inner so
+     hover/focus rings on the button itself don't fight the rotation.
+   - Both faces are absolutely positioned and occupy the same rect; the
+     parent reserves height via min-height so the layout doesn't jump.
+   - prefers-reduced-motion swaps the rotation for a cross-fade. */
+
+.p2-flip {
+  position: relative;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  perspective: 1400px;
+  border-radius: 20px;
+  min-height: 220px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.p2-flip:focus-visible {
+  outline: 2px solid var(--p2-gold);
+  outline-offset: 4px;
+}
+
+.p2-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+}
+
+.p2-flip.is-flipped .p2-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.p2-flip-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.p2-flip-face--front {
+  background: var(--p2-panel);
+  backdrop-filter: blur(14px);
+  padding: 22px;
+  justify-content: space-between;
+}
+
+.p2-flip-face--back {
+  transform: rotateY(180deg);
+  background: #0b1238;
+  color: #fff;
+}
+
+.p2-flip-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.55);
+}
+.p2-info-card.p2-flip-face--front .p2-flip-hint,
+.p2-flip-face--front .p2-flip-hint {
+  color: var(--p2-subtle);
+}
+.p2-flip-hint::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 12a9 9 0 0 1 15.3-6.4L21 3v6h-6l2.4-2.4A6 6 0 1 0 18 12h2a8 8 0 1 1-17 0z' fill='currentColor'/></svg>") center/contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 12a9 9 0 0 1 15.3-6.4L21 3v6h-6l2.4-2.4A6 6 0 1 0 18 12h2a8 8 0 1 1-17 0z' fill='currentColor'/></svg>") center/contain no-repeat;
+  opacity: 0.85;
+}
+
+/* Back-of-card hero — illustrated CSS placeholder. If a real photo is
+   present at the path on the background-image, it layers OVER the
+   gradient (so a missing file just falls through to the illustration). */
+.p2-flip-hero {
+  position: relative;
+  flex: 0 0 auto;
+  height: 132px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.p2-flip-hero--theater {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 18%, rgba(255, 226, 179, 0.32), transparent 70%),
+    radial-gradient(ellipse 90% 60% at 50% 100%, #0d1338 0%, #06091c 80%),
+    linear-gradient(180deg, #1a2168 0%, #0b1238 100%);
+}
+.p2-flip-hero--theater::before {
+  /* Projection beam */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -10%;
+  width: 0;
+  height: 140%;
+  border-left: 90px solid transparent;
+  border-right: 90px solid transparent;
+  border-top: 220px solid rgba(255, 220, 170, 0.14);
+  transform: translateX(-50%);
+  filter: blur(2px);
+  z-index: 1;
+}
+.p2-flip-hero--theater::after {
+  /* Recliner silhouettes — two rows */
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 64%;
+  background:
+    /* Front row */
+    radial-gradient(ellipse 16% 38% at 18% 100%, #050719 60%, transparent 62%),
+    radial-gradient(ellipse 16% 38% at 38% 100%, #050719 60%, transparent 62%),
+    radial-gradient(ellipse 16% 38% at 58% 100%, #050719 60%, transparent 62%),
+    radial-gradient(ellipse 16% 38% at 78% 100%, #050719 60%, transparent 62%),
+    radial-gradient(ellipse 16% 38% at 98% 100%, #050719 60%, transparent 62%),
+    /* Back row, slightly higher */
+    radial-gradient(ellipse 14% 32% at 8% 78%, rgba(8, 12, 36, 0.85) 60%, transparent 62%),
+    radial-gradient(ellipse 14% 32% at 28% 78%, rgba(8, 12, 36, 0.85) 60%, transparent 62%),
+    radial-gradient(ellipse 14% 32% at 48% 78%, rgba(8, 12, 36, 0.85) 60%, transparent 62%),
+    radial-gradient(ellipse 14% 32% at 68% 78%, rgba(8, 12, 36, 0.85) 60%, transparent 62%),
+    radial-gradient(ellipse 14% 32% at 88% 78%, rgba(8, 12, 36, 0.85) 60%, transparent 62%);
+  z-index: 2;
+}
+/* Real photo layer — only shows if asset exists. Image overrides gradient. */
+.p2-flip-hero--theater.p2-flip-hero--photo {
+  background:
+    linear-gradient(180deg, rgba(11, 18, 56, 0) 30%, rgba(11, 18, 56, 0.95) 100%),
+    url("/assets/brand/megaplex-interior.jpg") center/cover,
+    linear-gradient(180deg, #1a2168 0%, #0b1238 100%);
+}
+.p2-flip-hero--theater.p2-flip-hero--photo::before,
+.p2-flip-hero--theater.p2-flip-hero--photo::after {
+  display: none;
+}
+
+.p2-flip-hero--dinner {
+  background:
+    radial-gradient(ellipse 65% 55% at 50% 35%, rgba(231, 184, 117, 0.30), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, #1a0f24 0%, #0a0512 80%),
+    linear-gradient(180deg, #3d1f2b 0%, #1a0f24 100%);
+}
+.p2-flip-hero--dinner::before {
+  /* Plate */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 220, 180, 0.95) 0%, rgba(255, 220, 180, 0.95) 36%, transparent 38%),
+    radial-gradient(circle at 50% 50%, #f6e4cc 0%, #d6bfa0 70%, #b69472 100%);
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.45),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+.p2-flip-hero--dinner::after {
+  /* Steam wisps */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  width: 60px;
+  height: 30px;
+  background:
+    radial-gradient(ellipse 20% 60% at 30% 60%, rgba(255, 255, 255, 0.32), transparent 70%),
+    radial-gradient(ellipse 20% 60% at 55% 30%, rgba(255, 255, 255, 0.22), transparent 70%),
+    radial-gradient(ellipse 20% 60% at 80% 60%, rgba(255, 255, 255, 0.28), transparent 70%);
+  transform: translateX(-50%);
+  filter: blur(2px);
+  z-index: 3;
+}
+
+.p2-flip-hero--photo-dinner {
+  background:
+    linear-gradient(180deg, rgba(26, 15, 36, 0) 30%, rgba(11, 18, 56, 0.96) 100%),
+    url("/assets/brand/dinner-hero.jpg") center/cover,
+    linear-gradient(180deg, #3d1f2b 0%, #1a0f24 100%);
+}
+.p2-flip-hero--photo-dinner::before,
+.p2-flip-hero--photo-dinner::after {
+  display: none;
+}
+
+.p2-flip-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.p2-flip-body .kicker {
+  color: var(--p2-gold);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.p2-flip-body h3 {
+  margin: 8px 0 6px;
+  font-size: 20px;
+  color: #fff;
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.p2-flip-body p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.p2-flip-meta {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+}
+.p2-flip-meta a,
+.p2-flip-meta span.link {
+  color: var(--p2-gold);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.p2-flip-meta a:hover {
+  text-decoration: underline;
+}
+
+.p2-flip-back-hint {
+  margin-top: 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p2-flip-inner {
+    transition: opacity 0.25s ease;
+    transform: none !important;
+  }
+  .p2-flip-face {
+    transition: opacity 0.25s ease;
+  }
+  .p2-flip-face--back {
+    transform: none;
+    opacity: 0;
+  }
+  .p2-flip.is-flipped .p2-flip-face--front { opacity: 0; }
+  .p2-flip.is-flipped .p2-flip-face--back { opacity: 1; }
+}
+
 /* ── Footer ─────────────────────────────────────────────────────────── */
 
 .p2-footer {
@@ -2544,19 +2835,21 @@ body {
   }
 }
 
-/* Lineup horizontal rail on mobile — 2-2.5 cards visible at 390px, swipe
-   with momentum and snap to card start. Above 640px the grid takes over. */
+/* Lineup horizontal rail on mobile — 2026-05-18 redesign per Scott: cards
+   feel more like full features and less like a carousel. One full card
+   dominates at 390px with just a hint of the next, posters get taller,
+   body copy has more room to breathe. */
 @media (max-width: 640px) {
   .p2-movie-grid {
     display: flex;
     grid-template-columns: none;
-    gap: 14px;
+    gap: 18px;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 4px 18px 16px;
+    padding: 6px 18px 22px;
     margin: 0 -18px;
     scroll-padding-left: 18px;
   }
@@ -2564,16 +2857,28 @@ body {
 
   .p2-movie-card {
     scroll-snap-align: start;
-    flex: 0 0 72%;   /* 2 full + ~half peek at 390px */
-    max-width: 260px;
-    min-width: 220px;
+    flex: 0 0 86%;   /* one dominant card, ~10-12% peek of the next */
+    max-width: 360px;
+    min-width: 288px;
   }
-  .p2-movie-media { min-height: 168px; }
+  .p2-movie-media { min-height: 220px; }
+  .p2-movie-body { padding: 22px 22px 24px; }
   .p2-movie-body p {
-    -webkit-line-clamp: 3;
+    font-size: 14.5px;
+    line-height: 1.55;
+    -webkit-line-clamp: 4;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+  .p2-movie-identity {
+    left: 20px;
+    right: 20px;
+    bottom: 18px;
+    gap: 16px;
+  }
+  .p2-movie-poster {
+    width: 88px;
   }
 }
 @media (min-width: 641px) and (max-width: 920px) {
@@ -2643,6 +2948,18 @@ body {
   }
   .p2-info-card h3 {
     font-size: 20px;
+  }
+  .p2-flip {
+    min-height: 260px;
+  }
+  .p2-flip-face--front {
+    padding: 18px;
+  }
+  .p2-flip-hero {
+    height: 120px;
+  }
+  .p2-flip-body {
+    padding: 16px 18px 18px;
   }
 }
 
