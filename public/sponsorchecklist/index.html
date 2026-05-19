@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1b3d">
+<title>DEF Gala 2026 — Sponsor Signs Checklist</title>
+<meta name="robots" content="noindex,nofollow">
+
+<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png">
+<link rel="manifest" href="/manifest.json">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+
+<style>
+/* ------------------------------------------------------------------ */
+/* Brand tokens — match /admin and /admin-signin/ exactly.            */
+/* ------------------------------------------------------------------ */
+:root {
+  --navy:        #0d1b3d;
+  --navy-700:    #182a55;
+  --navy-300:    #5a6a8c;
+  --gold:        #c8a04a;     /* 3px banner strip only — see brand doctrine */
+  --red:         #cb262c;
+  --red-light:   #e84e53;
+  --paper:       #faf8f3;
+  --paper-card:  #ffffff;
+  --paper-soft:  #f3ede0;
+  --rule:        rgba(13,27,61,0.10);
+  --mute:        #6b7493;
+  --ink:         #1a2540;
+  --green:       #1f6f3d;
+  --green-bg:    #e3f0e8;
+  --amber-bg:    #fff3d6;
+  --amber:       #8a5a00;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+
+/* ------------------------------------------------------------------ */
+/* Header                                                              */
+/* ------------------------------------------------------------------ */
+header.banner {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-700) 100%);
+  color: #fff;
+  padding: 28px 28px 24px;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+header.banner::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--red) 0%, var(--gold) 50%, var(--red) 100%);
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+header.banner h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+header.banner h1 em { font-style: italic; color: var(--gold); font-weight: 600; }
+.sub {
+  margin-top: 8px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  color: rgba(255,255,255,0.78);
+  font-size: 15px;
+}
+.signout-link {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  color: rgba(255,255,255,.7);
+  font-size: 12px;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+.signout-link:hover { color: #fff; }
+
+/* ------------------------------------------------------------------ */
+/* Toolbar                                                             */
+/* ------------------------------------------------------------------ */
+.toolbar {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: var(--paper-card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(13,27,61,0.04);
+}
+.progress-wrap { flex: 1; min-width: 240px; }
+.progress-text {
+  font-size: 12px; color: var(--mute); margin-bottom: 6px;
+  display: flex; justify-content: space-between;
+}
+.progress-text strong { color: var(--navy); font-weight: 600; }
+.progress-bar {
+  height: 6px; background: var(--paper-soft); border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy), var(--gold));
+  transition: width .3s;
+  width: 0%;
+}
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+button.btn, a.btn {
+  font: 500 12px 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  padding: 8px 14px;
+  border: 1px solid var(--rule);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all .15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+button.btn:hover, a.btn:hover {
+  background: var(--navy); color: #fff; border-color: var(--navy);
+}
+button.btn.active, a.btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+button.btn[disabled] { opacity: .5; cursor: not-allowed; }
+button.btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+button.btn-primary:hover { background: var(--navy-700); border-color: var(--navy-700); }
+
+/* ------------------------------------------------------------------ */
+/* Tier sections                                                       */
+/* ------------------------------------------------------------------ */
+.tier { margin-top: 32px; }
+.tier-head {
+  display: flex; align-items: baseline; gap: 14px;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.tier-label {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+}
+.tier-count {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--mute);
+  padding: 3px 10px; border: 1px solid var(--rule);
+  border-radius: 99px;
+  background: #fff;
+}
+.tier-count.done { background: var(--green); color: #fff; border-color: var(--green); }
+.tier-rate {
+  font-family: 'Fraunces', serif; font-style: italic;
+  color: var(--mute); font-size: 13px;
+  margin-left: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sponsor row — desktop                                               */
+/* ------------------------------------------------------------------ */
+.row {
+  display: grid;
+  grid-template-columns: 30px 1fr 220px 220px 110px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 14px;
+  background: var(--paper-card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: opacity .2s;
+}
+.row.done { opacity: .55; }
+.row.done .company { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.cb {
+  appearance: none; width: 22px; height: 22px;
+  border: 1.5px solid var(--navy); border-radius: 4px;
+  cursor: pointer; position: relative; background: #fff;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.cb:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(200,160,74,.15);
+}
+.cb:checked { background: var(--navy); border-color: var(--navy); }
+.cb:checked::after {
+  content: '';
+  position: absolute; left: 6px; top: 2px;
+  width: 6px; height: 11px;
+  border: solid #fff; border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.meta { min-width: 0; }
+.id-tag {
+  font-size: 10px; font-weight: 600;
+  color: var(--mute); letter-spacing: 0.08em;
+  opacity: .7; margin-right: 6px;
+}
+.company {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.asterisk {
+  display: inline-block; margin-left: 4px;
+  color: var(--red); font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: help;
+}
+.contact {
+  font-size: 12.5px; color: var(--mute);
+  margin-top: 3px;
+}
+.context {
+  font-size: 11px; color: var(--mute);
+  margin-top: 2px; font-variant-numeric: tabular-nums;
+}
+.context strong { color: var(--navy); font-weight: 600; }
+
+/* ------------------------------------------------------------------ */
+/* Upload slots — color & white                                        */
+/* ------------------------------------------------------------------ */
+.slot {
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px;
+  background: var(--paper-soft);
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+  min-height: 56px;
+  position: relative;
+}
+.slot.dark { background: #0a1733; border-color: #2d3a55; }
+.slot-thumb {
+  width: 40px; height: 40px; border-radius: 4px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--rule);
+}
+.slot.dark .slot-thumb { background: #0a1733; border-color: #2d3a55; }
+.slot-thumb img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+}
+.slot-empty {
+  font-size: 18px; color: var(--mute); font-weight: 700;
+}
+.slot.dark .slot-empty { color: rgba(255,255,255,.4); }
+.slot-body { flex: 1; min-width: 0; }
+.slot-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--mute);
+}
+.slot.dark .slot-label { color: rgba(255,255,255,.55); }
+.slot-state {
+  font-size: 11px; color: var(--ink); margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.slot.dark .slot-state { color: rgba(255,255,255,.85); }
+.slot-actions {
+  display: flex; gap: 4px; margin-top: 4px;
+  font-size: 11px;
+}
+.slot-actions button, .slot-actions a {
+  font: 500 10.5px 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all .15s;
+}
+.slot.dark .slot-actions button, .slot.dark .slot-actions a {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  border-color: rgba(255,255,255,.2);
+}
+.slot-actions button:hover, .slot-actions a:hover {
+  background: var(--navy); color: #fff; border-color: var(--navy);
+}
+.slot.dark .slot-actions button:hover, .slot.dark .slot-actions a:hover {
+  background: var(--gold); color: var(--navy); border-color: var(--gold);
+}
+.hidden-input { display: none; }
+
+.slot.uploading::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(13,27,61,0.06);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Hide-done mode                                                      */
+/* ------------------------------------------------------------------ */
+body.hide-done .row.done { display: none; }
+
+/* ------------------------------------------------------------------ */
+/* Loading + empty states                                              */
+/* ------------------------------------------------------------------ */
+.loading {
+  text-align: center; padding: 60px 20px;
+  color: var(--mute);
+  font-family: 'Fraunces', serif; font-style: italic;
+}
+.shimmer {
+  height: 80px; border-radius: 10px;
+  background: linear-gradient(90deg, var(--paper-card) 0%, var(--paper-soft) 50%, var(--paper-card) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  margin-bottom: 8px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Toast                                                               */
+/* ------------------------------------------------------------------ */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--navy); color: #fff;
+  padding: 10px 18px; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(13,27,61,.18);
+  z-index: 100;
+  animation: slideUp .25s ease-out;
+}
+.toast.error { background: var(--red); }
+.toast.success { background: var(--green); }
+@keyframes slideUp {
+  from { transform: translate(-50%, 30px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile                                                              */
+/* ------------------------------------------------------------------ */
+@media (max-width: 800px) {
+  .row {
+    grid-template-columns: 30px 1fr;
+    gap: 10px;
+  }
+  .slot {
+    grid-column: 1 / -1;
+    margin-left: 40px;
+  }
+  .meta { grid-column: 2; }
+  header.banner h1 { font-size: 24px; }
+  .tier-label { font-size: 20px; }
+  .signout-link { position: static; display: block; margin-bottom: 8px; }
+}
+
+.footer-note {
+  margin-top: 40px; padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-family: 'Fraunces', serif; font-style: italic;
+  color: var(--mute); font-size: 13px; text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="banner">
+  <a href="/api/auth/signout" class="signout-link">Sign out</a>
+  <div class="eyebrow">Davis Education Foundation · June 10, 2026 · Megaplex at The Junction</div>
+  <h1>Sponsor Signs <em>Checklist</em></h1>
+  <div class="sub">Upload color + white logos, mark each sign as done, export when you're ready.</div>
+</header>
+
+<div class="toolbar">
+  <div class="progress-wrap">
+    <div class="progress-text">
+      <span>Signs completed</span>
+      <strong id="overallText">— / —</strong>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="overallFill"></div></div>
+  </div>
+  <div class="controls">
+    <button class="btn" id="toggleHide">Hide done</button>
+    <button class="btn" id="topTiersOnly">Top tiers only</button>
+    <a class="btn btn-primary" id="exportCsv" href="/api/gala/sign-checklist/csv" download>⬇ Export CSV</a>
+  </div>
+</div>
+
+<div id="root">
+  <div class="shimmer"></div>
+  <div class="shimmer"></div>
+  <div class="shimmer"></div>
+</div>
+
+<div class="footer-note">
+  Logos go to R2 under <code style="font-size:12px;background:var(--paper-soft);padding:1px 4px;border-radius:3px;">sponsor-signs/&#123;id&#125;/</code> and are reachable at the URLs shown. Banners on the public site can pull from the same path.
+</div>
+
+</div>
+
+<script>
+const TIER_ORDER = ['Platinum','Gold','Silver','Bronze','Friends and Family','Split Friends & Family','Individual Seats','Donation'];
+const TOP_TIERS = new Set(['Platinum','Gold','Silver','Bronze']);
+
+const root = document.getElementById('root');
+const overallText = document.getElementById('overallText');
+const overallFill = document.getElementById('overallFill');
+
+let SPONSORS = [];
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function fmtAmt(n) {
+  if (!n || Number(n) === 0) return '—';
+  return '$' + Number(n).toLocaleString('en-US');
+}
+
+async function loadSponsors() {
+  const res = await fetch('/api/gala/sign-checklist/list', { credentials: 'same-origin' });
+  if (res.status === 401) {
+    location.href = '/admin-signin/?next=' + encodeURIComponent('/sponsorchecklist');
+    return;
+  }
+  if (!res.ok) throw new Error('Failed to load: ' + res.status);
+  const data = await res.json();
+  SPONSORS = data.sponsors || [];
+  render();
+}
+
+function render() {
+  const grouped = {};
+  for (const t of TIER_ORDER) grouped[t] = [];
+  for (const r of SPONSORS) {
+    (grouped[r.sponsorship_tier] || (grouped[r.sponsorship_tier] = [])).push(r);
+  }
+
+  let totalDone = 0;
+  let totalAll = SPONSORS.length;
+
+  let html = '';
+  for (const tier of TIER_ORDER) {
+    const arr = grouped[tier];
+    if (!arr || arr.length === 0) continue;
+    const done = arr.filter(r => r.sign_completed_at).length;
+    totalDone += done;
+    const isTop = TOP_TIERS.has(tier);
+
+    html += `<section class="tier" data-tier="${escapeHtml(tier)}" data-top="${isTop ? '1' : '0'}">`;
+    html += `<div class="tier-head">
+      <div class="tier-label">${escapeHtml(tier)}</div>
+      <div class="tier-count ${done === arr.length ? 'done' : ''}" data-tier-count="${escapeHtml(tier)}">${done} / ${arr.length}</div>
+      <div class="tier-rate">${arr.length} ${arr.length === 1 ? 'sponsor' : 'sponsors'}</div>
+    </div>`;
+
+    for (const s of arr) {
+      html += rowHtml(s);
+    }
+    html += `</section>`;
+  }
+
+  root.innerHTML = html;
+  overallText.textContent = `${totalDone} / ${totalAll}`;
+  overallFill.style.width = (totalAll ? (totalDone/totalAll)*100 : 0) + '%';
+  wireRows();
+}
+
+function rowHtml(s) {
+  const done = !!s.sign_completed_at;
+  const company = (s.company || '').replace(/\*$/, '');
+  const hasAsterisk = (s.company || '').endsWith('*');
+  const contact = [s.first_name, s.last_name].filter(Boolean).join(' ') || '—';
+  const seats = s.seats_purchased || 0;
+  const amt = fmtAmt(s.amount_paid);
+  const pay = s.payment_status || '';
+
+  return `
+    <div class="row ${done ? 'done' : ''}" data-id="${s.id}">
+      <input type="checkbox" class="cb" ${done ? 'checked' : ''} data-action="check" aria-label="Sign for ${escapeHtml(company)}">
+      <div class="meta">
+        <div class="company">
+          <span class="id-tag">#${s.id}</span>${escapeHtml(company)}${hasAsterisk ? '<span class="asterisk" title="Special handling — verify with Sherry">*</span>' : ''}
+        </div>
+        <div class="contact">${escapeHtml(contact)}${s.email ? ' · ' + escapeHtml(s.email) : ''}</div>
+        <div class="context"><strong>${seats}</strong> ${seats === 1 ? 'seat' : 'seats'} · ${amt}${pay ? ' · ' + escapeHtml(pay) : ''}</div>
+      </div>
+      ${slotHtml(s, 'color')}
+      ${slotHtml(s, 'white')}
+    </div>
+  `;
+}
+
+function slotHtml(s, kind) {
+  const url = kind === 'color' ? s.logo_url : s.logo_white_url;
+  const label = kind === 'color' ? 'Color logo' : 'White logo';
+  return `
+    <div class="slot ${kind === 'white' ? 'dark' : ''}" data-id="${s.id}" data-kind="${kind}">
+      <div class="slot-thumb">
+        ${url ? `<img src="${escapeHtml(url)}" alt="" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='block')"><span class="slot-empty" style="display:none">?</span>` : `<span class="slot-empty">?</span>`}
+      </div>
+      <div class="slot-body">
+        <div class="slot-label">${label}</div>
+        <div class="slot-state">${url ? 'Uploaded' : 'Not uploaded'}</div>
+        <div class="slot-actions">
+          <button data-action="upload">${url ? 'Replace' : 'Upload'}</button>
+          ${url ? `<a href="${escapeHtml(url)}" download>Download</a>` : ''}
+        </div>
+      </div>
+      <input type="file" class="hidden-input" accept="image/png,image/jpeg,image/svg+xml,image/webp">
+    </div>
+  `;
+}
+
+function wireRows() {
+  document.querySelectorAll('.row').forEach(row => {
+    const id = Number(row.dataset.id);
+
+    // Checkbox
+    const cb = row.querySelector('input.cb');
+    cb.addEventListener('change', async () => {
+      await markDone(id, cb.checked, row);
+    });
+
+    // Upload slots
+    row.querySelectorAll('.slot').forEach(slot => {
+      const btn = slot.querySelector('button[data-action="upload"]');
+      const fileInput = slot.querySelector('input[type="file"]');
+      if (!btn || !fileInput) return;
+      btn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        await uploadLogo(id, slot.dataset.kind, file, slot);
+        fileInput.value = ''; // allow re-pick of the same file
+      });
+    });
+  });
+}
+
+async function markDone(id, done, rowEl) {
+  try {
+    const res = await fetch('/api/gala/sign-checklist/check', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, done }),
+    });
+    if (!res.ok) throw new Error((await res.json().catch(()=>({}))).error || 'Failed');
+    const data = await res.json();
+    // Update local state
+    const s = SPONSORS.find(r => r.id === id);
+    if (s) s.sign_completed_at = data.sign_completed_at;
+    rowEl.classList.toggle('done', done);
+    updateCounts();
+    toast(done ? 'Marked done' : 'Reopened', 'success');
+  } catch (err) {
+    // Revert checkbox
+    const cb = rowEl.querySelector('input.cb');
+    if (cb) cb.checked = !done;
+    toast('Save failed: ' + err.message, 'error');
+  }
+}
+
+async function uploadLogo(id, kind, file, slotEl) {
+  slotEl.classList.add('uploading');
+  const stateEl = slotEl.querySelector('.slot-state');
+  const originalState = stateEl.textContent;
+  stateEl.textContent = 'Uploading…';
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`/api/gala/sign-checklist/upload?id=${id}&kind=${kind}`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: fd,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.error || ('HTTP ' + res.status));
+    }
+    const data = await res.json();
+
+    // Update local state
+    const s = SPONSORS.find(r => r.id === id);
+    if (s) {
+      if (kind === 'color') s.logo_url = data.url;
+      else s.logo_white_url = data.url;
+    }
+
+    // Re-render just this row to keep things simple. (Per-element patching
+    // would be cleaner but with 105 rows the full row swap is instant and
+    // less surface area for state-sync bugs.)
+    const rowEl = slotEl.closest('.row');
+    const newRow = document.createElement('div');
+    newRow.innerHTML = rowHtml(s).trim();
+    rowEl.replaceWith(newRow.firstElementChild);
+    wireRows();
+
+    toast(`${kind === 'color' ? 'Color' : 'White'} logo uploaded`, 'success');
+  } catch (err) {
+    slotEl.classList.remove('uploading');
+    stateEl.textContent = originalState;
+    toast('Upload failed: ' + err.message, 'error');
+  }
+}
+
+function updateCounts() {
+  const grouped = {};
+  for (const t of TIER_ORDER) grouped[t] = [];
+  for (const r of SPONSORS) {
+    (grouped[r.sponsorship_tier] || (grouped[r.sponsorship_tier] = [])).push(r);
+  }
+  let totalDone = 0;
+  for (const tier of TIER_ORDER) {
+    const arr = grouped[tier];
+    if (!arr || arr.length === 0) continue;
+    const done = arr.filter(r => r.sign_completed_at).length;
+    totalDone += done;
+    const badge = document.querySelector(`[data-tier-count="${tier.replace(/"/g,'\\"')}"]`);
+    if (badge) {
+      badge.textContent = `${done} / ${arr.length}`;
+      badge.classList.toggle('done', done === arr.length);
+    }
+  }
+  overallText.textContent = `${totalDone} / ${SPONSORS.length}`;
+  overallFill.style.width = (SPONSORS.length ? (totalDone/SPONSORS.length)*100 : 0) + '%';
+}
+
+function toast(msg, kind = 'success') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2400);
+}
+
+// Toolbar
+document.getElementById('toggleHide').addEventListener('click', e => {
+  document.body.classList.toggle('hide-done');
+  e.target.classList.toggle('active');
+  e.target.textContent = document.body.classList.contains('hide-done') ? 'Show all' : 'Hide done';
+});
+document.getElementById('topTiersOnly').addEventListener('click', e => {
+  const on = e.target.classList.toggle('active');
+  document.querySelectorAll('.tier').forEach(t => {
+    t.style.display = (on && t.dataset.top !== '1') ? 'none' : '';
+  });
+  e.target.textContent = on ? 'Show all tiers' : 'Top tiers only';
+});
+
+// Sign-out is a GET to the existing /api/auth/signout endpoint, which
+// clears the gala_session cookie and redirects to /. No JS needed.
+
+loadSponsors().catch(err => {
+  root.innerHTML = `<div class="loading">Couldn't load: ${escapeHtml(err.message)}<br><br><button class="btn" onclick="location.reload()">Retry</button></div>`;
+});
+</script>
+</body>
+</html>

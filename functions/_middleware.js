@@ -23,7 +23,7 @@
 // requests, so the chat widget script tag is included directly in each
 // HTML file (see commit history). This middleware only handles auth.
 
-const PROTECTED_PREFIXES = ['/admin'];
+const PROTECTED_PREFIXES = ['/admin', '/sponsorchecklist'];
 const COOKIE_NAME = 'gala_session';
 const MAX_AGE_SEC = 2592000; // 30 days — admin convenience, password-protected
 
