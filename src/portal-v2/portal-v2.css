@@ -613,6 +613,25 @@ body {
   color: var(--p2-gold);
 }
 
+/* Over-allocated state — sponsor has more seats placed/allocated than
+   their budget allows (e.g. 11 against a 10-seat block). Soft red
+   tint to draw the eye without screaming. Pairs with the un-clamped
+   negative `available` value in StatusCard. */
+.p2-stat-tappable.is-over {
+  border-color: rgba(220, 80, 80, 0.45);
+  background: rgba(220, 80, 80, 0.08);
+}
+.p2-stat-tappable.is-over .p2-stat-value,
+.p2-stat-tappable.is-over .p2-stat-label,
+.p2-stat-tappable.is-over .p2-stat-arrow,
+.p2-stat-tappable.is-over .p2-stat-sub {
+  color: #ff8a8a;
+}
+.p2-stat-tappable.is-over .p2-stat-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .p2-stat-label {
   color: var(--p2-subtle);
   font-size: 11px;

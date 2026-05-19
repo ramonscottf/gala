@@ -10,9 +10,9 @@ The portal was already *fetching* every child-delegation seat assignment in `/ap
 
 | Phase | What | State |
 |---|---|---|
-| A | Show the guest's tickets in Manage Invite | ✅ Shipped 2026-05-18 (this PR) |
-| B | "Push tickets to guest" — confirmation SMS+email on demand | ✅ Shipped 2026-05-18 (this PR) |
-| C | Edit guest's seats on the sponsor's behalf | 📋 Plan below, awaiting Scott's go-ahead before any code touches auth |
+| A | Show the guest's tickets in Manage Invite | ✅ Shipped 2026-05-18 ([PR #43](https://github.com/ramonscottf/gala/pull/43)) |
+| B | "Push tickets to guest" — confirmation SMS+email on demand | ✅ Shipped 2026-05-18 ([PR #43](https://github.com/ramonscottf/gala/pull/43)) |
+| C | Edit guest's seats on the sponsor's behalf — swap, move, change meal | ✅ Shipped 2026-05-18 ([PR #44](https://github.com/ramonscottf/gala/pull/44)) |
 
 ---
 
@@ -71,7 +71,35 @@ No new infra. Uses the existing `sendSMS` and `sendEmail` helpers from `_notify.
 
 ---
 
-## Phase C — Edit on the sponsor's behalf (PLAN ONLY — DO NOT IMPLEMENT WITHOUT SCOTT'S GO)
+## Phase C — Edit on the sponsor's behalf (SHIPPED 2026-05-18, [PR #44](https://github.com/ramonscottf/gala/pull/44))
+
+Implemented essentially as specified below, with a few small variances called out at the end of this section.
+
+### What shipped
+
+**Migration 013** — `sponsor_actions_log` audit table applied to live D1 before merge. Actor-centric, keyed by `(actor_sponsor_id, target_delegation_id)`, with before/after JSON, action verb, full `(theater, showing, row, seat)` tuple, and a `notify_sent` flag.
+
+**`functions/api/gala/_onBehalfOf.js`** — `resolveWriteScope(env, resolved, body)` + `writeAuditLog(env, onBehalf, entry)`. Auth check verifies the calling sponsor is the *direct* parent of the target delegation, refuses reclaimed delegations, rejects non-sponsor callers. Returns a synthetic `writeScope` of shape `{kind: 'delegation', record: targetDelegationRow}` so downstream code is unchanged.
+
+**`functions/api/gala/portal/[token]/pick.js`** — every action (`set_dinner`, `unfinalize`, `finalize`, `hold`, `release`) now uses `writeScope` instead of `resolved` for ownership predicates and budget math via `getSeatsAvailableToPlace`. `set_dinner` also tightened to `sponsor_id = ? AND delegation_id IS NULL` for sponsor-direct seats (was latent permissive). On-behalf writes are indistinguishable from delegate self-edits at the row level.
+
+**`src/hooks/useSeats.js`** — `place`/`unplace`/`callPick` accept an optional `extras` arg that injects `on_behalf_of_delegation_id` and `notify_sent`.
+
+**`src/portal-v2/OnBehalfControls.jsx`** — shared `OnBehalfBanner` (gold-tinted "Editing on behalf of {name}") and `NotifyToggle` (defaults ON).
+
+**Three editing modals** — `DinnerModal`, `SwapSeatModal`, `MoveGroupModal` — accept `behalfOf` prop, render the banner + toggle, fire `push_tickets` on save when notify is on.
+
+**`DelegationManageModal`** — three optional callbacks (`onEditSeat`, `onEditMeal`, `onMoveGroup`). Each `TicketLine` gets ✏️ and 🍽️ buttons inline; "Move all N seats together" CTA shows when seats are all in the same showing+theater.
+
+**`PortalShell`** wires callbacks → `swapSeat`/`moveGroup`/`onBehalfDinner` state with `behalfOf` populated. Modals carry `returnTo: { kind: 'manageDelegation', delegation }` so closing them restores the Manage Invite view.
+
+### Variances from the original spec below
+
+1. **No new delegate-side banner.** Original open question #1 — answered as: no, the notification SMS+email and audit log do the trust work. Easy follow-up if requested.
+2. **Per-edit notify toggle (not sponsor-wide).** Original open question #2 — answered: toggle lives in each editing modal, defaults ON, sponsor flips OFF for silent admin edits.
+3. **No catering lockout in this PR.** Original spec mentioned a 72-hour soft warning. Not implemented; can add closer to gala. Audit log captures every meal change so a post-cutoff review is straightforward.
+
+### Original Phase C spec (preserved for reference)
 
 This is the auth lift. Today, `pick.js` gates every seat operation on:
 
