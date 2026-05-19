@@ -23,6 +23,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SeatMap, adaptTheater, seatById } from '../portal/SeatEngine.jsx';
 import { SHOWING_NUMBER_TO_ID } from '../hooks/usePortal.js';
 import { ShowingAuditoriumPills } from './TicketGroupModal.jsx';
+import { OnBehalfBanner, NotifyToggle } from './OnBehalfControls.jsx';
 
 export function SwapSeatModal({
   currentSeat,        // { row, num, seatLabel, theater_id, showing_number, movie_title, poster_url, ... }
@@ -33,10 +34,17 @@ export function SwapSeatModal({
   onRefresh,
   onCommitted,        // optional: parent reaction (e.g. close parent modal)
   onSuccess,          // optional: parent toast callback (kind, message)
+  // Phase C — when set, scopes the swap to a child delegation's seats
+  // and shows the on-behalf banner + notify toggle. Shape:
+  //   { delegationId: number, delegateName: string, token: string }
+  // `token` is the calling sponsor's portal token (needed for the
+  // post-save push_tickets call).
+  behalfOf = null,
 }) {
   const [target, setTarget] = useState(null); // seatId like "K-3"
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState(null);
+  const [notify, setNotify] = useState(true);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -107,20 +115,28 @@ export function SwapSeatModal({
     const showingId = SHOWING_NUMBER_TO_ID[showingNum];
     const theaterId = currentSeat.theater_id;
 
+    // Phase C — when scoped to a child delegation, every server write
+    // carries on_behalf_of_delegation_id. notify_sent flags whether
+    // the audit row records a follow-up notification (the actual push
+    // happens via the delegate.js push_tickets action below).
+    const extras = behalfOf?.delegationId
+      ? { onBehalfOfDelegationId: behalfOf.delegationId, notifySent: notify }
+      : null;
+
     try {
       // Step 1: release the current seat. Frees a slot in capacity.
-      await seats.unplace(showingId, theaterId, [currentSeatId]);
+      await seats.unplace(showingId, theaterId, [currentSeatId], extras);
       // Step 2: place the target. Capacity is now back to where it
       // was before the swap, so this should succeed unless the seat
       // got grabbed in the brief window.
       try {
-        await seats.place(showingId, theaterId, [target]);
+        await seats.place(showingId, theaterId, [target], extras);
       } catch (placeErr) {
         // Race: target was taken between our unplace and our place.
         // Try to recover by re-placing the original seat. If THAT
         // also fails (capacity issue?), surface both errors.
         try {
-          await seats.place(showingId, theaterId, [currentSeatId]);
+          await seats.place(showingId, theaterId, [currentSeatId], extras);
           throw new Error(
             `That seat got taken just now. Your original seat ${currentSeat.seatLabel} is still yours. Try a different seat.`
           );
@@ -128,6 +144,21 @@ export function SwapSeatModal({
           throw new Error(
             `Could not place ${target.replace('-', '')} (${placeErr.message}). And we could not put you back in ${currentSeat.seatLabel} either — please refresh and try again.`
           );
+        }
+      }
+      // Fire-and-forget push to delegate if requested.
+      if (behalfOf?.delegationId && notify && behalfOf?.token) {
+        try {
+          await fetch(`/api/gala/portal/${behalfOf.token}/delegate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'push_tickets',
+              delegation_id: behalfOf.delegationId,
+            }),
+          });
+        } catch (e) {
+          console.warn('push_tickets failed after on-behalf swap', e);
         }
       }
       if (onRefresh) await onRefresh();
@@ -174,6 +205,7 @@ export function SwapSeatModal({
         </div>
 
         <div className="p2-modal-body">
+          {behalfOf && <OnBehalfBanner name={behalfOf.delegateName} />}
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 18 }}>
             {currentSeat.poster_url && (
               <img
@@ -262,6 +294,10 @@ export function SwapSeatModal({
               </div>
             </div>
           </div>
+
+          {behalfOf && (
+            <NotifyToggle name={behalfOf.delegateName} on={notify} onChange={setNotify} />
+          )}
 
           {err && (
             <div className="p2-notice red" style={{ marginTop: 12 }}>

@@ -1434,6 +1434,49 @@ body {
   white-space: nowrap;
 }
 
+/* The title row optionally hosts the per-ticket action buttons on
+   the right. Flexbox so the title takes the available width and the
+   action buttons stay tucked at the end. */
+.p2-deleg-ticket-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.p2-deleg-ticket-titlerow .p2-deleg-ticket-title {
+  flex: 1;
+}
+
+.p2-deleg-ticket-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.p2-deleg-ticket-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+}
+.p2-deleg-ticket-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.p2-deleg-ticket-action:active {
+  transform: scale(0.94);
+}
+
 .p2-deleg-ticket-showing {
   font-size: 12px;
   color: var(--p2-subtle);
