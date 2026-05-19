@@ -1086,6 +1086,185 @@ body[data-color-mode="sponsor"] .seat--split {
   height: 10px;
 }
 
+/* ═══ Tier-2 admin visibility: Issues tab + sponsor footprint ═══
+   Pairs with the Tier-1 color/split work. The queue panel now hosts
+   two views — the default Sponsors list (unchanged) and a new
+   Issues list focused on split blocks. The cross-auditorium
+   footprint chips render inside each sponsor card so the admin can
+   see and jump to every aud a sponsor has seats in. */
+
+/* Tab strip at the top of the queue panel — Sponsors | Issues with
+   count badges. Same visual language as the existing filter pills
+   but slightly larger so it reads as a primary mode switch, not a
+   filter. */
+.queue-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.queue-tab {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding: 8px 10px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease, color 0.15s ease;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.queue-tab:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+.queue-tab.active {
+  color: var(--text);
+  border-bottom-color: var(--gala-red);
+  background: rgba(203, 38, 44, 0.04);
+}
+.queue-tab__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--card-alt);
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.queue-tab.active .queue-tab__badge {
+  background: var(--gala-red);
+  color: white;
+}
+.queue-tab__badge--warn {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.queue-tab.active .queue-tab__badge--warn {
+  background: #F59E0B;
+  color: white;
+}
+
+/* Issues list — one card per (sponsor, theater, row) split block.
+   Visually similar to sponsor-card so it feels at home, but with
+   a warning accent and a Jump button on the right. */
+.issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.issues-empty {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 28px 12px;
+  background: var(--green-bg);
+  border: 1px dashed #86EFAC;
+  border-radius: 8px;
+  color: #065F46;
+}
+.issue-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid #F59E0B;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.issue-card__body {
+  flex: 1;
+  min-width: 0;
+}
+.issue-card__name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.issue-card__detail {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.issue-card__seats {
+  display: inline-block;
+  font-family: ui-monospace, SF Mono, monospace;
+  font-size: 0.7rem;
+  color: #92400E;
+  background: #FEF3C7;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+.issue-card__jump {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.issue-card__jump:hover {
+  background: var(--gala-red);
+  border-color: var(--gala-red);
+  color: white;
+}
+
+/* Sponsor footprint — small chip row on each sponsor card showing
+   which auditoriums they have placed seats in. Each chip is
+   clickable to jump the picker to that aud. */
+.sponsor-card__footprint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.footprint-chip {
+  border: 0;
+  background: var(--card-alt);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.footprint-chip:hover {
+  background: var(--navy);
+  color: white;
+}
+.footprint-chip--split {
+  background: #FEF3C7;
+  color: #92400E;
+}
+.footprint-chip--split:hover {
+  background: #F59E0B;
+  color: white;
+}
+
 /* ═══ Toast notifications ═══ */
 .toast-container {
   position: fixed; bottom: 24px; right: 24px;
@@ -1605,26 +1784,44 @@ body[data-color-mode="sponsor"] .seat--split {
   <aside class="queue-panel">
     <div class="queue-panel__header">
       <div class="queue-panel__title">
-        <span>Sponsor Queue</span>
+        <span id="queue-panel-title">Sponsor Queue</span>
         <span class="queue-panel__count" id="queue-count">—</span>
       </div>
-      <p class="queue-panel__sub"><strong>1.</strong> Click a sponsor below. <strong>2.</strong> Click seats to select · shift-click for a row range · drag a box to lasso. <strong>3.</strong> Hit <em>Assign</em> when ready.</p>
+      <p class="queue-panel__sub" id="queue-panel-sub"><strong>1.</strong> Click a sponsor below. <strong>2.</strong> Click seats to select · shift-click for a row range · drag a box to lasso. <strong>3.</strong> Hit <em>Assign</em> when ready.</p>
     </div>
 
-    <input type="text" class="queue-search" id="queue-search" placeholder="Search company, contact..." autocomplete="off">
-
-    <div class="queue-filter" id="queue-filter">
-      <button class="queue-filter__pill active" data-filter="unseated">Unseated</button>
-      <button class="queue-filter__pill" data-filter="partial">Partial</button>
-      <button class="queue-filter__pill" data-filter="all">All</button>
-      <button class="queue-filter__pill" data-filter="Platinum">Platinum</button>
-      <button class="queue-filter__pill" data-filter="Gold">Gold</button>
-      <button class="queue-filter__pill" data-filter="Silver">Silver</button>
-      <button class="queue-filter__pill" data-filter="Bronze">Bronze</button>
+    <!-- Tier-2 view switcher: Sponsors (default) ↔ Issues (split blocks). -->
+    <div class="queue-tabs" role="tablist" aria-label="Queue view">
+      <button type="button" class="queue-tab active" data-view="sponsors" role="tab" aria-selected="true">
+        Sponsors <span class="queue-tab__badge" id="queue-tab-sponsors-count">—</span>
+      </button>
+      <button type="button" class="queue-tab" data-view="issues" role="tab" aria-selected="false">
+        Issues <span class="queue-tab__badge queue-tab__badge--warn" id="queue-tab-issues-count">0</span>
+      </button>
     </div>
 
-    <div class="queue-list" id="queue-list">
-      <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 20px;">Loading sponsors…</div>
+    <div id="queue-view-sponsors">
+      <input type="text" class="queue-search" id="queue-search" placeholder="Search company, contact..." autocomplete="off">
+
+      <div class="queue-filter" id="queue-filter">
+        <button class="queue-filter__pill active" data-filter="unseated">Unseated</button>
+        <button class="queue-filter__pill" data-filter="partial">Partial</button>
+        <button class="queue-filter__pill" data-filter="all">All</button>
+        <button class="queue-filter__pill" data-filter="Platinum">Platinum</button>
+        <button class="queue-filter__pill" data-filter="Gold">Gold</button>
+        <button class="queue-filter__pill" data-filter="Silver">Silver</button>
+        <button class="queue-filter__pill" data-filter="Bronze">Bronze</button>
+      </div>
+
+      <div class="queue-list" id="queue-list">
+        <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 20px;">Loading sponsors…</div>
+      </div>
+    </div>
+
+    <div id="queue-view-issues" style="display:none;">
+      <div class="issues-list" id="issues-list">
+        <div class="issues-empty">No split blocks — every sponsor's seats are contiguous within each row. 🎉</div>
+      </div>
     </div>
   </aside>
 
@@ -1970,6 +2167,30 @@ async function loadAssignmentsFromAPI(theaterId, showingNumber) {
   // every assignments reload. Cheap (O(n) over assignments), so safe
   // to run unconditionally.
   splitSponsorIds = detectSplitBlocks();
+  // Tier-2: keep the venue-wide cache in sync for cross-aud features
+  // (Issues panel + footprint chips). Mirror the rows we just got.
+  for (const k in venueAssignments) {
+    if (venueAssignments[k]?.theater_id === theaterId
+        && venueAssignments[k]?.showing_number === sn) {
+      delete venueAssignments[k];
+    }
+  }
+  for (const row of rows) {
+    const vk = `${row.theater_id}:${row.showing_number}:${row.row_label}:${row.seat_num}`;
+    venueAssignments[vk] = {
+      guest_name: row.guest_name,
+      sponsor_id: row.sponsor_id || null,
+      theater_id: row.theater_id,
+      showing_number: row.showing_number,
+      row_label: row.row_label,
+      seat_num: row.seat_num,
+    };
+  }
+  if (queueView === 'issues') renderIssuesList();
+  else {
+    const badge = document.getElementById('queue-tab-issues-count');
+    if (badge) badge.textContent = String(detectVenueSplitBlocks().length);
+  }
 }
 
 /* ── Load buyers from D1 sponsors (authoritative source) ── */
@@ -2061,6 +2282,18 @@ async function init() {
   splitSponsorIds = detectSplitBlocks();
   if (currentTheater) renderTheater(currentTheater.id);
   renderLegend();
+
+  // Tier-2 admin visibility: wire the Sponsors/Issues tab strip and
+  // load venue-wide assignments so the Issues panel + footprint
+  // chips have full data. This runs after the first render so the
+  // initial admin page paint isn't blocked on the cross-venue fetch.
+  document.querySelectorAll('.queue-tab').forEach(t => {
+    t.addEventListener('click', () => setQueueView(t.dataset.view));
+  });
+  loadVenueAssignments().then(() => {
+    renderIssuesList();  // updates the Issues count badge even when view is sponsors
+    if (typeof renderSponsorQueue === 'function') renderSponsorQueue();  // re-render to show footprint chips
+  });
 }
 
 /* ═══ PICKER LOGIC (ported from guest portal) ═══ */
@@ -2280,9 +2513,15 @@ function sponsorColor(sponsorOrName) {
 /* Recompute split-block sponsor set across the entire assignments
    map. A sponsor is "split" if they own 2+ seats in the same
    (theater, row) but those seat numbers aren't a contiguous run.
-   Caller stores result in splitSponsorIds and re-runs whenever
-   assignments change (on save, on initial load, on auditorium switch).
+
+   Tier-1: returned just a Set of sponsor IDs (used for the yellow
+   ring). Tier-2 (2026-05-18): also populates `splitBlockDetails` —
+   one row per (sponsor, theater, row) where the gap occurred —
+   which the Issues panel uses to show specific coordinates and
+   jump the picker to the right place.
+
    Cheap — O(n) over assignments, runs in microseconds. */
+let splitBlockDetails = []; // [{sponsorId, theaterId, row, seats: [num...]}, ...]
 function detectSplitBlocks() {
   const buckets = new Map(); // key = theater:row:sponsorId → [num...]
   for (const [seatKey, a] of Object.entries(assignments)) {
@@ -2291,22 +2530,33 @@ function detectSplitBlocks() {
     if (parts.length < 3) continue;
     const [theater, row, seat] = parts;
     const n = parseInt(seat, 10);
-    if (!Number.isFinite(n)) continue; // skip oddly-numbered seats
+    if (!Number.isFinite(n)) continue;
     const k = `${theater}:${row}:${a.sponsor_id}`;
     if (!buckets.has(k)) buckets.set(k, []);
     buckets.get(k).push(n);
   }
   const split = new Set();
+  const details = [];
   for (const [k, nums] of buckets) {
     if (nums.length < 2) continue;
     nums.sort((x, y) => x - y);
+    let hasGap = false;
     for (let i = 1; i < nums.length; i++) {
-      if (nums[i] !== nums[i - 1] + 1) {
-        split.add(Number(k.split(':')[2]));
-        break;
-      }
+      if (nums[i] !== nums[i - 1] + 1) { hasGap = true; break; }
+    }
+    if (hasGap) {
+      const [theaterStr, row, sponsorIdStr] = k.split(':');
+      const sponsorId = Number(sponsorIdStr);
+      split.add(sponsorId);
+      details.push({
+        sponsorId,
+        theaterId: Number(theaterStr),
+        row,
+        seats: nums,
+      });
     }
   }
+  splitBlockDetails = details;
   return split;
 }
 
@@ -2323,6 +2573,206 @@ function setColorMode(mode) {
   });
   if (currentTheater) renderTheater(currentTheater.id);
   renderLegend();
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Tier-2 admin visibility helpers (2026-05-18)
+   ────────────────────────────────────────────────────────────── */
+
+// Venue-wide assignment cache for the Issues panel and the sponsor
+// footprint chips. The main `assignments` map is scoped to the
+// active showing — switching showings clears it. We mirror it into
+// `venueAssignments` (same shape, never cleared) so the Issues
+// panel can see split blocks across every auditorium and showing,
+// not just the one the admin happens to be looking at.
+let venueAssignments = {};  // { seatKey → { sponsor_id, ... } }
+let venueLastFetched = 0;
+let queueView = 'sponsors';  // 'sponsors' | 'issues'
+
+async function loadVenueAssignments() {
+  try {
+    const res = await fetch('/api/gala/seating', { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const data = await res.json();
+    venueAssignments = {};
+    for (const r of (data.assignments || [])) {
+      const k = `${r.theater_id}:${r.showing_number}:${r.row_label}:${r.seat_num}`;
+      venueAssignments[k] = {
+        guest_name: r.guest_name,
+        sponsor_id: r.sponsor_id || null,
+        theater_id: r.theater_id,
+        showing_number: r.showing_number,
+        row_label: r.row_label,
+        seat_num: r.seat_num,
+      };
+    }
+    venueLastFetched = Date.now();
+  } catch (err) {
+    console.warn('[venueAssignments] fetch failed', err);
+  }
+}
+
+// Recompute split-block details using venueAssignments (cross-venue)
+// rather than the per-showing `assignments` map. Returns an array
+// of { sponsorId, theaterId, showingNumber, row, seats } records.
+function detectVenueSplitBlocks() {
+  const buckets = new Map();
+  for (const [seatKey, a] of Object.entries(venueAssignments)) {
+    if (!a || !a.sponsor_id) continue;
+    const parts = seatKey.split(':');
+    if (parts.length < 4) continue;
+    const [theater, showing, row, seat] = parts;
+    const n = parseInt(seat, 10);
+    if (!Number.isFinite(n)) continue;
+    const k = `${theater}:${showing}:${row}:${a.sponsor_id}`;
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(n);
+  }
+  const details = [];
+  for (const [k, nums] of buckets) {
+    if (nums.length < 2) continue;
+    nums.sort((x, y) => x - y);
+    let hasGap = false;
+    for (let i = 1; i < nums.length; i++) {
+      if (nums[i] !== nums[i - 1] + 1) { hasGap = true; break; }
+    }
+    if (hasGap) {
+      const [theaterStr, showingStr, row, sponsorIdStr] = k.split(':');
+      details.push({
+        sponsorId: Number(sponsorIdStr),
+        theaterId: Number(theaterStr),
+        showingNumber: Number(showingStr),
+        row,
+        seats: nums,
+      });
+    }
+  }
+  // Stable sort: by sponsor name, then theater, showing, row
+  details.sort((a, b) => {
+    const sa = allSponsors.find(s => s.id === a.sponsorId)?.company || '';
+    const sb = allSponsors.find(s => s.id === b.sponsorId)?.company || '';
+    return sa.localeCompare(sb)
+      || a.theaterId - b.theaterId
+      || a.showingNumber - b.showingNumber
+      || a.row.localeCompare(b.row);
+  });
+  return details;
+}
+
+// Compute the cross-auditorium footprint for one sponsor. Returns
+// an array of { theaterId, showingNumber, count } describing where
+// this sponsor has placed seats — used by the sponsor-card chips.
+function sponsorFootprint(sponsorId) {
+  const counts = new Map(); // key = theater:showing → count
+  for (const a of Object.values(venueAssignments)) {
+    if (a?.sponsor_id !== sponsorId) continue;
+    const k = `${a.theater_id}:${a.showing_number}`;
+    counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([k, n]) => {
+      const [t, s] = k.split(':');
+      return { theaterId: Number(t), showingNumber: Number(s), count: n };
+    })
+    .sort((a, b) => a.theaterId - b.theaterId || a.showingNumber - b.showingNumber);
+}
+
+// Switch which panel view is visible (Sponsors list / Issues list).
+function setQueueView(view) {
+  if (view !== 'sponsors' && view !== 'issues') return;
+  queueView = view;
+  document.querySelectorAll('.queue-tab').forEach(t => {
+    const isActive = t.dataset.view === view;
+    t.classList.toggle('active', isActive);
+    t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  document.getElementById('queue-view-sponsors').style.display = view === 'sponsors' ? '' : 'none';
+  document.getElementById('queue-view-issues').style.display = view === 'issues' ? '' : 'none';
+  if (view === 'issues') renderIssuesList();
+}
+
+// Jump the picker (showtime → movie → auditorium) so the chart
+// renders the target row's auditorium + showing. Best-effort —
+// scrolls the chart into view after the render settles.
+async function jumpToSplitBlock(detail) {
+  if (!detail || !currentTheater) return;
+  // Switch showing if different
+  if (pickerState.currentShowingNumber !== detail.showingNumber) {
+    pickerState.currentShowingNumber = detail.showingNumber;
+    document.body.setAttribute('data-showing', String(detail.showingNumber));
+  }
+  // Switch auditorium if different
+  if (currentTheater.id !== detail.theaterId) {
+    pickerState.currentTheaterId = detail.theaterId;
+    if (USE_API) await loadAssignmentsFromAPI(detail.theaterId);
+    renderTheater(detail.theaterId);
+  }
+  // Re-render the picker so the active pills reflect the new state
+  if (typeof buildPicker === 'function') buildPicker();
+  // Scroll the chart into view + briefly pulse the split-block seats
+  // in the target row so the eye lands on the right spot.
+  setTimeout(() => {
+    const chart = document.getElementById('theater-map');
+    if (chart) chart.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.querySelectorAll(
+      `.seat[data-row="${detail.row}"][data-sponsor-id="${detail.sponsorId}"]`
+    ).forEach(el => {
+      el.classList.add('seat--sponsor-hover');
+      setTimeout(() => el.classList.remove('seat--sponsor-hover'), 2500);
+    });
+  }, 200);
+  // Auto-switch back to Sponsors view so the user can edit
+  setQueueView('sponsors');
+}
+
+// Render the Issues list — one card per split-block group.
+function renderIssuesList() {
+  const list = document.getElementById('issues-list');
+  if (!list) return;
+  const details = detectVenueSplitBlocks();
+  // Update the counter badge regardless of which view is visible
+  const badge = document.getElementById('queue-tab-issues-count');
+  if (badge) badge.textContent = String(details.length);
+  if (details.length === 0) {
+    list.innerHTML = `<div class="issues-empty">No split blocks — every sponsor's seats are contiguous within each row. 🎉</div>`;
+    return;
+  }
+  list.innerHTML = details.map(d => {
+    const sp = allSponsors.find(s => s.id === d.sponsorId);
+    const name = sp?.company || `Sponsor #${d.sponsorId}`;
+    const seatsStr = d.seats.map(n => `${d.row}${n}`).join(', ');
+    const showingLabel = d.showingNumber === 1 ? 'Early' : 'Late';
+    return `<div class="issue-card" data-sponsor-id="${d.sponsorId}" data-theater="${d.theaterId}" data-showing="${d.showingNumber}" data-row="${d.row}">
+      <div class="issue-card__body">
+        <div class="issue-card__name">${escapeHtml(name)}</div>
+        <div class="issue-card__detail">
+          <span class="issue-card__seats">${escapeHtml(seatsStr)}</span>
+          Aud ${d.theaterId} · ${showingLabel} · row ${escapeHtml(d.row)}
+        </div>
+      </div>
+      <button type="button" class="issue-card__jump">Jump →</button>
+    </div>`;
+  }).join('');
+  // Wire jump buttons
+  list.querySelectorAll('.issue-card').forEach(card => {
+    const jumpBtn = card.querySelector('.issue-card__jump');
+    const detail = {
+      sponsorId: Number(card.dataset.sponsorId),
+      theaterId: Number(card.dataset.theater),
+      showingNumber: Number(card.dataset.showing),
+      row: card.dataset.row,
+    };
+    jumpBtn.addEventListener('click', () => jumpToSplitBlock(detail));
+    // Hovering a card also highlights the seats in chart (if same aud)
+    card.addEventListener('mouseenter', () => {
+      document.querySelectorAll(`.seat[data-sponsor-id="${detail.sponsorId}"]`)
+        .forEach(el => el.classList.add('seat--sponsor-hover'));
+    });
+    card.addEventListener('mouseleave', () => {
+      document.querySelectorAll('.seat.seat--sponsor-hover')
+        .forEach(el => el.classList.remove('seat--sponsor-hover'));
+    });
+  });
 }
 
 function renderLegend() {
@@ -3155,6 +3605,24 @@ function renderSponsorQueue() {
     const pctAssigned = s.seatsPurchased ? (s.seatsAssigned / s.seatsPurchased) * 100 : 0;
     const isSelected = bulkMode.active && bulkMode.sponsor?.id === s.id;
     const seatsClass = fullySeated ? 'sponsor-card__seats--done' : (s.seatsAssigned > 0 ? 'sponsor-card__seats--low' : '');
+    // Tier-2: render cross-auditorium footprint chips. One chip per
+    // (theater, showing) pair this sponsor has seats in. Highlight
+    // the chip if this (sponsor, theater, showing) has a split.
+    const footprint = sponsorFootprint(s.id);
+    const splitKeys = new Set(
+      detectVenueSplitBlocks()
+        .filter(d => d.sponsorId === s.id)
+        .map(d => `${d.theaterId}:${d.showingNumber}`)
+    );
+    const footprintHtml = footprint.length === 0 ? '' : `
+      <div class="sponsor-card__footprint">
+        ${footprint.map(fp => {
+          const isSplit = splitKeys.has(`${fp.theaterId}:${fp.showingNumber}`);
+          const label = `Aud ${fp.theaterId}${fp.showingNumber === 2 ? '·L' : ''} · ${fp.count}`;
+          return `<button type="button" class="footprint-chip${isSplit ? ' footprint-chip--split' : ''}" data-theater="${fp.theaterId}" data-showing="${fp.showingNumber}" title="${fp.count} seat${fp.count === 1 ? '' : 's'} in Auditorium ${fp.theaterId}${fp.showingNumber === 2 ? ' (late show)' : ' (early show)'}${isSplit ? ' — split block ⚠' : ''}">${label}</button>`;
+        }).join('')}
+      </div>
+    `;
     return `
       <div class="sponsor-card ${fullySeated ? 'fully-seated' : ''} ${isSelected ? 'selected' : ''}" data-id="${s.id}">
         <div class="sponsor-card__header">
@@ -3173,6 +3641,7 @@ function renderSponsorQueue() {
             <div class="sponsor-card__remaining-fill" style="width:${pctAssigned}%"></div>
           </div>
         ` : ''}
+        ${footprintHtml}
       </div>
     `;
   }).join('');
@@ -3202,6 +3671,38 @@ function renderSponsorQueue() {
     card.addEventListener('mouseleave', () => {
       document.querySelectorAll('.seat.seat--sponsor-hover')
         .forEach(el => el.classList.remove('seat--sponsor-hover'));
+    });
+    // Tier-2 admin visibility: each footprint chip jumps the picker
+    // to that (aud, showing). stopPropagation so the card-level
+    // click (which enters bulk mode) doesn't also fire.
+    card.querySelectorAll('.footprint-chip').forEach(chip => {
+      chip.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const sponsorId = Number(card.dataset.id);
+        const theaterId = Number(chip.dataset.theater);
+        const showingNumber = Number(chip.dataset.showing);
+        if (!theaterId) return;
+        // Mirror jumpToSplitBlock's mechanics (switch showing, switch
+        // aud, scroll into view, pulse the sponsor's seats).
+        if (pickerState.currentShowingNumber !== showingNumber) {
+          pickerState.currentShowingNumber = showingNumber;
+          document.body.setAttribute('data-showing', String(showingNumber));
+        }
+        if (!currentTheater || currentTheater.id !== theaterId) {
+          pickerState.currentTheaterId = theaterId;
+          if (USE_API) await loadAssignmentsFromAPI(theaterId);
+          renderTheater(theaterId);
+        }
+        if (typeof buildPicker === 'function') buildPicker();
+        setTimeout(() => {
+          const chart = document.getElementById('theater-map');
+          if (chart) chart.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          document.querySelectorAll(`.seat[data-sponsor-id="${sponsorId}"]`).forEach(el => {
+            el.classList.add('seat--sponsor-hover');
+            setTimeout(() => el.classList.remove('seat--sponsor-hover'), 2200);
+          });
+        }, 200);
+      });
     });
   });
 }
