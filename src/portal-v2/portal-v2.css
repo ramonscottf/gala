@@ -438,9 +438,9 @@ body {
    stays readable without truncation. */
 .p2-event-pill {
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: stretch;
-  gap: 14px;
+  gap: 18px;
   margin-top: 24px;
   padding: 14px 20px;
   border-radius: 16px;
@@ -450,15 +450,19 @@ body {
 
 /* Each row holds the date OR venue text on the left and a small
    action pill on the right (Add to calendar / Directions). Scott
-   2026-05-18 from the road: "two pills oriented right". */
+   2026-05-18 from the road: "two pills oriented right".
+   Post-dinner 2026-05-18: the two rows now sit side-by-side in a
+   horizontal pill (date | divider | venue) on desktop. Each row
+   still has its own internal text-then-button layout. Mobile
+   media query below reverts to the original stacked layout. */
 .p2-event-pill-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 14px;
   min-width: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .p2-event-pill-text {
@@ -481,8 +485,11 @@ body {
 }
 
 .p2-event-pill-divider {
-  height: 1px;
-  width: 100%;
+  /* Vertical bar between the date side and the venue side on the
+     desktop horizontal layout. Reverts to a horizontal rule in the
+     narrow-screen media query below. */
+  width: 1px;
+  align-self: stretch;
   background: rgba(255, 255, 255, 0.16);
 }
 
@@ -2598,10 +2605,19 @@ body {
   }
   .p2-event-pill {
     display: flex;
+    flex-direction: column;
     width: 100%;
+    gap: 14px;
   }
   .p2-event-pill-row {
     width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .p2-event-pill-divider {
+    width: 100%;
+    height: 1px;
+    align-self: auto;
   }
   .p2-modal-body {
     padding: 18px;
