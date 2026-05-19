@@ -349,22 +349,42 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
 }
 
 function StatusCard({ identity, seatMath, tierAccess, onPlace, onInvite, onScrollToTickets }) {
+  // placedTotal = all seats actually in chairs under this sponsor
+  // (sponsor-direct + delegate-placed). This is the "real" placed
+  // number for the dashboard tile. Falls back to legacy `placed`
+  // for backwards compat with old payloads.
+  const placedTotal = seatMath?.placedTotal ?? seatMath?.placed ?? 0;
+  // placed = sponsor-direct count, still used by other UI checks for
+  // whether the sponsor has their own editable seats.
   const placed = seatMath?.placed || 0;
   const total = seatMath?.total || 0;
-  const delegated = seatMath?.delegated || 0;
-  // Open = seats the sponsor still has to place themselves. Must
-  // exclude delegated seats (parity with v1's OPEN stat).
-  const remaining =
-    seatMath?.available ?? Math.max(0, total - placed - delegated);
+  // delegatedPending = seats allocated to invited guests who haven't
+  // placed yet. This is what the third tile should show — "how many
+  // are still out as un-placed invites" — instead of `delegated`
+  // (total allocation, placed or not), which double-counts the
+  // already-placed seats already shown in PLACED.
+  const delegatedPending =
+    seatMath?.delegatedPending ?? Math.max(0, (seatMath?.delegated || 0) - Math.max(0, placedTotal - placed));
+  // Available = total - placedDirect - delegatedAllocated. May be
+  // negative if the sponsor is over-allocated (e.g. Big West Oil:
+  // 10 budget, 3 direct + 8 delegated = 11). We surface the negative
+  // number rather than hiding it as "0" so the over-allocation is
+  // visible and fixable.
+  const available =
+    seatMath?.available ?? (total - placed - (seatMath?.delegated || 0));
+  const overAllocated = available < 0;
   const open = tierAccess?.open === true;
   const tier = identity?.tier || 'Sponsor';
 
   // Each stat (except TOTAL, which is purely informational) is a
   // tap target. Scott 2026-05-18 from the road: "add some
   // interactivity and more depth to that very first thing you see."
-  //   PLACED         → scroll to the tickets section below
-  //   INVITED GUESTS → open the invite-someone-new flow
-  //   AVAILABLE      → open the seat picker (primary action)
+  //   PLACED   → scroll to the tickets section below
+  //   PENDING  → open the invite-someone-new flow (still useful — if
+  //              their guests haven't placed yet, sponsor may want to
+  //              nudge them or reclaim a seat)
+  //   AVAILABLE → open the seat picker (primary action). If over-
+  //              allocated, becomes a warning state instead.
   return (
     <section className="p2-section tight">
       <div className="p2-card stripped">
@@ -407,42 +427,46 @@ function StatusCard({ identity, seatMath, tierAccess, onPlace, onInvite, onScrol
             </div>
             <button
               type="button"
-              className={`p2-stat p2-stat-tappable ${placed === 0 ? 'is-empty' : ''}`}
+              className={`p2-stat p2-stat-tappable ${placedTotal === 0 ? 'is-empty' : ''}`}
               onClick={() => onScrollToTickets && onScrollToTickets()}
-              aria-label={`${placed} placed — view tickets`}
+              aria-label={`${placedTotal} placed — view tickets`}
             >
               <div className="p2-stat-label">
                 Placed
                 <span className="p2-stat-arrow" aria-hidden="true">↘</span>
               </div>
-              <span className={`p2-stat-value ${placed === 0 ? 'muted' : ''}`}>{placed}</span>
+              <span className={`p2-stat-value ${placedTotal === 0 ? 'muted' : ''}`}>{placedTotal}</span>
               <span className="p2-stat-sub">In seats</span>
             </button>
             <button
               type="button"
-              className={`p2-stat p2-stat-tappable ${delegated === 0 ? 'is-empty' : ''}`}
+              className={`p2-stat p2-stat-tappable ${delegatedPending === 0 ? 'is-empty' : ''}`}
               onClick={() => onInvite && onInvite()}
-              aria-label={`${delegated} invited guests — invite someone`}
+              aria-label={`${delegatedPending} pending — invite someone or check on guests`}
             >
               <div className="p2-stat-label">
-                Invited guests
+                Pending
                 <span className="p2-stat-arrow" aria-hidden="true">→</span>
               </div>
-              <span className={`p2-stat-value ${delegated === 0 ? 'muted' : ''}`}>{delegated}</span>
-              <span className="p2-stat-sub">On your list</span>
+              <span className={`p2-stat-value ${delegatedPending === 0 ? 'muted' : ''}`}>{delegatedPending}</span>
+              <span className="p2-stat-sub">With guests</span>
             </button>
             <button
               type="button"
-              className={`p2-stat p2-stat-tappable ${remaining === 0 ? 'is-empty' : 'is-primary'}`}
+              className={`p2-stat p2-stat-tappable ${overAllocated ? 'is-over' : available === 0 ? 'is-empty' : 'is-primary'}`}
               onClick={() => onPlace && onPlace()}
-              aria-label={`${remaining} available — pick seats`}
+              aria-label={overAllocated ? `Over by ${Math.abs(available)} — review` : `${available} available — pick seats`}
             >
               <div className="p2-stat-label">
-                Available
+                {overAllocated ? 'Over' : 'Available'}
                 <span className="p2-stat-arrow" aria-hidden="true">→</span>
               </div>
-              <span className={`p2-stat-value ${remaining === 0 ? 'muted' : ''}`}>{remaining}</span>
-              <span className="p2-stat-sub">To place</span>
+              <span className={`p2-stat-value ${available === 0 && !overAllocated ? 'muted' : ''}`}>
+                {overAllocated ? `−${Math.abs(available)}` : available}
+              </span>
+              <span className="p2-stat-sub">
+                {overAllocated ? 'Needs review' : 'To place'}
+              </span>
             </button>
           </div>
         </div>
@@ -667,21 +691,61 @@ function TicketsSection({
 }
 
 // Compute a normalized status from the delegation row. Mirrors the
-// resolveDelegationStatus helper inside the old Portal.jsx so we get
-// the same buckets without importing the whole module.
+// Lifecycle status for a child delegation card. Pre-2026-05-18 this
+// function only knew four terminal states (claimed/declined/revoked/
+// expired) and fell through to 'invited' for everything else — which
+// meant a delegate who had opened the link, placed all their seats,
+// and picked meals still showed "INVITED" on the sponsor portal.
+// Scott caught this watching the Lindquist portal: 7 of 10 guests
+// were fully done but every card said "INVITED".
+//
+// We now read the per-delegation lifecycle fields that already exist
+// on the portal payload (seatsAllocated, seatsPlaced,
+// seatsMissingDinner, accessedAt) and emit one of five states that
+// reflect what the delegate has actually done:
+//
+//   invited   — never opened the link
+//   opened    — opened, but no seats placed yet
+//   partial   — placed some seats but fewer than allocated
+//   meals     — placed all seats but not all meals picked
+//   ready     — all seats placed, all meals picked, ready for gala
+//
+// Terminal states (declined/revoked/expired) still short-circuit
+// above the lifecycle check.
 function delegationStatus(d) {
   if (!d) return 'unknown';
   const raw = (d.status || '').toLowerCase();
-  if (raw === 'claimed' || raw === 'accepted' || d.claimed_at) return 'claimed';
   if (raw === 'declined' || raw === 'revoked') return raw;
   if (raw === 'expired') return 'expired';
-  return 'invited';
+
+  const allocated = Number(d.seatsAllocated || d.seats_allocated || 0);
+  const placed = Number(d.seatsPlaced || d.seats_placed || 0);
+  const missingMeals = Number(d.seatsMissingDinner || d.seats_missing_dinner || 0);
+  const accessed = !!(d.accessedAt || d.accessed_at);
+
+  if (placed === 0) return accessed ? 'opened' : 'invited';
+  if (placed < allocated) return 'partial';
+  // placed === allocated from here down
+  if (missingMeals > 0) return 'meals';
+  return 'ready';
 }
 
 function DelegationStatusPillV2({ status }) {
+  // Lifecycle states emitted by delegationStatus(). Color intent:
+  //   invited (gold)  — waiting on them to open
+  //   opened (blue)   — they opened, haven't picked yet
+  //   partial (orange)— mid-pick, needs follow-up
+  //   meals (orange)  — placed seats, still needs meals
+  //   ready (green)   — fully done
+  //   declined/revoked/expired (red/grey) — terminal
   const map = {
-    claimed:  { label: 'Claimed',  color: '#7fcfa0' },
     invited:  { label: 'Invited',  color: 'var(--p2-gold)' },
+    opened:   { label: 'Opened',   color: '#9ec5ff' },
+    partial:  { label: 'Picking',  color: '#ffb86b' },
+    meals:    { label: 'Meals',    color: '#ffb86b' },
+    ready:    { label: 'Ready',    color: '#7fcfa0' },
+    // legacy 'claimed' alias kept for any old code that still emits it
+    claimed:  { label: 'Ready',    color: '#7fcfa0' },
     declined: { label: 'Declined', color: 'var(--p2-red-soft)' },
     revoked:  { label: 'Revoked',  color: 'var(--p2-subtle)' },
     expired:  { label: 'Expired',  color: 'var(--p2-red-soft)' },

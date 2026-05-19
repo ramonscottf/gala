@@ -59,13 +59,28 @@ export async function getSeatsAvailableToPlace(env, resolved) {
     const s = resolved.record;
     const total = s.seats_purchased || 0;
 
-    // Count seats placed directly by this sponsor (no delegation_id)
+    // Count seats placed directly by this sponsor (no delegation_id).
+    // This is the sponsor's own selections — what the "edit my seats"
+    // affordance can touch. Kept as `placed` for backwards compat
+    // with existing UI checks; the dashboard tile uses `placedTotal`.
     const direct = await env.GALA_DB.prepare(
       `SELECT COUNT(*) AS n FROM seat_assignments
         WHERE sponsor_id = ? AND delegation_id IS NULL`
     ).bind(s.id).first();
 
-    // Count seats allocated to direct child delegations (any status except reclaimed)
+    // Count EVERY seat under this sponsor, including delegate-placed.
+    // This is what the "PLACED" dashboard tile should display — the
+    // real "people in chairs" number, not just the sponsor's directly
+    // placed seats. Pre-2026-05-18 the tile read `placed` (direct only)
+    // which read as 0 for any sponsor who delegated all their tickets
+    // (e.g. Lindquist, 14 placed via delegates but tile showed 0).
+    const totalPlaced = await env.GALA_DB.prepare(
+      `SELECT COUNT(*) AS n FROM seat_assignments WHERE sponsor_id = ?`
+    ).bind(s.id).first();
+
+    // Count seats allocated to direct child delegations (any status
+    // except reclaimed). This is the total "out as invites" number,
+    // placed or not.
     const delegated = await env.GALA_DB.prepare(
       `SELECT COALESCE(SUM(seats_allocated), 0) AS n
          FROM sponsor_delegations
@@ -74,11 +89,28 @@ export async function getSeatsAvailableToPlace(env, resolved) {
           AND status != 'reclaimed'`
     ).bind(s.id).first();
 
+    const placedDirect = direct.n || 0;
+    const placedTotal = totalPlaced.n || 0;
+    const delegatedAllocated = delegated.n || 0;
+    const delegatedPlaced = Math.max(0, placedTotal - placedDirect);
+    const delegatedPending = Math.max(0, delegatedAllocated - delegatedPlaced);
+    // IMPORTANT: do NOT clamp available to 0. If a sponsor is over
+    // their budget (3 direct + 8 delegated = 11 vs 10 seats_purchased),
+    // we want the dashboard to show -1 so the over-allocation is
+    // visible and fixable. The previous Math.max(0, …) silently hid
+    // 11-against-10 as "Available 0 · all set" which is exactly what
+    // surprised Scott on the Big West Oil portal 2026-05-18.
+    const available = total - placedDirect - delegatedAllocated;
+
     return {
       total,
-      placed: direct.n || 0,
-      delegated: delegated.n || 0,
-      available: Math.max(0, total - (direct.n || 0) - (delegated.n || 0)),
+      placed: placedDirect,            // legacy: sponsor-direct count
+      placedTotal,                     // NEW: all seats placed under this sponsor
+      placedDirect,                    // alias for clarity
+      delegated: delegatedAllocated,   // legacy: total allocated to delegates
+      delegatedPlaced,                 // NEW: seats placed via delegates
+      delegatedPending,                // NEW: allocated but not yet placed
+      available,                       // NOW un-clamped; negative = over-allocated
     };
   }
 
@@ -97,11 +129,18 @@ export async function getSeatsAvailableToPlace(env, resolved) {
         AND status != 'reclaimed'`
   ).bind(d.id).first();
 
+  const placedDirect = direct.n || 0;
+  const delegatedAllocated = delegated.n || 0;
+
   return {
     total,
-    placed: direct.n || 0,
-    delegated: delegated.n || 0,
-    available: Math.max(0, total - (direct.n || 0) - (delegated.n || 0)),
+    placed: placedDirect,
+    placedTotal: placedDirect,        // delegates don't typically have child-delegate seats; placed = placedTotal
+    placedDirect,
+    delegated: delegatedAllocated,
+    delegatedPlaced: 0,
+    delegatedPending: delegatedAllocated,
+    available: total - placedDirect - delegatedAllocated,
   };
 }
 

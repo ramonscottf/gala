@@ -33,13 +33,25 @@ import { useEffect, useMemo, useState } from 'react';
 import { config } from '../config.js';
 import { dinnerLabelFor, dinnerEmojiFor } from './DinnerModal.jsx';
 
+// Lifecycle status for the Manage Invite modal header. Mirrors the
+// implementation in PortalShell.jsx — see the long-form comment
+// there for the rationale. Keep these two in sync; if you change
+// one, change the other.
 function delegationStatus(d) {
   if (!d) return 'unknown';
   const raw = (d.status || '').toLowerCase();
-  if (raw === 'claimed' || raw === 'accepted' || d.claimedAt || d.confirmedAt) return 'claimed';
   if (raw === 'declined' || raw === 'revoked') return raw;
   if (raw === 'expired') return 'expired';
-  return 'invited';
+
+  const allocated = Number(d.seatsAllocated || d.seats_allocated || 0);
+  const placed = Number(d.seatsPlaced || d.seats_placed || 0);
+  const missingMeals = Number(d.seatsMissingDinner || d.seats_missing_dinner || 0);
+  const accessed = !!(d.accessedAt || d.accessed_at);
+
+  if (placed === 0) return accessed ? 'opened' : 'invited';
+  if (placed < allocated) return 'partial';
+  if (missingMeals > 0) return 'meals';
+  return 'ready';
 }
 
 function initialsOf(name) {
@@ -293,11 +305,25 @@ export function DelegationManageModal({
                   {delegation?.seatsPlaced ?? 0} of {delegation?.seatsAllocated ?? 0} placed
                 </div>
                 <div className="p2-ticket-meta" style={{ marginTop: 2 }}>
-                  {delegation?.confirmedAt
-                    ? 'Confirmed by guest'
-                    : delegation?.accessedAt
-                    ? 'Has opened the link'
-                    : 'Invite sent, not yet opened'}
+                  {(() => {
+                    // Subtitle mirrors the lifecycle state in the pill
+                    // so the two reinforce each other. Plain-English
+                    // sentence for each state — sponsor never has to
+                    // guess what "INVITED" or "PICKING" means.
+                    const placed = Number(delegation?.seatsPlaced || 0);
+                    const allocated = Number(delegation?.seatsAllocated || 0);
+                    switch (status) {
+                      case 'invited':  return 'Invite sent — hasn’t opened yet';
+                      case 'opened':   return 'Opened the link — hasn’t picked seats yet';
+                      case 'partial':  return `Picked ${placed} of ${allocated} seats so far`;
+                      case 'meals':    return 'All seats picked — still choosing meals';
+                      case 'ready':    return 'All seats and meals locked in';
+                      case 'declined': return 'Declined the invite';
+                      case 'revoked':  return 'Invite revoked';
+                      case 'expired':  return 'Invite expired';
+                      default:         return delegation?.accessedAt ? 'Has opened the link' : 'Invite sent, not yet opened';
+                    }
+                  })()}
                 </div>
               </div>
               <DelegationStatusInline status={status} />
@@ -507,12 +533,17 @@ export function DelegationManageModal({
 
 function DelegationStatusInline({ status }) {
   const map = {
-    claimed: { label: 'Claimed', color: '#7fcfa0' },
-    invited: { label: 'Invited', color: 'var(--p2-gold)' },
+    invited:  { label: 'Invited',  color: 'var(--p2-gold)' },
+    opened:   { label: 'Opened',   color: '#9ec5ff' },
+    partial:  { label: 'Picking',  color: '#ffb86b' },
+    meals:    { label: 'Meals',    color: '#ffb86b' },
+    ready:    { label: 'Ready',    color: '#7fcfa0' },
+    // legacy alias — if any old code still emits 'claimed', render as Ready.
+    claimed:  { label: 'Ready',    color: '#7fcfa0' },
     declined: { label: 'Declined', color: 'var(--p2-red-soft)' },
-    revoked: { label: 'Revoked', color: 'var(--p2-subtle)' },
-    expired: { label: 'Expired', color: 'var(--p2-red-soft)' },
-    unknown: { label: 'Unknown', color: 'var(--p2-subtle)' },
+    revoked:  { label: 'Revoked',  color: 'var(--p2-subtle)' },
+    expired:  { label: 'Expired',  color: 'var(--p2-red-soft)' },
+    unknown:  { label: 'Unknown',  color: 'var(--p2-subtle)' },
   };
   const m = map[status] || map.unknown;
   return (
