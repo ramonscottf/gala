@@ -45,13 +45,27 @@ export async function onRequestGet(context) {
     });
   }
 
-  // Fetch assignments for a specific theater
-  if (!theaterId) return jsonError('theater_id required', 400);
+  // Fetch assignments — by theater (legacy), or for the whole venue
+  // when theater_id is omitted (Tier-2 admin Issues panel: needs to
+  // find split blocks across every auditorium without making N API
+  // calls).
+  let results;
+  if (!theaterId) {
+    // Cross-venue fetch. Used by the admin Issues panel only — it
+    // walks every assignment looking for split blocks. Cheap on D1
+    // at gala scale (~200-1100 rows). Same shape as the per-theater
+    // response so the admin's apiGet() handler doesn't have to
+    // branch.
+    results = await env.GALA_DB.prepare(
+      `SELECT * FROM seat_assignments
+        ORDER BY theater_id, showing_number, row_label, seat_num`
+    ).all();
+    return jsonOk({ assignments: results.results || [] }, 0);
+  }
 
   // Optional showing_number filter — when provided, return only that
   // showing's assignments. When omitted, return all showings for the
   // theater (legacy behavior; the admin UI now passes it explicitly).
-  let results;
   if (showingNumber) {
     results = await env.GALA_DB.prepare(
       `SELECT * FROM seat_assignments
