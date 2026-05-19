@@ -68,7 +68,7 @@ export function useSeats(portal, token, refresh) {
   const [pickError, setPickError] = useState(null);
 
   const callPick = useCallback(
-    async (action, showingId, theaterId, ids) => {
+    async (action, showingId, theaterId, ids, extras = null) => {
       const showing_number = SHOWING_ID_TO_NUMBER[showingId];
       // Build the full batch's seat list once so every parallel POST can
       // pass it as `inflight`. The server's per-seat orphan check treats
@@ -86,17 +86,28 @@ export function useSeats(portal, token, refresh) {
         const dash = id.indexOf('-');
         const row_label = id.slice(0, dash);
         const seat_num = id.slice(dash + 1);
+        // Phase C — on-behalf editing: callers (SwapSeatModal etc.) can
+        // pass {onBehalfOfDelegationId, notifySent} to scope the write
+        // to a child delegation owned by the calling sponsor. The
+        // server-side resolveWriteScope() handles auth + audit.
+        const body = {
+          action,
+          theater_id: theaterId,
+          showing_number,
+          row_label,
+          seat_num,
+          inflight,
+        };
+        if (extras?.onBehalfOfDelegationId) {
+          body.on_behalf_of_delegation_id = extras.onBehalfOfDelegationId;
+        }
+        if (extras?.notifySent != null) {
+          body.notify_sent = !!extras.notifySent;
+        }
         return fetch(`${config.apiBase}/api/gala/portal/${token}/pick`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action,
-            theater_id: theaterId,
-            showing_number,
-            row_label,
-            seat_num,
-            inflight,
-          }),
+          body: JSON.stringify(body),
         });
       });
       const responses = await Promise.all(calls);
@@ -126,13 +137,13 @@ export function useSeats(portal, token, refresh) {
   );
 
   const place = useCallback(
-    async (showingId, theaterId, seatIds) => {
+    async (showingId, theaterId, seatIds, extras = null) => {
       // showingId is required — it determines which showing's seat we
       // write. Was previously voided here (legacy bug fixed May 11 2026).
       setPending(true);
       setPickError(null);
       try {
-        await callPick('finalize', showingId, theaterId, seatIds);
+        await callPick('finalize', showingId, theaterId, seatIds, extras);
         await refresh();
       } catch (e) {
         setPickError(e);
@@ -145,11 +156,11 @@ export function useSeats(portal, token, refresh) {
   );
 
   const unplace = useCallback(
-    async (showingId, theaterId, seatIds) => {
+    async (showingId, theaterId, seatIds, extras = null) => {
       setPending(true);
       setPickError(null);
       try {
-        await callPick('unfinalize', showingId, theaterId, seatIds);
+        await callPick('unfinalize', showingId, theaterId, seatIds, extras);
         await refresh();
       } catch (e) {
         setPickError(e);

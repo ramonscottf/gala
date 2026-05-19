@@ -65,6 +65,14 @@ export function DelegationManageModal({
   // (theater_id, showing_number) → movie title + start time.
   assignments,
   showtimes,
+  // Phase C — edit on behalf. When these callbacks are wired (sponsor
+  // view only, never selfView), the per-ticket ✏️/🍽️ icons appear
+  // and the "Move all seats together" CTA shows up below the list
+  // when applicable. Each callback receives the seat or group shape
+  // that the respective modal needs.
+  onEditSeat,
+  onEditMeal,
+  onMoveGroup,
 }) {
   const initialName = delegation?.delegateName || '';
   const initialEmail = delegation?.email || '';
@@ -306,14 +314,68 @@ export function DelegationManageModal({
                 {isSplit && <span className="p2-split-block-pill">Split block</span>}
               </div>
               <div className="p2-deleg-ticket-list">
-                {myAssignments.map((a, i) => (
-                  <TicketLine
-                    key={`${a.theater_id}:${a.showing_number}:${a.row_label}:${a.seat_num}:${i}`}
-                    assignment={a}
-                    showtime={showtimeLookup.get(`${a.theater_id}:${a.showing_number}`)}
-                  />
-                ))}
+                {myAssignments.map((a, i) => {
+                  const show = showtimeLookup.get(`${a.theater_id}:${a.showing_number}`);
+                  // Build the seat shape SwapSeatModal expects. The
+                  // currentSeat object is denormalized — modal uses
+                  // .row/.num/.seatLabel for display and .theater_id /
+                  // .showing_number for the API target.
+                  const seatForSwap = onEditSeat ? {
+                    row: a.row_label,
+                    num: a.seat_num,
+                    seatLabel: `${a.row_label}${a.seat_num}`,
+                    theater_id: a.theater_id,
+                    showing_number: a.showing_number,
+                    movie_title: show?.movie_title,
+                    poster_url: show?.poster_url || show?.thumbnail_url,
+                  } : null;
+                  // DinnerModal seat shape uses .row/.num and .raw
+                  // for current dinner_choice display.
+                  const seatForMeal = onEditMeal ? {
+                    row: a.row_label,
+                    num: a.seat_num,
+                    theater_id: a.theater_id,
+                    showing_number: a.showing_number,
+                    guest_name: delegation.delegateName,
+                    raw: { dinner_choice: a.dinner_choice },
+                  } : null;
+                  return (
+                    <TicketLine
+                      key={`${a.theater_id}:${a.showing_number}:${a.row_label}:${a.seat_num}:${i}`}
+                      assignment={a}
+                      showtime={show}
+                      onSwap={onEditSeat && seatForSwap ? () => onEditSeat(seatForSwap) : null}
+                      onChangeMeal={onEditMeal && seatForMeal ? () => onEditMeal(seatForMeal) : null}
+                    />
+                  );
+                })}
               </div>
+              {onMoveGroup && !isSplit && myAssignments.length >= 2 && (
+                <button
+                  type="button"
+                  className="p2-btn ghost sm"
+                  style={{ marginTop: 12, width: '100%' }}
+                  onClick={() => {
+                    // Build the group shape MoveGroupModal expects.
+                    const first = myAssignments[0];
+                    const show = showtimeLookup.get(`${first.theater_id}:${first.showing_number}`);
+                    onMoveGroup({
+                      id: `deleg-${delegation.id}-${first.theater_id}-${first.showing_number}`,
+                      theater_id: first.theater_id,
+                      showing_number: first.showing_number,
+                      movie_title: show?.movie_title,
+                      poster_url: show?.poster_url || show?.thumbnail_url,
+                      seats: myAssignments.map((a) => ({
+                        row: a.row_label,
+                        num: a.seat_num,
+                        seatLabel: `${a.row_label}${a.seat_num}`,
+                      })),
+                    });
+                  }}
+                >
+                  ↔ Move all {myAssignments.length} seats together
+                </button>
+              )}
             </div>
           )}
 
@@ -480,14 +542,18 @@ function DelegationStatusInline({ status }) {
 // Compact one-line ticket summary inside the Manage Invite modal.
 // Layout (responsive — meta row wraps on narrow phones):
 //
-//   ┌──┐  The Pursuit
+//   ┌──┐  The Pursuit                              ✏️ 🍽️
 //   │  │  Late Show · 8:45 PM
 //   └──┘  Theater 3 · F12 · [🥖 Hot French Dip]
+//
+// When editing callbacks are wired (onSwap / onChangeMeal), small icon
+// buttons appear on the right of the title row. The trailing buttons
+// open SwapSeatModal / DinnerModal in on-behalf mode via PortalShell.
 //
 // Poster thumbnail uses thumbnail_url → poster_url → 2-letter movie
 // initials chip. Falls back to "Aud {N}" labelling when the showtime
 // lookup misses (stale data, admin reassignment).
-function TicketLine({ assignment, showtime }) {
+function TicketLine({ assignment, showtime, onSwap, onChangeMeal }) {
   const movieTitle = showtime?.movie_title || `Theater ${assignment.theater_id}`;
   const showStart = showtime?.show_start || null;
   const showingNum = assignment.showing_number || showtime?.showing_number || 1;
@@ -511,6 +577,8 @@ function TicketLine({ assignment, showtime }) {
     .map((w) => w[0].toUpperCase())
     .join('') || '?';
 
+  const editable = !!(onSwap || onChangeMeal);
+
   return (
     <div className="p2-deleg-ticket">
       <div
@@ -521,7 +589,35 @@ function TicketLine({ assignment, showtime }) {
         {!posterUrl && movieInitials}
       </div>
       <div className="p2-deleg-ticket-body">
-        <div className="p2-deleg-ticket-title" title={movieTitle}>{movieTitle}</div>
+        <div className="p2-deleg-ticket-titlerow">
+          <div className="p2-deleg-ticket-title" title={movieTitle}>{movieTitle}</div>
+          {editable && (
+            <div className="p2-deleg-ticket-actions">
+              {onSwap && (
+                <button
+                  type="button"
+                  className="p2-deleg-ticket-action"
+                  onClick={onSwap}
+                  title="Swap this seat"
+                  aria-label={`Swap seat ${seatLabel}`}
+                >
+                  ✏️
+                </button>
+              )}
+              {onChangeMeal && (
+                <button
+                  type="button"
+                  className="p2-deleg-ticket-action"
+                  onClick={onChangeMeal}
+                  title="Change meal"
+                  aria-label={`Change meal for ${seatLabel}`}
+                >
+                  🍽️
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         <div className="p2-deleg-ticket-showing">
           {showingLabel}
           {showStart ? ` · ${showStart}` : ''}

@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SeatMap, adaptTheater, autoPickBlock, seatById } from '../portal/SeatEngine.jsx';
 import { SHOWING_NUMBER_TO_ID } from '../hooks/usePortal.js';
 import { ShowingAuditoriumPills } from './TicketGroupModal.jsx';
+import { OnBehalfBanner, NotifyToggle } from './OnBehalfControls.jsx';
 
 export function MoveGroupModal({
   group,           // { seats: [...], theater_id, showing_number, movie_title, poster_url }
@@ -27,11 +28,16 @@ export function MoveGroupModal({
   onRefresh,
   onCommitted,
   onSuccess,       // optional: parent toast callback (kind, message)
+  // Phase C — when set, scopes the move to a child delegation's seats
+  // and shows the on-behalf banner + notify toggle. Shape matches
+  // SwapSeatModal: { delegationId, delegateName, token }.
+  behalfOf = null,
 }) {
   const N = group.seats.length;
   const [target, setTarget] = useState([]); // [seatId, ...] of new block
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState(null);
+  const [notify, setNotify] = useState(true);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -149,18 +155,22 @@ export function MoveGroupModal({
     const theaterId = group.theater_id;
     const oldIds = group.seats.map((s) => `${s.row}-${s.num}`);
 
+    const extras = behalfOf?.delegationId
+      ? { onBehalfOfDelegationId: behalfOf.delegationId, notifySent: notify }
+      : null;
+
     try {
       // Step 1: release the old block. Frees N slots.
-      await seats.unplace(showingId, theaterId, oldIds);
+      await seats.unplace(showingId, theaterId, oldIds, extras);
       // Step 2: place the new block. Capacity is back to where we
       // started so this should succeed unless someone grabbed seats
       // in the brief window.
       try {
-        await seats.place(showingId, theaterId, target);
+        await seats.place(showingId, theaterId, target, extras);
       } catch (placeErr) {
         // Race: try to put the user back where they were.
         try {
-          await seats.place(showingId, theaterId, oldIds);
+          await seats.place(showingId, theaterId, oldIds, extras);
           throw new Error(
             `One of those seats got taken just now. Your original block (${oldIds.map((s) => s.replace('-', '')).join(', ')}) is still yours. Try a different spot.`
           );
@@ -168,6 +178,21 @@ export function MoveGroupModal({
           throw new Error(
             `Could not place the new block (${placeErr.message}). And we could not restore your original seats either — please refresh and try again.`
           );
+        }
+      }
+      // Push updated tickets to delegate if on-behalf + notify.
+      if (behalfOf?.delegationId && notify && behalfOf?.token) {
+        try {
+          await fetch(`/api/gala/portal/${behalfOf.token}/delegate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'push_tickets',
+              delegation_id: behalfOf.delegationId,
+            }),
+          });
+        } catch (e) {
+          console.warn('push_tickets failed after on-behalf move', e);
         }
       }
       if (onRefresh) await onRefresh();
@@ -212,6 +237,7 @@ export function MoveGroupModal({
         </div>
 
         <div className="p2-modal-body">
+          {behalfOf && <OnBehalfBanner name={behalfOf.delegateName} />}
           <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16 }}>
             {group.poster_url && (
               <img
@@ -305,6 +331,10 @@ export function MoveGroupModal({
               </div>
             </div>
           </div>
+
+          {behalfOf && (
+            <NotifyToggle name={behalfOf.delegateName} on={notify} onChange={setNotify} />
+          )}
 
           {err && (
             <div className="p2-notice red" style={{ marginTop: 12 }}>

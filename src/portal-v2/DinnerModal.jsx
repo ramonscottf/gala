@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { config } from '../config.js';
+import { OnBehalfBanner, NotifyToggle } from './OnBehalfControls.jsx';
 
 export const DINNER_OPTIONS = [
   {
@@ -52,10 +53,13 @@ export function dinnerEmojiFor(id) {
   return o ? o.emoji : null;
 }
 
-export function DinnerModal({ seat, token, onClose, onRefresh }) {
+export function DinnerModal({ seat, token, onClose, onRefresh, behalfOf = null }) {
   const [choice, setChoice] = useState(seat?.raw?.dinner_choice || null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  // Phase C — when editing on behalf of a delegate, default to notifying
+  // them of the change. Sponsor can flip OFF for silent admin edits.
+  const [notify, setNotify] = useState(true);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -69,21 +73,44 @@ export function DinnerModal({ seat, token, onClose, onRefresh }) {
     setBusy(true);
     setErr(null);
     try {
+      const body = {
+        action: 'set_dinner',
+        theater_id: seat.theater_id,
+        showing_number: seat.showing_number,
+        row_label: seat.row,
+        seat_num: seat.num,
+        dinner_choice: choice,
+      };
+      if (behalfOf?.delegationId) {
+        body.on_behalf_of_delegation_id = behalfOf.delegationId;
+        body.notify_sent = notify;
+      }
       const res = await fetch(`${config.apiBase}/api/gala/portal/${token}/pick`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'set_dinner',
-          theater_id: seat.theater_id,
-          showing_number: seat.showing_number,
-          row_label: seat.row,
-          seat_num: seat.num,
-          dinner_choice: choice,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || `HTTP ${res.status}`);
+      }
+      // Notify the delegate (push their updated ticket details) if asked.
+      // Fire-and-forget — the meal change already succeeded; a failed
+      // push shouldn't block the modal close.
+      if (behalfOf?.delegationId && notify) {
+        try {
+          await fetch(`${config.apiBase}/api/gala/portal/${token}/delegate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'push_tickets',
+              delegation_id: behalfOf.delegationId,
+            }),
+          });
+        } catch (e) {
+          // Don't fail the save on push errors — surface in console only.
+          console.warn('push_tickets failed after on-behalf set_dinner', e);
+        }
       }
       if (onRefresh) await onRefresh();
       onClose();
@@ -124,6 +151,7 @@ export function DinnerModal({ seat, token, onClose, onRefresh }) {
         </div>
 
         <div className="p2-modal-body">
+          {behalfOf && <OnBehalfBanner name={behalfOf.delegateName} />}
           <p
             style={{
               color: 'var(--p2-muted)',
@@ -173,6 +201,10 @@ export function DinnerModal({ seat, token, onClose, onRefresh }) {
             >
               Clear my pick
             </button>
+          )}
+
+          {behalfOf && (
+            <NotifyToggle name={behalfOf.delegateName} on={notify} onChange={setNotify} />
           )}
 
           {err && (

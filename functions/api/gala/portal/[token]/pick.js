@@ -33,6 +33,7 @@ import {
   jsonOk,
 } from '../../_sponsor_portal.js';
 import { getLoveseatPartner } from '../../_loveseat_pairs.js';
+import { resolveWriteScope, writeAuditLog } from '../../_onBehalfOf.js';
 
 const HOLD_MINUTES = 15;
 
@@ -171,13 +172,27 @@ export async function onRequestPost(context) {
   if (!showResolved.ok) return jsonError(showResolved.error, 400);
   const showing_number = showResolved.showing_number;
 
-  const sponsorId = resolved.kind === 'sponsor' ? resolved.record.id : resolved.record.parent_sponsor_id;
-  const delegationId = resolved.kind === 'delegation' ? resolved.record.id : null;
+  // Phase C — on-behalf-of: a sponsor can pass on_behalf_of_delegation_id
+  // to operate on a child delegation's seats. writeScope is the
+  // "synthetic" identity for ownership/budget queries below; onBehalf
+  // carries the audit metadata. When the body lacks the param, writeScope
+  // is just resolved (no behavior change).
+  const scope = await resolveWriteScope(env, resolved, body);
+  if (!scope.ok) return scope.response;
+  const writeScope = scope.writeScope;
+  const onBehalf = scope.onBehalf;
 
-  if (resolved.kind === 'delegation' && !resolved.record.accessed_at) {
+  const sponsorId = writeScope.kind === 'sponsor'
+    ? writeScope.record.id
+    : writeScope.record.parent_sponsor_id;
+  const delegationId = writeScope.kind === 'delegation' ? writeScope.record.id : null;
+
+  if (writeScope.kind === 'delegation' && !writeScope.record.accessed_at && !onBehalf) {
+    // Self-edit by the delegate: stamp first-access. Sponsor edits on
+    // behalf don't count as the delegate visiting.
     await env.GALA_DB.prepare(
       `UPDATE sponsor_delegations SET accessed_at = datetime('now'), status = 'active' WHERE id = ?`
-    ).bind(resolved.record.id).run();
+    ).bind(writeScope.record.id).run();
   }
 
   // ───── SET_DINNER ─────
@@ -191,8 +206,27 @@ export async function onRequestPost(context) {
     if (dinner !== null && !VALID.has(dinner)) {
       return jsonError(`Invalid dinner_choice: ${dinner}`, 400);
     }
-    const cond = resolved.kind === 'sponsor' ? `sponsor_id = ?` : `delegation_id = ?`;
-    const val = resolved.record.id;
+    // Auth scoping mirrors the seat-ownership predicate the other
+    // actions use: sponsor-direct seats only when writeScope is sponsor,
+    // delegation seats only when writeScope is delegation (which covers
+    // both delegate-self and sponsor-on-behalf paths).
+    const cond = writeScope.kind === 'sponsor'
+      ? `sponsor_id = ? AND delegation_id IS NULL`
+      : `delegation_id = ?`;
+    const val = writeScope.record.id;
+
+    // Capture the prior dinner_choice for audit before we overwrite.
+    let beforeDinner = null;
+    if (onBehalf) {
+      const prior = await env.GALA_DB.prepare(
+        `SELECT dinner_choice FROM seat_assignments
+          WHERE theater_id = ? AND showing_number = ?
+            AND row_label = ? AND seat_num = ?
+            AND ${cond}`
+      ).bind(theater_id, showing_number, row_label, seat_num, val).first();
+      beforeDinner = prior?.dinner_choice ?? null;
+    }
+
     const result = await env.GALA_DB.prepare(
       `UPDATE seat_assignments
           SET dinner_choice = ?, updated_at = datetime('now')
@@ -204,6 +238,18 @@ export async function onRequestPost(context) {
     if ((result.meta?.changes || 0) === 0) {
       return jsonError('Seat is not in this token\'s block', 404);
     }
+
+    await writeAuditLog(env, onBehalf, {
+      action: 'set_dinner',
+      theater_id,
+      showing_number,
+      row_label,
+      seat_num,
+      before_value: { dinner_choice: beforeDinner },
+      after_value: { dinner_choice: dinner },
+      notify_sent: !!body.notify_sent,
+    });
+
     return jsonOk({ ok: true, action: 'set_dinner', dinner_choice: dinner });
   }
 
@@ -229,10 +275,10 @@ export async function onRequestPost(context) {
 
   // ───── UNFINALIZE ─────
   if (action === 'unfinalize') {
-    const cond = resolved.kind === 'sponsor'
+    const cond = writeScope.kind === 'sponsor'
       ? `sponsor_id = ? AND delegation_id IS NULL`
       : `delegation_id = ?`;
-    const val = resolved.kind === 'sponsor' ? resolved.record.id : resolved.record.id;
+    const val = writeScope.record.id;
 
     const partnerSeat = await getLoveseatPartner(env, request, theater_id, row_label, seat_num);
     const seatsToUnfinalize = partnerSeat ? [seat_num, partnerSeat] : [seat_num];
@@ -246,6 +292,20 @@ export async function onRequestPost(context) {
             AND ${cond}`
       ).bind(theater_id, showing_number, row_label, s, val).run();
       totalRemoved += result.meta.changes || 0;
+    }
+
+    if (totalRemoved > 0) {
+      await writeAuditLog(env, onBehalf, {
+        action: 'unfinalize',
+        theater_id,
+        showing_number,
+        row_label,
+        seat_num,
+        before_value: { placed: true },
+        after_value: { placed: false },
+        notify_sent: !!body.notify_sent,
+        notes: partnerSeat ? `paired with ${partnerSeat}` : null,
+      });
     }
 
     return jsonOk({
@@ -328,7 +388,7 @@ export async function onRequestPost(context) {
       if (partnerHeldByOther) return jsonError('Partner half of this loveseat is held by another sponsor', 409);
     }
 
-    const math = await getSeatsAvailableToPlace(env, resolved);
+    const math = await getSeatsAvailableToPlace(env, writeScope);
     const myHolds = await env.GALA_DB.prepare(
       `SELECT COUNT(*) AS n FROM seat_holds
         WHERE held_by_token = ? AND expires_at > datetime('now')`
@@ -418,7 +478,7 @@ export async function onRequestPost(context) {
       }
     }
 
-    const math = await getSeatsAvailableToPlace(env, resolved);
+    const math = await getSeatsAvailableToPlace(env, writeScope);
     const myPlaced = math.placed;
     const myQuota = math.total - math.delegated;
     let newFinalCount = 0;
@@ -439,18 +499,22 @@ export async function onRequestPost(context) {
       return jsonError(`You've already placed your full ${myQuota} seats`, 400);
     }
 
-    const guestName = resolved.kind === 'sponsor'
-      ? `${resolved.record.company}${resolved.record.first_name ? ' (' + resolved.record.first_name + ' ' + (resolved.record.last_name || '') + ')' : ''}`
-      : `${resolved.record.parent_company} / ${resolved.record.delegate_name}`;
+    // guest_name is written into seat_assignments at finalize time. In
+    // on-behalf mode we use the target delegation's identity so the
+    // night-of check-in list reads correctly — the row should look
+    // identical to one the delegate placed themselves.
+    const guestName = writeScope.kind === 'sponsor'
+      ? `${writeScope.record.company}${writeScope.record.first_name ? ' (' + writeScope.record.first_name + ' ' + (writeScope.record.last_name || '') + ')' : ''}`
+      : `${writeScope.record.parent_company} / ${writeScope.record.delegate_name}`;
 
     // Atomic quota-guarded INSERT. The INSERT WHERE re-evaluates the
     // count subquery against committed state per write, so parallel
     // /pick calls can't over-place. See May 11 2026 Logan-delegation
     // race-fix commit for context.
-    const scopeCountSql = resolved.kind === 'sponsor'
+    const scopeCountSql = writeScope.kind === 'sponsor'
       ? `(SELECT COUNT(*) FROM seat_assignments WHERE sponsor_id = ? AND delegation_id IS NULL)`
       : `(SELECT COUNT(*) FROM seat_assignments WHERE delegation_id = ?)`;
-    const scopeCountBind = resolved.kind === 'sponsor' ? sponsorId : delegationId;
+    const scopeCountBind = writeScope.kind === 'sponsor' ? sponsorId : delegationId;
 
     let alreadyFinalized = true;
     let quotaBlocked = false;
@@ -520,6 +584,20 @@ export async function onRequestPost(context) {
           WHERE theater_id = ? AND showing_number = ?
             AND row_label = ? AND seat_num = ?`
       ).bind(theater_id, showing_number, s.row, s.num).run();
+    }
+
+    if (!alreadyFinalized) {
+      await writeAuditLog(env, onBehalf, {
+        action: 'finalize',
+        theater_id,
+        showing_number,
+        row_label,
+        seat_num,
+        before_value: { placed: false },
+        after_value: { placed: true, seat_num },
+        notify_sent: !!body.notify_sent,
+        notes: partnerSeat ? `paired with ${partnerSeat}` : null,
+      });
     }
 
     return jsonOk({

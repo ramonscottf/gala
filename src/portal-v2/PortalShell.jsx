@@ -46,6 +46,7 @@ import { SwapSeatModal } from './SwapSeatModal.jsx';
 import { ReleaseSeatConfirm } from './ReleaseSeatConfirm.jsx';
 import { MoveGroupModal } from './MoveGroupModal.jsx';
 import { GiftSeatModal } from './GiftSeatModal.jsx';
+import { DinnerModal } from './DinnerModal.jsx';
 import {
   FinalizeBanner,
   TicketQrCardV2,
@@ -1007,6 +1008,12 @@ export default function PortalShellV2({
   // showing existing delegations or an invite-someone-new path.
   const [giftSeat, setGiftSeat] = useState(null);
 
+  // Phase C — on-behalf dinner edit. DinnerModal usually lives inside
+  // TicketGroupModal for the sponsor's own seats; for child-delegation
+  // edits we mount it at PortalShell level so it can sit on top of
+  // DelegationManageModal. Carries the behalfOf scope object.
+  const [onBehalfDinner, setOnBehalfDinner] = useState(null);
+
   // Deep-link `/sponsor/{token}/seats` opens the seat modal.
   useEffect(() => {
     if (openSheetOnMount) setSeatModal(true);
@@ -1499,6 +1506,45 @@ export default function PortalShellV2({
           onRefresh={onRefresh}
           assignments={portal?.childDelegationAssignments}
           showtimes={portal?.showtimes}
+          onEditSeat={(seat) => {
+            // Sponsor wants to swap one of the delegate's seats.
+            // Open SwapSeatModal scoped on-behalf — server will write
+            // to delegation_id, audit-log the change.
+            setSwapSeat({
+              seat,
+              behalfOf: {
+                delegationId: manageDelegation.id,
+                delegateName: manageDelegation.delegateName,
+                token,
+              },
+              returnTo: { kind: 'manageDelegation', delegation: manageDelegation },
+            });
+            setManageDelegation(null);
+          }}
+          onEditMeal={(seat) => {
+            setOnBehalfDinner({
+              seat,
+              behalfOf: {
+                delegationId: manageDelegation.id,
+                delegateName: manageDelegation.delegateName,
+                token,
+              },
+              returnTo: { kind: 'manageDelegation', delegation: manageDelegation },
+            });
+            setManageDelegation(null);
+          }}
+          onMoveGroup={(group) => {
+            setMoveGroup({
+              group,
+              behalfOf: {
+                delegationId: manageDelegation.id,
+                delegateName: manageDelegation.delegateName,
+                token,
+              },
+              returnTo: { kind: 'manageDelegation', delegation: manageDelegation },
+            });
+            setManageDelegation(null);
+          }}
         />
       )}
       {swapSeat && (
@@ -1509,10 +1555,14 @@ export default function PortalShellV2({
           seats={seats}
           onRefresh={onRefresh}
           onSuccess={bumpToast}
+          behalfOf={swapSeat.behalfOf || null}
           onClose={() => {
             const ret = swapSeat.returnTo;
             setSwapSeat(null);
             if (ret?.kind === 'group') setGroupModal(ret.group);
+            if (ret?.kind === 'manageDelegation' && ret.delegation) {
+              setManageDelegation(ret.delegation);
+            }
           }}
         />
       )}
@@ -1569,6 +1619,7 @@ export default function PortalShellV2({
           seats={seats}
           onRefresh={onRefresh}
           onSuccess={bumpToast}
+          behalfOf={moveGroup.behalfOf || null}
           onClose={() => {
             const ret = moveGroup.returnTo;
             setMoveGroup(null);
@@ -1576,7 +1627,25 @@ export default function PortalShellV2({
               const fresh = tickets.find((g) => g.id === ret.group?.id);
               if (fresh) setGroupModal(fresh);
             }
+            if (ret?.kind === 'manageDelegation' && ret.delegation) {
+              setManageDelegation(ret.delegation);
+            }
           }}
+        />
+      )}
+      {onBehalfDinner && (
+        <DinnerModal
+          seat={onBehalfDinner.seat}
+          token={token}
+          behalfOf={onBehalfDinner.behalfOf}
+          onClose={() => {
+            const ret = onBehalfDinner.returnTo;
+            setOnBehalfDinner(null);
+            if (ret?.kind === 'manageDelegation' && ret.delegation) {
+              setManageDelegation(ret.delegation);
+            }
+          }}
+          onRefresh={onRefresh}
         />
       )}
       {giftSeat && (
