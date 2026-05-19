@@ -991,6 +991,101 @@ body.bulk-mode .seat:not(.assigned):not(.blocked):not(.gap) {
 .seat.tier-Bronze    { background: #EA580C !important; border-color: #C2410C !important; }
 .seat.tier-CellPhone { background: #8B5CF6 !important; border-color: #6D28D9 !important; }
 
+/* ═══ Color-by-sponsor / Split-block / Sponsor-hover overlays ═══
+   Tier-1 admin visibility layer. The default chart colors assigned
+   seats by tier (4 buckets) which makes every Platinum look identical.
+   When body[data-color-mode="sponsor"] is set, assigned seats render
+   in their per-sponsor color via the --sponsor-color CSS variable
+   we set inline in createSeat(). Tier classes still apply but are
+   overridden by the per-sponsor color rule below. */
+body[data-color-mode="sponsor"] .seat.assigned[style*="--sponsor-color"] {
+  background: var(--sponsor-color) !important;
+  border-color: rgba(0, 0, 0, 0.18) !important;
+}
+/* Optional: in sponsor mode, fade unassigned seats so the assigned
+   sponsor-colored ones pop. Subtle — keeps layout legible. */
+body[data-color-mode="sponsor"] .seat:not(.assigned):not(.blocked) {
+  opacity: 0.42;
+}
+
+/* Split-block ring — any sponsor with non-contiguous seats within
+   a row gets this thin yellow outline on every one of their seats
+   so the eye lands on the problem without hovering. Drawn as an
+   outline rather than a border so it doesn't reflow the seat grid. */
+.seat--split {
+  outline: 2px solid #FBBF24 !important;
+  outline-offset: -2px;
+  z-index: 2;
+}
+/* In sponsor color mode, lift the ring color slightly so it stays
+   visible on top of every sponsor color. */
+body[data-color-mode="sponsor"] .seat--split {
+  outline-color: #FACC15 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+/* Hover highlight — when a sponsor card in the queue is hovered,
+   that sponsor's seats brighten/lift on the chart. Works in both
+   color modes. */
+.seat.seat--sponsor-hover {
+  outline: 2px solid #2563EB !important;
+  outline-offset: 1px;
+  transform: scale(1.08);
+  z-index: 3;
+  opacity: 1 !important;
+}
+
+/* Color-by toggle pills above the legend. Inline-flex group with
+   two pills; the active pill gets a filled background. */
+.color-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--card-alt);
+  border: 1px solid var(--border);
+  margin-right: 12px;
+}
+.color-toggle__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 0 4px 0 8px;
+}
+.color-toggle__pill {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.color-toggle__pill:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.color-toggle__pill.active {
+  background: var(--gala-red);
+  color: white;
+}
+/* When showing the sponsor legend, the chip list can get long —
+   wrap it gracefully and shrink the swatches. */
+.legend-item--sponsor {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.legend-item--sponsor .legend-swatch {
+  width: 10px;
+  height: 10px;
+}
+
 /* ═══ Toast notifications ═══ */
 .toast-container {
   position: fixed; bottom: 24px; right: 24px;
@@ -1559,7 +1654,14 @@ body.bulk-mode .seat:not(.assigned):not(.blocked):not(.gap) {
     <div class="screen"></div>
     <div class="screen-label">Screen</div>
     <div class="theater-map" id="theater-map"></div>
-    <div class="legend" id="legend"></div>
+    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:0 4px;">
+      <div class="color-toggle" role="group" aria-label="Color seats by">
+        <span class="color-toggle__label">Color by</span>
+        <button type="button" class="color-toggle__pill active" data-mode="type" aria-pressed="true">Seat type</button>
+        <button type="button" class="color-toggle__pill" data-mode="sponsor" aria-pressed="false">Sponsor</button>
+      </div>
+      <div class="legend" id="legend" style="flex:1; min-width:0;"></div>
+    </div>
   </div>
 
   <!-- ═══ SELECTION ACTION BAR (floats bottom-center when seats are picked) ═══ -->
@@ -1727,6 +1829,14 @@ let assignments = {}; // { "theaterId:rowLabel:seatNum": { guest_name, sponsor_i
 let pendingSeat = null;
 let ticketBuyers = []; // cached from Monday.com
 
+// Tier-1 admin visibility additions (2026-05-18):
+//   colorMode='type'   — assigned seats keep their tier color (default)
+//   colorMode='sponsor'— assigned seats render in per-sponsor color via hash
+let colorMode = 'type';
+// Sponsor IDs whose seats are split within a row in the *current* view.
+// Recomputed on every renderTheater() pass.
+let splitSponsorIds = new Set();
+
 // v2 key — previous key 'gala_seating_assignments' held demo assignments; new key
 // forces every browser to start from D1 truth on first load after this deploy.
 const STORAGE_KEY = 'gala_seating_assignments_v2';
@@ -1856,6 +1966,10 @@ async function loadAssignmentsFromAPI(theaterId, showingNumber) {
     };
   }
   cacheToLocalStorage();
+  // Tier-1 admin visibility: recompute split-block sponsors after
+  // every assignments reload. Cheap (O(n) over assignments), so safe
+  // to run unconditionally.
+  splitSponsorIds = detectSplitBlocks();
 }
 
 /* ── Load buyers from D1 sponsors (authoritative source) ── */
@@ -1935,6 +2049,18 @@ async function init() {
     loadVenueSummary(),
   ]);
   if (firstTheater) renderTheater(firstTheater);
+
+  // Tier-1 admin visibility: wire the Color By toggle pills and run
+  // the initial split-block detection against whatever assignments
+  // loaded with the first theater. Subsequent reloads
+  // (loadAssignmentsFromAPI) recompute splits at the end of their
+  // promise chains.
+  document.querySelectorAll('.color-toggle__pill').forEach(btn => {
+    btn.addEventListener('click', () => setColorMode(btn.dataset.mode));
+  });
+  splitSponsorIds = detectSplitBlocks();
+  if (currentTheater) renderTheater(currentTheater.id);
+  renderLegend();
 }
 
 /* ═══ PICKER LOGIC (ported from guest portal) ═══ */
@@ -2126,10 +2252,113 @@ async function switchToCurrentAud() {
 }
 
 /* ── Render Legend ── */
+/* ─────────────────────────────────────────────────────────────
+   Tier-1 admin visibility helpers (2026-05-18)
+   ──────────────────────────────────────────────────────────────
+   Deterministic per-sponsor color via an FNV-1a-ish hash of the
+   company name → HSL. Same sponsor always gets the same hue across
+   sessions and across auditoriums; the eye learns "Lindquist is the
+   lavender" the first time and that mapping holds. Saturation and
+   lightness are fixed for legibility on a white background. */
+function hashSponsorHue(name) {
+  let h = 2166136261;
+  const s = String(name || '').toLowerCase();
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return h % 360;
+}
+function sponsorColor(sponsorOrName) {
+  const name = typeof sponsorOrName === 'string'
+    ? sponsorOrName
+    : (sponsorOrName?.company || sponsorOrName?.name || '');
+  if (!name) return '#94A3B8';
+  return `hsl(${hashSponsorHue(name)}, 62%, 56%)`;
+}
+
+/* Recompute split-block sponsor set across the entire assignments
+   map. A sponsor is "split" if they own 2+ seats in the same
+   (theater, row) but those seat numbers aren't a contiguous run.
+   Caller stores result in splitSponsorIds and re-runs whenever
+   assignments change (on save, on initial load, on auditorium switch).
+   Cheap — O(n) over assignments, runs in microseconds. */
+function detectSplitBlocks() {
+  const buckets = new Map(); // key = theater:row:sponsorId → [num...]
+  for (const [seatKey, a] of Object.entries(assignments)) {
+    if (!a || !a.sponsor_id) continue;
+    const parts = seatKey.split(':');
+    if (parts.length < 3) continue;
+    const [theater, row, seat] = parts;
+    const n = parseInt(seat, 10);
+    if (!Number.isFinite(n)) continue; // skip oddly-numbered seats
+    const k = `${theater}:${row}:${a.sponsor_id}`;
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(n);
+  }
+  const split = new Set();
+  for (const [k, nums] of buckets) {
+    if (nums.length < 2) continue;
+    nums.sort((x, y) => x - y);
+    for (let i = 1; i < nums.length; i++) {
+      if (nums[i] !== nums[i - 1] + 1) {
+        split.add(Number(k.split(':')[2]));
+        break;
+      }
+    }
+  }
+  return split;
+}
+
+/* Toggle handler — flips body[data-color-mode] and re-renders the
+   current chart + legend so the new mode takes effect immediately. */
+function setColorMode(mode) {
+  if (mode !== 'type' && mode !== 'sponsor') return;
+  colorMode = mode;
+  document.body.setAttribute('data-color-mode', mode);
+  document.querySelectorAll('.color-toggle__pill').forEach(btn => {
+    const isActive = btn.dataset.mode === mode;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+  if (currentTheater) renderTheater(currentTheater.id);
+  renderLegend();
+}
+
 function renderLegend() {
   const legend = document.getElementById('legend');
+  if (!legend) return;
+
+  // Sponsor mode — list every sponsor visible in the current
+  // auditorium (assigned seats only), each with their hash color.
+  if (colorMode === 'sponsor' && currentTheater) {
+    const visibleSponsorIds = new Set();
+    for (const [seatKey, a] of Object.entries(assignments)) {
+      if (!a?.sponsor_id) continue;
+      if (seatKey.startsWith(currentTheater.id + ':')) visibleSponsorIds.add(a.sponsor_id);
+    }
+    const items = [...visibleSponsorIds]
+      .map(id => allSponsors.find(s => s.id === id))
+      .filter(Boolean)
+      .sort((a, b) => (a.company || '').localeCompare(b.company || ''));
+    let html = '';
+    if (items.length === 0) {
+      html = `<div class="legend-item" style="color:var(--text-muted);">No assigned sponsors in this auditorium yet</div>`;
+    } else {
+      for (const sp of items) {
+        const split = splitSponsorIds.has(sp.id);
+        html += `<div class="legend-item legend-item--sponsor" title="${escapeHtml(sp.company)}${split ? ' — split block!' : ''}">
+          <div class="legend-swatch" style="background: ${sponsorColor(sp.company)};"></div>
+          ${escapeHtml(sp.company)}${split ? ' <span style="color:#F59E0B; font-weight:700;">⚠ split</span>' : ''}
+        </div>`;
+      }
+    }
+    legend.innerHTML = html;
+    return;
+  }
+
+  // Default: seat-type legend (original behavior)
   const types = theaterData.seatTypes;
-  // Collect types actually used in bookable (non-staging) theaters
   const usedTypes = new Set();
   theaterData.theaters.filter(t => !t.staging).forEach(t => {
     t.rows.forEach(r => {
@@ -2360,18 +2589,28 @@ function createSeat(theaterId, rowLabel, seatNum, type, isLoveseat, halfInfo = n
 
   // Tier color class if assigned and tier-known (from venue summary placement lookup)
   let tierCls = '';
+  let sponsorColorVar = '';
+  let splitCls = '';
   if (isAssigned && assignment.sponsor_id) {
     const sp = allSponsors.find(s => s.id === assignment.sponsor_id);
     if (sp && sp.tier) tierCls = ' tier-' + sp.tier.replace(/[^a-zA-Z]/g, '');
+    // Per-sponsor color (Tier-1 admin visibility). Always set the
+    // CSS var inline; the body[data-color-mode="sponsor"] rule
+    // decides whether to use it.
+    if (sp) sponsorColorVar = `--sponsor-color: ${sponsorColor(sp.company)};`;
+    // Split-block ring — set always, the .seat--split class drives
+    // the outline.
+    if (splitSponsorIds.has(assignment.sponsor_id)) splitCls = ' seat--split';
   }
 
   const halfCls = halfInfo ? ` seat-loveseat-half seat-loveseat-half--${halfInfo.half}` : '';
-  el.className = 'seat' + (isLoveseat ? ' seat-loveseat' : '') + halfCls + (isAssigned ? ' assigned' : '') + (isBlocked ? ' blocked' : '') + tierCls;
-  el.style.background = isAssigned ? '' : color;
+  el.className = 'seat' + (isLoveseat ? ' seat-loveseat' : '') + halfCls + (isAssigned ? ' assigned' : '') + (isBlocked ? ' blocked' : '') + tierCls + splitCls;
+  el.style.cssText = (isAssigned ? '' : `background: ${color};`) + sponsorColorVar;
   el.dataset.key = key;
   el.dataset.row = rowLabel;
   el.dataset.seat = seatNum;
   el.dataset.type = type;
+  if (isAssigned && assignment.sponsor_id) el.dataset.sponsorId = String(assignment.sponsor_id);
   if (halfInfo) {
     el.dataset.pair = halfInfo.pairKey;
     el.dataset.half = halfInfo.half;
@@ -2949,6 +3188,20 @@ function renderSponsorQueue() {
         return;
       }
       enterBulkMode(sponsor);
+    });
+    // Tier-1 admin visibility: hover a queue card → temporarily
+    // highlight every seat owned by that sponsor in the current
+    // chart. Works in both color modes. Uses data-sponsor-id which
+    // createSeat now stamps on every assigned seat.
+    card.addEventListener('mouseenter', () => {
+      const id = card.dataset.id;
+      if (!id) return;
+      document.querySelectorAll(`.seat[data-sponsor-id="${id}"]`)
+        .forEach(el => el.classList.add('seat--sponsor-hover'));
+    });
+    card.addEventListener('mouseleave', () => {
+      document.querySelectorAll('.seat.seat--sponsor-hover')
+        .forEach(el => el.classList.remove('seat--sponsor-hover'));
     });
   });
 }
