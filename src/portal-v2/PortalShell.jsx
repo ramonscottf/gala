@@ -1160,6 +1160,31 @@ export default function PortalShellV2({
 
   const tickets = useMemo(() => buildTicketGroups(portal), [portal]);
 
+  // Seats this sponsor has placed but NOT yet handed to a guest
+  // (delegation_id is null). The bare "Invite a guest" modal offers
+  // these as pickable pills so a sponsor who placed everything up front
+  // can attach a name without re-picking. Carries theater_id because
+  // seat labels (L28) repeat across auditoriums — assignment must key
+  // on the full {theaterId, seatId} pair, never the bare label.
+  const assignableSeats = useMemo(() => {
+    const out = [];
+    for (const g of tickets) {
+      for (const s of g.seats) {
+        if (s.raw?.delegation_id) continue; // already given to a guest
+        out.push({
+          key: `${s.theater_id}:${s.row}-${s.num}`,
+          seatId: `${s.row}-${s.num}`,
+          theaterId: s.theater_id,
+          label: `${s.row}${s.num}`,
+          movie: g.movie_title,
+          showing: g.showing_number,
+          showingLabel: g.showingLabel,
+        });
+      }
+    }
+    return out;
+  }, [tickets]);
+
   // When the portal refreshes (e.g. after saving a dinner pick inside
   // an open group modal), the groupModal state still holds a snapshot
   // taken at open time — stale. Re-derive from the fresh tickets list
@@ -1282,7 +1307,7 @@ export default function PortalShellV2({
             seatMath={seatMath}
             tierAccess={tierAccess}
             onPlace={openSeatModal}
-            onInvite={() => setInviteModal({})}
+            onInvite={() => setInviteModal({ assignableSeats })}
             onScrollToTickets={() => {
               const el = document.getElementById('p2-tickets');
               if (el) {
@@ -1359,7 +1384,7 @@ export default function PortalShellV2({
 
           <GroupSection
             portal={portal}
-            onOpenInvite={() => setInviteModal({})}
+            onOpenInvite={() => setInviteModal({ assignableSeats })}
             onManageDelegation={(d) => setManageDelegation(d)}
           />
 
@@ -1454,7 +1479,13 @@ export default function PortalShellV2({
             // the invite to all checked seats.
             const giveable = [];
             for (const s of g.seats) {
-              const free = !s.raw?.delegation_id && !s.guest_name;
+              // A seat is free-to-give if it has no delegation. The default
+                // company guest_name written at sponsor placement (pick.js)
+                // does NOT mean a guest already has it — only delegation_id
+                // does. Pre-2026-05-21 the && !guest_name clause hid every
+                // sponsor-placed seat from the giveable pill universe, so the
+                // invite-for-seat modal showed only the tapped seat.
+                const free = !s.raw?.delegation_id;
               if (free) giveable.push(`${s.row}-${s.num}`);
             }
             // Edge case: every seat in the group already has a
@@ -1465,6 +1496,7 @@ export default function PortalShellV2({
             setInviteModal({
               seatPills: pills,
               preselectedPills: pills,
+              theaterId: g.theater_id,
             });
           }}
           onGiftSeat={(seat) => {
@@ -1484,7 +1516,13 @@ export default function PortalShellV2({
               if (!sameGroup) continue;
               for (const s of g.seats) {
                 const isTarget = s.row === seat.row && s.num === seat.num;
-                const free = !s.raw?.delegation_id && !s.guest_name;
+                // A seat is free-to-give if it has no delegation. The default
+                // company guest_name written at sponsor placement (pick.js)
+                // does NOT mean a guest already has it — only delegation_id
+                // does. Pre-2026-05-21 the && !guest_name clause hid every
+                // sponsor-placed seat from the giveable pill universe, so the
+                // invite-for-seat modal showed only the tapped seat.
+                const free = !s.raw?.delegation_id;
                 if (isTarget || free) {
                   sameGroupGiveable.push(`${s.row}-${s.num}`);
                 }
@@ -1495,6 +1533,7 @@ export default function PortalShellV2({
               seatPills:
                 sameGroupGiveable.length > 0 ? sameGroupGiveable : [sid],
               preselectedPills: [sid],
+              theaterId: seat.theater_id,
             });
           }}
           onInviteSeat={(seat) => {
@@ -1510,7 +1549,13 @@ export default function PortalShellV2({
               if (!sameGroup) continue;
               for (const s of g.seats) {
                 const isTarget = s.row === seat.row && s.num === seat.num;
-                const free = !s.raw?.delegation_id && !s.guest_name;
+                // A seat is free-to-give if it has no delegation. The default
+                // company guest_name written at sponsor placement (pick.js)
+                // does NOT mean a guest already has it — only delegation_id
+                // does. Pre-2026-05-21 the && !guest_name clause hid every
+                // sponsor-placed seat from the giveable pill universe, so the
+                // invite-for-seat modal showed only the tapped seat.
+                const free = !s.raw?.delegation_id;
                 if (isTarget || free) {
                   sameGroupGiveable.push(`${s.row}-${s.num}`);
                 }
@@ -1521,6 +1566,7 @@ export default function PortalShellV2({
               seatPills:
                 sameGroupGiveable.length > 0 ? sameGroupGiveable : [sid],
               preselectedPills: [sid],
+              theaterId: seat.theater_id,
             });
           }}
         />
@@ -1620,6 +1666,9 @@ export default function PortalShellV2({
           available={seatMath.available || seatMath.total - seatMath.placed - seatMath.delegated}
           seatPills={inviteModal.seatPills || null}
           preselectedPills={inviteModal.preselectedPills || null}
+          theaterId={inviteModal.theaterId ?? null}
+          assignableSeats={inviteModal.assignableSeats || null}
+          apiBase={config.apiBase}
           onClose={() => setInviteModal(null)}
           onCreated={onRefresh}
           onSuccess={bumpToast}
@@ -1801,7 +1850,13 @@ export default function PortalShellV2({
                 // itself (which gets preselected). Skip seats already
                 // delegated to someone else.
                 const isTarget = s.row === seat.row && s.num === seat.num;
-                const free = !s.raw?.delegation_id && !s.guest_name;
+                // A seat is free-to-give if it has no delegation. The default
+                // company guest_name written at sponsor placement (pick.js)
+                // does NOT mean a guest already has it — only delegation_id
+                // does. Pre-2026-05-21 the && !guest_name clause hid every
+                // sponsor-placed seat from the giveable pill universe, so the
+                // invite-for-seat modal showed only the tapped seat.
+                const free = !s.raw?.delegation_id;
                 if (isTarget || free) {
                   sameGroupGiveable.push(`${s.row}-${s.num}`);
                 }
@@ -1811,6 +1866,7 @@ export default function PortalShellV2({
               seatPills:
                 sameGroupGiveable.length > 0 ? sameGroupGiveable : [sid],
               preselectedPills: [sid],
+              theaterId: seat.theater_id,
             });
           }}
           onClose={() => {

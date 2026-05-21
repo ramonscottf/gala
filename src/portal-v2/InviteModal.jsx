@@ -27,6 +27,9 @@ export function InviteModal({
   available,
   seatPills = null,        // Mode B if provided
   preselectedPills = null, // which pills start checked in Mode B
+  theaterId = null,        // Mode B: the single theater all seatPills live in
+  assignableSeats = null,  // Hybrid Mode A: placed-but-unassigned seat objects
+  apiBase = config.apiBase,
   onClose,
   onCreated,
   onSuccess,               // optional: parent toast callback (kind, message)
@@ -38,6 +41,38 @@ export function InviteModal({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  // After the delegation is created, assign any seats the user kept
+  // selected. keptSeats is normalized by DelegateForm to an array of
+  // { theaterId, seatId } so we never key on the bare label (which
+  // repeats across auditoriums). Group by theaterId — /assign takes
+  // one theater_id + a seat_ids[] per call.
+  async function assignKeptSeats(delegation, keptSeats) {
+    if (!delegation?.id || !Array.isArray(keptSeats) || keptSeats.length === 0) return;
+    const byTheater = new Map();
+    for (const s of keptSeats) {
+      if (s?.theaterId == null || !s?.seatId) continue;
+      if (!byTheater.has(s.theaterId)) byTheater.set(s.theaterId, []);
+      byTheater.get(s.theaterId).push(s.seatId);
+    }
+    for (const [tid, seatIds] of byTheater) {
+      try {
+        await fetch(`${apiBase}/api/gala/portal/${token}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            theater_id: tid,
+            seat_ids: seatIds,
+            delegation_id: delegation.id,
+          }),
+        });
+      } catch {
+        // Soft-fail: the delegation was created and the invite fired.
+        // The seat assignment is convenience; the sponsor can re-assign
+        // from the seat detail if a call dropped.
+      }
+    }
+  }
 
   // Title varies by mode and which seats are being invited.
   const title = (() => {
@@ -79,11 +114,20 @@ export function InviteModal({
             available={available}
             seatPills={seatPills}
             preselectedPills={preselectedPills}
-            onCreated={async (d) => {
+            theaterId={theaterId}
+            assignableSeats={assignableSeats}
+            onCreated={async (d, keptSeats) => {
+              await assignKeptSeats(d, keptSeats);
               if (onCreated) await onCreated(d);
               if (onSuccess) {
                 const name = d?.delegate_name || d?.name || 'guest';
-                onSuccess('success', `Invite sent to ${name}.`);
+                const n = Array.isArray(keptSeats) ? keptSeats.length : 0;
+                onSuccess(
+                  'success',
+                  n > 0
+                    ? `Invite sent to ${name} — ${n} seat${n === 1 ? '' : 's'} assigned.`
+                    : `Invite sent to ${name}.`
+                );
               }
               onClose();
             }}

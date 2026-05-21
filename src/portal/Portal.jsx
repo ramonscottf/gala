@@ -2033,6 +2033,16 @@ export const DelegateForm = ({
   // Legacy: locks the counter to a specific count. Kept for any
   // call sites still on the old contract; prefer seatPills.
   lockSeats = null,
+  // 2026-05-21 — Mode B needs the theater the seatPills live in so the
+  // caller can chain /assign (seat labels repeat across auditoriums).
+  theaterId = null,
+  // 2026-05-21 — Hybrid Mode A. Array of placed-but-unassigned seat
+  // objects { key, seatId, theaterId, label, movie, showing }. When
+  // present (and no seatPills), the bare "Invite a guest" form shows
+  // these as pickable pills AND a counter for any unplaced seats the
+  // sponsor can still hand off. Lets a sponsor who placed everything
+  // up front attach a name without re-picking.
+  assignableSeats = null,
 }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -2054,9 +2064,20 @@ export const DelegateForm = ({
     }
     return new Set(seatPills || []);
   });
-  const [seats, setSeats] = useState(
-    seatPills?.length ?? lockSeats ?? (Math.min(available, 2) || 1),
-  );
+  const [seats, setSeats] = useState(() => {
+    if (seatPills?.length != null) return seatPills.length;
+    if (lockSeats != null) return lockSeats;
+    // Hybrid: default to giving ZERO new seats — the sponsor picks from
+    // already-placed seats below. They can bump the counter to also hand
+    // off any unplaced seats they still have.
+    if (Array.isArray(assignableSeats) && assignableSeats.length > 0) return 0;
+    return Math.min(available, 2) || 1;
+  });
+  // Hybrid Mode A: which already-placed seats the sponsor checked to
+  // hand to this guest. Keyed by the unique `key` field (theater:row-num)
+  // since bare labels collide across auditoriums. Starts empty.
+  const hasAssignable = !seatPills && Array.isArray(assignableSeats) && assignableSeats.length > 0;
+  const [selectedAssignable, setSelectedAssignable] = useState(() => new Set());
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
   // Phase 5.13 — surface flow-blocking submit errors via the dead-center
@@ -2064,14 +2085,19 @@ export const DelegateForm = ({
   const flowErr = useFlowError();
 
   // In Mode B the effective seat count is the number of pills still
-  // selected. In Mode A it's the counter value.
-  const effectiveSeats = seatPills ? selectedPills.size : seats;
+  // selected. In hybrid Mode A it's checked placed-seats + new-seat
+  // counter. In pure Mode A it's the counter value.
+  const effectiveSeats = seatPills
+    ? selectedPills.size
+    : hasAssignable
+      ? selectedAssignable.size + seats
+      : seats;
 
   const valid =
     name.trim() &&
     (phone.trim() || email.trim()) &&
     effectiveSeats >= 1 &&
-    (seatPills ? true : effectiveSeats <= available);
+    (seatPills ? true : seats <= available);
 
   const submit = async () => {
     if (!valid) return;
@@ -2093,10 +2119,22 @@ export const DelegateForm = ({
         throw new Error(j.error || `HTTP ${res.status}`);
       }
       const j = await res.json();
-      // R13 — pass back BOTH the new delegation AND the final seat
-      // selection so the caller can chain /assign for Mode B. Mode A
-      // returns null for keptSeats (no specific assignment yet).
-      const keptSeats = seatPills ? Array.from(selectedPills) : null;
+      // R13 + 2026-05-21 — pass back BOTH the new delegation AND the
+      // seats to assign, normalized to { theaterId, seatId } so the
+      // caller can chain /assign without re-deriving theater from a
+      // label (labels repeat across auditoriums). Pure Mode A returns
+      // null (no specific seats — the guest picks their own later).
+      let keptSeats = null;
+      if (seatPills) {
+        keptSeats = Array.from(selectedPills).map((sid) => ({
+          theaterId,
+          seatId: sid,
+        }));
+      } else if (hasAssignable && selectedAssignable.size > 0) {
+        keptSeats = assignableSeats
+          .filter((s) => selectedAssignable.has(s.key))
+          .map((s) => ({ theaterId: s.theaterId, seatId: s.seatId }));
+      }
       if (onCreated) await onCreated(j.delegation, keptSeats);
       onClose();
     } catch (e) {
@@ -2121,12 +2159,41 @@ export const DelegateForm = ({
     });
   };
 
+  // Hybrid Mode A — toggle an already-placed seat in/out of the set
+  // being handed to this guest. No floor here (unlike Mode B): the
+  // sponsor can clear all placed seats and instead give new ones via
+  // the counter, so submit validity is driven by effectiveSeats.
+  const toggleAssignable = (key) => {
+    setSelectedAssignable((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // Group assignable seats by movie+showing so a sponsor with seats
+  // across multiple films sees clear sections instead of one flat wall
+  // of labels that repeat across auditoriums.
+  const assignableGroups = (() => {
+    if (!hasAssignable) return [];
+    const m = new Map();
+    for (const s of assignableSeats) {
+      const k = `${s.showing}:${s.movie}`;
+      if (!m.has(k)) m.set(k, { movie: s.movie, showingLabel: s.showingLabel, seats: [] });
+      m.get(k).seats.push(s);
+    }
+    return [...m.values()];
+  })();
+
   return (
     <>
       <div style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 16, lineHeight: 1.55 }}>
         {seatPills
           ? "We'll text + email a link with these specific seats. They get a personal portal you can keep tabs on right here."
-          : "We'll text + email a link so they select their own seats. They get a personal portal you can keep tabs on right here."}
+          : hasAssignable
+            ? "Pick the seats you've already placed to hand to this guest — or give them new seats to choose. We'll text + email them a link and a personal portal you can keep tabs on right here."
+            : "We'll text + email a link so they select their own seats. They get a personal portal you can keep tabs on right here."}
       </div>
 
       <GuestField label="NAME" value={name} onChange={setName} placeholder="Their full name" />
@@ -2155,7 +2222,7 @@ export const DelegateForm = ({
             marginBottom: 6,
           }}
         >
-          {seatPills ? 'SEATS' : 'SEATS TO ASSIGN'}
+          {seatPills ? 'SEATS' : hasAssignable ? 'ASSIGN SEATS' : 'SEATS TO ASSIGN'}
         </div>
         {seatPills ? (
           // Mode B — tap-to-deselect seat pills. At least 1 must stay
@@ -2191,18 +2258,127 @@ export const DelegateForm = ({
                     fontFamily: FONT_DISPLAY,
                     fontSize: 15,
                     fontWeight: 700,
-                    color: on ? BRAND.indigoLight : 'rgba(255,255,255,0.50)',
+                    color: on ? BRAND.indigoLight : 'rgba(255,255,255,0.55)',
                     fontVariantNumeric: 'tabular-nums',
                     letterSpacing: 0.3,
-                    textDecoration: on ? 'none' : 'line-through',
-                    textDecorationThickness: '1.5px',
-                    textDecorationColor: 'rgba(255,255,255,0.40)',
                   }}
                 >
-                  {seatLabel(sid)}
+                  {on ? '✓ ' : ''}{seatLabel(sid)}
                 </button>
               );
             })}
+          </div>
+        ) : hasAssignable ? (
+          // Hybrid Mode A — pick already-placed seats (grouped by film)
+          // and/or give new unplaced seats via the counter. Pills start
+          // UNchecked (default = pick nothing new). 2026-05-21.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {assignableGroups.map((grp, gi) => (
+              <div key={gi}>
+                <div style={{ fontSize: 11, color: 'var(--mute)', marginBottom: 6, fontWeight: 600 }}>
+                  {grp.movie}{grp.showingLabel ? ` · ${grp.showingLabel}` : ''}
+                </div>
+                <div
+                  style={{
+                    padding: '12px',
+                    borderRadius: 12,
+                    border: `1px solid var(--rule)`,
+                    background: 'rgba(168,177,255,0.06)',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                  }}
+                >
+                  {grp.seats.map((s) => {
+                    const on = selectedAssignable.has(s.key);
+                    return (
+                      <button
+                        key={s.key}
+                        type="button"
+                        onClick={() => toggleAssignable(s.key)}
+                        style={{
+                          all: 'unset',
+                          cursor: 'pointer',
+                          padding: '8px 14px',
+                          borderRadius: 99,
+                          background: on ? 'rgba(168,177,255,0.18)' : 'transparent',
+                          border: `1.5px ${on ? 'solid' : 'dashed'} ${on ? 'rgba(168,177,255,0.45)' : 'rgba(255,255,255,0.20)'}`,
+                          fontFamily: FONT_DISPLAY,
+                          fontSize: 15,
+                          fontWeight: 700,
+                          color: on ? BRAND.indigoLight : 'rgba(255,255,255,0.55)',
+                          fontVariantNumeric: 'tabular-nums',
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {on ? '✓ ' : ''}{s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {available > 0 && (
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--mute)', marginBottom: 6, fontWeight: 600 }}>
+                  Or give new seats for them to pick
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    borderRadius: 12,
+                    border: `1px solid var(--rule)`,
+                    background: 'rgba(168,177,255,0.06)',
+                  }}
+                >
+                  <button
+                    onClick={() => setSeats((s) => Math.max(0, s - 1))}
+                    disabled={seats <= 0}
+                    style={{
+                      width: 36, height: 36, borderRadius: 99,
+                      border: `1.5px solid var(--rule)`, background: 'transparent',
+                      color: '#fff', cursor: seats <= 0 ? 'not-allowed' : 'pointer',
+                      fontSize: 20, opacity: seats <= 0 ? 0.4 : 1,
+                    }}
+                  >
+                    −
+                  </button>
+                  <div
+                    style={{
+                      fontFamily: FONT_DISPLAY, fontSize: 32, fontWeight: 700,
+                      color: 'var(--accent-italic)', fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+                    }}
+                  >
+                    {seats}
+                    <span style={{ color: 'var(--mute)', fontSize: 14, fontStyle: 'italic', fontWeight: 400 }}>
+                      {' '}of {available}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSeats((s) => Math.min(available, s + 1))}
+                    disabled={seats >= available}
+                    style={{
+                      width: 36, height: 36, borderRadius: 99,
+                      border: `1.5px solid var(--rule)`, background: 'transparent',
+                      color: '#fff', cursor: seats >= available ? 'not-allowed' : 'pointer',
+                      fontSize: 20, opacity: seats >= available ? 0.4 : 1,
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ fontSize: 12, color: 'var(--mute)', textAlign: 'center' }}>
+              {effectiveSeats === 0
+                ? 'Pick a seat above, or give a new one.'
+                : `${effectiveSeats} seat${effectiveSeats === 1 ? '' : 's'} for this guest`}
+            </div>
           </div>
         ) : (
           <div
