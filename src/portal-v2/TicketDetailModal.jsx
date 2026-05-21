@@ -30,12 +30,16 @@ export function TicketDetailModal({
   const [err, setErr] = useState(null);
   const [smsNote, setSmsNote] = useState(null);
   const [assignTo, setAssignTo] = useState(ticket.raw?.delegation_id || '');
+  const [newGuestName, setNewGuestName] = useState('');
+  const [newGuestEmail, setNewGuestEmail] = useState('');
   const [dinnerOpen, setDinnerOpen] = useState(false);
 
   const delegations = portal?.childDelegations || [];
   const identity = portal?.identity || {};
   const canTextSelf = identity.kind === 'sponsor' && !!identity.phone;
   const dinner = ticket.raw?.dinner_choice;
+  // Only sponsors can assign seats to guests; delegations see their own tickets only.
+  const canAssign = identity.kind === 'sponsor';
 
   async function unplace() {
     if (!confirm(`Release seat ${ticket.seatLabel}? It goes back to the open pool.`)) return;
@@ -70,13 +74,46 @@ export function TicketDetailModal({
     setBusy(true);
     setErr(null);
     try {
+      let delegationId = assignTo === '' ? null : Number(assignTo);
+
+      // "new_guest": create the delegation first, then fall through to /assign.
+      if (assignTo === 'new_guest') {
+        const name = newGuestName.trim();
+        if (!name) {
+          setErr('Guest name is required.');
+          setBusy(false);
+          return;
+        }
+        const delegRes = await fetch(
+          `${config.apiBase}/api/gala/portal/${token}/delegate`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              delegate_name: name,
+              delegate_email: newGuestEmail.trim() || undefined,
+              // seats_allocated=1: this seat transfers from sponsor-direct
+              // to the new delegation; seatMath stays neutral after /assign.
+              seats_allocated: 1,
+            }),
+          }
+        );
+        if (!delegRes.ok) {
+          const j = await delegRes.json().catch(() => ({}));
+          throw new Error(j.error || `HTTP ${delegRes.status}`);
+        }
+        const delegData = await delegRes.json();
+        delegationId = delegData.delegation?.id;
+        if (!delegationId) throw new Error('Delegation created but no ID returned');
+      }
+
       const res = await fetch(`${config.apiBase}/api/gala/portal/${token}/assign`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           theater_id: ticket.theater_id,
           seat_ids: [`${ticket.row}-${ticket.num}`],
-          delegation_id: assignTo === '' ? null : Number(assignTo),
+          delegation_id: delegationId,
         }),
       });
       if (!res.ok) {
@@ -233,7 +270,7 @@ export function TicketDetailModal({
             </button>
           </div>
 
-          {delegations.length > 0 && (
+          {canAssign && (
             <div style={{ marginTop: 22 }}>
               <div
                 style={{
@@ -249,7 +286,11 @@ export function TicketDetailModal({
               </div>
               <select
                 value={assignTo}
-                onChange={(e) => setAssignTo(e.target.value)}
+                onChange={(e) => {
+                  setAssignTo(e.target.value);
+                  setNewGuestName('');
+                  setNewGuestEmail('');
+                }}
                 style={{
                   width: '100%',
                   background: 'rgba(255,255,255,0.06)',
@@ -261,13 +302,54 @@ export function TicketDetailModal({
                   fontFamily: 'inherit',
                 }}
               >
-                <option value="">Mine (no delegate)</option>
+                <option value="">Mine (no guest assigned)</option>
                 {delegations.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.delegateName || d.guest_name || d.email || d.guest_email || `Guest #${d.id}`}
                   </option>
                 ))}
+                <option value="new_guest">+ Add a new guest…</option>
               </select>
+
+              {assignTo === 'new_guest' && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="Guest name (required)"
+                    value={newGuestName}
+                    onChange={(e) => setNewGuestName(e.target.value)}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid var(--p2-rule)',
+                      color: '#fff',
+                      borderRadius: 10,
+                      padding: '11px 14px',
+                      fontSize: 14,
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email (optional — they'll get a confirmation)"
+                    value={newGuestEmail}
+                    onChange={(e) => setNewGuestEmail(e.target.value)}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid var(--p2-rule)',
+                      color: '#fff',
+                      borderRadius: 10,
+                      padding: '11px 14px',
+                      fontSize: 14,
+                      fontFamily: 'inherit',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              )}
+
               <button
                 className="p2-btn sm primary"
                 type="button"
@@ -275,7 +357,9 @@ export function TicketDetailModal({
                 onClick={saveAssignment}
                 style={{ marginTop: 12 }}
               >
-                {busy ? 'Saving…' : 'Save assignment'}
+                {busy
+                  ? (assignTo === 'new_guest' ? 'Adding guest…' : 'Saving…')
+                  : (assignTo === 'new_guest' ? 'Add guest & assign seat' : 'Save assignment')}
               </button>
             </div>
           )}
