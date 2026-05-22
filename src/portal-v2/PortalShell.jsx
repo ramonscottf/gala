@@ -1910,6 +1910,7 @@ export default function PortalShellV2({
           onRefresh={onRefresh}
           assignments={portal?.childDelegationAssignments}
           showtimes={portal?.showtimes}
+          assignableSeats={assignableSeats}
           onEditSeat={(seat) => {
             // Sponsor wants to swap one of the delegate's seats.
             // Open SwapSeatModal scoped on-behalf — server will write

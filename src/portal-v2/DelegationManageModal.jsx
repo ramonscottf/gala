@@ -77,6 +77,13 @@ export function DelegationManageModal({
   // (theater_id, showing_number) → movie title + start time.
   assignments,
   showtimes,
+  // Phase X (2026-05-22) — assign-seats-on-edit. The sponsor's placed-
+  // but-undelegated seats, same shape PortalShell builds for InviteModal
+  // ({ key, seatId, theaterId, label, movie, showing, showingLabel }).
+  // When present (sponsor view), an "Assign seats" section lets the
+  // sponsor hand specific already-placed seats to THIS existing guest —
+  // the seat picker that previously only existed in the Invite flow.
+  assignableSeats = null,
   // Phase C — edit on behalf. When these callbacks are wired (sponsor
   // view only, never selfView), the per-ticket ✏️/🍽️ icons appear
   // and the "Move all seats together" CTA shows up below the list
@@ -99,6 +106,10 @@ export function DelegationManageModal({
   const [copied, setCopied] = useState(false);
   const [confirmReclaim, setConfirmReclaim] = useState(false);
   const [pushedAt, setPushedAt] = useState(null);
+  // Assign-seats-on-edit: which assignable seat keys are selected to
+  // hand to this guest, keyed by the `key` field (theater:row-num so it
+  // never collides across auditoriums).
+  const [pickedSeats, setPickedSeats] = useState(() => new Set());
 
   // Filter the full child-delegation-assignments list down to just
   // this delegation's seats. Stable-sort by showing → theater → row →
@@ -272,6 +283,45 @@ export function DelegationManageModal({
     }
   }
 
+  async function assignSeats() {
+    if (pending) return;
+    const all = Array.isArray(assignableSeats) ? assignableSeats : [];
+    const chosen = all.filter((s) => pickedSeats.has(s.key));
+    if (chosen.length === 0) {
+      setErr('Tap one or more seats to hand to this guest first.');
+      return;
+    }
+    setPending('assign');
+    setErr(null);
+    // /assign takes one theater_id + seat_ids[] per call. Group by it.
+    const byTheater = new Map();
+    for (const s of chosen) {
+      if (!byTheater.has(s.theaterId)) byTheater.set(s.theaterId, []);
+      byTheater.get(s.theaterId).push(s.seatId);
+    }
+    try {
+      for (const [tid, seatIds] of byTheater) {
+        const res = await fetch(`${config.apiBase}/api/gala/portal/${token}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            theater_id: tid,
+            seat_ids: seatIds,
+            delegation_id: delegation.id,
+          }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+      }
+      setPickedSeats(new Set());
+      if (onRefresh) await onRefresh();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setPending(null);
+    }
+  }
+
   return (
     <div
       className="p2-modal-backdrop"
@@ -402,6 +452,74 @@ export function DelegationManageModal({
                   ↔ Move all {myAssignments.length} seats together
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Assign seats — hand the sponsor's already-placed, not-yet-
+              given seats to THIS guest. Same picker the Invite flow uses,
+              now available when editing an existing guest. Grouped by
+              showtime to mirror the Invite modal's layout. */}
+          {!selfView && Array.isArray(assignableSeats) && assignableSeats.length > 0 && (
+            <div className="p2-deleg-section">
+              <div className="p2-deleg-section-title">Assign seats</div>
+              <div className="p2-ticket-meta" style={{ marginBottom: 10 }}>
+                Tap the seats you've already placed to hand to {name || 'this guest'}.
+              </div>
+              {Object.entries(
+                assignableSeats.reduce((acc, s) => {
+                  const k = `${s.showing}:${s.movie}`;
+                  (acc[k] = acc[k] || { label: `${s.movie} · ${s.showingLabel || ''}`.trim(), seats: [] }).seats.push(s);
+                  return acc;
+                }, {})
+              ).map(([k, grp]) => (
+                <div key={k} style={{ marginBottom: 12 }}>
+                  <div className="p2-ticket-meta" style={{ marginBottom: 6, fontWeight: 600 }}>
+                    {grp.label}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {grp.seats.map((s) => {
+                      const on = pickedSeats.has(s.key);
+                      return (
+                        <button
+                          key={s.key}
+                          type="button"
+                          className={`p2-seat-chip${on ? ' selected' : ''}`}
+                          aria-pressed={on}
+                          style={{
+                            cursor: 'pointer',
+                            border: on ? '1.5px solid var(--p2-gold)' : '1px solid var(--p2-rule)',
+                            background: on ? 'rgba(255,194,77,0.14)' : 'transparent',
+                            color: on ? 'var(--p2-gold)' : 'var(--p2-subtle)',
+                          }}
+                          onClick={() =>
+                            setPickedSeats((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(s.key)) next.delete(s.key);
+                              else next.add(s.key);
+                              return next;
+                            })
+                          }
+                        >
+                          {s.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="p2-btn primary sm"
+                style={{ marginTop: 4, width: '100%' }}
+                onClick={assignSeats}
+                disabled={pickedSeats.size === 0 || pending === 'assign'}
+              >
+                {pending === 'assign'
+                  ? 'Assigning…'
+                  : pickedSeats.size > 0
+                  ? `Assign ${pickedSeats.size} seat${pickedSeats.size === 1 ? '' : 's'} to ${name || 'guest'}`
+                  : 'Tap seats above to assign'}
+              </button>
             </div>
           )}
 
