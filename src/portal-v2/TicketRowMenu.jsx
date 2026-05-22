@@ -5,6 +5,8 @@
 //   Change seats → open seat picker
 //   Pick meals   → open the group modal (where per-seat dinner pills live)
 //   Reassign / Gift → open the group modal at the assign affordance
+//   Edit guest   → open the delegation manage modal (name/phone/email) —
+//                  only wired on guest cards in "Guests you invited".
 //   Release      → release the entire group
 //
 // Anchored relative to its trigger button. Click outside or Escape closes.
@@ -16,6 +18,9 @@ export function TicketRowMenu({
   onChangeSeats,
   onPickMeals,
   onReassign,
+  onEditGuest,
+  onResend,
+  onReclaim,
   onRelease,
 }) {
   const [open, setOpen] = useState(false);
@@ -107,6 +112,42 @@ export function TicketRowMenu({
                 onClick={handle(onReassign)}
               >
                 Reassign / Gift
+              </button>
+            </li>
+          )}
+          {onEditGuest && (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className="p2-ticket-menu-item"
+                onClick={handle(onEditGuest)}
+              >
+                Edit guest
+              </button>
+            </li>
+          )}
+          {onResend && (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className="p2-ticket-menu-item"
+                onClick={handle(onResend)}
+              >
+                Resend invite
+              </button>
+            </li>
+          )}
+          {onReclaim && (
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                className="p2-ticket-menu-item danger"
+                onClick={handle(onReclaim)}
+              >
+                Reclaim
               </button>
             </li>
           )}

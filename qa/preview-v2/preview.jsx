@@ -119,8 +119,8 @@ const mockPortal = {
     },
   ],
   childDelegationAssignments: [
-    { delegation_id: 1, theater_id: 8, row_label: 'D', seat_num: '11' },
-    { delegation_id: 1, theater_id: 8, row_label: 'D', seat_num: '12' },
+    { delegation_id: 1, theater_id: 8, showing_number: 2, row_label: 'D', seat_num: '11', delegate_name: 'Ali Foster' },
+    { delegation_id: 1, theater_id: 8, showing_number: 2, row_label: 'D', seat_num: '12', delegate_name: 'Ali Foster' },
   ],
   allAssignments: [],
   showtimes: [

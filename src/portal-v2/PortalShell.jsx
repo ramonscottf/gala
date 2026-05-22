@@ -151,6 +151,95 @@ function buildTicketGroups(portal) {
   });
 }
 
+// Build rich, ticket-style cards for the "Guests you invited" section.
+// Parity with buildTicketGroups: one card per (delegation × showing), so
+// a guest's placed seats render with the same poster + showtime/auditorium
+// pills + seat chips as the sponsor's own tickets. The ONLY visible
+// difference is a guest-name line under the pills (where the sponsor card
+// shows its who-line). Returns one entry per delegation:
+//   { delegation, cards: [ {id, theater_id, showing_number, movie_title,
+//     poster_url, seats:[...]} ], placed, allocated, hasPlaced }
+// A delegation with no placed seats yet still gets a single placeholder
+// card so its name + status + "awaiting seats" still surface — name-only
+// guests (no contact, no seats) included.
+function buildDelegationGroups(portal) {
+  const delegations = portal?.childDelegations || [];
+  const assignments = portal?.childDelegationAssignments || [];
+  const showtimes = portal?.showtimes || [];
+  const stIndex = {};
+  const stByTheater = {};
+  showtimes.forEach((s) => {
+    stIndex[`${s.theater_id}:${s.showing_number}`] = s;
+    // First showtime seen per theater — fallback when an assignment row
+    // is missing showing_number (defensive; prod rows carry it, but a
+    // silently-wrong "TBD" card is worse than a best-effort match).
+    if (!stByTheater[s.theater_id]) stByTheater[s.theater_id] = s;
+  });
+  const lookupShowtime = (theaterId, showing) =>
+    stIndex[`${theaterId}:${showing}`] || stByTheater[theaterId] || {};
+
+  // Bucket every placed seat by delegation_id → showing key.
+  const byDeleg = new Map();
+  for (const a of assignments) {
+    const did = a.delegation_id;
+    if (did == null) continue;
+    if (!byDeleg.has(did)) byDeleg.set(did, new Map());
+    const showing = a.showing_number || 1;
+    const key = `${a.theater_id}:${showing}`;
+    const groups = byDeleg.get(did);
+    if (!groups.has(key)) {
+      const st = lookupShowtime(a.theater_id, showing);
+      groups.set(key, {
+        id: `${did}:${key}`,
+        theater_id: a.theater_id,
+        showing_number: showing,
+        showingLabel: formatShowing(showing),
+        movie_title: st.movie_title || 'TBD',
+        poster_url: st.poster_url,
+        seats: [],
+      });
+    }
+    groups.get(key).seats.push({
+      id: `${did}:${key}:${a.row_label}-${a.seat_num}`,
+      seatLabel: `${a.row_label}${a.seat_num}`,
+      row: a.row_label,
+      num: a.seat_num,
+      theater_id: a.theater_id,
+      showing_number: showing,
+      auditorium: a.theater_id,
+      guest_name: a.delegate_name || a.guest_name,
+      poster_url: lookupShowtime(a.theater_id, showing).poster_url,
+      movie_title: lookupShowtime(a.theater_id, showing).movie_title || 'TBD',
+      showingLabel: formatShowing(showing),
+      raw: a,
+    });
+  }
+
+  return delegations.map((d) => {
+    const groupsMap = byDeleg.get(d.id);
+    const cards = groupsMap ? [...groupsMap.values()] : [];
+    // Natural seat sort within each card, then showing/theater sort.
+    for (const c of cards) {
+      c.seats.sort((a, b) => {
+        if (a.row !== b.row) return String(a.row).localeCompare(String(b.row));
+        return Number(a.num) - Number(b.num);
+      });
+    }
+    cards.sort((a, b) => {
+      if (a.showing_number !== b.showing_number) return a.showing_number - b.showing_number;
+      return a.theater_id - b.theater_id;
+    });
+    const placed = cards.reduce((n, c) => n + c.seats.length, 0);
+    return {
+      delegation: d,
+      cards,
+      placed,
+      allocated: d.seatsAllocated ?? 0,
+      hasPlaced: placed > 0,
+    };
+  });
+}
+
 // ───────────────────────────────────────────────────────────────────────
 // Atom components
 // ───────────────────────────────────────────────────────────────────────
@@ -782,11 +871,23 @@ function DelegationStatusPillV2({ status }) {
   );
 }
 
-function GroupSection({ portal, onOpenInvite, onManageDelegation }) {
+function GroupSection({
+  portal,
+  onOpenInvite,
+  onManageDelegation,
+  onChangeGuestSeats,
+  onResendGuest,
+  onReclaimGuest,
+}) {
   const delegations = portal?.childDelegations || [];
   const seatMath = portal?.seatMath || { total: 0, placed: 0, delegated: 0, available: 0 };
   const tierAccess = portal?.tierAccess || {};
   const open = tierAccess?.open === true;
+
+  // Rich, ticket-style cards per (guest × showing) — parity with the
+  // "Tickets placed" section. Same poster + pills + seat chips; the one
+  // difference is the guest-name line under the pills.
+  const guestGroups = useMemo(() => buildDelegationGroups(portal), [portal]);
 
   // Sponsors are the only kind who can invite. If we're a delegate
   // looking at our own portal, the group section is irrelevant.
@@ -838,45 +939,136 @@ function GroupSection({ portal, onOpenInvite, onManageDelegation }) {
         </div>
       ) : (
         <div className="p2-ticket-grid">
-          {delegations.map((d) => {
-            // Production API returns camelCase: delegateName, email,
-            // phone, seatsPlaced, seatsAllocated, status. Mock preview
-            // data may use either shape — guard both.
+          {guestGroups.map(({ delegation: d, cards, placed, allocated, hasPlaced }) => {
+            // Production API returns camelCase: delegateName, email, phone.
             const name = d.delegateName || d.guest_name || 'Unnamed guest';
             const email = d.email || d.guest_email;
             const phone = d.phone || d.guest_phone;
-            const placed = d.seatsPlaced ?? 0;
-            const allocated = d.seatsAllocated ?? d.seat_count ?? 0;
             const status = delegationStatus(d);
-            return (
-              <button
-                key={d.id}
-                type="button"
-                className="p2-ticket-card"
-                onClick={() => onManageDelegation(d)}
-                style={{ textAlign: 'left' }}
-              >
+
+            // No seats placed yet → one placeholder card carrying the
+            // guest name + status + an awaiting-seats line, so name-only
+            // and not-yet-picked guests still render a real card.
+            const renderCards = hasPlaced
+              ? cards
+              : [{ id: `${d.id}:pending`, _placeholder: true, seats: [] }];
+
+            return renderCards.map((g, idx) => {
+              const n = g.seats.length;
+              // First card of a multi-showing guest carries the menu +
+              // status; subsequent cards stay clean (the guest, status,
+              // and contact are the same person — no need to repeat).
+              const isPrimary = idx === 0;
+              return (
                 <div
-                  className="p2-avatar"
-                  style={{ width: 48, height: 48, fontSize: 14, flexShrink: 0 }}
+                  key={g.id}
+                  className="p2-ticket-card has-menu"
+                  role="group"
+                  aria-label={`${name} · ${g._placeholder ? 'awaiting seats' : `${g.movie_title} · ${n} ${n === 1 ? 'seat' : 'seats'}`}`}
                 >
-                  {initialsOf(name)}
-                </div>
-                <div className="p2-ticket-body">
-                  <div
-                    className="p2-ticket-title"
-                    style={{ fontSize: 14, alignItems: 'center', gap: 10 }}
+                  <button
+                    type="button"
+                    className="p2-ticket-card-body"
+                    onClick={() => onManageDelegation(d)}
+                    aria-label={`Manage ${name}`}
                   >
-                    <span style={{ flex: 1, minWidth: 0 }}>{name}</span>
-                    <DelegationStatusPillV2 status={status} />
-                  </div>
-                  <div className="p2-ticket-meta">
-                    {placed} of {allocated} placed · {email || phone || 'no contact yet'}
-                  </div>
+                    <div className="p2-ticket-poster" aria-hidden="true">
+                      {g._placeholder ? (
+                        <div
+                          className="p2-avatar"
+                          style={{ width: '100%', height: '100%', borderRadius: 0, fontSize: 18 }}
+                        >
+                          {initialsOf(name)}
+                        </div>
+                      ) : (
+                        g.poster_url && (
+                          <img
+                            src={g.poster_url}
+                            alt=""
+                            className="p2-ticket-poster-img"
+                            loading="lazy"
+                          />
+                        )
+                      )}
+                    </div>
+                    <div className="p2-ticket-body">
+                      <div className="p2-ticket-title">
+                        <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>
+                          {g._placeholder ? name : g.movie_title}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            letterSpacing: '0.12em',
+                            textTransform: 'uppercase',
+                            color: 'var(--p2-subtle)',
+                            marginLeft: 'auto',
+                          }}
+                        >
+                          {g._placeholder
+                            ? `${placed} of ${allocated}`
+                            : `${n} ${n === 1 ? 'seat' : 'seats'}`}
+                        </span>
+                      </div>
+                      {!g._placeholder && (
+                        <div style={{ margin: '8px 0 4px' }}>
+                          <ShowingAuditoriumPills
+                            showingNumber={g.showing_number}
+                            auditoriumId={g.theater_id}
+                          />
+                        </div>
+                      )}
+                      {/* The one difference from a ticket card: the guest
+                          name + status sit where the ticket's who-line is.
+                          On placeholder cards the title slot already shows
+                          the name, so we show only the status there. */}
+                      <div
+                        className="p2-ticket-meta"
+                        style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+                      >
+                        {!g._placeholder && <span>{name}</span>}
+                        {isPrimary && <DelegationStatusPillV2 status={status} />}
+                      </div>
+                      {g._placeholder ? (
+                        <div className="p2-ticket-meta" style={{ marginTop: 6, color: 'var(--p2-muted)' }}>
+                          {allocated > 0
+                            ? `${allocated} ${allocated === 1 ? 'seat' : 'seats'} waiting — ${email || phone || 'no contact yet'}`
+                            : (email || phone || 'no contact yet')}
+                        </div>
+                      ) : (
+                        <div className="p2-seat-chip-row">
+                          {g.seats.map((s) => (
+                            <span key={s.id} className="p2-seat-chip">
+                              {s.seatLabel}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                  <TicketRowMenu
+                    onView={() => onManageDelegation(d)}
+                    onChangeSeats={
+                      open && hasPlaced && onChangeGuestSeats
+                        ? () => onChangeGuestSeats(g, d)
+                        : null
+                    }
+                    onEditGuest={() => onManageDelegation(d)}
+                    onResend={
+                      isPrimary && (email || phone) && onResendGuest
+                        ? () => onResendGuest(d)
+                        : null
+                    }
+                    onReclaim={
+                      isPrimary && onReclaimGuest
+                        ? () => onReclaimGuest(d)
+                        : null
+                    }
+                  />
                 </div>
-                <span className="p2-ticket-arrow">→</span>
-              </button>
-            );
+              );
+            });
           })}
         </div>
       )}
@@ -1386,6 +1578,42 @@ export default function PortalShellV2({
             portal={portal}
             onOpenInvite={() => setInviteModal({ assignableSeats })}
             onManageDelegation={(d) => setManageDelegation(d)}
+            onChangeGuestSeats={(g) => {
+              // Guest seats move the same way sponsor groups do — the
+              // seat picker pre-positioned on this guest's showing. The
+              // delegation_id rides along on each seat's raw row.
+              if (g.seats.length === 1) {
+                setSwapSeat({ seat: g.seats[0], returnTo: { kind: 'home' } });
+              } else {
+                setMoveGroup({ group: g, returnTo: { kind: 'home' } });
+              }
+            }}
+            onResendGuest={async (d) => {
+              // Re-fire the original invite link. Same call the manage
+              // modal uses (action:'resend'). Only reachable when the
+              // guest has a phone or email (menu gates it).
+              try {
+                const res = await fetch(
+                  `${config.apiBase}/api/gala/portal/${token}/delegate`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'resend', delegation_id: d.id }),
+                  }
+                );
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                bumpToast('success', `Invite resent to ${d.delegateName || 'guest'}.`);
+              } catch (e) {
+                bumpToast('error', `Couldn't resend — ${String(e.message || e)}`);
+              }
+            }}
+            onReclaimGuest={(d) => {
+              // Reclaim pulls the delegation's seats back and revokes the
+              // invite — irreversible-ish, so route through the manage
+              // modal where the two-tap confirm + toast already live,
+              // rather than firing the DELETE silently from a menu.
+              setManageDelegation(d);
+            }}
           />
 
           <LineupSection showtimes={showtimes} onOpenMovie={(m) => setMovieModal(m)} />
