@@ -131,7 +131,7 @@ export async function onRequestGet(context) {
 
   // ALL assignments across venue (to render the chart — seats others have taken)
   const allAssignments = await env.GALA_DB.prepare(
-    `SELECT sa.theater_id, sa.row_label, sa.seat_num,
+    `SELECT sa.theater_id, sa.showing_number, sa.row_label, sa.seat_num,
             sa.sponsor_id, sa.delegation_id,
             s.company AS sponsor_company, s.sponsorship_tier AS sponsor_tier
        FROM seat_assignments sa
@@ -140,7 +140,7 @@ export async function onRequestGet(context) {
 
   // ALL active holds (exclude my own token's holds — those render as "mine pending")
   const allHolds = await env.GALA_DB.prepare(
-    `SELECT theater_id, row_label, seat_num, held_by_token, expires_at
+    `SELECT theater_id, showing_number, row_label, seat_num, held_by_token, expires_at
        FROM seat_holds
       WHERE expires_at > datetime('now')`
   ).all();

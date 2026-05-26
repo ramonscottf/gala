@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { loadSponsorSeats, setSeatDinner } from './api.js';
+import { SeatChangeModal } from './SeatChangeModal.jsx';
 
 // Meal codes + labels — must match pick.js set_dinner VALID set and the
 // portal's DinnerModal options exactly.
@@ -46,7 +47,7 @@ function groupByMovie(assignments, showtimes) {
   return [...movies.values()];
 }
 
-function SeatCardMenu({ onViewChart, onCopy }) {
+function SeatCardMenu({ onChangeSeats, onViewChart, onCopy }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -75,6 +76,13 @@ function SeatCardMenu({ onViewChart, onCopy }) {
       </button>
       {open && (
         <ul className="gs-seatmenu-list" role="menu">
+          {onChangeSeats && (
+            <li role="none">
+              <button type="button" role="menuitem" className="gs-seatmenu-item" onClick={pick(onChangeSeats)}>
+                Change seats
+              </button>
+            </li>
+          )}
           <li role="none">
             <button type="button" role="menuitem" className="gs-seatmenu-item" onClick={pick(onViewChart)}>
               View in seating chart
@@ -141,19 +149,20 @@ function SeatChip({ token, theaterId, showing, seat, onChanged, onToast }) {
 
 export function SponsorSeats({ sponsor, onToast }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
+  const [editing, setEditing] = useState(null); // { theaterId, showing, movieTitle, mySeats, taken }
 
-  useEffect(() => {
-    let cancelled = false;
+  const reload = useCallback(() => {
     if (!sponsor.rsvp_token || (sponsor.seats_assigned || 0) === 0) {
-      setState({ loading: false, error: null, data: { myAssignments: [], showtimes: [], childDelegationAssignments: [] } });
-      return undefined;
+      setState({ loading: false, error: null, data: { myAssignments: [], showtimes: [], childDelegationAssignments: [], allAssignments: [], allHolds: [], myToken: sponsor.rsvp_token } });
+      return Promise.resolve();
     }
-    setState({ loading: true, error: null, data: null });
-    loadSponsorSeats(sponsor.rsvp_token)
-      .then(d => { if (!cancelled) setState({ loading: false, error: null, data: d }); })
-      .catch(e => { if (!cancelled) setState({ loading: false, error: e.message || 'Could not load seats', data: null }); });
-    return () => { cancelled = true; };
+    setState(s => ({ ...s, loading: true }));
+    return loadSponsorSeats(sponsor.rsvp_token)
+      .then(d => setState({ loading: false, error: null, data: d }))
+      .catch(e => setState({ loading: false, error: e.message || 'Could not load seats', data: null }));
   }, [sponsor.rsvp_token, sponsor.seats_assigned]);
+
+  useEffect(() => { let off = false; reload(); return () => { off = true; }; }, [reload]);
 
   if (state.loading) {
     return (<><div className="gs-section-h">Seats &amp; movies selected</div><div className="gs-seats-loading">Loading selections...</div></>);
@@ -162,7 +171,7 @@ export function SponsorSeats({ sponsor, onToast }) {
     return (<><div className="gs-section-h">Seats &amp; movies selected</div><div className="gs-seats-empty">Couldn't load selections: {state.error}</div></>);
   }
 
-  const { myAssignments, showtimes, childDelegationAssignments } = state.data;
+  const { myAssignments, showtimes, childDelegationAssignments, allAssignments, allHolds, myToken } = state.data;
   const token = sponsor.rsvp_token;
   const groups = groupByMovie(myAssignments, showtimes);
   const guestSeatCount = (childDelegationAssignments || []).length;
@@ -179,6 +188,28 @@ export function SponsorSeats({ sponsor, onToast }) {
     } catch {
       onToast?.({ kind: 'error', text: 'Could not copy' });
     }
+  };
+
+  // Build the change-seats payload for a given showing: this sponsor's seats,
+  // and the seats taken by everyone else in the SAME (theater, showing).
+  const openChangeSeats = (movieTitle, sh) => {
+    const inScope = (x) => Number(x.theater_id) === Number(sh.theaterId) && Number(x.showing_number || 1) === Number(sh.showing);
+    const mySeats = (myAssignments || []).filter(inScope)
+      .map(a => ({ row_label: a.row_label, seat_num: String(a.seat_num) }));
+    const mineIds = new Set(mySeats.map(s => `${s.row_label}-${s.seat_num}`));
+    const takenAssign = (allAssignments || []).filter(inScope)
+      .map(a => ({ row_label: a.row_label, seat_num: String(a.seat_num) }))
+      .filter(s => !mineIds.has(`${s.row_label}-${s.seat_num}`));
+    const takenHolds = (allHolds || []).filter(h => inScope(h) && h.held_by_token !== myToken)
+      .map(h => ({ row_label: h.row_label, seat_num: String(h.seat_num) }))
+      .filter(s => !mineIds.has(`${s.row_label}-${s.seat_num}`));
+    setEditing({
+      theaterId: sh.theaterId,
+      showing: sh.showing,
+      movieTitle,
+      mySeats,
+      taken: [...takenAssign, ...takenHolds],
+    });
   };
 
   return (
@@ -200,6 +231,7 @@ export function SponsorSeats({ sponsor, onToast }) {
                   </span>
                   <span className="gs-seatshow-count">{sh.seats.length} seat{sh.seats.length !== 1 ? 's' : ''}</span>
                   <SeatCardMenu
+                    onChangeSeats={() => openChangeSeats(m.title, sh)}
                     onViewChart={() => window.open(`/admin/seating.html?theater=${sh.theaterId}&showing=${sh.showing}`, '_blank')}
                     onCopy={() => copySeats(m.title, sh)}
                   />
@@ -226,6 +258,19 @@ export function SponsorSeats({ sponsor, onToast }) {
         <div className="gs-seats-guestnote">
           + {guestSeatCount} seat{guestSeatCount !== 1 ? 's' : ''} assigned to guests they invited
         </div>
+      )}
+      {editing && (
+        <SeatChangeModal
+          token={token}
+          theaterId={editing.theaterId}
+          showing={editing.showing}
+          movieTitle={editing.movieTitle}
+          mySeats={editing.mySeats}
+          taken={editing.taken}
+          onToast={onToast}
+          onClose={() => setEditing(null)}
+          onDone={() => { setEditing(null); reload(); }}
+        />
       )}
     </>
   );

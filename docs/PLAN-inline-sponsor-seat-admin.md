@@ -2,10 +2,10 @@
 title: Inline sponsor seat admin (Sponsors tab)
 status: in-progress
 project: gala
-phase: 2 of 3
+phase: 3 of 3 (3a shipped, 3b next)
 source_chat: 2026-05-26 gala admin session
 created: 2026-05-26
-last_updated: 2026-05-26
+last_updated: 2026-05-26 (3a shipped)
 ---
 
 # Inline sponsor seat admin
@@ -51,11 +51,19 @@ grouped by movie → showing, seat chips, portal-style cards, ⋯ menu
 Each seat chip has a meal dropdown writing through set_dinner. Optimistic
 update + revert-on-error + toast.
 
-### Phase 3 — Change seats + move show  ⬜ SPEC (this is the remaining build)
+### Phase 3 — Change seats + move show  🚧 3a SHIPPED, 3b next
 Scott's choice (2026-05-26): build BOTH — a mini seat-map for picking seats,
 and a list control for moving shows.
 
-**3a. Mini seat-map picker (change seats)**
+**3a. Mini seat-map picker (change seats)  ✅ SHIPPED**
+- Reuses portal SeatEngine (adaptTheater + SeatMap) — loveseat pairing handled
+  by SeatMap.onSelect. New SeatChangeModal.jsx opened from the seat-card ⋯ menu.
+- Taken-set scoped to (theater, showing) — required adding showing_number to
+  allAssignments + allHolds in portal/[token].js (additive read).
+- Apply: claims (hold+finalize) then releases (unfinalize), each through the
+  guarded endpoint; stops + reports on first failure, reloads the card.
+
+_Original spec:_
 - New modal opened from a seat-card / ⋯ "Change seats".
 - Renders ONE auditorium (the showing's theater) from theater-layouts.json —
   not the venue. Their seats highlighted; taken seats (from portal

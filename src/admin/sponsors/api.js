@@ -40,13 +40,44 @@ export async function loadSponsorsWithTracking() {
  * No new backend — same source of truth as the portal.
  */
 export async function loadSponsorSeats(token) {
-  if (!token) return { myAssignments: [], showtimes: [], childDelegationAssignments: [] };
+  if (!token) return { myAssignments: [], showtimes: [], childDelegationAssignments: [], allAssignments: [], allHolds: [], myToken: token };
   const data = await fetchJson(`/api/gala/portal/${token}`);
+  const allHolds = [...(data.myHolds || []), ...(data.otherHolds || [])];
   return {
     myAssignments: data.myAssignments || [],
     showtimes: data.showtimes || [],
     childDelegationAssignments: data.childDelegationAssignments || [],
+    allAssignments: data.allAssignments || [],
+    allHolds,
+    myToken: token,
   };
+}
+
+/**
+ * Seat mutations via the portal pick endpoint, by the sponsor's token.
+ * Every call binds showing_number explicitly (composite-key-bug safe) and
+ * inherits pick.js's collision / orphan / loveseat guards.
+ */
+function pickAction(token, action, seat) {
+  return fetchJson(`/api/gala/portal/${token}/pick`, {
+    method: 'POST',
+    body: JSON.stringify({
+      action,
+      theater_id: seat.theater_id,
+      showing_number: seat.showing_number,
+      row_label: seat.row_label,
+      seat_num: seat.seat_num,
+    }),
+  });
+}
+// Claim an open seat = hold then finalize.
+export async function claimSeat(token, seat) {
+  await pickAction(token, 'hold', seat);
+  return pickAction(token, 'finalize', seat);
+}
+// Give up one of this sponsor's assigned seats.
+export async function releaseSeat(token, seat) {
+  return pickAction(token, 'unfinalize', seat);
 }
 
 /**
