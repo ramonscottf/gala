@@ -71,7 +71,7 @@ export async function onRequestPost({ request, env }) {
   let send = null;
   try {
     const live = await db.prepare(
-      `SELECT subject, body, channel, audience, title
+      `SELECT subject, body, channel, audience, title, reply_to
          FROM marketing_sends
         WHERE send_id = ?`
     ).bind(sendId).first();
@@ -82,6 +82,7 @@ export async function onRequestPost({ request, env }) {
         audience: live.audience || 'Unknown',
         type:    (live.channel  || 'email').toLowerCase(),
         title:    live.title    || sendId,
+        reply_to: live.reply_to || null,
       };
     }
   } catch (e) {
@@ -175,7 +176,7 @@ export async function onRequestPost({ request, env }) {
         to: sponsor.email,
         subject: subjectForRecipient,
         html,
-        replyTo: 'smiggin@dsdmail.net',
+        replyTo: send.reply_to || 'smiggin@dsdmail.net',
       });
       if (!res.ok || !res.id) {
         status = 'failed';

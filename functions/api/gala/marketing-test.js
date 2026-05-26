@@ -430,12 +430,13 @@ export async function onRequestPost(context) {
   try {
     if (env.GALA_DB) {
       const live = await env.GALA_DB.prepare(
-        `SELECT channel, subject, body, audience, title FROM marketing_sends WHERE send_id = ?`
+        `SELECT channel, subject, body, audience, title, reply_to FROM marketing_sends WHERE send_id = ?`
       ).bind(sendId).first();
       if (live && (live.subject || live.body)) {
         if (send) {
           send.subject = live.subject || send.subject;
           send.body = live.body || send.body;
+          send.reply_to = live.reply_to || send.reply_to;
         } else {
           // D1-only send (no in-code base entry).
           send = {
@@ -444,6 +445,7 @@ export async function onRequestPost(context) {
             body: live.body || '',
             audience: live.audience || '',
             title: live.title || sendId,
+            reply_to: live.reply_to || null,
           };
         }
       } else if (send) {
@@ -534,7 +536,7 @@ export async function onRequestPost(context) {
         subject: `[TEST] ${subjectForRecipient}`,
         html,
         // Single replyTo only — SkippyMail silently drops comma-separated.
-        replyTo: 'smiggin@dsdmail.net',
+        replyTo: send.reply_to || 'smiggin@dsdmail.net',
       });
       // Defensive: SkippyMail returns ok:true with no id when it silently
       // drops a send. Treat that as failure.

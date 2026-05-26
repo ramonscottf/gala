@@ -30,7 +30,7 @@ export async function onRequestPost({ request, env }) {
 
   // Pull canonical send row
   const send = await db.prepare(
-    'SELECT send_id, channel, audience, subject, body FROM marketing_sends WHERE send_id = ?'
+    'SELECT send_id, channel, audience, subject, body, reply_to FROM marketing_sends WHERE send_id = ?'
   ).bind(sendId).first();
   if (!send) return jsonError(`Send ${sendId} not found in marketing_sends`, 404);
   const channelLc = (send.channel || '').toLowerCase();
@@ -98,6 +98,7 @@ export async function onRequestPost({ request, env }) {
         to: r.email,
         subject: subjectForRecipient,
         html,
+        replyTo: send.reply_to || undefined,
       });
       if (!res.ok || !res.id) {
         // !res.id catches the SkippyMail silent-drop case where the
