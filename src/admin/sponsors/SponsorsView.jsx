@@ -288,6 +288,7 @@ export function SponsorsView() {
               onToggle={() => setOpenId(openId === s.id ? null : s.id)}
               onAction={handleAction}
               onSave={handleSave}
+              onToast={setToast}
             />
           ))}
         </div>

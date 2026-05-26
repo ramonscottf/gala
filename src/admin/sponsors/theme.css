@@ -570,3 +570,88 @@
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
 }
+
+/* ── Seats & movies selected (expanded sponsor card) ─────────────────── */
+.gs-seats-section { margin-bottom: 18px; }
+.gs-seats-loading,
+.gs-seats-empty {
+  font-size: 13px; color: var(--def-light, #64748b);
+  padding: 10px 0;
+}
+.gs-seatcards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.gs-seatcard {
+  border: 1px solid var(--def-border, #e2e8f0);
+  border-radius: var(--def-radius-md, 10px);
+  background: #fff;
+  overflow: hidden;
+}
+.gs-seatcard-head {
+  padding: 10px 12px;
+  background: var(--def-navy, #0d1b3d);
+  color: #fff;
+}
+.gs-seatcard-title { font-weight: 700; font-size: 14px; }
+.gs-seatshow {
+  padding: 10px 12px;
+  border-top: 1px solid var(--def-border, #e2e8f0);
+}
+.gs-seatshow:first-of-type { border-top: none; }
+.gs-seatshow-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.gs-seatshow-label { font-size: 12px; font-weight: 700; color: var(--def-navy, #0d1b3d); }
+.gs-seatshow-room { font-weight: 500; color: var(--def-muted, #64748b); }
+.gs-seatshow-count {
+  font-size: 11px; color: var(--def-muted, #64748b);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.gs-seatchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gs-seatchip {
+  display: inline-flex; flex-direction: column; align-items: flex-start;
+  padding: 4px 8px;
+  background: var(--def-bg-soft, #f1f5f9);
+  border: 1px solid var(--def-border, #e2e8f0);
+  border-radius: 6px;
+  line-height: 1.2;
+}
+.gs-seatchip-id { font-size: 12px; font-weight: 700; color: var(--def-navy, #0d1b3d); font-variant-numeric: tabular-nums; }
+.gs-seatchip-meal { font-size: 10px; color: var(--def-muted, #64748b); margin-top: 1px; }
+.gs-seatchip-guest { font-size: 10px; color: var(--def-info, #2563eb); margin-top: 1px; }
+.gs-seats-guestnote {
+  margin-top: 10px; font-size: 12px; color: var(--def-muted, #64748b);
+  padding: 8px 10px; background: var(--def-bg-soft, #f1f5f9);
+  border-radius: 6px;
+}
+
+/* ⋯ menu on each showing — admin, view-only actions */
+.gs-seatmenu { position: relative; }
+.gs-seatmenu-btn {
+  all: unset; cursor: pointer;
+  width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px; color: var(--def-muted, #64748b);
+  font-size: 17px; line-height: 1;
+}
+.gs-seatmenu-btn:hover { background: var(--def-bg-soft, #f1f5f9); color: var(--def-navy, #0d1b3d); }
+.gs-seatmenu-list {
+  position: absolute; right: 0; top: 30px; z-index: 50;
+  margin: 0; padding: 4px; list-style: none;
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid var(--def-border, #e2e8f0);
+  border-radius: var(--def-radius-md, 10px);
+  box-shadow: 0 10px 30px rgba(13, 27, 61, 0.18);
+}
+.gs-seatmenu-item {
+  all: unset; cursor: pointer;
+  display: block; width: 100%; box-sizing: border-box;
+  padding: 8px 10px; border-radius: 6px;
+  font-size: 13px; color: var(--def-navy, #0d1b3d);
+}
+.gs-seatmenu-item:hover { background: var(--def-bg-soft, #f1f5f9); }

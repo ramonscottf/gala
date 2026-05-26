@@ -30,6 +30,25 @@ export async function loadSponsorsWithTracking() {
   return data.sponsors || [];
 }
 
+/**
+ * Load a sponsor's actual seat selections by reusing the sponsor-facing
+ * portal endpoint with their rsvp_token. Returns the same contract the
+ * portal renders from, so the admin card shows exactly what the sponsor sees:
+ *   - myAssignments: seats they placed directly
+ *   - showtimes:     (theater_id, showing_number) → movie_title, etc.
+ *   - childDelegationAssignments: seats they handed to invited guests
+ * No new backend — same source of truth as the portal.
+ */
+export async function loadSponsorSeats(token) {
+  if (!token) return { myAssignments: [], showtimes: [], childDelegationAssignments: [] };
+  const data = await fetchJson(`/api/gala/portal/${token}`);
+  return {
+    myAssignments: data.myAssignments || [],
+    showtimes: data.showtimes || [],
+    childDelegationAssignments: data.childDelegationAssignments || [],
+  };
+}
+
 export async function updateSponsor(id, patch) {
   return fetchJson('/api/gala/sponsors', {
     method: 'PATCH',

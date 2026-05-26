@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TierBadge, StatusBadge, PipelinePills, Timeline } from './components.jsx';
 import { SponsorAvatar } from './SponsorAvatar.jsx';
+import { SponsorSeats } from './SponsorSeats.jsx';
 import { deriveStatus, pipelineState } from './status.js';
 
 function fmtCurrency(n) {
@@ -8,7 +9,7 @@ function fmtCurrency(n) {
   return '$' + Number(n).toLocaleString('en-US');
 }
 
-export function SponsorRow({ sponsor, isOpen, onToggle, onAction, onSave }) {
+export function SponsorRow({ sponsor, isOpen, onToggle, onAction, onSave, onToast }) {
   const status = deriveStatus(sponsor);
   const pipeline = pipelineState(sponsor);
 
@@ -116,6 +117,9 @@ export function SponsorRow({ sponsor, isOpen, onToggle, onAction, onSave }) {
 
       {isOpen && (
         <div className="gs-exp">
+          <div className="gs-seats-section">
+            <SponsorSeats sponsor={sponsor} onToast={onToast} />
+          </div>
           <div className="gs-exp-grid">
             <div>
               <div className="gs-section-h">Touchpoint timeline</div>
