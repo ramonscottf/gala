@@ -418,36 +418,42 @@ export async function onRequestPost(context) {
   if (!sendId) return jsonError('sendId required', 400);
   if (!recipients) return jsonError('recipients required (scott|sherry|both)', 400);
 
-  const baseSend = SENDS[sendId];
-  if (!baseSend) return jsonError(`Unknown sendId: ${sendId}`, 404);
+  // A send may exist ONLY in marketing_sends (created in the admin editor,
+  // no in-code SENDS entry). Don't 404 on a missing registry entry — build
+  // from the D1 row in that case. baseSend may be null here.
+  const baseSend = SENDS[sendId] || null;
 
   // Source priority: marketing_sends (new admin editor, single source of
   // truth) → marketing_edits (legacy gala-review overrides, kept for safety
   // until that tool is fully retired) → in-code SENDS registry.
-  let send = baseSend;
+  let send = baseSend ? { ...baseSend } : null;
   try {
     if (env.GALA_DB) {
       const live = await env.GALA_DB.prepare(
-        `SELECT subject, body FROM marketing_sends WHERE send_id = ?`
+        `SELECT channel, subject, body, audience, title FROM marketing_sends WHERE send_id = ?`
       ).bind(sendId).first();
       if (live && (live.subject || live.body)) {
-        send = {
-          ...baseSend,
-          subject: live.subject || baseSend.subject,
-          body: live.body || baseSend.body,
-        };
-      } else {
-        // Legacy fallback — the row didn't exist in marketing_sends yet,
-        // try the old marketing_edits override table.
+        if (send) {
+          send.subject = live.subject || send.subject;
+          send.body = live.body || send.body;
+        } else {
+          // D1-only send (no in-code base entry).
+          send = {
+            type: (live.channel || 'email').toLowerCase() === 'sms' ? 'sms' : 'email',
+            subject: live.subject || '',
+            body: live.body || '',
+            audience: live.audience || '',
+            title: live.title || sendId,
+          };
+        }
+      } else if (send) {
+        // Legacy fallback — only meaningful when we have a base registry entry.
         const legacy = await env.GALA_DB.prepare(
           `SELECT subject_override, body_override FROM marketing_edits WHERE send_id = ?`
         ).bind(sendId).first();
         if (legacy && (legacy.subject_override || legacy.body_override)) {
-          send = {
-            ...baseSend,
-            subject: legacy.subject_override || baseSend.subject,
-            body: legacy.body_override || baseSend.body,
-          };
+          send.subject = legacy.subject_override || send.subject;
+          send.body = legacy.body_override || send.body;
         }
       }
     }
@@ -455,6 +461,8 @@ export async function onRequestPost(context) {
     // Don't block the send on a DB hiccup — fall back to baked-in copy.
     console.error('Override fetch failed, using default:', e.message);
   }
+
+  if (!send) return jsonError(`Unknown sendId: ${sendId}`, 404);
 
   const targets = resolveRecipients(env, recipients);
   if (targets.length === 0) return jsonError('No valid recipients', 400);
@@ -497,9 +505,13 @@ export async function onRequestPost(context) {
   }
 
   function substituteToken(str, label) {
+    let out = String(str || '');
     const tok = tokenByLabel[(label || '').toLowerCase()];
-    if (!tok) return str; // leave {TOKEN} so the broken link is visible in test
-    return String(str || '').replaceAll('{TOKEN}', tok);
+    if (tok) out = out.replaceAll('{TOKEN}', tok); // else leave {TOKEN} so the broken link is visible in test
+    // Test sends aren't audience-resolved, so there's no real per-recipient
+    // seats_remaining — show a sample so the copy reads cleanly.
+    out = out.replaceAll('{SEATS_LEFT}', '2');
+    return out;
   }
 
   const results = [];
