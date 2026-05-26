@@ -36,6 +36,11 @@ export const AUDIENCE_PRESETS = [
   'All Sponsors (paid)',
   'All Sponsors + Friends & Family',
   'Confirmed Buyers',          // Everyone who has bought a tier and is attending — all paid + F&F + Individual Seats
+  // Dynamic: every eligible-to-select tier (all but Individual Seats) whose
+  // placed seats < seats_purchased. Re-resolves at send time, so anyone who
+  // finishes before the next send drops off. Carries seats_remaining for the
+  // {SEATS_LEFT} personalization token.
+  'Incomplete Seat Selections',
 ];
 
 // Companies that count as the "Platinum Internal" sandbox audience.
@@ -97,6 +102,49 @@ export async function resolveAudience(audience, db) {
       tiers: ['Platinum (Internal sandbox)'],
       recipients: internalResult.results || [],
       missingEmail: [],
+    };
+  }
+
+  // Eligible-to-select sponsors who haven't finished placing their seats.
+  // "Eligible" = every paid/F&F tier EXCEPT Individual Seats (an individual
+  // holds a single ticket — nothing to keep selecting/delegating). "Not
+  // finished" = placed seat_assignments < seats_purchased. Dynamic at send
+  // time so anyone who completes before the next send drops off. Returns
+  // seats_remaining per recipient for the {SEATS_LEFT} token. Checked before
+  // the tier substring branches so it doesn't fall through to a plain tier.
+  if (lc.includes('incomplete seat')) {
+    const eligTiers = ['Platinum', 'Gold', 'Silver', 'Bronze',
+                       'Friends and Family', 'Split Friends & Family'];
+    const ph = eligTiers.map(() => '?').join(',');
+    const placedExpr = '(SELECT COUNT(*) FROM seat_assignments sa WHERE sa.sponsor_id = s.id)';
+    const recSql = `
+      SELECT s.id, s.email, s.first_name, s.last_name, s.company, s.sponsorship_tier, s.rsvp_token,
+             s.seats_purchased,
+             ${placedExpr} AS placed,
+             (s.seats_purchased - ${placedExpr}) AS seats_remaining
+      FROM sponsors s
+      WHERE s.sponsorship_tier IN (${ph})
+        AND s.archived_at IS NULL
+        AND s.email IS NOT NULL AND s.email != ''
+        AND s.rsvp_token IS NOT NULL AND s.rsvp_token != ''
+        AND s.seats_purchased > ${placedExpr}
+      ORDER BY seats_remaining DESC, s.company COLLATE NOCASE
+    `;
+    const rec = await db.prepare(recSql).bind(...eligTiers).all();
+    const missSql = `
+      SELECT s.id, s.first_name, s.last_name, s.company, s.sponsorship_tier
+      FROM sponsors s
+      WHERE s.sponsorship_tier IN (${ph})
+        AND s.archived_at IS NULL
+        AND (s.email IS NULL OR s.email = '' OR s.rsvp_token IS NULL OR s.rsvp_token = '')
+        AND s.seats_purchased > ${placedExpr}
+      ORDER BY s.company COLLATE NOCASE
+    `;
+    const miss = await db.prepare(missSql).bind(...eligTiers).all();
+    return {
+      tiers: ['Eligible · seats not finished'],
+      recipients: rec.results || [],
+      missingEmail: miss.results || [],
     };
   }
 

@@ -84,8 +84,9 @@ export async function onRequestPost({ request, env }) {
       continue;
     }
 
-    const bodyForRecipient = String(send.body || '').replaceAll('{TOKEN}', r.rsvp_token);
-    const subjectForRecipient = String(send.subject || '').replaceAll('{TOKEN}', r.rsvp_token);
+    const seatsLeft = r.seats_remaining != null ? String(r.seats_remaining) : '';
+    const bodyForRecipient = String(send.body || '').replaceAll('{TOKEN}', r.rsvp_token).replaceAll('{SEATS_LEFT}', seatsLeft);
+    const subjectForRecipient = String(send.subject || '').replaceAll('{TOKEN}', r.rsvp_token).replaceAll('{SEATS_LEFT}', seatsLeft);
     const html = galaEmailHtml({
       firstName: r.first_name || r.company || null,
       body: bodyForRecipient,
