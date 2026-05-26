@@ -1081,23 +1081,33 @@ body {
         <div class="kpi-card__icon tickets">
           <svg viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
         </div>
-        <div class="kpi-card__value" id="kpi-tickets">--</div>
-        <div class="kpi-card__label">Tickets Sold</div>
+        <div class="kpi-card__value" id="kpi-seats">--</div>
+        <div class="kpi-card__label">Seats Placed</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__icon sponsors">
           <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div class="kpi-card__value" id="kpi-sponsors">--</div>
-        <div class="kpi-card__label">Sponsors</div>
+        <div class="kpi-card__label">Sponsors Seated</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-card__icon" style="background: linear-gradient(135deg, #CB262C, #E84E53); box-shadow: none;">
           <svg viewBox="0 0 24 24"><path d="M2 8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z"/><circle cx="6" cy="8" r=".5" fill="currentColor"/><circle cx="18" cy="8" r=".5" fill="currentColor"/><circle cx="6" cy="16" r=".5" fill="currentColor"/><circle cx="18" cy="16" r=".5" fill="currentColor"/></svg>
         </div>
-        <div class="kpi-card__value" id="kpi-movies">--</div>
-        <div class="kpi-card__label">Movies Lined Up</div>
+        <div class="kpi-card__value" id="kpi-capacity">--</div>
+        <div class="kpi-card__label">Capacity Used</div>
       </div>
+    </div>
+
+    <h2 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 28px 0 16px;">Seat Fill by Movie</h2>
+    <div id="seat-fill" style="display:flex; flex-direction:column; gap:18px;">
+      <div class="shimmer" style="width: 100%; height: 120px;"></div>
+    </div>
+
+    <h2 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 28px 0 16px;">Still to Select &mdash; by Tier</h2>
+    <div id="unpicked-strip" class="summary-bar" style="justify-content: center;">
+      <div class="shimmer" style="width: 100%; height: 40px;"></div>
     </div>
 
     <h2 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Sponsor Breakdown by Tier</h2>
@@ -1623,13 +1633,12 @@ async function loadAllData() {
 
   // KPIs — single source of truth: D1 sponsors table.
   // As of May 2026, the dashboard is canonical; the xlsx is no longer synced.
-  // totalAmount = sum of amount_paid across all active sponsors.
-  // totalTickets = sum of seats_purchased across all active sponsors.
   const totalAmount = sponsors.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
-  const totalTickets = sponsors.reduce((sum, s) => sum + (parseInt(s.quantity, 10) || 0), 0);
   document.getElementById('kpi-revenue').textContent = formatCurrency(totalAmount);
-  document.getElementById('kpi-tickets').textContent = totalTickets.toLocaleString();
-  document.getElementById('kpi-sponsors').textContent = sponsors.length.toString();
+
+  // Seat-centric KPIs + fill section pull from the seating-summary endpoint,
+  // which counts real placements on the (theater, showing) composite key.
+  loadSeatIntel();
 
   // Tier breakdown
   const tiers = {};
@@ -1649,6 +1658,110 @@ async function loadAllData() {
       .join('');
   } else {
     breakdown.innerHTML = '<div class="summary-item"><div class="summary-item__label">No sponsors yet</div></div>';
+  }
+}
+
+/* ── Seat intelligence: KPIs, fill-by-movie, still-to-select ──
+   Pulls /api/gala/seating-summary, which counts placements on the real
+   (theater_id, showing_number) composite key so showings never blur. */
+async function loadSeatIntel() {
+  const fillEl = document.getElementById('seat-fill');
+  const unpickedEl = document.getElementById('unpicked-strip');
+  let data;
+  try {
+    data = await fetchJSON('/api/gala/seating-summary');
+  } catch (e) {
+    if (fillEl) fillEl.innerHTML = '<div class="summary-item"><div class="summary-item__label">Could not load seat data</div></div>';
+    if (unpickedEl) unpickedEl.innerHTML = '';
+    return;
+  }
+
+  const showings = data.showings || [];
+  const totals = data.totals || {};
+  const placed = totals.assignedSeats || 0;
+  const ticketed = totals.ticketedSeats || 0;
+  const seatable = showings.reduce((a, s) => a + (s.capacity || 0), 0);
+  const sponsorsCount = totals.sponsorsCount || 0;
+  const sponsorsSeated = sponsorsCount - (totals.sponsorsUnseated || 0);
+  const pct = seatable ? Math.round((placed / seatable) * 100) : 0;
+
+  const elSeats = document.getElementById('kpi-seats');
+  if (elSeats) elSeats.innerHTML = `${placed.toLocaleString()}<span style="font-size:0.5em; color:var(--text-muted); font-weight:600;"> / ${ticketed.toLocaleString()} sold</span>`;
+  const elSpon = document.getElementById('kpi-sponsors');
+  if (elSpon) elSpon.innerHTML = `${sponsorsSeated}<span style="font-size:0.5em; color:var(--text-muted); font-weight:600;"> / ${sponsorsCount}</span>`;
+  const elCap = document.getElementById('kpi-capacity');
+  if (elCap) elCap.innerHTML = `${pct}%<span style="font-size:0.5em; color:var(--text-muted); font-weight:600;"> of ${seatable.toLocaleString()}</span>`;
+
+  // ── Fill by movie ──
+  const movies = {};
+  const flexRooms = [];
+  showings.forEach(s => {
+    if (!s.movie) { flexRooms.push(s); return; }
+    (movies[s.movie] = movies[s.movie] || []).push(s);
+  });
+
+  const FILL = '#2f6fd0', OVER = '#c2790f', WARN = '#9a5b00';
+  const bar = (assigned, cap, over) => {
+    const p = cap ? Math.round((assigned / cap) * 100) : 0;
+    return `<div style="flex:1; background:rgba(120,130,150,0.16); border-radius:6px; height:20px; position:relative; overflow:hidden;">
+      <div style="position:absolute; left:0; top:0; bottom:0; width:${Math.min(p,100)}%; background:${over ? OVER : FILL}; border-radius:6px;"></div>
+    </div>`;
+  };
+
+  const movieRows = Object.keys(movies).sort().map(title => {
+    const rooms = movies[title];
+    const totAssigned = rooms.reduce((a, r) => a + r.assigned, 0);
+    const totCap = rooms.reduce((a, r) => a + r.capacity, 0);
+    const totPct = totCap ? Math.round((totAssigned / totCap) * 100) : 0;
+    const showingNos = [...new Set(rooms.map(r => r.showing))].sort();
+    const showingRows = showingNos.map(n => {
+      const rs = rooms.filter(r => r.showing === n);
+      const a = rs.reduce((x, r) => x + r.assigned, 0);
+      const c = rs.reduce((x, r) => x + r.capacity, 0);
+      const over = rs.some(r => r.assigned > r.capacity);
+      const overRoom = rs.find(r => r.assigned > r.capacity);
+      const flag = over
+        ? `<div style="font-size:0.72rem; color:${WARN}; margin:2px 0 0 86px;">Primary room T${overRoom.theaterId} over soft cap (${overRoom.assigned}/${overRoom.capacity}) — overflow room still open</div>`
+        : '';
+      return `<div style="display:flex; align-items:center; gap:10px; margin:6px 0;">
+          <div style="width:76px; font-size:0.76rem; color:var(--text-muted); flex-shrink:0;">Showing ${n}</div>
+          ${bar(a, c, over)}
+          <div style="width:104px; font-size:0.78rem; text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums;">${a} / ${c} · ${c ? Math.round(a/c*100) : 0}%</div>
+        </div>${flag}`;
+    }).join('');
+    return `<div>
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px;">
+        <div style="font-weight:700; font-size:0.92rem; color:var(--text);">${title}</div>
+        <div style="font-size:0.78rem; color:var(--text-muted); font-variant-numeric:tabular-nums;">${totAssigned} / ${totCap} · ${totPct}%</div>
+      </div>
+      ${showingRows}
+    </div>`;
+  }).join('');
+
+  let flexNote = '';
+  if (flexRooms.length) {
+    const fCap = flexRooms.reduce((a, r) => a + r.capacity, 0);
+    const fAssigned = flexRooms.reduce((a, r) => a + r.assigned, 0);
+    const fTheaters = [...new Set(flexRooms.map(r => 'T' + r.theaterId))].join(', ');
+    flexNote = `<div style="border-top:1px dashed rgba(120,130,150,0.3); padding-top:12px; font-size:0.82rem; color:var(--text-muted);">
+      <strong style="color:var(--text);">Flex / reserve:</strong> ${fTheaters} &middot; ${fAssigned} / ${fCap} seats &middot; no movie assigned. Point one at a hot showing whenever you need overflow.</div>`;
+  }
+  if (fillEl) fillEl.innerHTML = movieRows + flexNote;
+
+  // ── Still to select, by tier ──
+  const unpicked = (data.unpickedByTier || []).filter(u => (u.seats || 0) > 0 || (u.sponsors || 0) > 0);
+  if (unpickedEl) {
+    if (unpicked.length) {
+      unpickedEl.innerHTML = unpicked.map(u => {
+        const isFF = /friends/i.test(u.tier || '');
+        return `<div class="summary-item" style="${isFF ? 'background:rgba(47,111,208,0.10); border-radius:10px; padding:8px 14px;' : ''}">
+          <div class="summary-item__value">${u.sponsors}</div>
+          <div class="summary-item__label">${u.tier}${u.seats ? ` · ${u.seats} seats` : ''}</div>
+        </div>`;
+      }).join('');
+    } else {
+      unpickedEl.innerHTML = '<div class="summary-item"><div class="summary-item__label">Everyone has selected 🎉</div></div>';
+    }
   }
 }
 
@@ -5005,9 +5118,6 @@ async function loadMoviesOverview() {
     const scheduledMovieIds = new Set(showtimes.filter(s => s.movie_id).map(s => s.movie_id));
     const lineup = movies.filter(m => scheduledMovieIds.has(m.id));
 
-    const kpi = document.getElementById('kpi-movies');
-    if (kpi) kpi.textContent = String(lineup.length);
-
     const strip = document.getElementById('overview-lineup-strip');
     if (!strip) return;
     if (!lineup.length) {
@@ -5028,8 +5138,7 @@ async function loadMoviesOverview() {
       strip.appendChild(card);
     }
   } catch (e) {
-    const kpi = document.getElementById('kpi-movies');
-    if (kpi) kpi.textContent = '—';
+    /* lineup strip stays in its loading state on error */
   }
 }
 

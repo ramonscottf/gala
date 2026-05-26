@@ -104,6 +104,53 @@ export async function onRequestGet(context) {
     placements[sid].theaters = [...placements[sid].theaters];
   });
 
+  // Per-showing fill: one row per (theater × showing) with its movie + soft cap.
+  // assigned is counted on the composite (theater_id, showing_number) so showing 1
+  // and showing 2 in the same auditorium never blur together. Flex/reserve rooms
+  // (no movie assigned) come back with movie = null so the client can surface them.
+  const showingsResult = await env.GALA_DB.prepare(`
+    SELECT st.theater_id, st.showing_number,
+           t.tier, t.purpose, t.notes AS theater_notes,
+           st.movie_id, m.title AS movie_title,
+           COALESCE(st.capacity, t.capacity) AS capacity,
+           (SELECT COUNT(*) FROM seat_assignments sa
+              WHERE sa.theater_id = st.theater_id
+                AND sa.showing_number = st.showing_number) AS assigned
+      FROM showtimes st
+      LEFT JOIN theaters t ON t.id = st.theater_id
+      LEFT JOIN movies m ON m.id = st.movie_id
+     ORDER BY m.title, st.showing_number, st.theater_id
+  `).all();
+  const showings = (showingsResult.results || []).map(r => ({
+    theaterId: r.theater_id,
+    showing: r.showing_number,
+    tier: r.tier,
+    purpose: r.purpose,
+    movieId: r.movie_id,
+    movie: r.movie_title,
+    capacity: r.capacity || 0,
+    assigned: r.assigned || 0,
+  }));
+
+  // Unpicked sponsors by tier — sponsors who have placed zero seats so far.
+  // Lets the dashboard show who still needs to select, grouped by tier.
+  const unpickedResult = await env.GALA_DB.prepare(`
+    SELECT sponsorship_tier AS tier, COUNT(*) AS sponsors,
+           COALESCE(SUM(seats_purchased), 0) AS seats
+      FROM sponsors
+     WHERE ${archiveSupported ? 'archived_at IS NULL AND ' : ''}
+           id NOT IN (
+             SELECT DISTINCT sponsor_id FROM seat_assignments WHERE sponsor_id IS NOT NULL
+           )
+     GROUP BY sponsorship_tier
+     ORDER BY sponsors DESC
+  `).all();
+  const unpickedByTier = (unpickedResult.results || []).map(r => ({
+    tier: normalizeSponsorTier(r.tier) || r.tier,
+    sponsors: r.sponsors,
+    seats: r.seats,
+  }));
+
   return jsonOk({
     totals: {
       ticketedSeats,
@@ -115,6 +162,8 @@ export async function onRequestGet(context) {
     },
     sponsors,
     perTheater,
+    showings,
+    unpickedByTier,
     placements,
   }, 0);
 }
