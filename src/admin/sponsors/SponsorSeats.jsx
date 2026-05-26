@@ -16,12 +16,12 @@ const MEAL_SHORT = { frenchdip: 'French Dip', salad: 'Salad', veggie: 'Veggie', 
 
 // Group flat assignment rows into movie -> showing -> seats[], resolving
 // (theater_id, showing_number) -> movie via the showtimes map.
-function groupByMovie(assignments, showtimes) {
+function groupByMovie(assignments, childAssignments, showtimes) {
   const showMap = new Map();
   for (const s of showtimes) showMap.set(`${s.theater_id}:${s.showing_number}`, s);
 
   const movies = new Map();
-  for (const a of assignments) {
+  const add = (a, { editable, guest }) => {
     const st = showMap.get(`${a.theater_id}:${a.showing_number}`);
     const title = st?.movie_title || a.movie_title || 'Unassigned room';
     if (!movies.has(title)) movies.set(title, { title, showings: new Map() });
@@ -34,11 +34,16 @@ function groupByMovie(assignments, showtimes) {
       row: a.row_label,
       seat: a.seat_num,
       dinner: a.dinner_choice || '',
-      guest: a.delegate_name || null,
+      guest: guest || null,
+      editable,
     });
-  }
+  };
+  for (const a of assignments) add(a, { editable: true, guest: null });
+  for (const a of (childAssignments || [])) add(a, { editable: false, guest: a.delegate_name || 'Guest' });
+
   for (const m of movies.values()) {
     for (const sh of m.showings.values()) {
+      sh.ownCount = sh.seats.filter(s => s.editable).length;
       sh.seats.sort((p, q) =>
         String(p.row).localeCompare(String(q.row)) ||
         (parseInt(p.seat, 10) || 0) - (parseInt(q.seat, 10) || 0)
@@ -112,6 +117,20 @@ function SeatChip({ token, theaterId, showing, seat, onChanged, onToast }) {
   const [value, setValue] = useState(seat.dinner || '');
   const [saving, setSaving] = useState(false);
 
+  // Guest-assigned (delegated) seats are read-only here: the sponsor's token
+  // can't set_dinner on a delegated seat (that's the guest's / on-behalf path).
+  if (!seat.editable) {
+    return (
+      <div className="gs-seatchip is-guest">
+        <div className="gs-seatchip-top">
+          <span className="gs-seatchip-id">{seat.row}{seat.seat}</span>
+          {seat.guest ? <span className="gs-seatchip-guest">{seat.guest}</span> : null}
+        </div>
+        <span className="gs-seatchip-meal-ro">{MEAL_SHORT[seat.dinner] || 'No meal'}</span>
+      </div>
+    );
+  }
+
   const change = async (next) => {
     const prev = value;
     setValue(next);          // optimistic
@@ -139,7 +158,6 @@ function SeatChip({ token, theaterId, showing, seat, onChanged, onToast }) {
     <div className={`gs-seatchip ${saving ? 'is-saving' : ''}`}>
       <div className="gs-seatchip-top">
         <span className="gs-seatchip-id">{seat.row}{seat.seat}</span>
-        {seat.guest ? <span className="gs-seatchip-guest">{seat.guest}</span> : null}
       </div>
       <select
         className="gs-seatchip-meal-select"
@@ -182,10 +200,10 @@ export function SponsorSeats({ sponsor, onToast }) {
 
   const { myAssignments, showtimes, childDelegationAssignments, allAssignments, allHolds, myToken } = state.data;
   const token = sponsor.rsvp_token;
-  const groups = groupByMovie(myAssignments, showtimes);
+  const groups = groupByMovie(myAssignments, childDelegationAssignments, showtimes);
   const guestSeatCount = (childDelegationAssignments || []).length;
 
-  if (groups.length === 0 && guestSeatCount === 0) {
+  if (groups.length === 0) {
     return (<><div className="gs-section-h">Seats &amp; movies selected</div><div className="gs-seats-empty">No seats placed yet.</div></>);
   }
 
@@ -247,8 +265,8 @@ export function SponsorSeats({ sponsor, onToast }) {
                   </span>
                   <span className="gs-seatshow-count">{sh.seats.length} seat{sh.seats.length !== 1 ? 's' : ''}</span>
                   <SeatCardMenu
-                    onChangeSeats={() => openChangeSeats(m.title, sh)}
-                    onMoveShow={() => openMoveShow(m.title, sh)}
+                    onChangeSeats={sh.ownCount > 0 ? () => openChangeSeats(m.title, sh) : null}
+                    onMoveShow={sh.ownCount > 0 ? () => openMoveShow(m.title, sh) : null}
                     onViewChart={() => window.open(`/admin/seating.html?theater=${sh.theaterId}&showing=${sh.showing}`, '_blank')}
                     onCopy={() => copySeats(m.title, sh)}
                   />
@@ -273,7 +291,7 @@ export function SponsorSeats({ sponsor, onToast }) {
       </div>
       {guestSeatCount > 0 && (
         <div className="gs-seats-guestnote">
-          + {guestSeatCount} seat{guestSeatCount !== 1 ? 's' : ''} assigned to guests they invited
+          Seats showing a name are assigned to guests they invited ({guestSeatCount} total) — shown read-only.
         </div>
       )}
       {editing && (

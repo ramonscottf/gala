@@ -679,3 +679,23 @@
   padding: 12px 16px; border-top: 1px solid var(--def-border, #e2e8f0);
 }
 .gs-seatmodal-summary { font-size: 13px; color: var(--def-navy, #0d1b3d); }
+
+/* ── Move-to-another-show modal ───────────────────────────────────────── */
+.gs-movemodal { max-width: 520px; width: 92vw; display: flex; flex-direction: column; }
+.gs-movemodal-body { padding: 4px 16px 8px; }
+.gs-move-from { font-size: 13px; color: var(--def-navy, #0d1b3d); line-height: 1.5; }
+.gs-move-plan { margin-top: 12px; min-height: 24px; }
+.gs-move-ok {
+  padding: 10px 12px; background: var(--def-bg-soft, #f1f5f9);
+  border: 1px solid var(--def-border, #e2e8f0); border-radius: 8px;
+  font-size: 13px; color: var(--def-navy, #0d1b3d); line-height: 1.5;
+}
+.gs-move-note { font-size: 12px; color: var(--def-muted, #64748b); margin-top: 4px; }
+.gs-movemodal-foot {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 12px 16px; border-top: 1px solid var(--def-border, #e2e8f0);
+}
+
+/* Guest-assigned (delegated) seat chips — read-only */
+.gs-seatchip.is-guest { background: #eef2fb; border-color: #d7e0f3; }
+.gs-seatchip-meal-ro { font-size: 11px; color: var(--def-muted, #64748b); padding: 2px 0; }
