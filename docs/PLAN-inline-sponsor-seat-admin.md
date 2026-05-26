@@ -1,11 +1,11 @@
 ---
 title: Inline sponsor seat admin (Sponsors tab)
-status: in-progress
+status: live (pending Scott walk)
 project: gala
-phase: 3 of 3 (3a shipped, 3b next)
+phase: 3 of 3 — all phases shipped
 source_chat: 2026-05-26 gala admin session
 created: 2026-05-26
-last_updated: 2026-05-26 (3a shipped)
+last_updated: 2026-05-26 (3a + 3b shipped)
 ---
 
 # Inline sponsor seat admin
@@ -51,7 +51,7 @@ grouped by movie → showing, seat chips, portal-style cards, ⋯ menu
 Each seat chip has a meal dropdown writing through set_dinner. Optimistic
 update + revert-on-error + toast.
 
-### Phase 3 — Change seats + move show  🚧 3a SHIPPED, 3b next
+### Phase 3 — Change seats + move show  ✅ SHIPPED (3a + 3b)
 Scott's choice (2026-05-26): build BOTH — a mini seat-map for picking seats,
 and a list control for moving shows.
 
@@ -75,7 +75,20 @@ _Original spec:_
   stop and report which seat failed, leave already-applied writes in place
   (or roll back — decide during build; lean on pick.js semantics).
 
-**3b. Move to another show (list)**
+**3b. Move to another show (list)  ✅ SHIPPED**
+- New MoveShowModal.jsx from the seat-card ⋯ menu ("Move to another show").
+- Dropdown of all other showings. Same-theater target keeps their exact seat
+  numbers when free; cross-theater (or conflicting) uses SeatEngine.autoPickBlock
+  to suggest a contiguous block in the target room, shown for confirmation.
+- Apply: claim target seats (hold+finalize) then release source (unfinalize),
+  each guarded; stop + report on first failure, reload.
+- KNOWN LIMIT (v1): loveseat-pair groups may fail to move (pick.js finalize
+  wants both halves held; sequential per-seat claim can't satisfy that) — fails
+  cleanly and reports, no corruption; use the seating chart for loveseat moves
+  until a batch-move path is added. Partial move (claim ok, release fails)
+  leaves seats in both showings; card reloads so it's visible to fix.
+
+_Original spec:_
 - "Move to [show ▾]" control listing other showings from showtimes.
 - Same-auditorium target (e.g. 5pm → 7:50pm): try same row/seat in target
   showing; release source, claim target. Clean common case.

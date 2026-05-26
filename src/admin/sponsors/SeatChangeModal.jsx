@@ -1,16 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { adaptTheater, SeatMap } from '../../portal/SeatEngine.jsx';
 import { claimSeat, releaseSeat } from './api.js';
-
-// Layout is a static asset shared with the portal. Fetch once, cache on window.
-let _layoutCache = null;
-async function loadLayouts() {
-  if (_layoutCache) return _layoutCache;
-  const res = await fetch('/data/theater-layouts.json');
-  if (!res.ok) throw new Error('Could not load seat layout');
-  _layoutCache = await res.json();
-  return _layoutCache;
-}
+import { loadLayouts, theaterRaw } from './layouts.js';
 
 const sid = (a) => `${a.row_label}-${a.seat_num}`;
 
@@ -31,7 +22,7 @@ export function SeatChangeModal({ token, theaterId, showing, movieTitle, taken, 
     loadLayouts()
       .then(d => {
         if (off) return;
-        const raw = (d.theaters || []).find(t => String(t.id) === String(theaterId));
+        const raw = theaterRaw(d, theaterId);
         if (!raw) { setLoadErr(`No layout for theater ${theaterId}`); return; }
         setLayoutTheater(adaptTheater(raw));
       })

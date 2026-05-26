@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { loadSponsorSeats, setSeatDinner } from './api.js';
 import { SeatChangeModal } from './SeatChangeModal.jsx';
+import { MoveShowModal } from './MoveShowModal.jsx';
 
 // Meal codes + labels — must match pick.js set_dinner VALID set and the
 // portal's DinnerModal options exactly.
@@ -47,7 +48,7 @@ function groupByMovie(assignments, showtimes) {
   return [...movies.values()];
 }
 
-function SeatCardMenu({ onChangeSeats, onViewChart, onCopy }) {
+function SeatCardMenu({ onChangeSeats, onMoveShow, onViewChart, onCopy }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
@@ -80,6 +81,13 @@ function SeatCardMenu({ onChangeSeats, onViewChart, onCopy }) {
             <li role="none">
               <button type="button" role="menuitem" className="gs-seatmenu-item" onClick={pick(onChangeSeats)}>
                 Change seats
+              </button>
+            </li>
+          )}
+          {onMoveShow && (
+            <li role="none">
+              <button type="button" role="menuitem" className="gs-seatmenu-item" onClick={pick(onMoveShow)}>
+                Move to another show
               </button>
             </li>
           )}
@@ -150,6 +158,7 @@ function SeatChip({ token, theaterId, showing, seat, onChanged, onToast }) {
 export function SponsorSeats({ sponsor, onToast }) {
   const [state, setState] = useState({ loading: true, error: null, data: null });
   const [editing, setEditing] = useState(null); // { theaterId, showing, movieTitle, mySeats, taken }
+  const [moving, setMoving] = useState(null);    // { theaterId, showing, movieTitle, mySeats }
 
   const reload = useCallback(() => {
     if (!sponsor.rsvp_token || (sponsor.seats_assigned || 0) === 0) {
@@ -212,6 +221,13 @@ export function SponsorSeats({ sponsor, onToast }) {
     });
   };
 
+  const openMoveShow = (movieTitle, sh) => {
+    const inScope = (x) => Number(x.theater_id) === Number(sh.theaterId) && Number(x.showing_number || 1) === Number(sh.showing);
+    const mySeats = (myAssignments || []).filter(inScope)
+      .map(a => ({ row_label: a.row_label, seat_num: String(a.seat_num) }));
+    setMoving({ theaterId: sh.theaterId, showing: sh.showing, movieTitle, mySeats });
+  };
+
   return (
     <>
       <div className="gs-section-h">Seats &amp; movies selected</div>
@@ -232,6 +248,7 @@ export function SponsorSeats({ sponsor, onToast }) {
                   <span className="gs-seatshow-count">{sh.seats.length} seat{sh.seats.length !== 1 ? 's' : ''}</span>
                   <SeatCardMenu
                     onChangeSeats={() => openChangeSeats(m.title, sh)}
+                    onMoveShow={() => openMoveShow(m.title, sh)}
                     onViewChart={() => window.open(`/admin/seating.html?theater=${sh.theaterId}&showing=${sh.showing}`, '_blank')}
                     onCopy={() => copySeats(m.title, sh)}
                   />
@@ -270,6 +287,22 @@ export function SponsorSeats({ sponsor, onToast }) {
           onToast={onToast}
           onClose={() => setEditing(null)}
           onDone={() => { setEditing(null); reload(); }}
+        />
+      )}
+      {moving && (
+        <MoveShowModal
+          token={token}
+          sourceTheaterId={moving.theaterId}
+          sourceShowing={moving.showing}
+          sourceMovieTitle={moving.movieTitle}
+          mySeats={moving.mySeats}
+          showtimes={showtimes}
+          allAssignments={allAssignments}
+          allHolds={allHolds}
+          myToken={myToken}
+          onToast={onToast}
+          onClose={() => setMoving(null)}
+          onDone={() => { setMoving(null); reload(); }}
         />
       )}
     </>
