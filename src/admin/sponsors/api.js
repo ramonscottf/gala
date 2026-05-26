@@ -49,6 +49,27 @@ export async function loadSponsorSeats(token) {
   };
 }
 
+/**
+ * Change a single seat's meal via the portal's set_dinner action, using the
+ * sponsor's token. Reuses the exact endpoint the portal uses, which resolves
+ * showing_number defensively and scopes the write to the full composite key —
+ * so the admin never hand-writes seat SQL. dinner_choice of '' clears it.
+ * Valid codes: frenchdip | salad | veggie | kids | '' (none).
+ */
+export async function setSeatDinner(token, { theater_id, showing_number, row_label, seat_num, dinner_choice }) {
+  return fetchJson(`/api/gala/portal/${token}/pick`, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'set_dinner',
+      theater_id,
+      showing_number,
+      row_label,
+      seat_num,
+      dinner_choice: dinner_choice || '',
+    }),
+  });
+}
+
 export async function updateSponsor(id, patch) {
   return fetchJson('/api/gala/sponsors', {
     method: 'PATCH',
