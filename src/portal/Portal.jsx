@@ -2104,6 +2104,39 @@ export const DelegateForm = ({
     setPending(true);
     setError(null);
     try {
+      // 2026-05-27 — build seat_transfer alongside the POST so the
+      // backend can atomically move already-placed seats into the new
+      // delegation. Without this, sponsors who placed every seat see
+      // available=0 and get refused. seat_transfer is the explicit
+      // signal that these seats are coming OUT of placedDirect and
+      // INTO the delegation, not eating new budget. Format mirrors
+      // /assign: [{ theater_id, row_label, seat_num }, ...].
+      let seatTransfer;
+      if (seatPills && theaterId) {
+        // Mode B: every selected pill is in `theaterId`.
+        seatTransfer = Array.from(selectedPills).map((sid) => {
+          const dash = sid.indexOf('-');
+          return {
+            theater_id: theaterId,
+            row_label: sid.slice(0, dash),
+            seat_num: sid.slice(dash + 1),
+          };
+        });
+      } else if (hasAssignable && selectedAssignable.size > 0) {
+        // Hybrid Mode A: selectedAssignable can span theaters; each
+        // entry carries its own theaterId on the source object.
+        seatTransfer = assignableSeats
+          .filter((s) => selectedAssignable.has(s.key))
+          .map((s) => {
+            const dash = String(s.seatId || '').indexOf('-');
+            return {
+              theater_id: s.theaterId,
+              row_label: s.seatId.slice(0, dash),
+              seat_num: s.seatId.slice(dash + 1),
+            };
+          });
+      }
+
       const res = await fetch(`${apiBase}/api/gala/portal/${token}/delegate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2112,6 +2145,7 @@ export const DelegateForm = ({
           delegate_phone: phone.trim() || undefined,
           delegate_email: email.trim() || undefined,
           seats_allocated: effectiveSeats,
+          seat_transfer: seatTransfer && seatTransfer.length > 0 ? seatTransfer : undefined,
         }),
       });
       if (!res.ok) {

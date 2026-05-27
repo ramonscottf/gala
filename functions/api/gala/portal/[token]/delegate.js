@@ -304,10 +304,75 @@ export async function onRequestPost(context) {
   if (!phone && !email) return jsonError('At least phone or email required', 400);
   if (!seats || seats < 1) return jsonError('Seats must be >= 1', 400);
 
+  // ── Optional seat_transfer (2026-05-27 fix) ──
+  // The "per-seat invite" flow (merged 2026-05-10) lets a sponsor who
+  // already placed all their seats hand specific seats to a guest. The
+  // client picks specific seat IDs from the sponsor's placed block;
+  // those seats need to move from "placed by sponsor, delegation_id
+  // null" → "owned by the new delegation". Without this branch the
+  // sub-allocation check below saw math.available = 0 (every seat
+  // already in placedDirect) and refused to create the delegation —
+  // which is how Carver/Florek/James + 16 other fully-placed sponsors
+  // got stuck on 2026-05-27.
+  //
+  // Body shape: seat_transfer = [{ theater_id, row_label, seat_num }, ...]
+  // Sponsor-only — delegates can't transfer placed seats into a child
+  // delegation (they don't own the parent budget).
+  const seatTransferRaw = Array.isArray(body.seat_transfer) ? body.seat_transfer : [];
+  const transferTargets = [];
+  if (seatTransferRaw.length > 0) {
+    if (resolved.kind !== 'sponsor') {
+      return jsonError('seat_transfer is only supported from a sponsor token', 400);
+    }
+    const sponsorId = resolved.record.id;
+    for (const item of seatTransferRaw) {
+      const tId = Number(item?.theater_id);
+      const rowLabel = String(item?.row_label || '').trim();
+      const seatNum = String(item?.seat_num || '').trim();
+      if (!tId || !rowLabel || !seatNum) {
+        return jsonError('seat_transfer items need theater_id, row_label, seat_num', 400);
+      }
+      const row = await env.GALA_DB.prepare(
+        `SELECT id, delegation_id FROM seat_assignments
+          WHERE theater_id = ? AND row_label = ? AND seat_num = ?
+            AND sponsor_id = ?`
+      ).bind(tId, rowLabel, seatNum, sponsorId).first();
+      if (!row) {
+        return jsonError(
+          `Seat ${rowLabel}${seatNum} (theater ${tId}) was not placed by this sponsor`,
+          400
+        );
+      }
+      if (row.delegation_id !== null) {
+        return jsonError(
+          `Seat ${rowLabel}${seatNum} (theater ${tId}) is already assigned to a guest — reclaim that guest first`,
+          400
+        );
+      }
+      transferTargets.push({
+        assignment_id: row.id,
+        theater_id: tId,
+        row_label: rowLabel,
+        seat_num: seatNum,
+      });
+    }
+    if (transferTargets.length > seats) {
+      return jsonError(
+        `seat_transfer has ${transferTargets.length} seats but seats_allocated is ${seats}`,
+        400
+      );
+    }
+  }
+
   // Validate capacity: can this token sub-allocate `seats` more?
+  // Seats inside seat_transfer already live in placedDirect — they
+  // move into the new delegation, they don't consume fresh budget.
+  // Only the "net new" remainder needs to fit in math.available.
   const math = await getSeatsAvailableToPlace(env, resolved);
-  if (seats > math.available) {
-    return jsonError(`Only ${math.available} seats available to delegate`, 400);
+  const netNew = seats - transferTargets.length;
+  if (netNew > math.available) {
+    const cap = math.available + transferTargets.length;
+    return jsonError(`Only ${cap} seats available to delegate`, 400);
   }
 
   const parentSponsorId = resolved.kind === 'sponsor' ? resolved.record.id : resolved.record.parent_sponsor_id;
@@ -328,6 +393,49 @@ export async function onRequestPost(context) {
     `SELECT company FROM sponsors WHERE id = ?`
   ).bind(parentSponsorId).first();
   const parentCompany = parent?.company || 'the gala';
+
+  // ── Atomic seat transfer (2026-05-27 fix) ──
+  // Move any seats the sponsor identified in seat_transfer into the
+  // newly created delegation. Recompose guest_name to match the new
+  // owner — same format /assign uses so check-in CSVs and the iPad
+  // scanner stay truthful without re-joining tables.
+  let transferredCount = 0;
+  if (transferTargets.length > 0) {
+    const newGuestName = `${parentCompany} / ${name}`;
+    for (const t of transferTargets) {
+      // Re-check delegation_id IS NULL in the WHERE clause so we never
+      // clobber a seat that got delegated by a concurrent call between
+      // our SELECT validation and this UPDATE.
+      const result = await env.GALA_DB.prepare(
+        `UPDATE seat_assignments
+            SET delegation_id = ?,
+                guest_name = ?,
+                updated_at = datetime('now')
+          WHERE id = ?
+            AND sponsor_id = ?
+            AND delegation_id IS NULL`
+      ).bind(delegationId, newGuestName, t.assignment_id, parentSponsorId).run();
+      if (result.meta?.changes) {
+        transferredCount++;
+        // Audit trail — best effort, don't fail the delegation if log
+        // insert hiccups.
+        try {
+          await env.GALA_DB.prepare(
+            `INSERT INTO sponsor_actions_log
+               (actor_sponsor_id, target_delegation_id, action, theater_id, row_label, seat_num, after_value)
+             VALUES (?, ?, 'seat_transferred', ?, ?, ?, ?)`
+          ).bind(
+            parentSponsorId,
+            delegationId,
+            t.theater_id,
+            t.row_label,
+            t.seat_num,
+            JSON.stringify({ delegation_id: delegationId, guest_name: newGuestName }),
+          ).run();
+        } catch (_) {}
+      }
+    }
+  }
 
   // Send invite
   const portalUrl = `https://gala.daviskids.org/sponsor/${newToken}`;
@@ -357,6 +465,7 @@ export async function onRequestPost(context) {
       seatsAllocated: seats,
       status: 'pending',
     },
+    transferredCount,
   });
 }
 
