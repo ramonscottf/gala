@@ -655,8 +655,17 @@ function TicketsSection({
             </div>
           )}
           <p style={{ margin: 0 }}>
-            {placed} of {total} placed
-            {remaining > 0 ? <> · {remaining} still to choose</> : <> · all set</>}
+            {delegated > 0 ? (
+              <>
+                {placed} placed by you · {delegated} with guests
+                {remaining > 0 ? <> · {remaining} still to choose</> : <> · all {total} placed</>}
+              </>
+            ) : (
+              <>
+                {placed} of {total} placed
+                {remaining > 0 ? <> · {remaining} still to choose</> : <> · all set</>}
+              </>
+            )}
           </p>
           {open && remaining === 0 && placed > 0 && (
             <button className="p2-btn ghost sm" type="button" onClick={onPlaceMore}>
