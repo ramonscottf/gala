@@ -95,6 +95,18 @@ export function TicketDetailModal({
               // seats_allocated=1: this seat transfers from sponsor-direct
               // to the new delegation; seatMath stays neutral after /assign.
               seats_allocated: 1,
+              // 2026-05-27 — explicit seat_transfer so the backend's
+              // budget check exempts this already-placed seat. Without
+              // it, sponsors who placed every seat themselves saw
+              // "Only 0 seats available to delegate" and could never
+              // hand off a single seat from this modal.
+              seat_transfer: [
+                {
+                  theater_id: ticket.theater_id,
+                  row_label: ticket.row,
+                  seat_num: String(ticket.num),
+                },
+              ],
             }),
           }
         );
