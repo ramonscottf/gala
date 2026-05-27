@@ -46,16 +46,24 @@ export async function sendSMS(env, to, body, options = {}) {
   // Twilio accepts up to 10 MediaUrl params. We build the form body manually
   // below to support multiple values for the same key.
   //
-  // DEFAULT BEHAVIOR (May 13 2026): every gala SMS auto-attaches the canonical
-  // hero image (GALA_SMS_HERO_URL). Recipients see the kids/neon Take Action
-  // image alongside the message. To send a plain SMS without the hero (e.g.
-  // a STOP-confirmation or a 2FA code), pass { noHero: true }.
+  // 2026-05-27 — MMS DEFAULT DISABLED. Every MMS send today failed with
+  // Twilio error 12300 (carrier rejected the MediaUrl). The hero PNG at
+  // assets.daviskids.org/gala-2026/sms-hero.png returns 200 OK with
+  // image/png, yet US carriers are filtering the resulting MMS — likely
+  // an A2P 10DLC content/size policy hit (image is 138 KB; some carriers
+  // are stricter than that). Confirmed via the new
+  // /api/gala/admin/twilio-status endpoint: 100% MMS failure rate today,
+  // sponsor_invites silently recording 'sent' because Twilio accepted the
+  // initial POST. Until we resolve the underlying MMS reject (likely:
+  // shrink the hero to <30 KB, host on a Twilio-approved domain, or
+  // accept SMS-only), plain SMS is the reliable path. Pass
+  // { withHero: true } to force MMS for any future test.
   const extraMedia = options.mediaUrl
     ? (Array.isArray(options.mediaUrl) ? options.mediaUrl : [options.mediaUrl])
     : [];
-  const mediaUrls = (options.noHero
-    ? extraMedia
-    : [GALA_SMS_HERO_URL, ...extraMedia]).slice(0, 10);
+  const mediaUrls = (options.withHero && !options.noHero
+    ? [GALA_SMS_HERO_URL, ...extraMedia]
+    : extraMedia).slice(0, 10);
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`;
   const auth = btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`);

@@ -593,8 +593,8 @@ async function sendDelegationInvite(env, opts) {
     if (phone) {
       const r = results[1].status === 'fulfilled' ? results[1].value : null;
       await env.GALA_DB.prepare(
-        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error) VALUES (?, 'sms', ?, ?, ?)`
-      ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown')).run();
+        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error, twilio_sid, twilio_status) VALUES (?, 'sms', ?, ?, ?, ?, ?)`
+      ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown'), r?.sid || null, r?.status || null).run();
     }
   } catch {}
 }
@@ -670,8 +670,8 @@ async function sendDinnerReminder(env, opts) {
     if (phone) {
       const r = results[1].status === 'fulfilled' ? results[1].value : null;
       await env.GALA_DB.prepare(
-        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error) VALUES (?, 'sms', ?, ?, ?)`
-      ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown')).run();
+        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error, twilio_sid, twilio_status) VALUES (?, 'sms', ?, ?, ?, ?, ?)`
+      ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown'), r?.sid || null, r?.status || null).run();
     }
   } catch {}
 }
@@ -746,8 +746,8 @@ async function sendDelegationTicketPush(env, opts) {
     if (phone) {
       const r = results[1].status === 'fulfilled' ? results[1].value : null;
       await env.GALA_DB.prepare(
-        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error) VALUES (?, 'sms-push', ?, ?, ?)`
-      ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown')).run();
+        `INSERT INTO sponsor_invites (delegation_id, channel, recipient, status, error, twilio_sid, twilio_status) VALUES (?, 'sms-push', ?, ?, ?, ?, ?)`
+      ).bind(delegationId, phone, r?.ok ? 'sent' : 'failed', r?.ok ? null : (r?.error || 'unknown'), r?.sid || null, r?.status || null).run();
     }
   } catch {}
 }
