@@ -1528,10 +1528,15 @@ export default function PortalShellV2({
           )}
 
           {/* Silent-auction registration. Shown for sponsor tokens once
-              they've placed at least one seat — never pressures them
-              before they've engaged with seating. Renders ✓ Registered
-              state after the Qgiv embed flow completes. */}
-          {isSponsor && (seatMath?.placed || 0) > 0 && (
+              they've engaged with their block — either placed a seat
+              themselves OR handed seats to guests. Uses placedTotal
+              (direct + delegated) so a sponsor like Shelly who delegated
+              all 20 seats still sees the CTA — she's the MOST engaged,
+              not the least. Renders ✓ Registered state after the Qgiv
+              embed flow completes. */}
+          {isSponsor &&
+            ((seatMath?.placedTotal ?? seatMath?.placed ?? 0) > 0 ||
+              (seatMath?.delegated || 0) > 0) && (
             <AuctionRegistrationCard
               identity={identity}
               token={token}
