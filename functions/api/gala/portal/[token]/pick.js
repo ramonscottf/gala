@@ -215,6 +215,9 @@ export async function onRequestPost(context) {
     if (dinner !== null && !VALID.has(dinner)) {
       return jsonError(`Invalid dinner_choice: ${dinner}`, 400);
     }
+    // Gluten-free flag — only meaningful for the salad. Force 0 for any other
+    // choice so the flag can never dangle on a non-salad meal.
+    const needsGf = (dinner === 'salad' && (body.needs_gf === true || body.needs_gf === 1 || body.needs_gf === '1')) ? 1 : 0;
     // Auth scoping mirrors the seat-ownership predicate the other
     // actions use: sponsor-direct seats only when writeScope is sponsor,
     // delegation seats only when writeScope is delegation (which covers
@@ -238,11 +241,11 @@ export async function onRequestPost(context) {
 
     const result = await env.GALA_DB.prepare(
       `UPDATE seat_assignments
-          SET dinner_choice = ?, updated_at = datetime('now')
+          SET dinner_choice = ?, needs_gf = ?, updated_at = datetime('now')
         WHERE theater_id = ? AND showing_number = ?
           AND row_label = ? AND seat_num = ?
           AND ${cond}`
-    ).bind(dinner, theater_id, showing_number, row_label, seat_num, val).run();
+    ).bind(dinner, needsGf, theater_id, showing_number, row_label, seat_num, val).run();
 
     if ((result.meta?.changes || 0) === 0) {
       return jsonError('Seat is not in this token\'s block', 404);
@@ -255,11 +258,11 @@ export async function onRequestPost(context) {
       row_label,
       seat_num,
       before_value: { dinner_choice: beforeDinner },
-      after_value: { dinner_choice: dinner },
+      after_value: { dinner_choice: dinner, needs_gf: needsGf },
       notify_sent: !!body.notify_sent,
     });
 
-    return jsonOk({ ok: true, action: 'set_dinner', dinner_choice: dinner });
+    return jsonOk({ ok: true, action: 'set_dinner', dinner_choice: dinner, needs_gf: needsGf });
   }
 
   // ───── RELEASE ─────

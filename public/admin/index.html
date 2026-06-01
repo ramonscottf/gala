@@ -1061,6 +1061,7 @@ body {
       <button class="nav-tab" data-tab="volunteers">Volunteers</button>
       <button class="nav-tab" data-tab="lunchangels">Lunch Angels</button>
       <button class="nav-tab" data-tab="food">Food Choices</button>
+      <button class="nav-tab" data-tab="saladgf">Salad GF</button>
       <button class="nav-tab" data-tab="marketing">Marketing</button>
     </nav>
   </div>
@@ -1402,6 +1403,48 @@ body {
 
     <!-- Sponsors still missing choices -->
     <div id="food-missing"></div>
+  </div>
+
+  <!-- ── Salad GF Tab (gluten-free poll for salad guests) ── -->
+  <div class="tab-panel" id="panel-saladgf">
+    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="font-size:13px; color:var(--text-secondary, #64748b); flex:1; min-width:240px; line-height:1.5;">
+          <strong style="color:var(--navy,#0a1733);">Gluten-free salad poll</strong> — salad guests get a one-tap link to choose regular or gluten-free. Delegates are polled directly; the rest go through the sponsor who placed them.
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; font-size:12px; color:#64748b; flex-wrap:wrap;">
+          <span><span id="sg-kpi-resp" style="font-weight:700; color:#10b981; font-variant-numeric:tabular-nums;">0</span>/<span id="sg-kpi-total" style="font-weight:700; color:var(--navy,#0a1733);">0</span> replied</span>
+          <span style="color:#CBD5E1;">·</span>
+          <span><span id="sg-kpi-gf" style="font-weight:700; color:#0a1733; font-variant-numeric:tabular-nums;">0</span> GF salads</span>
+          <span style="color:#CBD5E1;">·</span>
+          <span><span id="sg-kpi-await" style="font-weight:700; color:#f59e0b; font-variant-numeric:tabular-nums;">0</span> seats awaiting</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+      <button class="btn btn-primary" id="sg-send-btn" style="padding:8px 12px; font-size:12px;">Send poll to all</button>
+      <button class="btn btn-secondary" id="sg-remind-btn" style="padding:8px 12px; font-size:12px;">Remind those awaiting</button>
+      <button class="btn btn-secondary" id="sg-test-btn" title="Send a sample poll to Scott only" style="padding:8px 12px; font-size:12px;">Test to me</button>
+      <button class="btn btn-secondary" id="sg-export-btn" style="padding:8px 12px; font-size:12px;">Export</button>
+      <button class="btn btn-secondary" id="sg-refresh-btn" style="padding:8px 12px; font-size:12px;">Refresh</button>
+      <span id="sg-note" style="font-size:12px; color:#94a3b8;"></span>
+    </div>
+
+    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead><tr style="background:#0a1733; color:#fff; text-align:left;">
+          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Name</th>
+          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Type</th>
+          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Salads</th>
+          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">GF</th>
+          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Status</th>
+        </tr></thead>
+        <tbody id="sg-tbody">
+          <tr><td colspan="5" style="padding:14px;"><div class="empty-state"><div class="empty-state__text">Loading…</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ── Marketing Tab ── -->
@@ -3668,6 +3711,78 @@ document.getElementById('food-export-btn').addEventListener('click', () => {
   });
   const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'gala-kitchen-count.csv'; a.click();
+});
+
+/* ════════════════════════════════════════════════════════════════════
+   SALAD GF TAB — gluten-free salad poll.
+   Recipients (delegates + sponsors) get a one-tap link; this tracks who
+   replied and the running GF count for the kitchen. Reads
+   /api/gala/salad-gf/status; sends via /api/gala/salad-gf/notify.
+   ════════════════════════════════════════════════════════════════════ */
+let saladgfLoaded = false;
+let saladgfData = null;
+async function loadSaladGf() {
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const tb = document.getElementById('sg-tbody');
+  try {
+    const d = await fetchJSON('/api/gala/salad-gf/status');
+    saladgfData = d;
+    document.getElementById('sg-kpi-resp').textContent = d.responded || 0;
+    document.getElementById('sg-kpi-total').textContent = d.total || 0;
+    document.getElementById('sg-kpi-gf').textContent = d.gfSeats || 0;
+    document.getElementById('sg-kpi-await').textContent = d.awaitingSeats || 0;
+    const recips = d.recipients || [];
+    if (!recips.length) { tb.innerHTML = '<tr><td colspan="5" style="padding:14px;"><div class="empty-state"><div class="empty-state__text">No salad recipients.</div></div></td></tr>'; return; }
+    tb.innerHTML = recips.map(r => {
+      const typePill = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:' + (r.type === 'delegate' ? '#eef2ff;color:#4338ca' : '#fef3c7;color:#92400e') + ';">' + (r.type === 'delegate' ? 'Guest' : 'Sponsor') + '</span>';
+      const gf = r.responded ? ('<strong style="color:#0a1733;">' + (r.gf_count || 0) + '</strong>') : '<span style="color:#94a3b8;">—</span>';
+      const pill = r.responded
+        ? '<span style="display:inline-block;padding:3px 10px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:11px;font-weight:700;">✓ Replied</span>'
+        : '<span style="display:inline-block;padding:3px 10px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:700;">Awaiting</span>';
+      return '<tr style="border-top:1px solid var(--border);">'
+        + '<td style="padding:9px 14px;font-weight:600;color:#0a1733;">' + esc(r.name) + '<div style="font-weight:400;font-size:11px;color:#94a3b8;">' + esc(r.email || '') + '</div></td>'
+        + '<td style="padding:9px 14px;">' + typePill + '</td>'
+        + '<td style="padding:9px 14px;color:#475569;">' + (r.salad_seats || 0) + '</td>'
+        + '<td style="padding:9px 14px;">' + gf + '</td>'
+        + '<td style="padding:9px 14px;">' + pill + '</td></tr>';
+    }).join('');
+  } catch (e) {
+    tb.innerHTML = '<tr><td colspan="5" style="padding:14px;"><div class="empty-state"><div class="empty-state__text">Could not load the poll</div><button class="retry-btn" onclick="loadSaladGf()">Retry</button></div></td></tr>';
+  }
+}
+async function sgSend(opts, confirmMsg) {
+  const note = document.getElementById('sg-note');
+  if (confirmMsg && !confirm(confirmMsg)) return;
+  note.textContent = 'Sending…';
+  try {
+    const res = await fetch('/api/gala/salad-gf/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(opts) });
+    const d = await res.json();
+    if (!res.ok) { note.textContent = 'Error: ' + (d.error || res.status); return; }
+    if (d.test) { note.textContent = 'Test sent to you — check email + phone.'; }
+    else { note.textContent = 'Sent — ' + (d.emailOk || 0) + ' emails, ' + (d.smsOk || 0) + ' texts to ' + (d.recipients || 0) + ' recipients.'; }
+  } catch (e) { note.textContent = 'Send failed.'; }
+  loadSaladGf();
+}
+document.querySelector('.nav-tab[data-tab="saladgf"]').addEventListener('click', () => {
+  if (!saladgfLoaded) { saladgfLoaded = true; loadSaladGf(); }
+});
+document.getElementById('sg-refresh-btn').addEventListener('click', loadSaladGf);
+document.getElementById('sg-test-btn').addEventListener('click', () => sgSend({ channel: 'both', testTo: { email: 'sfoster@dsdmail.net', phone: '+18018106642', name: 'Scott', salad_seats: 2 } }));
+document.getElementById('sg-send-btn').addEventListener('click', () => {
+  const n = saladgfData ? saladgfData.total : 0;
+  sgSend({ channel: 'both', awaitingOnly: false, copyScott: false }, 'Send the gluten-free salad poll (email + text) to all ' + n + ' recipients? This goes to sponsors and guests.');
+});
+document.getElementById('sg-remind-btn').addEventListener('click', () => {
+  const n = saladgfData ? saladgfData.awaiting : 0;
+  if (!n) { document.getElementById('sg-note').textContent = 'Everyone has replied.'; return; }
+  sgSend({ channel: 'both', awaitingOnly: true, copyScott: false }, 'Send a reminder to the ' + n + " recipient(s) who haven't replied yet?");
+});
+document.getElementById('sg-export-btn').addEventListener('click', () => {
+  if (!saladgfData) return;
+  const rows = [['Name','Type','Email','Phone','Salad seats','GF count','Status']]
+    .concat((saladgfData.recipients || []).map(r => [r.name, r.type, r.email, r.phone, r.salad_seats, r.responded ? (r.gf_count || 0) : '', r.responded ? 'Replied' : 'Awaiting']));
+  const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'salad-gf-poll.csv'; a.click();
 });
 
 /* ════════════════════════════════════════════════════════════════════

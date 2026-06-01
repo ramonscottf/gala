@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Your Gala Salad · DEF Gala 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gala-red:#CB262C; --gala-red-deep:#a01f24; --navy-950:#0b1b3c; --navy-800:#183672;
+  --green:#10b981; --green-deep:#047857; --ink:#1e293b; --ink-soft:#475569; --ink-muted:#94a3b8;
+  --border:#e2e8f0; --paper:#f8fbff; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --display:'Fraunces',Georgia,serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);color:var(--ink);background:var(--paper);line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;}
+.bar{background:linear-gradient(135deg,var(--navy-950),var(--navy-800));color:#fff;padding:22px 20px;text-align:center;}
+.bar .kicker{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9bb0d4;font-weight:600;}
+.bar .mark{font-family:var(--display);font-size:1.7rem;font-weight:700;letter-spacing:1px;margin-top:4px;}
+.bar .mark .y{color:#ffb400;}
+.wrap{max-width:540px;margin:0 auto;padding:28px 20px 60px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:28px 24px;box-shadow:0 12px 32px rgba(13,27,61,0.08);}
+h1{font-family:var(--display);font-size:1.6rem;font-weight:700;color:var(--navy-950);line-height:1.2;margin-bottom:10px;}
+.lead{font-size:1rem;color:var(--ink-soft);margin-bottom:6px;}
+.lead strong{color:var(--navy-950);}
+.note{font-size:0.92rem;color:var(--ink-muted);margin:14px 0 22px;}
+.choice-row{display:flex;gap:12px;flex-wrap:wrap;}
+.choice{flex:1;min-width:150px;border:2px solid var(--border);border-radius:14px;padding:20px 18px;cursor:pointer;background:#fff;text-align:left;transition:border-color .15s,transform .12s,box-shadow .15s;font-family:inherit;}
+.choice:hover{transform:translateY(-2px);}
+.choice .t{font-size:1.05rem;font-weight:700;color:var(--navy-950);}
+.choice .d{font-size:0.85rem;color:var(--ink-soft);margin-top:3px;}
+.choice.reg:hover{border-color:var(--gala-red);box-shadow:0 8px 20px rgba(203,38,44,0.14);}
+.choice.gf:hover{border-color:var(--green);box-shadow:0 8px 20px rgba(16,185,129,0.16);}
+.choice.sel.reg{border-color:var(--gala-red);background:#fff5f5;}
+.choice.sel.gf{border-color:var(--green);background:#ecfdf5;}
+/* multi-seat stepper */
+.stepper-wrap{margin:8px 0 20px;}
+.stepper-label{font-size:0.95rem;color:var(--ink);font-weight:600;margin-bottom:10px;}
+.stepper{display:inline-flex;align-items:center;gap:0;border:2px solid var(--border);border-radius:12px;overflow:hidden;}
+.stepper button{width:52px;height:52px;border:none;background:#f1f5f9;font-size:1.5rem;font-weight:700;color:var(--navy-950);cursor:pointer;font-family:inherit;}
+.stepper button:hover{background:#e2e8f0;}
+.stepper .val{min-width:64px;text-align:center;font-family:var(--display);font-size:1.7rem;font-weight:700;color:var(--navy-950);font-variant-numeric:tabular-nums;}
+.stepper-sub{font-size:0.85rem;color:var(--ink-muted);margin-top:8px;}
+.btn{width:100%;padding:15px;border:none;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--gala-red),var(--gala-red-deep));color:#fff;box-shadow:0 8px 20px rgba(203,38,44,0.22);transition:transform .12s,filter .15s;margin-top:8px;}
+.btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.05);}
+.btn:disabled{opacity:0.55;cursor:not-allowed;}
+.center{text-align:center;}
+.done-ico{width:64px;height:64px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2rem;}
+.muted{color:var(--ink-muted);font-size:0.9rem;}
+.hidden{display:none !important;}
+.spin{display:inline-block;width:22px;height:22px;border:3px solid #e2e8f0;border-top-color:var(--gala-red);border-radius:50%;animation:s 0.7s linear infinite;}
+@keyframes s{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="kicker">Davis Education Foundation</div>
+  <div class="mark"><span class="y">Gala</span> 2026 · Dinner</div>
+</div>
+<div class="wrap">
+  <div class="card">
+
+    <!-- loading -->
+    <div id="loading" class="center" style="padding:30px 0;"><div class="spin"></div><p class="muted" style="margin-top:14px;">Loading your reservation…</p></div>
+
+    <!-- invalid -->
+    <div id="invalid" class="hidden center" style="padding:20px 0;">
+      <h1>Hmm, that link didn't work</h1>
+      <p class="lead">Please use the most recent link from your email or text. If you're stuck, just reply to that message and we'll sort it out.</p>
+    </div>
+
+    <!-- single-seat choice -->
+    <div id="single" class="hidden">
+      <h1>Your Gala salad</h1>
+      <p class="lead">You chose the <strong>green salad with grilled chicken</strong>. We can make it gluten-free, but it's a little better when it isn't — your call.</p>
+      <p class="note">Tap the one you'd like:</p>
+      <div class="choice-row">
+        <button class="choice reg" id="pick-reg"><div class="t">Regular</div><div class="d">The full version (recommended)</div></button>
+        <button class="choice gf" id="pick-gf"><div class="t">Gluten-free</div><div class="d">Made without gluten</div></button>
+      </div>
+    </div>
+
+    <!-- multi-seat stepper -->
+    <div id="multi" class="hidden">
+      <h1>Your Gala salads</h1>
+      <p class="lead">You have <strong id="m-count">0</strong> green-salad meals on your reservation. We can make any of them gluten-free — how many should be?</p>
+      <div class="stepper-wrap">
+        <div class="stepper-label">Gluten-free salads needed</div>
+        <div class="stepper">
+          <button id="m-minus" aria-label="fewer">−</button>
+          <span class="val" id="m-val">0</span>
+          <button id="m-plus" aria-label="more">+</button>
+        </div>
+        <div class="stepper-sub" id="m-sub">The rest will be served regular.</div>
+      </div>
+      <button class="btn" id="m-submit">Save my answer</button>
+    </div>
+
+    <!-- done -->
+    <div id="done" class="hidden center" style="padding:14px 0;">
+      <div class="done-ico">✓</div>
+      <h1 id="done-h">Thank you!</h1>
+      <p class="lead" id="done-msg">We've got it noted for the kitchen.</p>
+      <p class="muted" style="margin-top:14px;">Changed your mind? You can tap your link again any time before the event.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const token=params.get('t');
+let seats=1, gfVal=0;
+
+function show(id){ ['loading','invalid','single','multi','done'].forEach(x=>$(x).classList.toggle('hidden', x!==id)); }
+
+async function load(){
+  if(!token){ show('invalid'); return; }
+  try{
+    const r=await fetch('/api/gala/salad-gf?t='+encodeURIComponent(token));
+    if(!r.ok){ show('invalid'); return; }
+    const d=await r.json();
+    seats=d.recipient.salad_seats||1;
+    if(seats<=1){
+      show('single');
+    }else{
+      $('m-count').textContent=seats;
+      gfVal=(d.recipient.gf_count!=null)?d.recipient.gf_count:0;
+      renderStepper();
+      show('multi');
+    }
+  }catch(e){ show('invalid'); }
+}
+
+async function submit(gf){
+  try{
+    const r=await fetch('/api/gala/salad-gf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,gf_count:gf})});
+    if(!r.ok) throw new Error();
+    if(seats<=1){
+      $('done-h').textContent = gf? 'Gluten-free it is' : "You're all set";
+      $('done-msg').textContent = gf? "We'll make your salad gluten-free." : "We'll serve you the regular salad.";
+    }else{
+      $('done-h').textContent='Thank you!';
+      $('done-msg').textContent = gf===0 ? 'All of your salads will be regular.' : (gf+' of your '+seats+' salads will be gluten-free; the rest regular.');
+    }
+    show('done');
+  }catch(e){ alert('Something went wrong saving that — please try again.'); }
+}
+
+// single
+$('pick-reg').addEventListener('click',()=>{ $('pick-reg').classList.add('sel'); submit(0); });
+$('pick-gf').addEventListener('click',()=>{ $('pick-gf').classList.add('sel'); submit(1); });
+
+// multi stepper
+function renderStepper(){
+  $('m-val').textContent=gfVal;
+  $('m-sub').textContent = gfVal===0 ? 'All '+seats+' served regular.' : (gfVal===seats ? 'All '+seats+' gluten-free.' : (gfVal+' gluten-free, '+(seats-gfVal)+' regular.'));
+}
+$('m-minus').addEventListener('click',()=>{ gfVal=Math.max(0,gfVal-1); renderStepper(); });
+$('m-plus').addEventListener('click',()=>{ gfVal=Math.min(seats,gfVal+1); renderStepper(); });
+$('m-submit').addEventListener('click',()=>{ $('m-submit').disabled=true; $('m-submit').textContent='Saving…'; submit(gfVal); });
+
+load();
+</script>
+</body>
+</html>

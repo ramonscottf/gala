@@ -56,15 +56,18 @@ export default function DinnerPicker({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(null);
   const current = assignment?.dinner_choice || '';
+  // GF flag — only meaningful for salad. Seed from the assignment row.
+  const [needsGf, setNeedsGf] = useState(!!assignment?.needs_gf);
 
   const heightPx = size === 'sm' ? 28 : 34;
   const fontPx = size === 'sm' ? 11 : 12;
 
-  const handle = async (e) => {
-    const next = e.target.value || null;
+  // Single POST path for both the dinner select and the GF checkbox so the
+  // two stay consistent (the server forces needs_gf=0 for non-salad).
+  const save = async ({ choice, gf }) => {
     setPending(true);
     setError(null);
-    if (onChange) onChange(next);
+    if (onChange) onChange(choice);
     try {
       const res = await fetch(`${apiBase}/api/gala/portal/${token}/pick`, {
         method: 'POST',
@@ -75,21 +78,37 @@ export default function DinnerPicker({
           showing_number: assignment.showing_number,
           row_label: assignment.row_label,
           seat_num: String(assignment.seat_num),
-          dinner_choice: next,
+          dinner_choice: choice,
+          needs_gf: choice === 'salad' ? gf : false,
         }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || `HTTP ${res.status}`);
       }
-      if (onSaved) await onSaved(next).catch(() => {});
+      if (onSaved) await onSaved(choice).catch(() => {});
     } catch (err) {
       setError(err);
-      // Revert the optimistic update so the UI stays in sync with server.
       if (onChange) onChange(current);
+      throw err;
     } finally {
       setPending(false);
     }
+  };
+
+  const handle = async (e) => {
+    const next = e.target.value || null;
+    // Leaving salad clears the GF flag in the UI immediately.
+    const gf = next === 'salad' ? needsGf : false;
+    if (next !== 'salad' && needsGf) setNeedsGf(false);
+    try { await save({ choice: next, gf }); } catch { /* handled */ }
+  };
+
+  const toggleGf = async () => {
+    const nextGf = !needsGf;
+    setNeedsGf(nextGf); // optimistic
+    try { await save({ choice: current, gf: nextGf }); }
+    catch { setNeedsGf(!nextGf); } // revert on failure
   };
 
   return (
@@ -134,6 +153,32 @@ export default function DinnerPicker({
           </option>
         ))}
       </select>
+      {current === 'salad' && (
+        <label
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            marginTop: 6,
+            paddingLeft: 8,
+            fontSize: fontPx,
+            fontWeight: 600,
+            fontFamily: FONT_UI,
+            color: 'var(--ink-on-ground)',
+            cursor: pending ? 'wait' : 'pointer',
+            opacity: pending ? 0.6 : 1,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={needsGf}
+            onChange={toggleGf}
+            disabled={pending}
+            style={{ width: 15, height: 15, accentColor: BRAND.indigoLight, cursor: 'inherit' }}
+          />
+          Needs gluten-free
+        </label>
+      )}
       {error && (
         <span
           style={{
