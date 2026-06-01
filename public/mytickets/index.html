@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b102d">
+<meta name="robots" content="noindex,nofollow">
+<title>Find My Tickets — DEF Gala 2026</title>
+<link rel="canonical" href="https://gala.daviskids.org/mytickets">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#11194a; --navy-deep:#080d28; --navy-mid:#1c2760; --navy-soft:#242f68;
+    --indigo:#4d54b3; --red:#d72846; --red-soft:#ff4d70; --gold:#f4b942;
+    --cyan:#62c8ff; --paper:#fbf8f3; --ink:#fff;
+    --muted:rgba(255,255,255,.72); --subtle:rgba(255,255,255,.54);
+    --rule:rgba(255,255,255,.14); --panel:rgba(20,28,72,.82); --panel-solid:#171f54;
+    --shadow:0 24px 70px rgba(0,0,0,.34);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--navy-deep); color:var(--ink);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased; min-height:100dvh;
+    background-image:
+      radial-gradient(120% 70% at 50% -10%, rgba(77,84,179,.34) 0%, transparent 55%),
+      radial-gradient(90% 60% at 100% 0%, rgba(215,40,70,.18) 0%, transparent 50%);
+    background-attachment:fixed;
+  }
+  a{color:inherit;}
+  .wrap{max-width:560px;margin:0 auto;padding:28px 18px 60px;}
+  .top{text-align:center;padding:14px 0 26px;}
+  .eyebrow{font-size:11px;letter-spacing:.2em;font-weight:800;color:var(--gold);text-transform:uppercase;}
+  .top h1{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:34px;line-height:1.05;margin:12px 0 6px;}
+  .top h1 em{font-style:italic;color:var(--gold);}
+  .top .sub{color:var(--muted);font-size:14.5px;line-height:1.5;max-width:380px;margin:0 auto;}
+  .card{
+    background:var(--panel-solid);border:1px solid var(--rule);border-radius:18px;
+    padding:22px 20px;box-shadow:var(--shadow);
+  }
+  .tabs{display:flex;gap:8px;background:rgba(0,0,0,.22);border-radius:12px;padding:5px;margin-bottom:18px;}
+  .tab{
+    flex:1;border:0;background:transparent;color:var(--subtle);font-family:inherit;
+    font-size:15px;font-weight:700;padding:11px 8px;border-radius:9px;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .tab[aria-selected="true"]{background:var(--indigo);color:#fff;}
+  label{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin:0 0 7px;text-transform:uppercase;}
+  input[type=text],input[type=email]{
+    width:100%;border:1px solid var(--rule);background:rgba(0,0,0,.25);color:#fff;
+    font-family:inherit;font-size:17px;padding:15px 16px;border-radius:11px;outline:none;
+  }
+  input::placeholder{color:rgba(255,255,255,.4);}
+  input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(98,200,255,.18);}
+  .submit{
+    width:100%;margin-top:14px;border:0;border-radius:11px;cursor:pointer;
+    background:var(--red);color:#fff;font-family:inherit;font-size:16.5px;font-weight:800;
+    letter-spacing:.02em;padding:16px;transition:filter .15s,transform .05s;
+  }
+  .submit:hover{filter:brightness(1.07);}
+  .submit:active{transform:translateY(1px);}
+  .submit[disabled]{opacity:.6;cursor:default;}
+  .hint{margin-top:13px;font-size:12.5px;color:var(--subtle);line-height:1.5;text-align:center;}
+  .status{margin-top:14px;font-size:14px;line-height:1.5;text-align:center;min-height:1px;}
+  .status.err{color:var(--red-soft);}
+  .status.ok{color:var(--cyan);}
+
+  /* Results */
+  #results{margin-top:18px;display:none;}
+  .found-head{text-align:center;margin-bottom:6px;}
+  .found-head .who{font-family:"Fraunces",serif;font-size:23px;font-weight:600;}
+  .found-head .meta{color:var(--muted);font-size:13.5px;margin-top:3px;}
+  .showing{
+    background:rgba(0,0,0,.2);border:1px solid var(--rule);border-radius:14px;
+    padding:15px 15px 7px;margin-top:14px;
+  }
+  .showing-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:11px;}
+  .showing-movie{font-weight:800;font-size:16px;line-height:1.25;}
+  .showing-pills{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;}
+  .pill{font-size:11.5px;font-weight:700;letter-spacing:.02em;padding:5px 10px;border-radius:999px;background:rgba(77,84,179,.28);color:#cfd4ff;border:1px solid rgba(120,130,230,.35);}
+  .pill.gold{background:rgba(244,185,66,.16);color:var(--gold);border-color:rgba(244,185,66,.4);}
+  .seatlist{display:flex;flex-direction:column;gap:7px;padding-bottom:8px;}
+  .seatrow{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:rgba(255,255,255,.04);border:1px solid var(--rule);border-radius:10px;padding:11px 13px;
+  }
+  .seatrow .s{font-family:"Fraunces",serif;font-weight:700;font-size:19px;color:var(--gold);min-width:54px;}
+  .seatrow .d{font-size:13.5px;color:var(--muted);text-align:right;}
+  .seatrow .d.none{color:var(--red-soft);font-weight:600;}
+  .editbox{margin-top:16px;padding:15px;border-radius:13px;background:rgba(98,200,255,.08);border:1px solid rgba(98,200,255,.25);}
+  .editbox h4{margin:0 0 6px;font-size:14.5px;}
+  .editbox p{margin:0 0 11px;font-size:13px;color:var(--muted);line-height:1.5;}
+  .editbox .submit{background:var(--indigo);margin-top:0;}
+  .candidates{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+  .candidate{
+    text-align:left;width:100%;border:1px solid var(--rule);background:rgba(255,255,255,.04);
+    color:#fff;font-family:inherit;font-size:16px;font-weight:600;padding:14px 15px;border-radius:11px;cursor:pointer;
+  }
+  .candidate:hover{border-color:var(--cyan);}
+  .restart{display:block;width:100%;text-align:center;margin-top:18px;background:transparent;border:0;color:var(--subtle);font-family:inherit;font-size:13.5px;cursor:pointer;text-decoration:underline;}
+  .foot{text-align:center;margin-top:26px;color:var(--subtle);font-size:12px;line-height:1.6;}
+  .foot a{color:var(--muted);text-decoration:underline;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="eyebrow">Davis Education Foundation · Gala 2026</div>
+      <h1>Find <em>my tickets</em></h1>
+      <p class="sub">Look up your seats and dinner for the night. Search by the email on your invitation, or by your company name.</p>
+    </div>
+
+    <div class="card" id="lookupCard">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true"  id="tab-email"   data-mode="email">By email</button>
+        <button class="tab" role="tab" aria-selected="false" id="tab-company" data-mode="company">By company</button>
+      </div>
+
+      <form id="lookupForm" novalidate>
+        <div id="field-email">
+          <label for="in-email">Email on your invitation</label>
+          <input id="in-email" type="email" inputmode="email" autocomplete="email"
+                 autocapitalize="none" spellcheck="false" placeholder="you@example.com">
+        </div>
+        <div id="field-company" style="display:none;">
+          <label for="in-company">Company / organization name</label>
+          <input id="in-company" type="text" autocomplete="organization"
+                 placeholder="e.g. Boeing, Tanner Clinic, Muller Park…">
+        </div>
+        <button type="submit" class="submit" id="go">Find my tickets</button>
+      </form>
+      <div class="hint" id="hint">Tip: use the same email that received your sponsorship invite.</div>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </div>
+
+    <div id="results"></div>
+
+    <div class="foot">
+      Can't find your seats? Email <a href="mailto:smiggin@dsdmail.net">smiggin@dsdmail.net</a><br>
+      Wednesday, June 10, 2026 · Megaplex at Legacy Crossing, Centerville
+    </div>
+  </div>
+
+<script>
+(function(){
+  var mode = 'email';
+  var els = {
+    tabEmail: document.getElementById('tab-email'),
+    tabCompany: document.getElementById('tab-company'),
+    fieldEmail: document.getElementById('field-email'),
+    fieldCompany: document.getElementById('field-company'),
+    inEmail: document.getElementById('in-email'),
+    inCompany: document.getElementById('in-company'),
+    form: document.getElementById('lookupForm'),
+    go: document.getElementById('go'),
+    status: document.getElementById('status'),
+    hint: document.getElementById('hint'),
+    results: document.getElementById('results'),
+    card: document.getElementById('lookupCard'),
+  };
+
+  function setMode(m){
+    mode = m;
+    var isEmail = m === 'email';
+    els.tabEmail.setAttribute('aria-selected', isEmail);
+    els.tabCompany.setAttribute('aria-selected', !isEmail);
+    els.fieldEmail.style.display = isEmail ? '' : 'none';
+    els.fieldCompany.style.display = isEmail ? 'none' : '';
+    els.hint.textContent = isEmail
+      ? 'Tip: use the same email that received your sponsorship invite.'
+      : "We'll show your seats. To make changes you'll verify by email.";
+    els.status.textContent = '';
+    (isEmail ? els.inEmail : els.inCompany).focus();
+  }
+  els.tabEmail.addEventListener('click', function(){ setMode('email'); });
+  els.tabCompany.addEventListener('click', function(){ setMode('company'); });
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function setStatus(msg, kind){
+    els.status.textContent = msg || '';
+    els.status.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  function showingCard(g){
+    var pills = '';
+    if (g.show_start)  pills += '<span class="pill gold">Movie ' + esc(g.show_start) + '</span>';
+    if (g.dinner_time) pills += '<span class="pill">Dinner ' + esc(g.dinner_time) + '</span>';
+    pills += '<span class="pill">Auditorium ' + esc(g.auditorium) + '</span>';
+    var seats = g.seats.map(function(s){
+      var d = s.dinner_label
+        ? '<span class="d">' + esc(s.dinner_label) + '</span>'
+        : '<span class="d none">No dinner picked</span>';
+      return '<div class="seatrow"><span class="s">' + esc(s.seat) + '</span>' + d + '</div>';
+    }).join('');
+    return '<div class="showing"><div class="showing-top"><div>'
+      + '<div class="showing-movie">' + esc(g.movie_title) + '</div>'
+      + '<div class="showing-pills">' + pills + '</div></div></div>'
+      + '<div class="seatlist">' + seats + '</div></div>';
+  }
+
+  function renderFound(data){
+    els.card.style.display = 'none';
+    var html = '<div class="found-head"><div class="who">' + esc(data.name || data.company) + '</div>';
+    var metaBits = [];
+    if (data.seats_purchased) metaBits.push(data.placed + ' of ' + data.seats_purchased + ' seats placed');
+    if (data.company && data.name && data.company !== data.name) metaBits.unshift(esc(data.company));
+    html += '<div class="meta">' + metaBits.join(' · ') + '</div></div>';
+
+    if (!data.showings || !data.showings.length){
+      html += '<div class="showing" style="text-align:center;color:var(--muted);font-size:14px;">'
+        + 'No seats picked yet. Use the button below to open your portal and choose your seats &amp; dinner.</div>';
+    } else {
+      data.showings.forEach(function(g){ html += showingCard(g); });
+    }
+
+    // Edit affordance
+    if (data.canEdit){
+      html += '<div class="editbox"><h4>Need to make a change?</h4>'
+        + '<p>We\'ll send your private portal link to <strong>' + esc(data.editEmail) + '</strong>. '
+        + 'Open it to move seats, pick dinner, or invite guests.</p>'
+        + '<button class="submit" id="sendLink" data-email="' + esc(data.editEmail) + '">Email me my portal link</button>'
+        + '<div class="status" id="linkStatus" role="status" aria-live="polite"></div></div>';
+    } else {
+      html += '<div class="editbox"><h4>Need to make a change?</h4>'
+        + '<p>To edit these seats we\'ll send a private link to the email on file'
+        + (data.maskedEmail ? ' (<strong>' + esc(data.maskedEmail) + '</strong>)' : '')
+        + '. Switch to <strong>By email</strong> and enter that address.</p></div>';
+    }
+
+    html += '<button class="restart" id="restart">← Look up a different ticket</button>';
+    els.results.innerHTML = html;
+    els.results.style.display = 'block';
+
+    var sendBtn = document.getElementById('sendLink');
+    if (sendBtn) sendBtn.addEventListener('click', function(){ emailLink(sendBtn.getAttribute('data-email')); });
+    document.getElementById('restart').addEventListener('click', resetView);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderCandidates(cands){
+    els.card.style.display = 'none';
+    var html = '<div class="found-head"><div class="who">Which one?</div>'
+      + '<div class="meta">We found a few matches</div></div><div class="candidates">';
+    cands.forEach(function(c){
+      html += '<button class="candidate" data-id="' + esc(c.id) + '">' + esc(c.company) + '</button>';
+    });
+    html += '</div><button class="restart" id="restart">← Start over</button>';
+    els.results.innerHTML = html;
+    els.results.style.display = 'block';
+    Array.prototype.forEach.call(els.results.querySelectorAll('.candidate'), function(btn){
+      btn.addEventListener('click', function(){ pickCompany(btn.getAttribute('data-id')); });
+    });
+    document.getElementById('restart').addEventListener('click', resetView);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetView(){
+    els.results.style.display = 'none';
+    els.results.innerHTML = '';
+    els.card.style.display = '';
+    setStatus('');
+    (mode === 'email' ? els.inEmail : els.inCompany).focus();
+  }
+
+  async function emailLink(email){
+    var ls = document.getElementById('linkStatus');
+    var btn = document.getElementById('sendLink');
+    if (btn) btn.disabled = true;
+    if (ls){ ls.textContent = 'Sending…'; ls.className = 'status'; }
+    try{
+      var r = await fetch('/api/gala/portal/request-link', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email: email })
+      });
+      var j = await r.json().catch(function(){ return {}; });
+      if (r.ok){
+        if (ls){ ls.textContent = '✓ Sent! Check your inbox (and spam) in about a minute.'; ls.className='status ok'; }
+      } else {
+        if (ls){ ls.textContent = (j && j.error) || 'Could not send right now — try again shortly.'; ls.className='status err'; }
+        if (btn) btn.disabled = false;
+      }
+    } catch(e){
+      if (ls){ ls.textContent = 'Network error — please try again.'; ls.className='status err'; }
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function pickCompany(id){
+    setStatus('Loading…');
+    try{
+      var r = await fetch('/api/gala/mytickets/lookup?id=' + encodeURIComponent(id));
+      var j = await r.json();
+      if (j && j.match === 'company'){ renderFound(j); }
+      else { setStatus('Could not load that one — please try again.', 'err'); }
+    } catch(e){ setStatus('Network error — please try again.', 'err'); }
+  }
+
+  els.form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var value = (mode === 'email' ? els.inEmail.value : els.inCompany.value).trim();
+    if (!value){ setStatus(mode === 'email' ? 'Please enter your email.' : 'Please enter your company name.', 'err'); return; }
+    if (mode === 'email' && value.indexOf('@') < 1){ setStatus('Please enter a valid email address.', 'err'); return; }
+
+    els.go.disabled = true;
+    setStatus('Searching…');
+    try{
+      var r = await fetch('/api/gala/mytickets/lookup', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ mode: mode, value: value })
+      });
+      var j = await r.json();
+      els.go.disabled = false;
+      if (!r.ok){ setStatus((j && j.error) || 'Something went wrong — please try again.', 'err'); return; }
+
+      if (j.match === 'none'){
+        setStatus(mode === 'email'
+          ? "We couldn't find that email. Double-check it, or try looking up your company name instead."
+          : "No match for that name. Try a shorter version (e.g. just the first word), or look up by email.", 'err');
+        return;
+      }
+      if (j.match === 'company_multi'){ renderCandidates(j.candidates); return; }
+      renderFound(j);
+    } catch(err){
+      els.go.disabled = false;
+      setStatus('Network error — please check your connection and try again.', 'err');
+    }
+  });
+
+  setMode('email');
+})();
+</script>
+</body>
+</html>
