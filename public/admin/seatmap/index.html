@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b102d">
+<meta name="robots" content="noindex,nofollow">
+<title>Seat Mover — DEF Gala Admin</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#11194a; --navy-deep:#080d28; --navy-mid:#1c2760; --indigo:#4d54b3;
+    --red:#d72846; --red-soft:#ff4d70; --gold:#f4b942; --cyan:#62c8ff;
+    --paper:#fbf8f3; --ink:#fff; --muted:rgba(255,255,255,.72); --subtle:rgba(255,255,255,.5);
+    --rule:rgba(255,255,255,.14); --panel:#171f54; --ok:#37c98b;
+    --open:#27306a; --open-br:#3a4488;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--navy-deep); color:var(--ink); overflow:hidden;
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex;flex-direction:column;height:100dvh;}
+  /* top bar */
+  .bar{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--rule);background:var(--navy);flex-wrap:wrap;}
+  .bar .title{font-family:"Fraunces",serif;font-weight:600;font-size:19px;}
+  .bar .title .acc{color:var(--gold);}
+  .bar .spacer{flex:1;}
+  .sel{background:rgba(0,0,0,.25);border:1px solid var(--rule);color:#fff;font-family:inherit;font-size:14px;font-weight:600;padding:9px 11px;border-radius:9px;}
+  .search{background:rgba(0,0,0,.25);border:1px solid var(--rule);color:#fff;font-family:inherit;font-size:14px;padding:9px 12px;border-radius:9px;min-width:190px;}
+  .search::placeholder{color:rgba(255,255,255,.4);}
+  .seg{display:flex;background:rgba(0,0,0,.25);border-radius:9px;padding:3px;}
+  .seg button{border:0;background:transparent;color:var(--subtle);font-family:inherit;font-weight:700;font-size:13px;padding:7px 12px;border-radius:7px;cursor:pointer;}
+  .seg button[aria-pressed="true"]{background:var(--indigo);color:#fff;}
+  /* body split */
+  .main{flex:1;display:flex;min-height:0;}
+  .stage{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;}
+  .stagehead{text-align:center;padding:10px;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;}
+  .screen{height:6px;margin:4px auto 2px;width:min(70%,640px);border-radius:3px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
+  .screen-lbl{text-align:center;color:var(--subtle);font-size:10px;letter-spacing:.3em;margin-bottom:6px;}
+  .mapwrap{flex:1;overflow:auto;padding:14px 18px 26px;}
+  .map{margin:0 auto;width:max-content;}
+  .seatrow{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
+  .rowlab{width:18px;text-align:center;color:var(--subtle);font-size:11px;font-weight:700;flex:none;}
+  .seat{
+    width:26px;height:26px;border-radius:6px;border:1px solid var(--open-br);background:var(--open);
+    display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.55);
+    cursor:pointer;flex:none;user-select:none;transition:transform .06s,box-shadow .1s;
+  }
+  .seat.gap{background:transparent;border-color:transparent;cursor:default;}
+  .seat.assigned{color:#fff;}
+  .seat.held{outline:2px dashed var(--gold);outline-offset:1px;}
+  .seat.selected{box-shadow:0 0 0 3px var(--gold);transform:scale(1.12);z-index:2;}
+  .seat.target-ok{box-shadow:0 0 0 3px var(--ok);}
+  .seat.dimmed{opacity:.32;}
+  .seat.hot{box-shadow:0 0 0 3px var(--cyan);}      /* search highlight */
+  .seat.dragover{box-shadow:0 0 0 3px var(--ok);transform:scale(1.12);}
+  /* side panel */
+  .side{width:330px;flex:none;border-left:1px solid var(--rule);background:var(--navy);display:flex;flex-direction:column;min-height:0;}
+  .side.empty{align-items:center;justify-content:center;color:var(--subtle);font-size:14px;text-align:center;padding:24px;}
+  .side-h{padding:16px 18px;border-bottom:1px solid var(--rule);}
+  .side-h .eyebrow{font-size:10px;letter-spacing:.16em;color:var(--gold);font-weight:800;text-transform:uppercase;}
+  .side-h .seatbig{font-family:"Fraunces",serif;font-size:30px;font-weight:600;margin-top:2px;}
+  .side-h .who{color:var(--muted);font-size:14px;margin-top:4px;line-height:1.4;}
+  .side-h .dinner{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(244,185,66,.16);color:var(--gold);border:1px solid rgba(244,185,66,.4);}
+  .side-b{padding:16px 18px;flex:1;overflow:auto;}
+  .instr{font-size:13.5px;color:var(--muted);line-height:1.55;}
+  .instr b{color:#fff;}
+  .actions{padding:14px 18px;border-top:1px solid var(--rule);display:flex;flex-direction:column;gap:9px;}
+  .btn{border:0;border-radius:10px;font-family:inherit;font-weight:800;font-size:15px;padding:13px;cursor:pointer;}
+  .btn.move{background:var(--indigo);color:#fff;}
+  .btn.confirm{background:var(--ok);color:#06251a;}
+  .btn.cancel{background:transparent;border:1px solid var(--rule);color:var(--muted);}
+  .btn[disabled]{opacity:.5;cursor:default;}
+  .legend{display:flex;flex-wrap:wrap;gap:10px 16px;padding:10px 18px;border-top:1px solid var(--rule);font-size:11.5px;color:var(--muted);}
+  .legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--rule);color:#fff;padding:12px 18px;border-radius:11px;font-size:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;}
+  .toast.err{border-color:var(--red-soft);}
+  .toast.ok{border-color:var(--ok);}
+  .modebar{position:absolute;top:46px;left:50%;transform:translateX(-50%);background:rgba(13,27,61,.96);border:1px solid var(--gold);color:var(--gold);font-weight:700;font-size:13px;padding:8px 16px;border-radius:999px;z-index:5;display:none;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+  .modebar.show{display:block;}
+  @media (max-width:760px){
+    .side{position:fixed;inset:auto 0 0 0;width:100%;height:auto;max-height:62dvh;border-left:0;border-top:1px solid var(--rule);z-index:20;border-radius:16px 16px 0 0;transform:translateY(110%);transition:transform .22s;}
+    .side.open{transform:translateY(0);}
+    .side.empty{display:none;}
+    .bar{gap:8px;}
+    .search{min-width:0;flex:1;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="bar">
+    <div class="title">Seat <span class="acc">Mover</span></div>
+    <select class="sel" id="audSel" aria-label="Auditorium"></select>
+    <select class="sel" id="showSel" aria-label="Showing">
+      <option value="1">Early · 5:00</option>
+      <option value="2">Late · 7:50</option>
+    </select>
+    <input class="search" id="search" placeholder="Find sponsor / company…" autocomplete="off">
+    <div class="spacer"></div>
+    <div class="seg" role="group" aria-label="Move mode">
+      <button id="modeTap" aria-pressed="true">Tap to move</button>
+      <button id="modeDrag" aria-pressed="false">Drag</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="stage">
+      <div class="modebar" id="modebar">Pick a destination seat</div>
+      <div class="stagehead" id="audInfo">—</div>
+      <div class="screen-lbl">SCREEN</div>
+      <div class="screen"></div>
+      <div class="mapwrap"><div class="map" id="map"></div></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="side empty" id="side">
+      <div>Tap any seat to see who's there<br>and move them.</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/admin/seatmap/app.js"></script>
+</body>
+</html>
