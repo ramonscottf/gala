@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1b3d">
+<title>Auction Preview · DEF Gala 2026</title>
+
+<link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Silent Auction Preview — DEF Gala 2026">
+<meta property="og:description" content="Preview the items coming to the 2026 Lights, Camera, ACTION! Silent Auction · Davis Education Foundation · June 10, 2026 · Megaplex Centerville">
+<meta property="og:url" content="https://gala.daviskids.org/auction">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --navy: #0d1b3d;
+    --navy-700: #182a55;
+    --navy-300: #5a6a8c;
+    --blue: #1e88e5;
+    --red: #e53935;
+    --gold: #ffc24d;
+    --grey-50: #f8fafc;
+    --grey-100: #f1f5f9;
+    --grey-200: #e2e8f0;
+    --grey-300: #cbd5e1;
+    --grey-500: #64748b;
+    --grey-700: #334155;
+    --grey-900: #0f172a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--grey-900);
+    background: #fff;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+
+  /* ── Masthead ─────────────────────────────────────────── */
+  .masthead {
+    background: var(--navy);
+    color: #fff;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .masthead a.wordmark {
+    color: #fff; text-decoration: none;
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700; letter-spacing: .5px;
+  }
+  .masthead .nav { display: flex; gap: 20px; }
+  .masthead .nav a {
+    font-size: 14px; font-weight: 500; opacity: .9; text-decoration: none;
+  }
+  .masthead .nav a:hover, .masthead .nav a[aria-current] { opacity: 1; color: var(--gold); }
+  .strip { height: 3px; background: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%); }
+
+  /* ── Hero ─────────────────────────────────────────────── */
+  .hero {
+    background: var(--grey-50);
+    padding: 52px 24px 36px;
+    text-align: center;
+    border-bottom: 1px solid var(--grey-200);
+  }
+  .hero .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800; color: var(--navy);
+    font-size: clamp(30px, 5.4vw, 48px); line-height: 1.05;
+    margin: 0 auto 16px; max-width: 16ch;
+  }
+  .hero h1 .flair { font-style: italic; font-weight: 700; color: var(--blue); }
+  .hero p.lead {
+    color: var(--grey-700); font-size: 17px; max-width: 56ch; margin: 0 auto 20px;
+  }
+  .hero .meta {
+    display: inline-flex; flex-wrap: wrap; gap: 10px 18px; justify-content: center;
+    font-size: 13.5px; color: var(--navy-300); font-weight: 500;
+  }
+  .hero .meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .hero .meta b { color: var(--navy); font-weight: 700; }
+
+  /* ── Preview notice ───────────────────────────────────── */
+  .notice {
+    background: var(--navy); color: #fff;
+    text-align: center; padding: 13px 24px;
+    font-size: 14px; font-weight: 500;
+  }
+  .notice b { color: var(--gold); font-weight: 700; }
+
+  /* ── Controls (sticky) ────────────────────────────────── */
+  .controls {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(255,255,255,.94);
+    backdrop-filter: saturate(160%) blur(10px);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    border-bottom: 1px solid var(--grey-200);
+    padding: 14px 24px 10px;
+  }
+  .controls-inner { max-width: 1200px; margin: 0 auto; }
+  .controls-row {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .search {
+    flex: 1 1 240px; min-width: 0; position: relative;
+  }
+  .search input {
+    width: 100%; padding: 10px 14px 10px 38px;
+    border: 1px solid var(--grey-300); border-radius: 10px;
+    font: inherit; font-size: 15px; color: var(--grey-900);
+    background: #fff;
+  }
+  .search input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(30,136,229,.15); }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--grey-500); }
+  .sort select {
+    padding: 10px 12px; border: 1px solid var(--grey-300); border-radius: 10px;
+    font: inherit; font-size: 14px; color: var(--grey-900); background: #fff; cursor: pointer;
+  }
+  .sort select:focus { outline: none; border-color: var(--blue); }
+  .count { font-size: 13px; color: var(--grey-500); font-weight: 500; white-space: nowrap; }
+
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; margin: 0 -4px; scrollbar-width: thin; }
+  .chips::-webkit-scrollbar { height: 6px; }
+  .chips::-webkit-scrollbar-thumb { background: var(--grey-300); border-radius: 3px; }
+  .chip {
+    flex: 0 0 auto; padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--grey-200); background: #fff;
+    font-size: 13px; font-weight: 600; color: var(--grey-700); cursor: pointer;
+    white-space: nowrap; transition: background .12s, color .12s, border-color .12s;
+  }
+  .chip:hover { border-color: var(--navy-300); }
+  .chip[aria-pressed="true"] {
+    background: var(--navy); color: #fff; border-color: var(--navy);
+  }
+  .chip .n { opacity: .55; font-weight: 500; margin-left: 5px; }
+
+  /* ── Grid ─────────────────────────────────────────────── */
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 26px 24px 64px; }
+  .grid {
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  }
+  .card {
+    border: 1px solid var(--grey-200); border-radius: 14px; overflow: hidden;
+    background: #fff; display: flex; flex-direction: column;
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(13,27,61,.12); border-color: var(--grey-300); }
+  .card .imgwrap {
+    position: relative; aspect-ratio: 4 / 3; background: var(--grey-100); overflow: hidden;
+  }
+  .card .imgwrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .imgwrap .noimg {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    color: var(--grey-300); font-family: 'Playfair Display', serif; font-size: 40px;
+  }
+  .badge {
+    position: absolute; top: 10px; left: 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 6px; color: #fff;
+  }
+  .badge.premier { background: var(--red); }
+  .badge.raffle { background: var(--navy); }
+  .num {
+    position: absolute; bottom: 10px; right: 10px;
+    font-size: 11px; font-weight: 600; color: #fff;
+    background: rgba(13,27,61,.72); padding: 3px 8px; border-radius: 6px;
+    backdrop-filter: blur(2px);
+  }
+  .card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
+  .card .tagrow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .card .tag {
+    font-size: 11px; font-weight: 600; color: var(--navy-300);
+    background: var(--grey-100); padding: 3px 8px; border-radius: 6px;
+  }
+  .card h3 {
+    font-size: 15.5px; font-weight: 700; color: var(--navy); margin: 0 0 6px;
+    line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card .desc {
+    font-size: 13px; color: var(--grey-500); margin: 0 0 14px; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card .foot {
+    margin-top: auto; padding-top: 12px; border-top: 1px solid var(--grey-100);
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  }
+  .card .vlabel { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--grey-500); }
+  .card .value { font-size: 17px; font-weight: 800; color: var(--navy); font-family: 'Playfair Display', serif; }
+
+  .empty { text-align: center; padding: 70px 24px; color: var(--grey-500); }
+  .empty button {
+    margin-top: 14px; padding: 9px 18px; border: 1px solid var(--grey-300);
+    background: #fff; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .skeleton { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); }
+  .sk { border: 1px solid var(--grey-200); border-radius: 14px; overflow: hidden; }
+  .sk .a { aspect-ratio: 4/3; background: var(--grey-100); }
+  .sk .b { height: 64px; background: linear-gradient(var(--grey-50), #fff); }
+
+  /* ── Footer ───────────────────────────────────────────── */
+  footer.site {
+    background: var(--navy); color: rgba(255,255,255,.75);
+    text-align: center; padding: 34px 24px; font-size: 13.5px;
+  }
+  footer.site .fstrip { height: 2px; background: linear-gradient(90deg, var(--blue), var(--red)); margin: -34px -24px 28px; }
+  footer.site b { color: #fff; }
+  footer.site a { color: var(--gold); text-decoration: none; }
+
+  @media (max-width: 560px) {
+    .masthead { padding: 15px 18px; }
+    .hero { padding: 40px 20px 30px; }
+    .controls { padding: 12px 18px 8px; }
+    .wrap { padding: 22px 18px 56px; }
+    .grid { gap: 14px; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); }
+    .card .body { padding: 12px 13px 14px; }
+    .card h3 { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+  <header class="masthead">
+    <a class="wordmark" href="/">DEF Gala 2026</a>
+    <nav class="nav">
+      <a href="/">Home</a>
+      <a href="/schedule">Schedule</a>
+      <a href="/auction" aria-current="page">Auction</a>
+      <a href="/faq">FAQ</a>
+    </nav>
+  </header>
+  <div class="strip"></div>
+
+  <section class="hero">
+    <div class="eyebrow">2026 Lights · Camera · Action</div>
+    <h1>Silent Auction <span class="flair">Preview</span></h1>
+    <p class="lead">A first look at the experiences, getaways, and treasures coming to this year's Davis Education Foundation Gala. Browse now — start building your wish list.</p>
+    <div class="meta">
+      <span><b id="meta-count">…</b>&nbsp;items</span>
+      <span>📅 <b>June 10, 2026</b></span>
+      <span>📍 <b>Megaplex · Centerville</b></span>
+    </div>
+  </section>
+
+  <div class="notice">
+    This is a <b>preview</b> — bidding opens the night of the Gala. Items and values are subject to change.
+  </div>
+
+  <div class="controls">
+    <div class="controls-inner">
+      <div class="controls-row">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="q" type="search" placeholder="Search items…" autocomplete="off" aria-label="Search auction items">
+        </div>
+        <div class="sort">
+          <select id="sort" aria-label="Sort items">
+            <option value="featured">Sort: Featured</option>
+            <option value="value-desc">Value: High → Low</option>
+            <option value="value-asc">Value: Low → High</option>
+            <option value="az">Title: A → Z</option>
+          </select>
+        </div>
+        <div class="count" id="count">Loading…</div>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="grid skeleton" id="grid">
+      <div class="sk"><div class="a"></div><div class="b"></div></div>
+      <div class="sk"><div class="a"></div><div class="b"></div></div>
+      <div class="sk"><div class="a"></div><div class="b"></div></div>
+      <div class="sk"><div class="a"></div><div class="b"></div></div>
+    </div>
+  </main>
+
+  <footer class="site">
+    <div class="fstrip"></div>
+    <div><b>Davis Education Foundation</b> · 2026 Lights, Camera, ACTION! Gala</div>
+    <div style="margin-top:6px">Questions? <a href="/faq">See the FAQ</a> · <a href="/">Back to the Gala home</a></div>
+  </footer>
+
+<script>
+const TAG_ORDER = ["Premier","Travel","Sports","Dining & Entertainment","Outdoors","Home","Kids","Personal Care","Art","Electronics","Auto & Tools","Misc"];
+let ITEMS = [], activeTag = "All", query = "", sortMode = "featured";
+
+const esc = s => (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function buildChips() {
+  const counts = {};
+  ITEMS.forEach(it => (it.tags||[]).forEach(t => counts[t] = (counts[t]||0)+1));
+  const tags = TAG_ORDER.filter(t => counts[t]);
+  const el = document.getElementById("chips");
+  const mk = (label, key, n) =>
+    `<button class="chip" data-tag="${esc(key)}" aria-pressed="${activeTag===key}">${esc(label)}${n!=null?`<span class="n">${n}</span>`:""}</button>`;
+  el.innerHTML = mk("All","All",ITEMS.length) + tags.map(t => mk(t,t,counts[t])).join("");
+  el.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
+    activeTag = c.dataset.tag; render();
+  }));
+}
+
+function filtered() {
+  let r = ITEMS.slice();
+  if (activeTag !== "All") r = r.filter(it => (it.tags||[]).includes(activeTag));
+  if (query) {
+    const q = query.toLowerCase();
+    r = r.filter(it => (it.title||"").toLowerCase().includes(q) || (it.desc||"").toLowerCase().includes(q) || (it.tags||[]).join(" ").toLowerCase().includes(q));
+  }
+  if (sortMode === "value-desc") r.sort((a,b)=>b.value_num-a.value_num);
+  else if (sortMode === "value-asc") r.sort((a,b)=>a.value_num-b.value_num);
+  else if (sortMode === "az") r.sort((a,b)=>(a.title||"").localeCompare(b.title||""));
+  else { // featured: premier first, then value desc
+    r.sort((a,b)=>{
+      const pa=(a.tags||[]).includes("Premier")?1:0, pb=(b.tags||[]).includes("Premier")?1:0;
+      if (pa!==pb) return pb-pa;
+      return b.value_num-a.value_num;
+    });
+  }
+  return r;
+}
+
+function card(it) {
+  const img = it.images && it.images[0];
+  const premier = (it.tags||[]).includes("Premier");
+  const tags = (it.tags||[]).filter(t=>t!=="Premier").slice(0,2);
+  const badge = it.raffle ? `<span class="badge raffle">Opportunity Drawing</span>`
+              : premier ? `<span class="badge premier">Premier</span>` : "";
+  return `<article class="card">
+    <div class="imgwrap">
+      ${img ? `<img loading="lazy" decoding="async" src="${esc(img)}" alt="${esc(it.title)}">` : `<div class="noimg">D</div>`}
+      ${badge}
+      ${it.number ? `<span class="num">#${esc(it.number)}</span>` : ""}
+    </div>
+    <div class="body">
+      ${tags.length ? `<div class="tagrow">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
+      <h3>${esc(it.title)}</h3>
+      <p class="desc">${esc(it.desc)}</p>
+      <div class="foot">
+        <span class="vlabel">${it.raffle ? "Ticket value" : "Est. value"}</span>
+        <span class="value">${esc(it.value) || "—"}</span>
+      </div>
+    </div>
+  </article>`;
+}
+
+function render() {
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.tag===activeTag));
+  const r = filtered();
+  const grid = document.getElementById("grid");
+  grid.classList.remove("skeleton");
+  document.getElementById("count").textContent = `Showing ${r.length} of ${ITEMS.length}`;
+  if (!r.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>No items match your search.</p><button id="clr">Clear filters</button></div>`;
+    document.getElementById("clr").onclick = () => { query=""; activeTag="All"; document.getElementById("q").value=""; render(); };
+    return;
+  }
+  grid.innerHTML = r.map(card).join("");
+}
+
+let t;
+document.getElementById("q").addEventListener("input", e => { clearTimeout(t); t=setTimeout(()=>{ query=e.target.value.trim(); render(); }, 140); });
+document.getElementById("sort").addEventListener("change", e => { sortMode=e.target.value; render(); });
+
+(async function load(){
+  try {
+    const res = await fetch("/data/auction-items.json", {cache:"no-cache"});
+    const data = await res.json();
+    ITEMS = data.items || [];
+    document.getElementById("meta-count").textContent = ITEMS.length;
+    buildChips();
+    render();
+  } catch (e) {
+    document.getElementById("grid").classList.remove("skeleton");
+    document.getElementById("grid").innerHTML = `<div class="empty" style="grid-column:1/-1"><p>Couldn't load the auction items right now. Please try again in a moment.</p></div>`;
+    document.getElementById("count").textContent = "";
+  }
+})();
+</script>
+</body>
+</html>
