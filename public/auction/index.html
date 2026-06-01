@@ -11,225 +11,182 @@
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Silent Auction Preview — DEF Gala 2026">
-<meta property="og:description" content="Preview the items coming to the 2026 Lights, Camera, ACTION! Silent Auction · Davis Education Foundation · June 10, 2026 · Megaplex Centerville">
+<meta property="og:description" content="Preview the Premier experiences, getaways, and treasures coming to the 2026 Lights, Camera, ACTION! Silent Auction · Davis Education Foundation · June 10, 2026 · Megaplex Centerville">
 <meta property="og:url" content="https://gala.daviskids.org/auction">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --navy: #0d1b3d;
-    --navy-700: #182a55;
-    --navy-300: #5a6a8c;
-    --blue: #1e88e5;
-    --red: #e53935;
-    --gold: #ffc24d;
-    --grey-50: #f8fafc;
-    --grey-100: #f1f5f9;
-    --grey-200: #e2e8f0;
-    --grey-300: #cbd5e1;
-    --grey-500: #64748b;
-    --grey-700: #334155;
-    --grey-900: #0f172a;
+    --navy: #0d1b3d; --navy-900: #081427; --navy-700: #182a55; --navy-500: #2d3f6d;
+    --navy-300: #5a6a8c; --navy-100: #c8cfde;
+    --blue: #1e88e5; --blue-bright: #4a9af0; --red: #e53935; --red-deep: #c62828;
+    --gold: #ffc24d; --gold-soft: #ffd77f;
+    --grey-50: #f8fafc; --grey-100: #f1f5f9; --grey-200: #e2e8f0; --grey-300: #cbd5e1;
+    --grey-500: #64748b; --grey-700: #334155; --grey-900: #0f172a;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--grey-900);
-    background: #fff;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: inherit; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--grey-900); background: #fff; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  img { display: block; }
 
-  /* ── Masthead ─────────────────────────────────────────── */
-  .masthead {
-    background: var(--navy);
-    color: #fff;
-    padding: 18px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .masthead a.wordmark {
-    color: #fff; text-decoration: none;
-    font-family: 'Playfair Display', serif;
-    font-size: 22px; font-weight: 700; letter-spacing: .5px;
-  }
+  .masthead { background: var(--navy); color: #fff; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 5; }
+  .masthead a.wordmark { color: #fff; font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; letter-spacing: .5px; }
   .masthead .nav { display: flex; gap: 20px; }
-  .masthead .nav a {
-    font-size: 14px; font-weight: 500; opacity: .9; text-decoration: none;
-  }
+  .masthead .nav a { font-size: 14px; font-weight: 500; opacity: .9; }
   .masthead .nav a:hover, .masthead .nav a[aria-current] { opacity: 1; color: var(--gold); }
   .strip { height: 3px; background: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%); }
 
-  /* ── Hero ─────────────────────────────────────────────── */
-  .hero {
-    background: var(--grey-50);
-    padding: 52px 24px 36px;
-    text-align: center;
-    border-bottom: 1px solid var(--grey-200);
-  }
-  .hero .eyebrow {
-    font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
-    color: var(--red); margin-bottom: 14px;
-  }
-  .hero h1 {
-    font-family: 'Playfair Display', serif;
-    font-weight: 800; color: var(--navy);
-    font-size: clamp(30px, 5.4vw, 48px); line-height: 1.05;
-    margin: 0 auto 16px; max-width: 16ch;
-  }
-  .hero h1 .flair { font-style: italic; font-weight: 700; color: var(--blue); }
-  .hero p.lead {
-    color: var(--grey-700); font-size: 17px; max-width: 56ch; margin: 0 auto 20px;
-  }
-  .hero .meta {
-    display: inline-flex; flex-wrap: wrap; gap: 10px 18px; justify-content: center;
-    font-size: 13.5px; color: var(--navy-300); font-weight: 500;
-  }
-  .hero .meta span { display: inline-flex; align-items: center; gap: 6px; }
-  .hero .meta b { color: var(--navy); font-weight: 700; }
+  .hero { position: relative; overflow: hidden; background: var(--navy-900); color: #fff; }
+  .hero-grid { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; min-height: 460px; }
+  .hero-copy { padding: 60px 40px 56px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2; }
+  .hero .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+  .hero .eyebrow::before { content: ""; width: 26px; height: 1.5px; background: var(--gold); }
+  .hero h1 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(34px, 4.6vw, 56px); line-height: 1.02; margin: 0 0 18px; letter-spacing: -.01em; }
+  .hero h1 .flair { font-style: italic; font-weight: 700; color: var(--blue-bright); }
+  .hero p.lead { color: rgba(255,255,255,.78); font-size: 17px; max-width: 46ch; margin: 0 0 26px; }
+  .hero .meta { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 13.5px; color: rgba(255,255,255,.62); font-weight: 500; }
+  .hero .meta b { color: #fff; font-weight: 700; }
+  .hero .meta span { display: inline-flex; align-items: center; gap: 7px; }
+  .hero-spot { position: relative; min-height: 380px; }
+  .hero-spot .shade { position: absolute; inset: 0; z-index: 2; background: linear-gradient(90deg, var(--navy-900) 0%, rgba(8,20,39,.35) 28%, transparent 55%), linear-gradient(0deg, rgba(8,20,39,.85) 0%, transparent 45%); }
+  .hero-spot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero-spot .spotcard { position: absolute; left: 24px; right: 24px; bottom: 24px; z-index: 3; cursor: pointer; }
+  .hero-spot .spot-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-soft); margin-bottom: 8px; }
+  .hero-spot .spot-title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 22px; line-height: 1.18; color: #fff; margin: 0 0 10px; max-width: 22ch; text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+  .hero-spot .spot-row { display: flex; align-items: center; gap: 14px; }
+  .hero-spot .spot-val { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 20px; color: #fff; }
+  .hero-spot .spot-btn { font-size: 13px; font-weight: 700; color: var(--navy); background: var(--gold); padding: 8px 16px; border-radius: 999px; white-space: nowrap; }
 
-  /* ── Preview notice ───────────────────────────────────── */
-  .notice {
-    background: var(--navy); color: #fff;
-    text-align: center; padding: 13px 24px;
-    font-size: 14px; font-weight: 500;
-  }
+  .notice { background: var(--navy-700); color: #fff; text-align: center; padding: 11px 24px; font-size: 13.5px; font-weight: 500; }
   .notice b { color: var(--gold); font-weight: 700; }
 
-  /* ── Controls (sticky) ────────────────────────────────── */
-  .controls {
-    position: sticky; top: 0; z-index: 20;
-    background: rgba(255,255,255,.94);
-    backdrop-filter: saturate(160%) blur(10px);
-    -webkit-backdrop-filter: saturate(160%) blur(10px);
-    border-bottom: 1px solid var(--grey-200);
-    padding: 14px 24px 10px;
-  }
-  .controls-inner { max-width: 1200px; margin: 0 auto; }
-  .controls-row {
-    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-  }
-  .search {
-    flex: 1 1 240px; min-width: 0; position: relative;
-  }
-  .search input {
-    width: 100%; padding: 10px 14px 10px 38px;
-    border: 1px solid var(--grey-300); border-radius: 10px;
-    font: inherit; font-size: 15px; color: var(--grey-900);
-    background: #fff;
-  }
-  .search input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(30,136,229,.15); }
-  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--grey-500); }
-  .sort select {
-    padding: 10px 12px; border: 1px solid var(--grey-300); border-radius: 10px;
-    font: inherit; font-size: 14px; color: var(--grey-900); background: #fff; cursor: pointer;
-  }
-  .sort select:focus { outline: none; border-color: var(--blue); }
-  .count { font-size: 13px; color: var(--grey-500); font-weight: 500; white-space: nowrap; }
+  .section { max-width: 1240px; margin: 0 auto; padding: 38px 24px 6px; }
+  .section.tight { padding-top: 30px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .sec-head h2 { font-family: 'Playfair Display', serif; font-weight: 800; color: var(--navy); font-size: clamp(20px, 2.6vw, 27px); margin: 0; letter-spacing: -.01em; }
+  .sec-head .kick { font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--red); display: block; margin-bottom: 5px; }
+  .sec-head .seeall { font-size: 13.5px; font-weight: 600; color: var(--blue); white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .sec-head .seeall:hover { color: var(--red); }
+  .sec-head .seeall svg { transition: transform .14s; }
+  .sec-head .seeall:hover svg { transform: translateX(3px); }
 
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; margin: 0 -4px; scrollbar-width: thin; }
-  .chips::-webkit-scrollbar { height: 6px; }
-  .chips::-webkit-scrollbar-thumb { background: var(--grey-300); border-radius: 3px; }
-  .chip {
-    flex: 0 0 auto; padding: 7px 14px; border-radius: 999px;
-    border: 1px solid var(--grey-200); background: #fff;
-    font-size: 13px; font-weight: 600; color: var(--grey-700); cursor: pointer;
-    white-space: nowrap; transition: background .12s, color .12s, border-color .12s;
-  }
-  .chip:hover { border-color: var(--navy-300); }
-  .chip[aria-pressed="true"] {
-    background: var(--navy); color: #fff; border-color: var(--navy);
-  }
-  .chip .n { opacity: .55; font-weight: 500; margin-left: 5px; }
+  .rail-wrap { position: relative; margin: 0 -24px; }
+  .rail { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; padding: 4px 24px 22px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+  .rail::-webkit-scrollbar { height: 8px; }
+  .rail::-webkit-scrollbar-track { background: transparent; }
+  .rail::-webkit-scrollbar-thumb { background: var(--grey-300); border-radius: 4px; }
+  .rail:hover::-webkit-scrollbar-thumb { background: var(--navy-300); }
+  .rail .card { flex: 0 0 auto; width: 230px; scroll-snap-align: start; }
+  .rail-btn { position: absolute; top: calc(50% - 28px); transform: translateY(-50%); z-index: 4; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--grey-200); background: rgba(255,255,255,.96); box-shadow: 0 4px 14px rgba(13,27,61,.16); cursor: pointer; display: none; align-items: center; justify-content: center; color: var(--navy); font-size: 22px; line-height: 1; }
+  .rail-btn:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .rail-btn.left { left: 8px; } .rail-btn.right { right: 8px; }
+  .rail-wrap:hover .rail-btn { display: flex; }
 
-  /* ── Grid ─────────────────────────────────────────────── */
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 26px 24px 64px; }
-  .grid {
-    display: grid; gap: 20px;
-    grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
-  }
-  .card {
-    border: 1px solid var(--grey-200); border-radius: 14px; overflow: hidden;
-    background: #fff; display: flex; flex-direction: column;
-    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
-  }
-  .card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(13,27,61,.12); border-color: var(--grey-300); }
-  .card .imgwrap {
-    position: relative; aspect-ratio: 4 / 3; background: var(--grey-100); overflow: hidden;
-  }
-  .card .imgwrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .card .imgwrap .noimg {
-    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-    color: var(--grey-300); font-family: 'Playfair Display', serif; font-size: 40px;
-  }
-  .badge {
-    position: absolute; top: 10px; left: 10px;
-    font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-    padding: 4px 9px; border-radius: 6px; color: #fff;
-  }
+  .card { border: 1px solid var(--grey-200); border-radius: 14px; overflow: hidden; background: #fff; display: flex; flex-direction: column; cursor: pointer; transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(13,27,61,.13); border-color: var(--grey-300); }
+  .card .imgwrap { position: relative; aspect-ratio: 4/3; background: var(--grey-100); overflow: hidden; }
+  .card .imgwrap img { width: 100%; height: 100%; object-fit: cover; }
+  .card .imgwrap .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--grey-300); font-family: 'Playfair Display', serif; font-size: 40px; }
+  .badge { position: absolute; top: 10px; left: 10px; font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; color: #fff; }
   .badge.premier { background: var(--red); }
   .badge.raffle { background: var(--navy); }
-  .num {
-    position: absolute; bottom: 10px; right: 10px;
-    font-size: 11px; font-weight: 600; color: #fff;
-    background: rgba(13,27,61,.72); padding: 3px 8px; border-radius: 6px;
-    backdrop-filter: blur(2px);
-  }
-  .card .body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
-  .card .tagrow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-  .card .tag {
-    font-size: 11px; font-weight: 600; color: var(--navy-300);
-    background: var(--grey-100); padding: 3px 8px; border-radius: 6px;
-  }
-  .card h3 {
-    font-size: 15.5px; font-weight: 700; color: var(--navy); margin: 0 0 6px;
-    line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .card .desc {
-    font-size: 13px; color: var(--grey-500); margin: 0 0 14px; line-height: 1.5;
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .card .foot {
-    margin-top: auto; padding-top: 12px; border-top: 1px solid var(--grey-100);
-    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  }
-  .card .vlabel { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--grey-500); }
+  .imgcount { position: absolute; bottom: 10px; right: 10px; font-size: 11px; font-weight: 600; color: #fff; background: rgba(13,27,61,.7); padding: 3px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(2px); }
+  .card .body { padding: 13px 15px 15px; display: flex; flex-direction: column; flex: 1; }
+  .card .tagrow { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 7px; }
+  .card .tag { font-size: 10.5px; font-weight: 600; color: var(--navy-300); background: var(--grey-100); padding: 3px 8px; border-radius: 6px; }
+  .card h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin: 0 0 10px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .foot { margin-top: auto; padding-top: 11px; border-top: 1px solid var(--grey-100); display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .card .vlabel { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--grey-500); }
   .card .value { font-size: 17px; font-weight: 800; color: var(--navy); font-family: 'Playfair Display', serif; }
 
-  .empty { text-align: center; padding: 70px 24px; color: var(--grey-500); }
-  .empty button {
-    margin-top: 14px; padding: 9px 18px; border: 1px solid var(--grey-300);
-    background: #fff; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer;
-  }
-  .skeleton { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); }
-  .sk { border: 1px solid var(--grey-200); border-radius: 14px; overflow: hidden; }
-  .sk .a { aspect-ratio: 4/3; background: var(--grey-100); }
-  .sk .b { height: 64px; background: linear-gradient(var(--grey-50), #fff); }
+  .rail.premier-rail .card { width: 300px; border-color: rgba(229,57,53,.28); }
+  .rail.premier-rail .card .imgwrap { aspect-ratio: 16/10; }
+  .rail.premier-rail .card h3 { font-size: 16.5px; }
+  .rail.premier-rail .card .desc { font-size: 12.5px; color: var(--grey-500); margin: 0 0 12px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-  /* ── Footer ───────────────────────────────────────────── */
-  footer.site {
-    background: var(--navy); color: rgba(255,255,255,.75);
-    text-align: center; padding: 34px 24px; font-size: 13.5px;
-  }
+  .browse { background: var(--grey-50); border-top: 1px solid var(--grey-200); margin-top: 34px; padding-bottom: 50px; }
+  .controls { position: sticky; top: 0; z-index: 20; background: rgba(248,250,252,.95); backdrop-filter: saturate(160%) blur(10px); border-bottom: 1px solid var(--grey-200); padding: 14px 0 10px; }
+  .controls-inner { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+  .controls-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .search { flex: 1 1 240px; min-width: 0; position: relative; }
+  .search input { width: 100%; padding: 10px 14px 10px 38px; border: 1px solid var(--grey-300); border-radius: 10px; font: inherit; font-size: 15px; background: #fff; }
+  .search input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(30,136,229,.15); }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--grey-500); }
+  .sort select { padding: 10px 12px; border: 1px solid var(--grey-300); border-radius: 10px; font: inherit; font-size: 14px; background: #fff; cursor: pointer; }
+  .sort select:focus { outline: none; border-color: var(--blue); }
+  .count { font-size: 13px; color: var(--grey-500); font-weight: 500; white-space: nowrap; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 2px; scrollbar-width: thin; }
+  .chips::-webkit-scrollbar { height: 6px; }
+  .chips::-webkit-scrollbar-thumb { background: var(--grey-300); border-radius: 3px; }
+  .chip { flex: 0 0 auto; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--grey-200); background: #fff; font-size: 13px; font-weight: 600; color: var(--grey-700); cursor: pointer; white-space: nowrap; transition: background .12s, color .12s, border-color .12s; }
+  .chip:hover { border-color: var(--navy-300); }
+  .chip[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .chip .n { opacity: .55; font-weight: 500; margin-left: 5px; }
+  .browse-grid { max-width: 1240px; margin: 0 auto; padding: 24px 24px 0; }
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .empty { text-align: center; padding: 60px 24px; color: var(--grey-500); }
+  .empty button { margin-top: 14px; padding: 9px 18px; border: 1px solid var(--grey-300); background: #fff; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
+
+  .modal-back { position: fixed; inset: 0; z-index: 100; background: rgba(8,20,39,.62); backdrop-filter: blur(3px); display: none; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+  .modal-back.open { display: flex; }
+  .modal { background: #fff; border-radius: 18px; overflow: hidden; max-width: 880px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,.4); position: relative; }
+  .modal .mstrip { height: 3px; background: linear-gradient(90deg, var(--blue), var(--red)); }
+  .modal-close { position: absolute; top: 14px; right: 14px; z-index: 6; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.92); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--navy); box-shadow: 0 2px 10px rgba(0,0,0,.18); }
+  .modal-close:hover { background: var(--navy); color: #fff; }
+  .modal-grid { display: grid; grid-template-columns: 1.05fr 1fr; }
+  .gallery { background: var(--grey-100); position: relative; }
+  .gallery .main { position: relative; aspect-ratio: 4/3; background: var(--grey-200); }
+  .gallery .main img { width: 100%; height: 100%; object-fit: cover; }
+  .gallery .main .noimg { width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--grey-300);font-family:'Playfair Display',serif;font-size:64px; }
+  .gallery .gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.92); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--navy); box-shadow: 0 2px 10px rgba(0,0,0,.2); font-size: 20px; line-height: 1; }
+  .gallery .gnav:hover { background: var(--navy); color: #fff; }
+  .gallery .gnav.prev { left: 12px; } .gallery .gnav.next { right: 12px; }
+  .gallery .thumbs { display: flex; gap: 8px; padding: 10px; overflow-x: auto; }
+  .gallery .thumbs img { width: 56px; height: 44px; object-fit: cover; border-radius: 7px; cursor: pointer; border: 2px solid transparent; flex: 0 0 auto; opacity: .65; }
+  .gallery .thumbs img.active { border-color: var(--blue); opacity: 1; }
+  .mdetail { padding: 30px 30px 32px; display: flex; flex-direction: column; }
+  .mdetail .mbadges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .mdetail .mbadge { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; }
+  .mdetail .mbadge.premier { background: rgba(229,57,53,.1); color: var(--red-deep); }
+  .mdetail .mbadge.raffle { background: rgba(13,27,61,.08); color: var(--navy); }
+  .mdetail .mbadge.tag { background: var(--grey-100); color: var(--navy-300); }
+  .mdetail h2 { font-family: 'Playfair Display', serif; font-weight: 800; color: var(--navy); font-size: 25px; line-height: 1.15; margin: 0 0 6px; }
+  .mdetail .mnum { font-size: 12.5px; color: var(--grey-500); font-weight: 500; margin-bottom: 16px; }
+  .mdetail .mdesc { font-size: 14.5px; color: var(--grey-700); line-height: 1.62; margin: 0 0 22px; max-height: 280px; overflow-y: auto; }
+  .mdetail .mval-row { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--grey-200); display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .mdetail .mval-label { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--grey-500); }
+  .mdetail .mval { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 30px; color: var(--navy); }
+  .mdetail .mhint { font-size: 12.5px; color: var(--grey-500); margin-top: 14px; text-align: center; padding: 9px; background: var(--grey-50); border-radius: 9px; }
+  .mdetail .mhint b { color: var(--red-deep); }
+
+  footer.site { background: var(--navy); color: rgba(255,255,255,.75); text-align: center; padding: 34px 24px; font-size: 13.5px; }
   footer.site .fstrip { height: 2px; background: linear-gradient(90deg, var(--blue), var(--red)); margin: -34px -24px 28px; }
-  footer.site b { color: #fff; }
-  footer.site a { color: var(--gold); text-decoration: none; }
+  footer.site b { color: #fff; } footer.site a { color: var(--gold); }
 
+  @media (max-width: 880px) {
+    .hero-grid { grid-template-columns: 1fr; min-height: 0; }
+    .hero-copy { padding: 44px 24px 30px; }
+    .hero-spot { min-height: 320px; }
+    .modal-grid { grid-template-columns: 1fr; }
+    .gallery .main { aspect-ratio: 16/10; }
+    .mdetail { padding: 24px 22px 26px; }
+  }
   @media (max-width: 560px) {
     .masthead { padding: 15px 18px; }
-    .hero { padding: 40px 20px 30px; }
-    .controls { padding: 12px 18px 8px; }
-    .wrap { padding: 22px 18px 56px; }
-    .grid { gap: 14px; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); }
-    .card .body { padding: 12px 13px 14px; }
-    .card h3 { font-size: 14px; }
+    .section { padding: 30px 18px 4px; }
+    .rail-wrap { margin: 0 -18px; }
+    .rail { padding: 4px 18px 20px; }
+    .rail .card { width: 200px; }
+    .rail.premier-rail .card { width: 250px; }
+    .controls-inner, .browse-grid { padding-left: 18px; padding-right: 18px; }
+    .grid { gap: 14px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .hero h1 { font-size: 32px; }
+    .modal-back { padding: 0; align-items: stretch; }
+    .modal { border-radius: 0; min-height: 100%; }
   }
 </style>
 </head>
@@ -246,49 +203,60 @@
   <div class="strip"></div>
 
   <section class="hero">
-    <div class="eyebrow">2026 Lights · Camera · Action</div>
-    <h1>Silent Auction <span class="flair">Preview</span></h1>
-    <p class="lead">A first look at the experiences, getaways, and treasures coming to this year's Davis Education Foundation Gala. Browse now — start building your wish list.</p>
-    <div class="meta">
-      <span><b id="meta-count">…</b>&nbsp;items</span>
-      <span>📅 <b>June 10, 2026</b></span>
-      <span>📍 <b>Megaplex · Centerville</b></span>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow">Premier Experiences</div>
+        <h1>The night's <span class="flair">headliners</span>.</h1>
+        <p class="lead">A first look at the marquee getaways, once-a-year experiences, and showstoppers coming to the 2026 Lights, Camera, ACTION! Silent Auction. Start building your wish list.</p>
+        <div class="meta">
+          <span><b id="meta-count">…</b>&nbsp;items</span>
+          <span>📅 <b>June 10, 2026</b></span>
+          <span>📍 <b>Megaplex · Centerville</b></span>
+        </div>
+      </div>
+      <div class="hero-spot" id="hero-spot"><div class="shade"></div></div>
     </div>
   </section>
 
-  <div class="notice">
-    This is a <b>preview</b> — bidding opens the night of the Gala. Items and values are subject to change.
-  </div>
+  <div class="notice">This is a <b>preview</b> — bidding opens the night of the Gala. Items and values are subject to change.</div>
 
-  <div class="controls">
-    <div class="controls-inner">
-      <div class="controls-row">
-        <div class="search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input id="q" type="search" placeholder="Search items…" autocomplete="off" aria-label="Search auction items">
+  <section class="section" id="premier-sec" style="display:none">
+    <div class="sec-head"><div><span class="kick">Don't miss these</span><h2>Premier Lots</h2></div></div>
+    <div class="rail-wrap">
+      <button class="rail-btn left" data-rail="premier-rail" data-dir="-1" aria-label="Scroll left">‹</button>
+      <button class="rail-btn right" data-rail="premier-rail" data-dir="1" aria-label="Scroll right">›</button>
+      <div class="rail premier-rail" id="premier-rail"></div>
+    </div>
+  </section>
+
+  <div id="cat-rails"></div>
+
+  <section class="browse" id="browse">
+    <div class="section tight" style="padding-bottom:0">
+      <div class="sec-head"><div><span class="kick">Everything in the catalog</span><h2>Browse All Items</h2></div></div>
+    </div>
+    <div class="controls">
+      <div class="controls-inner">
+        <div class="controls-row">
+          <div class="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="q" type="search" placeholder="Search items…" autocomplete="off" aria-label="Search auction items">
+          </div>
+          <div class="sort">
+            <select id="sort" aria-label="Sort items">
+              <option value="featured">Sort: Featured</option>
+              <option value="value-desc">Value: High → Low</option>
+              <option value="value-asc">Value: Low → High</option>
+              <option value="az">Title: A → Z</option>
+            </select>
+          </div>
+          <div class="count" id="count">Loading…</div>
         </div>
-        <div class="sort">
-          <select id="sort" aria-label="Sort items">
-            <option value="featured">Sort: Featured</option>
-            <option value="value-desc">Value: High → Low</option>
-            <option value="value-asc">Value: Low → High</option>
-            <option value="az">Title: A → Z</option>
-          </select>
-        </div>
-        <div class="count" id="count">Loading…</div>
+        <div class="chips" id="chips"></div>
       </div>
-      <div class="chips" id="chips"></div>
     </div>
-  </div>
-
-  <main class="wrap">
-    <div class="grid skeleton" id="grid">
-      <div class="sk"><div class="a"></div><div class="b"></div></div>
-      <div class="sk"><div class="a"></div><div class="b"></div></div>
-      <div class="sk"><div class="a"></div><div class="b"></div></div>
-      <div class="sk"><div class="a"></div><div class="b"></div></div>
-    </div>
-  </main>
+    <div class="browse-grid"><div class="grid" id="grid"></div></div>
+  </section>
 
   <footer class="site">
     <div class="fstrip"></div>
@@ -296,99 +264,150 @@
     <div style="margin-top:6px">Questions? <a href="/faq">See the FAQ</a> · <a href="/">Back to the Gala home</a></div>
   </footer>
 
+  <div class="modal-back" id="modal-back" role="dialog" aria-modal="true">
+    <div class="modal" id="modal">
+      <div class="mstrip"></div>
+      <button class="modal-close" id="modal-close" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="modal-grid" id="modal-grid"></div>
+    </div>
+  </div>
+
 <script>
-const TAG_ORDER = ["Premier","Travel","Sports","Dining & Entertainment","Outdoors","Home","Kids","Personal Care","Art","Electronics","Auto & Tools","Misc"];
-let ITEMS = [], activeTag = "All", query = "", sortMode = "featured";
+const TAG_ORDER = ["Travel","Sports","Dining & Entertainment","Outdoors","Home","Kids","Personal Care","Electronics","Art","Auto & Tools","Misc"];
+let ITEMS = [], BY_ID = {}, activeTag = "All", query = "", sortMode = "featured";
 
 const esc = s => (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isPrem = it => (it.tags||[]).includes("Premier");
+
+function cardHTML(it, opts={}) {
+  const img = it.images && it.images[0];
+  const tags = (it.tags||[]).filter(t=>t!=="Premier").slice(0,2);
+  const badge = it.raffle ? `<span class="badge raffle">Opportunity Drawing</span>` : isPrem(it) ? `<span class="badge premier">Premier</span>` : "";
+  const imgcount = (it.images && it.images.length>1) ? `<span class="imgcount"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m8 13 2.5-3 3 4 2-2.5L19 16"/></svg>${it.images.length}</span>` : "";
+  const desc = opts.premier ? `<p class="desc">${esc(it.desc)}</p>` : "";
+  return `<article class="card" data-id="${esc(it.id)}" tabindex="0" role="button" aria-label="${esc(it.title)} — view details">
+    <div class="imgwrap">${img ? `<img loading="lazy" decoding="async" src="${esc(img)}" alt="${esc(it.title)}">` : `<div class="noimg">D</div>`}${badge}${imgcount}</div>
+    <div class="body">${tags.length?`<div class="tagrow">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}<h3>${esc(it.title)}</h3>${desc}<div class="foot"><span class="vlabel">${it.raffle?"Ticket value":"Est. value"}</span><span class="value">${esc(it.value)||"—"}</span></div></div>
+  </article>`;
+}
+
+function buildHero() {
+  const cands = ITEMS.filter(i => isPrem(i) && !i.raffle && i.images.length);
+  const hero = cands.sort((a,b)=>b.value_num-a.value_num)[0] || ITEMS.find(i=>i.images.length);
+  if (!hero) return;
+  const spot = document.getElementById("hero-spot");
+  spot.insertAdjacentHTML("afterbegin", `<img src="${esc(hero.images[0])}" alt="${esc(hero.title)}">`);
+  spot.insertAdjacentHTML("beforeend", `<div class="spotcard" data-id="${esc(hero.id)}"><div class="spot-eyebrow">★ Featured Premier Lot</div><h3 class="spot-title">${esc(hero.title)}</h3><div class="spot-row"><span class="spot-val">${esc(hero.value)}</span><span class="spot-btn">View details →</span></div></div>`);
+}
+
+function buildPremierRail() {
+  const prem = ITEMS.filter(isPrem).sort((a,b)=>b.value_num-a.value_num);
+  if (!prem.length) return;
+  document.getElementById("premier-sec").style.display = "";
+  document.getElementById("premier-rail").innerHTML = prem.map(it=>cardHTML(it,{premier:true})).join("");
+}
+
+function buildCatRails() {
+  const counts = {};
+  ITEMS.forEach(it => (it.tags||[]).forEach(t => counts[t]=(counts[t]||0)+1));
+  const wrap = document.getElementById("cat-rails");
+  const cats = TAG_ORDER.filter(t => counts[t] >= 3);
+  wrap.innerHTML = cats.map((cat, idx) => {
+    const list = ITEMS.filter(it => (it.tags||[]).includes(cat)).sort((a,b)=>{ const p=(isPrem(b)?1:0)-(isPrem(a)?1:0); return p||b.value_num-a.value_num; }).slice(0,12);
+    const railId = `rail-${idx}`;
+    return `<section class="section"><div class="sec-head"><div><h2>${esc(cat)}</h2></div><span class="seeall" data-tag="${esc(cat)}">See all ${counts[cat]} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div><div class="rail-wrap"><button class="rail-btn left" data-rail="${railId}" data-dir="-1" aria-label="Scroll left">‹</button><button class="rail-btn right" data-rail="${railId}" data-dir="1" aria-label="Scroll right">›</button><div class="rail" id="${railId}">${list.map(it=>cardHTML(it)).join("")}</div></div></section>`;
+  }).join("");
+}
 
 function buildChips() {
   const counts = {};
-  ITEMS.forEach(it => (it.tags||[]).forEach(t => counts[t] = (counts[t]||0)+1));
-  const tags = TAG_ORDER.filter(t => counts[t]);
+  ITEMS.forEach(it => (it.tags||[]).forEach(t => counts[t]=(counts[t]||0)+1));
+  const tags = ["Premier", ...TAG_ORDER].filter(t=>counts[t]);
   const el = document.getElementById("chips");
-  const mk = (label, key, n) =>
-    `<button class="chip" data-tag="${esc(key)}" aria-pressed="${activeTag===key}">${esc(label)}${n!=null?`<span class="n">${n}</span>`:""}</button>`;
-  el.innerHTML = mk("All","All",ITEMS.length) + tags.map(t => mk(t,t,counts[t])).join("");
-  el.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
-    activeTag = c.dataset.tag; render();
-  }));
+  const mk = (label,key,n) => `<button class="chip" data-tag="${esc(key)}" aria-pressed="${activeTag===key}">${esc(label)}${n!=null?`<span class="n">${n}</span>`:""}</button>`;
+  el.innerHTML = mk("All","All",ITEMS.length) + tags.map(t=>mk(t,t,counts[t])).join("");
+  el.querySelectorAll(".chip").forEach(c => c.addEventListener("click", ()=>{ activeTag=c.dataset.tag; renderGrid(); }));
 }
 
 function filtered() {
   let r = ITEMS.slice();
-  if (activeTag !== "All") r = r.filter(it => (it.tags||[]).includes(activeTag));
-  if (query) {
-    const q = query.toLowerCase();
-    r = r.filter(it => (it.title||"").toLowerCase().includes(q) || (it.desc||"").toLowerCase().includes(q) || (it.tags||[]).join(" ").toLowerCase().includes(q));
-  }
-  if (sortMode === "value-desc") r.sort((a,b)=>b.value_num-a.value_num);
-  else if (sortMode === "value-asc") r.sort((a,b)=>a.value_num-b.value_num);
-  else if (sortMode === "az") r.sort((a,b)=>(a.title||"").localeCompare(b.title||""));
-  else { // featured: premier first, then value desc
-    r.sort((a,b)=>{
-      const pa=(a.tags||[]).includes("Premier")?1:0, pb=(b.tags||[]).includes("Premier")?1:0;
-      if (pa!==pb) return pb-pa;
-      return b.value_num-a.value_num;
-    });
-  }
+  if (activeTag!=="All") r = r.filter(it => (it.tags||[]).includes(activeTag));
+  if (query) { const q=query.toLowerCase(); r = r.filter(it => (it.title||"").toLowerCase().includes(q) || (it.desc||"").toLowerCase().includes(q) || (it.tags||[]).join(" ").toLowerCase().includes(q)); }
+  if (sortMode==="value-desc") r.sort((a,b)=>b.value_num-a.value_num);
+  else if (sortMode==="value-asc") r.sort((a,b)=>a.value_num-b.value_num);
+  else if (sortMode==="az") r.sort((a,b)=>(a.title||"").localeCompare(b.title||""));
+  else r.sort((a,b)=>{ const p=(isPrem(b)?1:0)-(isPrem(a)?1:0); return p||b.value_num-a.value_num; });
   return r;
 }
 
-function card(it) {
-  const img = it.images && it.images[0];
-  const premier = (it.tags||[]).includes("Premier");
-  const tags = (it.tags||[]).filter(t=>t!=="Premier").slice(0,2);
-  const badge = it.raffle ? `<span class="badge raffle">Opportunity Drawing</span>`
-              : premier ? `<span class="badge premier">Premier</span>` : "";
-  return `<article class="card">
-    <div class="imgwrap">
-      ${img ? `<img loading="lazy" decoding="async" src="${esc(img)}" alt="${esc(it.title)}">` : `<div class="noimg">D</div>`}
-      ${badge}
-      ${it.number ? `<span class="num">#${esc(it.number)}</span>` : ""}
-    </div>
-    <div class="body">
-      ${tags.length ? `<div class="tagrow">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
-      <h3>${esc(it.title)}</h3>
-      <p class="desc">${esc(it.desc)}</p>
-      <div class="foot">
-        <span class="vlabel">${it.raffle ? "Ticket value" : "Est. value"}</span>
-        <span class="value">${esc(it.value) || "—"}</span>
-      </div>
-    </div>
-  </article>`;
+function renderGrid() {
+  document.querySelectorAll("#chips .chip").forEach(c=>c.setAttribute("aria-pressed", c.dataset.tag===activeTag));
+  const r = filtered(), grid = document.getElementById("grid");
+  document.getElementById("count").textContent = `Showing ${r.length} of ${ITEMS.length}`;
+  if (!r.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>No items match your search.</p><button id="clr">Clear filters</button></div>`; document.getElementById("clr").onclick = ()=>{ query=""; activeTag="All"; document.getElementById("q").value=""; renderGrid(); }; return; }
+  grid.innerHTML = r.map(it=>cardHTML(it)).join("");
 }
 
-function render() {
-  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.tag===activeTag));
-  const r = filtered();
-  const grid = document.getElementById("grid");
-  grid.classList.remove("skeleton");
-  document.getElementById("count").textContent = `Showing ${r.length} of ${ITEMS.length}`;
-  if (!r.length) {
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><p>No items match your search.</p><button id="clr">Clear filters</button></div>`;
-    document.getElementById("clr").onclick = () => { query=""; activeTag="All"; document.getElementById("q").value=""; render(); };
+let galleryImgs = [], galleryIdx = 0;
+function openModal(id) {
+  const it = BY_ID[id]; if (!it) return;
+  galleryImgs = it.images||[]; galleryIdx = 0;
+  const badges = [];
+  if (it.raffle) badges.push(`<span class="mbadge raffle">Opportunity Drawing</span>`);
+  if (isPrem(it)) badges.push(`<span class="mbadge premier">★ Premier Lot</span>`);
+  (it.tags||[]).filter(t=>t!=="Premier").forEach(t=>badges.push(`<span class="mbadge tag">${esc(t)}</span>`));
+  const gallery = `<div class="gallery"><div class="main" id="g-main">${galleryImgs.length?`<img src="${esc(galleryImgs[0])}" alt="${esc(it.title)}" id="g-img">`:`<div class="noimg">D</div>`}${galleryImgs.length>1?`<button class="gnav prev" id="g-prev" aria-label="Previous photo">‹</button><button class="gnav next" id="g-next" aria-label="Next photo">›</button>`:""}</div>${galleryImgs.length>1?`<div class="thumbs" id="g-thumbs">${galleryImgs.map((u,i)=>`<img src="${esc(u)}" data-i="${i}" class="${i===0?'active':''}" alt="">`).join("")}</div>`:""}</div>`;
+  const detail = `<div class="mdetail"><div class="mbadges">${badges.join("")}</div><h2>${esc(it.title)}</h2>${it.number?`<div class="mnum">Item #${esc(it.number)}</div>`:""}<div class="mdesc">${esc(it.desc)||"<em>Details coming soon.</em>"}</div><div class="mval-row"><span class="mval-label">${it.raffle?"Ticket value":"Estimated value"}</span><span class="mval">${esc(it.value)||"—"}</span></div><div class="mhint">Bidding opens the night of the Gala — <b>June 10</b>. This is a preview.</div></div>`;
+  document.getElementById("modal-grid").innerHTML = gallery + detail;
+  if (galleryImgs.length>1) {
+    document.getElementById("g-prev").onclick = ()=>step(-1);
+    document.getElementById("g-next").onclick = ()=>step(1);
+    document.getElementById("g-thumbs").querySelectorAll("img").forEach(t=>t.onclick=()=>setImg(+t.dataset.i));
+  }
+  const back = document.getElementById("modal-back");
+  back.classList.add("open"); back.scrollTop=0; document.body.style.overflow="hidden";
+}
+function setImg(i){ galleryIdx=(i+galleryImgs.length)%galleryImgs.length; document.getElementById("g-img").src=galleryImgs[galleryIdx]; document.querySelectorAll("#g-thumbs img").forEach((t,n)=>t.classList.toggle("active",n===galleryIdx)); }
+function step(d){ setImg(galleryIdx+d); }
+function closeModal(){ document.getElementById("modal-back").classList.remove("open"); document.body.style.overflow=""; }
+
+document.addEventListener("click", e => {
+  const card = e.target.closest("[data-id]");
+  if (card) { openModal(card.dataset.id); return; }
+  const seeall = e.target.closest(".seeall");
+  if (seeall) { activeTag = seeall.dataset.tag; renderGrid(); document.getElementById("browse").scrollIntoView({behavior:"smooth"}); return; }
+  const rb = e.target.closest(".rail-btn");
+  if (rb) { const rail=document.getElementById(rb.dataset.rail); rail && rail.scrollBy({left: (+rb.dataset.dir)*Math.round(rail.clientWidth*0.85), behavior:"smooth"}); }
+});
+document.addEventListener("keydown", e => {
+  if (document.getElementById("modal-back").classList.contains("open")) {
+    if (e.key==="Escape") closeModal();
+    else if (e.key==="ArrowLeft" && galleryImgs.length>1) step(-1);
+    else if (e.key==="ArrowRight" && galleryImgs.length>1) step(1);
     return;
   }
-  grid.innerHTML = r.map(card).join("");
-}
+  if ((e.key==="Enter"||e.key===" ") && document.activeElement && document.activeElement.dataset && document.activeElement.dataset.id){ e.preventDefault(); openModal(document.activeElement.dataset.id); }
+});
+document.getElementById("modal-close").onclick = closeModal;
+document.getElementById("modal-back").addEventListener("click", e => { if (e.target.id==="modal-back") closeModal(); });
 
 let t;
-document.getElementById("q").addEventListener("input", e => { clearTimeout(t); t=setTimeout(()=>{ query=e.target.value.trim(); render(); }, 140); });
-document.getElementById("sort").addEventListener("change", e => { sortMode=e.target.value; render(); });
+document.getElementById("q").addEventListener("input", e => { clearTimeout(t); t=setTimeout(()=>{ query=e.target.value.trim(); renderGrid(); },140); });
+document.getElementById("sort").addEventListener("change", e => { sortMode=e.target.value; renderGrid(); });
 
 (async function load(){
   try {
     const res = await fetch("/data/auction-items.json", {cache:"no-cache"});
     const data = await res.json();
     ITEMS = data.items || [];
+    ITEMS.forEach(it => BY_ID[it.id]=it);
     document.getElementById("meta-count").textContent = ITEMS.length;
-    buildChips();
-    render();
+    buildHero(); buildPremierRail(); buildCatRails(); buildChips(); renderGrid();
   } catch (e) {
-    document.getElementById("grid").classList.remove("skeleton");
-    document.getElementById("grid").innerHTML = `<div class="empty" style="grid-column:1/-1"><p>Couldn't load the auction items right now. Please try again in a moment.</p></div>`;
     document.getElementById("count").textContent = "";
+    document.getElementById("grid").innerHTML = `<div class="empty" style="grid-column:1/-1"><p>Couldn't load the auction items right now. Please try again in a moment.</p></div>`;
   }
 })();
 </script>

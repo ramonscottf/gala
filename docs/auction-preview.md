@@ -1,11 +1,22 @@
 # Auction Preview Page (`/auction`)
 
-Public, no-bidding **preview** of the silent-auction catalog for DEF Gala 2026.
-Live at `https://gala.daviskids.org/auction`.
+Public, no-bidding **preview** of the silent-auction catalog for DEF Gala 2026,
+built as an Amazon-style storefront that pushes the Premier lots. Live at
+`https://gala.daviskids.org/auction`.
 
 - **Page:** `public/auction/index.html` — static, vanilla JS, matches the
   faq/schedule chrome (#0d1b3d navy masthead, Playfair Display + Inter, white
-  page, blue→red strip). Search + tag-filter chips + sort. Lazy-loaded images.
+  page, blue→red strip). Layout (top → bottom):
+  1. **Cinematic hero** (still — no entrance animation) with a featured Premier
+     spotlight = highest-value non-raffle Premier item; clicking it opens the modal.
+  2. **Premier Lots** rail — all 9 Premier items, larger cards, horizontal scroll.
+  3. **Category carousels** — one horizontal rail per tag with ≥3 items, in
+     TAG_ORDER; each capped at 12 items, Premier-first then value-desc; a
+     "See all N →" link filters + scrolls to the browse grid.
+  4. **Browse All** — full grid with search + tag chips + sort.
+  - **Item detail modal** — click any card (or hero spotlight): image gallery
+    (arrows + thumbnails + keyboard ←/→/Esc), full description, value, tags.
+  - Lazy-loaded images; image-count badge on multi-photo cards.
 - **Data:** `public/data/auction-items.json` — `{title, count, items[]}`.
   Each item: `id, number, title, desc, value, value_num, tags[], images[],
   status, raffle`.
