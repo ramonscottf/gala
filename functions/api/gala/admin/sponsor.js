@@ -20,6 +20,24 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const id = Number(url.searchParams.get('id'));
   const qRaw = (url.searchParams.get('q') || '').trim();
+  const listAll = url.searchParams.get('all') === '1';
+
+  // ── LIST ALL (alphabetical) ──
+  if (!id && listAll) {
+    const rows = await env.GALA_DB.prepare(
+      `SELECT s.id, s.company, s.sponsorship_tier, s.seats_purchased,
+              (SELECT COUNT(*) FROM seat_assignments a WHERE a.sponsor_id = s.id) AS placed
+         FROM sponsors s
+        WHERE s.archived_at IS NULL
+        ORDER BY s.company COLLATE NOCASE`
+    ).all();
+    return jsonOk({
+      results: (rows.results || []).map((r) => ({
+        id: r.id, company: r.company, tier: r.sponsorship_tier,
+        purchased: r.seats_purchased || 0, placed: r.placed || 0,
+      })),
+    }, 0);
+  }
 
   // ── SEARCH ──
   if (!id && qRaw) {

@@ -18,6 +18,7 @@
     legend:document.getElementById('legend'), toast:document.getElementById('toast'),
     modebar:document.getElementById('modebar'),
     modeTap:document.getElementById('modeTap'), modeDrag:document.getElementById('modeDrag'),
+    allBtn:document.getElementById('allBtn'),
   };
 
   function toast(msg, kind){
@@ -81,11 +82,13 @@
           bg='background:'+sponsorColor(a.sponsor_id)+';border-color:rgba(0,0,0,.25);';
           title=id+' — '+(a.company||a.guest_name||'sponsor '+a.sponsor_id)+(a.dinner?(' · '+(DINNER[a.dinner]||a.dinner)):'');
         } else {
-          // Open seat: keep it quiet. A thin type-tinted left edge hints at
-          // seat type (luxury/wheelchair/etc.) without shouting over the
-          // assigned blocks, which are the thing the admin is scanning for.
+          // Open seat: keep it quiet. Only accessibility-relevant types
+          // (wheelchair/companion/loveseat) get a tinted left edge so they
+          // stand out; luxury/dbox/standard are the bulk and stay neutral
+          // so the colored assigned seats are the only thing that pops.
+          var ACCESS={wheelchair:1,companion:1,loveseat:1};
           var tc=TYPE_COLOR[row.type];
-          if(tc && row.type!=='standard'){ bg='border-left:3px solid '+tc+';'; }
+          if(tc && ACCESS[row.type]){ bg='border-left:3px solid '+tc+';'; }
           title=id+' — open ('+(row.type||'standard')+')';
         }
         if(held) cls+=' held';
@@ -306,20 +309,29 @@
     var d;
     try{ var r=await fetch('/api/gala/admin/sponsor?q='+encodeURIComponent(q)); d=await r.json(); }
     catch(e){ return; }
-    var list=(d&&d.results)||[];
+    renderSponsorList((d&&d.results)||[], 'Search · ', '“'+esc(q)+'”', 'No sponsor found for “'+esc(q)+'”. Try a shorter term.');
+  }
+
+  // Shared renderer for any sponsor list (search results or All sponsors).
+  function renderSponsorList(list, eyebrowPrefix, titleHtml, emptyMsg){
     el.side.className='side open';
     if(!list.length){
-      el.side.innerHTML='<div class="side-h"><div class="eyebrow">Search</div>'
+      el.side.innerHTML='<div class="side-h"><div class="eyebrow">'+eyebrowPrefix+'0</div>'
         +'<div class="seatbig" style="font-size:22px;">No matches</div></div>'
-        +'<div class="side-b"><p class="instr">No sponsor found for “'+esc(q)+'”. Try a shorter term.</p></div>';
-      return;
+        +'<div class="side-b"><p class="instr">'+emptyMsg+'</p></div>'
+        +'<div class="actions"><button class="btn cancel" id="closeSide">Close</button></div>';
+      document.getElementById('closeSide').onclick=clearTransient; return;
     }
-    var html='<div class="side-h"><div class="eyebrow">Search · '+list.length+'</div>'
-      +'<div class="seatbig" style="font-size:22px;">“'+esc(q)+'”</div></div><div class="side-b">';
+    var html='<div class="side-h"><div class="eyebrow">'+eyebrowPrefix+list.length+'</div>'
+      +'<div class="seatbig" style="font-size:22px;">'+titleHtml+'</div></div>'
+      +'<div class="side-b" id="sponsorList">';
     list.forEach(function(s){
-      html+='<button class="dsponsor" data-id="'+s.id+'">'
+      var done = s.purchased>0 && s.placed>=s.purchased;
+      html+='<button class="dsponsor" data-id="'+s.id+'" data-name="'+esc((s.company||'').toLowerCase())+'">'
         +'<span class="dsponsor-name">'+esc(s.company)+'</span>'
-        +'<span class="dseat-meta">'+s.placed+'/'+s.purchased+' placed'+(s.tier?(' · '+esc(s.tier)):'')+'</span></button>';
+        +'<span class="dseat-meta">'+s.placed+'/'+s.purchased+' placed'
+        +(done?'':' · <span style="color:var(--gold)">needs '+(s.purchased-s.placed)+'</span>')
+        +(s.tier?(' · '+esc(s.tier)):'')+'</span></button>';
     });
     html+='</div>';
     el.side.innerHTML=html;
@@ -327,6 +339,36 @@
       btn.onclick=function(){ renderDossier(Number(btn.getAttribute('data-id')), null); };
     });
   }
+
+  // ── All sponsors button ──
+  el.allBtn.onclick=async function(){
+    if(state.moving) clearTransient();
+    el.search.value='';
+    el.side.className='side open';
+    el.side.innerHTML='<div class="side-h"><div class="eyebrow">All sponsors</div><div class="seatbig" style="font-size:22px;">Loading…</div></div>';
+    var d;
+    try{ var r=await fetch('/api/gala/admin/sponsor?all=1'); d=await r.json(); }
+    catch(e){ toast('Could not load sponsors','err'); return; }
+    var list=(d&&d.results)||[];
+    state.allSponsors=list;
+    renderSponsorList(list, 'All sponsors · ', 'Browse', 'No sponsors found.');
+    // Prepend a quick filter box to the list body
+    var body=document.getElementById('sponsorList');
+    if(body){
+      var fwrap=document.createElement('div');
+      fwrap.innerHTML='<input id="listFilter" placeholder="Filter by name…" '
+        +'style="width:100%;background:rgba(0,0,0,.25);border:1px solid var(--rule);color:#fff;font-family:inherit;font-size:14px;padding:10px 12px;border-radius:9px;margin-bottom:12px;">';
+      body.insertBefore(fwrap.firstChild, body.firstChild);
+      var fin=document.getElementById('listFilter');
+      fin.addEventListener('input',function(){
+        var qq=fin.value.trim().toLowerCase();
+        Array.prototype.forEach.call(body.querySelectorAll('.dsponsor'),function(b){
+          b.style.display = (!qq || b.getAttribute('data-name').indexOf(qq)>=0) ? '' : 'none';
+        });
+      });
+      fin.focus();
+    }
+  };
 
   // ── mode toggle ──
   function setMode(m){
