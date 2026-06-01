@@ -1060,6 +1060,7 @@ body {
       <button class="nav-tab" data-tab="movies">Movies</button>
       <button class="nav-tab" data-tab="volunteers">Volunteers</button>
       <button class="nav-tab" data-tab="lunchangels">Lunch Angels</button>
+      <button class="nav-tab" data-tab="food">Food Choices</button>
       <button class="nav-tab" data-tab="marketing">Marketing</button>
     </nav>
   </div>
@@ -1363,6 +1364,44 @@ body {
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- ── Food Choices Tab (dinner selections for the kitchen) ── -->
+  <div class="tab-panel" id="panel-food">
+    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="font-size:13px; color:var(--text-secondary, #64748b); flex:1; min-width:240px; line-height:1.5;">
+          <strong style="color:var(--navy,#0a1733);">Dinner selections</strong> — the kitchen count, pulled live from seat assignments. Each assigned seat carries one choice.
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; font-size:12px; color:#64748b; flex-wrap:wrap;">
+          <span><span id="food-kpi-total" style="font-weight:700; color:var(--navy,#0a1733); font-variant-numeric:tabular-nums;">0</span> seats</span>
+          <span style="color:#CBD5E1;">·</span>
+          <span><span id="food-kpi-chosen" style="font-weight:700; color:#10b981; font-variant-numeric:tabular-nums;">0</span> chosen</span>
+          <span style="color:#CBD5E1;">·</span>
+          <span><span id="food-kpi-blank" style="font-weight:700; color:#f59e0b; font-variant-numeric:tabular-nums;">0</span> no choice</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+      <button class="btn btn-secondary" id="food-export-btn" style="padding:8px 12px; font-size:12px;">Export kitchen count</button>
+      <button class="btn btn-secondary" id="food-refresh-btn" style="padding:8px 12px; font-size:12px;">Refresh</button>
+      <span id="food-note" style="font-size:12px; color:#94a3b8;"></span>
+    </div>
+
+    <!-- Kitchen totals (big cards with bars) -->
+    <div id="food-totals" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:10px; margin-bottom:16px;">
+      <div class="shimmer" style="height:96px; border-radius:12px;"></div>
+      <div class="shimmer" style="height:96px; border-radius:12px;"></div>
+      <div class="shimmer" style="height:96px; border-radius:12px;"></div>
+      <div class="shimmer" style="height:96px; border-radius:12px;"></div>
+    </div>
+
+    <!-- Per-showing split -->
+    <div id="food-showings" style="margin-bottom:16px;"></div>
+
+    <!-- Sponsors still missing choices -->
+    <div id="food-missing"></div>
   </div>
 
   <!-- ── Marketing Tab ── -->
@@ -3529,6 +3568,106 @@ document.getElementById('la-export-btn').addEventListener('click', () => {
   const rows = [['Name','Email','Phone','Shift','Size','Status']].concat(lunchAngelsData.map(c => [c.name, c.email, c.phone, c.shift, c.size || '', c.responded ? 'Responded' : 'Awaiting']));
   const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'lunch-angels-shirts.csv'; a.click();
+});
+
+/* ════════════════════════════════════════════════════════════════════
+   FOOD CHOICES TAB — dinner selections for the kitchen.
+   Reads /api/gala/food-choices (admin-gated), which aggregates
+   seat_assignments.dinner_choice into kitchen totals, a per-showing
+   split, and the sponsors still missing a choice. Read-only.
+   ════════════════════════════════════════════════════════════════════ */
+let foodLoaded = false;
+let foodData = null;
+const FOOD_COLORS = { 'French Dip':'#CB262C', 'Salad':'#10b981', 'Kids Meal':'#0066ff', 'Vegetarian':'#f59e0b' };
+function foodColor(label, i){ return FOOD_COLORS[label] || ['#7c3aed','#0891b2','#db2777','#65a30d'][i % 4]; }
+
+async function loadFoodChoices() {
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const totalsEl = document.getElementById('food-totals');
+  try {
+    const d = await fetchJSON('/api/gala/food-choices');
+    foodData = d;
+    document.getElementById('food-kpi-total').textContent = d.total || 0;
+    document.getElementById('food-kpi-chosen').textContent = d.chosen || 0;
+    document.getElementById('food-kpi-blank').textContent = d.blank || 0;
+
+    // Big total cards with proportion bars
+    const maxCount = Math.max(1, ...(d.choices || []).map(c => c.count));
+    totalsEl.innerHTML = (d.choices || []).map((c, i) => {
+      const color = foodColor(c.label, i);
+      const w = Math.round((c.count / maxCount) * 100);
+      return '<div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px;">'
+        + '<div style="display:flex; align-items:baseline; justify-content:space-between; gap:8px;">'
+        + '<span style="font-size:13px; font-weight:600; color:#0a1733;">' + esc(c.label) + '</span>'
+        + '<span style="font-size:12px; color:#94a3b8;">' + c.pct + '%</span></div>'
+        + '<div style="font-family:Fraunces,Georgia,serif; font-size:2rem; font-weight:700; color:' + color + '; line-height:1.1; margin:4px 0 10px; font-variant-numeric:tabular-nums;">' + c.count + '</div>'
+        + '<div style="height:6px; background:#f1f5f9; border-radius:999px; overflow:hidden;"><div style="height:100%; width:' + w + '%; background:' + color + '; border-radius:999px;"></div></div>'
+        + '</div>';
+    }).join('') + (d.blank ? '<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:16px;">'
+        + '<div style="font-size:13px; font-weight:600; color:#92400e;">No choice yet</div>'
+        + '<div style="font-family:Fraunces,Georgia,serif; font-size:2rem; font-weight:700; color:#f59e0b; line-height:1.1; margin:4px 0 10px; font-variant-numeric:tabular-nums;">' + d.blank + '</div>'
+        + '<div style="font-size:12px; color:#b45309;">seats still need a selection</div></div>' : '');
+
+    // Per-showing split
+    const showEl = document.getElementById('food-showings');
+    if (d.showings && d.showings.length) {
+      showEl.innerHTML = '<div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; color:#64748b; margin-bottom:8px;">By showing</div>'
+        + '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px;">'
+        + d.showings.map(s => {
+            const label = s.showing ? ('Showing ' + s.showing) : 'Unassigned showing';
+            const lines = (s.byChoice || []).map((b, i) =>
+              '<div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; padding:3px 0;">'
+              + '<span style="display:flex; align-items:center; gap:7px; color:#334155;"><span style="width:9px;height:9px;border-radius:2px;background:' + foodColor(b.label, i) + ';display:inline-block;"></span>' + esc(b.label) + '</span>'
+              + '<span style="font-weight:700; color:#0a1733; font-variant-numeric:tabular-nums;">' + b.count + '</span></div>'
+            ).join('');
+            const blankLine = s.blank ? '<div style="display:flex; align-items:center; justify-content:space-between; font-size:13px; padding:3px 0; color:#b45309;"><span>No choice yet</span><span style="font-weight:700;">' + s.blank + '</span></div>' : '';
+            return '<div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px 16px;">'
+              + '<div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;"><span style="font-weight:700; color:#0a1733;">' + label + '</span><span style="font-size:12px; color:#94a3b8;">' + s.chosen + '/' + s.total + ' chosen</span></div>'
+              + lines + blankLine + '</div>';
+          }).join('')
+        + '</div>';
+    } else { showEl.innerHTML = ''; }
+
+    // Sponsors missing choices
+    const missEl = document.getElementById('food-missing');
+    if (d.missing && d.missing.length) {
+      missEl.innerHTML = '<div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; font-weight:600; color:#64748b; margin:4px 0 8px;">Still missing a choice (' + d.blank + ' seats)</div>'
+        + '<div style="background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden;">'
+        + '<table style="width:100%; border-collapse:collapse; font-size:13px;">'
+        + '<thead><tr style="background:#0a1733; color:#fff; text-align:left;">'
+        + '<th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Sponsor / Table</th>'
+        + '<th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Missing</th>'
+        + '<th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Seats</th></tr></thead><tbody>'
+        + d.missing.map(m => '<tr style="border-top:1px solid var(--border);">'
+            + '<td style="padding:9px 14px; font-weight:600; color:#0a1733;">' + esc(m.sponsor) + '</td>'
+            + '<td style="padding:9px 14px;"><span style="display:inline-block;padding:2px 9px;border-radius:999px;background:#fffbeb;color:#b45309;font-weight:700;font-size:12px;">' + m.blanks + '</span></td>'
+            + '<td style="padding:9px 14px; color:#64748b;">' + m.seats + '</td></tr>').join('')
+        + '</tbody></table></div>';
+    } else {
+      missEl.innerHTML = '<div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; padding:14px 16px; color:#047857; font-size:13px; font-weight:600;">✓ Every assigned seat has a dinner choice.</div>';
+    }
+  } catch (e) {
+    totalsEl.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state__text">Could not load food choices</div><button class="retry-btn" onclick="loadFoodChoices()">Retry</button></div>';
+  }
+}
+document.querySelector('.nav-tab[data-tab="food"]').addEventListener('click', () => {
+  if (!foodLoaded) { foodLoaded = true; loadFoodChoices(); }
+});
+document.getElementById('food-refresh-btn').addEventListener('click', loadFoodChoices);
+document.getElementById('food-export-btn').addEventListener('click', () => {
+  if (!foodData) return;
+  const rows = [['Choice','Count','Percent of chosen']];
+  (foodData.choices || []).forEach(c => rows.push([c.label, c.count, c.pct + '%']));
+  if (foodData.blank) rows.push(['No choice yet', foodData.blank, '']);
+  rows.push([]);
+  rows.push(['By showing','','']);
+  (foodData.showings || []).forEach(s => {
+    rows.push(['Showing ' + (s.showing || '?'), s.chosen + '/' + s.total + ' chosen', '']);
+    (s.byChoice || []).forEach(b => rows.push(['  ' + b.label, b.count, '']));
+    if (s.blank) rows.push(['  No choice yet', s.blank, '']);
+  });
+  const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'gala-kitchen-count.csv'; a.click();
 });
 
 /* ════════════════════════════════════════════════════════════════════
