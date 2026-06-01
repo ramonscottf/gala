@@ -74,3 +74,13 @@ old chart live as backup, decide later whether to retire it.
 - Mirror to skippy-plans/plans/2026-06-01-gala-admin-seat-mover.md (done in same session).
 - Scott to click through on the real portal before we mark the old chart
   for retirement.
+
+## Update 2026-06-01 — sponsor-centric dossier (shipped, deploy 31780b5+)
+Scott: tapping a seat showed no context. Now tapping an occupied seat (or
+searching a company) opens a full dossier: contact, tier, placed/purchased,
+EVERY seat across ALL auditoriums+showings grouped by movie with dinner +
+whose seat (sponsor vs named guest), and an invited-guest rollup. Each
+dossier seat is tappable -> jumps the map to that auditorium and selects it.
+New endpoint: /api/gala/admin/sponsor (?id dossier, ?q search). Verified
+live against Bank of Utah (#4): 5 aud/showing groups, 5 guests, surfaced
+from one tap; spotted a 'no dinner' pair (Cherie Hanson K20/K21).
