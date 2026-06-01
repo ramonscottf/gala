@@ -114,27 +114,126 @@
   }
 
   // ── side panel ──
-  function openSide(id){
+  // ── side panel: SPONSOR DOSSIER ──
+  // Tapping an occupied seat loads the whole sponsor (every seat across
+  // every auditorium + their guests), not just the one seat. `focusSeat`
+  // is the seat that was tapped — highlighted, and the default move source.
+  async function openSide(id){
     var a=state.assignBySeat[id];
     el.side.className='side open';
     if(!a){
       el.side.innerHTML='<div class="side-h"><div class="eyebrow">Open seat</div>'
         +'<div class="seatbig">'+esc(id)+'</div><div class="who">No one is seated here.</div></div>'
-        +'<div class="side-b"><p class="instr">Pick an <b>occupied</b> seat to move someone into this spot.</p></div>'
+        +'<div class="side-b"><p class="instr">Tap an <b>occupied</b> seat to see that sponsor and move someone here.</p></div>'
         +'<div class="actions"><button class="btn cancel" id="closeSide">Close</button></div>';
       document.getElementById('closeSide').onclick=clearTransient;
       return;
     }
-    el.side.innerHTML='<div class="side-h"><div class="eyebrow">'+esc(a.company?'Sponsor':'Guest')+'</div>'
-      +'<div class="seatbig">'+esc(id)+'</div>'
-      +'<div class="who">'+esc(a.company||a.guest_name||('sponsor '+a.sponsor_id))+'</div>'
-      +(a.dinner?'<div class="dinner">'+esc(DINNER[a.dinner]||a.dinner)+'</div>':'')
-      +'</div>'
-      +'<div class="side-b"><p class="instr">Move this seat to an open spot — or onto another occupied seat to <b>swap</b> them. The dinner choice travels with the seat.</p></div>'
+    el.side.innerHTML='<div class="side-h"><div class="eyebrow">Loading…</div>'
+      +'<div class="seatbig">'+esc(id)+'</div></div>';
+    if(a.sponsor_id) renderDossier(a.sponsor_id, id);
+    else openSeatOnly(id, a);
+  }
+
+  // Fallback when a seat has no sponsor_id (rare).
+  function openSeatOnly(id, a){
+    el.side.innerHTML='<div class="side-h"><div class="eyebrow">Guest</div>'
+      +'<div class="seatbig">'+esc(id)+'</div><div class="who">'+esc(a.guest_name||'')+'</div>'
+      +(a.dinner?'<div class="dinner">'+esc(DINNER[a.dinner]||a.dinner)+'</div>':'')+'</div>'
+      +'<div class="side-b"><p class="instr">Move this seat, or tap another occupied seat to swap.</p></div>'
       +'<div class="actions"><button class="btn move" id="startMove">Move '+esc(id)+' →</button>'
       +'<button class="btn cancel" id="closeSide">Close</button></div>';
     document.getElementById('startMove').onclick=function(){ startMove(id); };
     document.getElementById('closeSide').onclick=clearTransient;
+  }
+
+  async function renderDossier(sponsorId, focusSeat){
+    var d;
+    try{
+      var r=await fetch('/api/gala/admin/sponsor?id='+sponsorId);
+      d=await r.json();
+      if(!r.ok||!d.sponsor) throw new Error();
+    }catch(e){
+      var a=state.assignBySeat[focusSeat]; openSeatOnly(focusSeat,a||{}); return;
+    }
+    var s=d.sponsor;
+    // Header
+    var html='<div class="side-h"><div class="eyebrow">'+esc(s.tier||'Sponsor')+'</div>'
+      +'<div class="seatbig" style="font-size:23px;line-height:1.15;">'+esc(s.company)+'</div>'
+      +'<div class="who">'+esc([s.contact,s.email].filter(Boolean).join(' · '))
+      +(s.phone?(' · '+esc(s.phone)):'')+'</div>'
+      +'<div class="who" style="margin-top:6px;color:#fff;">'
+        +'<b>'+d.placed+'</b> of <b>'+s.purchased+'</b> seats placed'
+        +(d.guest_placed?(' · '+d.guest_placed+' for guests'):'')+'</div>'
+      +'</div>';
+    // Body: seats grouped by auditorium+showing
+    html+='<div class="side-b">';
+    if(!d.groups.length){
+      html+='<p class="instr">No seats placed yet for this sponsor.</p>';
+    } else {
+      d.groups.forEach(function(g){
+        var here = (g.theater_id===state.theaterId && g.showing_number===state.showing);
+        html+='<div class="dgroup">'
+          +'<div class="dgroup-h">'+esc(g.movie_title)+'<span class="dgroup-sub">Aud '+g.theater_id
+            +' · '+(g.showing_number===1?'Early':'Late')+(g.show_start?(' · '+esc(g.show_start)):'')
+            +(here?'':' · tap to jump')+'</span></div>';
+        g.seats.forEach(function(st){
+          var isFocus = here && st.seat===focusSeat;
+          html+='<button class="dseat'+(isFocus?' focus':'')+'" '
+            +'data-aud="'+g.theater_id+'" data-show="'+g.showing_number+'" data-seat="'+esc(st.seat)+'">'
+            +'<span class="dseat-id">'+esc(st.seat)+'</span>'
+            +'<span class="dseat-meta">'+esc(st.dinner_label||'no dinner')
+            +(st.owner!=='Sponsor'?(' · '+esc(st.owner)):'')+'</span></button>';
+        });
+        html+='</div>';
+      });
+    }
+    // Guests
+    if(d.delegates&&d.delegates.length){
+      html+='<div class="dgroup"><div class="dgroup-h">Invited guests<span class="dgroup-sub">'+d.delegates.length+'</span></div>';
+      d.delegates.forEach(function(g){
+        html+='<div class="dguest"><span>'+esc(g.name)+'</span>'
+          +'<span class="dseat-meta">'+g.placed+'/'+g.allocated+' seats · '+esc(g.status)+'</span></div>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+    // Action: move the focused seat (only when a specific seat is in focus)
+    if(focusSeat){
+      html+='<div class="actions">'
+        +'<button class="btn move" id="startMove">Move '+esc(focusSeat)+' →</button>'
+        +'<button class="btn cancel" id="closeSide">Close</button></div>';
+    } else {
+      html+='<div class="actions"><p class="instr" style="margin:0 0 4px;">Tap any seat above to jump to it and move it.</p>'
+        +'<button class="btn cancel" id="closeSide">Close</button></div>';
+    }
+    el.side.className='side open';
+    el.side.innerHTML=html;
+
+    // Wire: tap any dossier seat -> jump to its auditorium + select it
+    Array.prototype.forEach.call(el.side.querySelectorAll('.dseat'),function(btn){
+      btn.onclick=function(){
+        var aud=Number(btn.getAttribute('data-aud')), show=Number(btn.getAttribute('data-show')), seat=btn.getAttribute('data-seat');
+        jumpToSeat(aud,show,seat);
+      };
+    });
+    var sm=document.getElementById('startMove');
+    if(sm) sm.onclick=function(){ startMove(focusSeat); };
+    document.getElementById('closeSide').onclick=clearTransient;
+  }
+
+  // Switch the map to a given auditorium+showing and select a seat there.
+  async function jumpToSeat(aud, show, seat){
+    if(aud!==state.theaterId || show!==state.showing){
+      state.theaterId=aud; state.showing=show;
+      el.audSel.value=String(aud); el.showSel.value=String(show);
+      await loadAssignments(); render();
+    }
+    state.selected=seat; applySelectionClasses();
+    var cell=el.map.querySelector('.seat[data-seat="'+seat+'"]');
+    if(cell) cell.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});
+    var a=state.assignBySeat[seat];
+    if(a&&a.sponsor_id) renderDossier(a.sponsor_id, seat);
   }
 
   function startMove(id){
@@ -182,19 +281,52 @@
     state.selected=id; applySelectionClasses(); openSide(id);
   });
 
-  // ── search ──
+  // ── search: find sponsors, list them, open a dossier ──
+  var searchT=null;
   el.search.addEventListener('input',function(){
-    var q=el.search.value.trim().toLowerCase();
+    var q=el.search.value.trim();
+    // Always also highlight matches in the current map view (quick visual).
     var seats=el.map.querySelectorAll('.seat'); var firstHit=null;
     Array.prototype.forEach.call(seats,function(s){
       s.classList.remove('hot');
       if(!q) return;
       var id=s.getAttribute('data-seat'); var a=state.assignBySeat[id];
       if(a){ var hay=((a.company||'')+' '+(a.guest_name||'')).toLowerCase();
-        if(hay.indexOf(q)>=0){ s.classList.add('hot'); if(!firstHit) firstHit=s; } }
+        if(hay.indexOf(q.toLowerCase())>=0){ s.classList.add('hot'); if(!firstHit) firstHit=s; } }
     });
     if(firstHit) firstHit.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});
+    // Debounced sponsor search -> panel list (works across ALL auditoriums).
+    clearTimeout(searchT);
+    if(q.length<2){ if(!state.moving) { el.side.className='side empty'; el.side.innerHTML="<div>Tap any seat to see who's there<br>and move them.</div>"; } return; }
+    searchT=setTimeout(function(){ searchSponsors(q); }, 220);
   });
+
+  async function searchSponsors(q){
+    if(state.moving) return;
+    var d;
+    try{ var r=await fetch('/api/gala/admin/sponsor?q='+encodeURIComponent(q)); d=await r.json(); }
+    catch(e){ return; }
+    var list=(d&&d.results)||[];
+    el.side.className='side open';
+    if(!list.length){
+      el.side.innerHTML='<div class="side-h"><div class="eyebrow">Search</div>'
+        +'<div class="seatbig" style="font-size:22px;">No matches</div></div>'
+        +'<div class="side-b"><p class="instr">No sponsor found for “'+esc(q)+'”. Try a shorter term.</p></div>';
+      return;
+    }
+    var html='<div class="side-h"><div class="eyebrow">Search · '+list.length+'</div>'
+      +'<div class="seatbig" style="font-size:22px;">“'+esc(q)+'”</div></div><div class="side-b">';
+    list.forEach(function(s){
+      html+='<button class="dsponsor" data-id="'+s.id+'">'
+        +'<span class="dsponsor-name">'+esc(s.company)+'</span>'
+        +'<span class="dseat-meta">'+s.placed+'/'+s.purchased+' placed'+(s.tier?(' · '+esc(s.tier)):'')+'</span></button>';
+    });
+    html+='</div>';
+    el.side.innerHTML=html;
+    Array.prototype.forEach.call(el.side.querySelectorAll('.dsponsor'),function(btn){
+      btn.onclick=function(){ renderDossier(Number(btn.getAttribute('data-id')), null); };
+    });
+  }
 
   // ── mode toggle ──
   function setMode(m){
