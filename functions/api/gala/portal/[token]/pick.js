@@ -160,6 +160,15 @@ export async function onRequestPost(context) {
   const theater_id = Number(body.theater_id);
   const row_label = String(body.row_label || '');
   const seat_num = String(body.seat_num || '');
+  // Opt-in bypass of the orphan-creation nudge. Set by deliberate
+  // relocations (SwapSeatModal) and admin seat-change tools, where the
+  // actor is moving an existing seat into an open gap — consolidating a
+  // group — not freshly picking seats from scratch. The orphan check only
+  // inspects the seat being FILLED (never the one being vacated), so on a
+  // swap it blocks legitimate moves into existing gaps while doing nothing
+  // about the gap the move just opened. Fresh self-service picking
+  // (SeatPickSheet) never sets this flag, so that flow keeps the guard.
+  const skipOrphanCheck = body.skip_orphan_check === true;
 
   if (!['hold','release','finalize','unfinalize','set_dinner'].includes(action)) {
     return jsonError('Invalid action', 400);
@@ -362,13 +371,15 @@ export async function onRequestPost(context) {
       if (Number.isFinite(pn)) inflightSet.add(pn);
     }
 
-    for (const s of seatsToHold) {
-      const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num, inflightSet);
-      if (!orphanCheck.ok) {
-        return jsonError(
-          `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
-          409,
-        );
+    if (!skipOrphanCheck) {
+      for (const s of seatsToHold) {
+        const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num, inflightSet);
+        if (!orphanCheck.ok) {
+          return jsonError(
+            `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
+            409,
+          );
+        }
       }
     }
 
@@ -468,13 +479,15 @@ export async function onRequestPost(context) {
       if (Number.isFinite(pn)) inflightSet.add(pn);
     }
 
-    for (const s of seatsToFinalize) {
-      const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num, inflightSet);
-      if (!orphanCheck.ok) {
-        return jsonError(
-          `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
-          409,
-        );
+    if (!skipOrphanCheck) {
+      for (const s of seatsToFinalize) {
+        const orphanCheck = await checkOrphanCreation(env, theater_id, showing_number, row_label, s.num, inflightSet);
+        if (!orphanCheck.ok) {
+          return jsonError(
+            `That selection would leave seat ${orphanCheck.orphan} alone in row ${row_label}. Please choose a different seat so no single seat is left empty.`,
+            409,
+          );
+        }
       }
     }
 

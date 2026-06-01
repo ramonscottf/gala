@@ -104,6 +104,11 @@ export function useSeats(portal, token, refresh) {
         if (extras?.notifySent != null) {
           body.notify_sent = !!extras.notifySent;
         }
+        if (extras?.skipOrphanCheck) {
+          // Deliberate relocations (swap) and admin moves opt out of the
+          // orphan-creation nudge — see pick.js. Fresh picking omits this.
+          body.skip_orphan_check = true;
+        }
         return fetch(`${config.apiBase}/api/gala/portal/${token}/pick`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

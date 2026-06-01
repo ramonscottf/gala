@@ -119,9 +119,17 @@ export function SwapSeatModal({
     // carries on_behalf_of_delegation_id. notify_sent flags whether
     // the audit row records a follow-up notification (the actual push
     // happens via the delegate.js push_tickets action below).
-    const extras = behalfOf?.delegationId
-      ? { onBehalfOfDelegationId: behalfOf.delegationId, notifySent: notify }
-      : null;
+    // A swap is a deliberate relocation, not fresh seat-picking: the user
+    // vacates one seat to fill another. The orphan-creation guard is a
+    // pick-time nudge against leaving single empty seats; it must NOT block
+    // a relocation into an existing gap, which is exactly how a group gets
+    // consolidated. Skip it for the place AND the recovery re-place below.
+    const extras = {
+      skipOrphanCheck: true,
+      ...(behalfOf?.delegationId
+        ? { onBehalfOfDelegationId: behalfOf.delegationId, notifySent: notify }
+        : {}),
+    };
 
     try {
       // Step 1: release the current seat. Frees a slot in capacity.

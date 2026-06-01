@@ -67,6 +67,10 @@ function pickAction(token, action, seat) {
       showing_number: seat.showing_number,
       row_label: seat.row_label,
       seat_num: seat.seat_num,
+      // Admin seat changes are deliberate arrangement (e.g. consolidating a
+      // sponsor's group into open gaps). The orphan-creation nudge is a
+      // self-service picking guardrail and must not block the admin tool.
+      skip_orphan_check: true,
     }),
   });
 }
