@@ -40,6 +40,33 @@ function maskEmail(email) {
   return `${head}${'•'.repeat(Math.max(2, local.length - 1))}@${domain}`;
 }
 
+// Levenshtein distance with an early-exit ceiling. Returns max+1 the
+// moment every cell in a row exceeds `max`, so we never finish the matrix
+// for clearly-unrelated strings. Plenty fast over ~100 short company
+// names per request.
+function boundedLev(a, b, max) {
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > max) return max + 1;
+  if (la === 0) return lb;
+  if (lb === 0) return la;
+  let prev = new Array(lb + 1);
+  let curr = new Array(lb + 1);
+  for (let j = 0; j <= lb; j++) prev[j] = j;
+  for (let i = 1; i <= la; i++) {
+    curr[0] = i;
+    let rowMin = curr[0];
+    const ca = a.charCodeAt(i - 1);
+    for (let j = 1; j <= lb; j++) {
+      const cost = ca === b.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+      if (curr[j] < rowMin) rowMin = curr[j];
+    }
+    if (rowMin > max) return max + 1;
+    const tmp = prev; prev = curr; curr = tmp;
+  }
+  return prev[lb];
+}
+
 // Pull a sponsor's seats, grouped by showing, with movie + times.
 async function seatsForSponsor(env, sponsorId) {
   const rs = await env.GALA_DB.prepare(
@@ -131,10 +158,10 @@ export async function onRequestPost(context) {
   }
 
   // ───── COMPANY ─────
-  // Prefix + contains match, case-insensitive. Return up to a few
-  // candidates if ambiguous so the guest can disambiguate by name only.
-  const like = `%${value.replace(/[%_]/g, '')}%`;
-  const matches = await env.GALA_DB.prepare(
+  // Pass 1: prefix + contains match, case-insensitive.
+  const cleaned = value.replace(/[%_]/g, '');
+  const like = `%${cleaned}%`;
+  let matches = await env.GALA_DB.prepare(
     `SELECT id, company, email, secondary_email, seats_purchased
        FROM sponsors
       WHERE archived_at IS NULL
@@ -143,9 +170,66 @@ export async function onRequestPost(context) {
         CASE WHEN company LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END,
         company
       LIMIT 6`
-  ).bind(like, `${value.replace(/[%_]/g, '')}%`).all();
+  ).bind(like, `${cleaned}%`).all();
 
-  const results = matches.results || [];
+  let results = matches.results || [];
+
+  // Pass 2 (fallback): no exact contains-match. Guests misspell school
+  // names constantly (e.g. "Muller" vs the real "Mueller Park"), drop
+  // words, or type just one word. Retry on each significant word the
+  // guest typed (length >= 3, skipping common org filler), matching any
+  // sponsor whose company contains that word. This rescues partial and
+  // single-letter-off entries without a full fuzzy/Levenshtein engine.
+  if (results.length === 0) {
+    const STOP = new Set(['the','and','jr','sr','inc','llc','co','of','for','school','high','elementary','junior','dist']);
+    const words = cleaned.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !STOP.has(w));
+    if (words.length) {
+      const clauses = words.map(() => `company LIKE ? COLLATE NOCASE`).join(' OR ');
+      const binds = words.map((w) => `%${w}%`);
+      const fb = await env.GALA_DB.prepare(
+        `SELECT id, company, email, secondary_email, seats_purchased
+           FROM sponsors
+          WHERE archived_at IS NULL AND (${clauses})
+          ORDER BY company
+          LIMIT 6`
+      ).bind(...binds).all();
+      results = fb.results || [];
+    }
+  }
+
+  // Pass 3 (last resort): true typo tolerance for single/double-letter
+  // errors the substring passes can't bridge (e.g. "Muller" → "Mueller",
+  // which share no 3-char substring). The sponsor set is tiny (~100 rows)
+  // so a bounded edit-distance scan in JS is cheap. Only fires when 1 & 2
+  // found nothing; results still flow through the disambiguation UI.
+  if (results.length === 0 && cleaned.length >= 4) {
+    const all = await env.GALA_DB.prepare(
+      `SELECT id, company, email, secondary_email, seats_purchased
+         FROM sponsors WHERE archived_at IS NULL`
+    ).all();
+    const q = cleaned.toLowerCase();
+    const scored = [];
+    for (const r of (all.results || [])) {
+      const comp = String(r.company || '').toLowerCase();
+      // Compare the query against the whole company and its words; take
+      // the best (smallest) distance. Tolerance scales with query length.
+      const tol = q.length <= 5 ? 1 : 2;
+      let best = boundedLev(q, comp, tol);
+      if (best > tol) {
+        for (const w of comp.split(/[^a-z0-9]+/)) {
+          if (Math.abs(w.length - q.length) > tol) continue;
+          const d = boundedLev(q, w, tol);
+          if (d < best) best = d;
+          if (best === 0) break;
+        }
+      }
+      if (best <= tol) scored.push({ r, best });
+    }
+    scored.sort((a, b) => a.best - b.best);
+    results = scored.slice(0, 6).map((s) => s.r);
+  }
+
+
   if (results.length === 0) {
     return jsonOk({ ok: true, match: 'none' });
   }
