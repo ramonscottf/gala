@@ -127,7 +127,7 @@ export async function sendMessage(sponsorId, channel, body, subject) {
     body: JSON.stringify({
       sponsor_id: sponsorId,
       channel,
-      message: body,
+      body,
       subject: subject || undefined,
     }),
   });
