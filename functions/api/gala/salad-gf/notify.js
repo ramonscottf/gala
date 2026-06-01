@@ -30,7 +30,7 @@ function smsBody(name, seats, token) {
   return `Hi ${firstNameOf(name)}! Quick Gala dinner question: your green salad with grilled chicken can be regular or gluten-free. `
     + (many ? `Tell us how many of your ${seats} salads need to be gluten-free here: ` : `Let us know which you'd like here: `)
     + link(token)
-    + `  Reply STOP to opt out.`;
+    + `  Please reply by Wed, June 3 (order day). Reply STOP to opt out.`;
 }
 
 function emailHtml(name, seats, token) {
@@ -74,7 +74,8 @@ function emailHtml(name, seats, token) {
           </td></tr>
           <tr><td class="card-pad" style="padding:0 40px 18px 40px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
             <p style="margin:0 0 16px 0;font-size:16px;line-height:25px;color:#3d3d3d;">You selected the <strong style="color:#0d1b3d;">green salad with grilled chicken</strong> for dinner at the Gala. We can serve it gluten-free, but it&rsquo;s honestly a bit better when it isn&rsquo;t &mdash; so we want to make sure everyone gets the version they want.</p>
-            <p style="margin:0;font-size:16px;line-height:25px;color:#3d3d3d;">${ask}</p>
+            <p style="margin:0 0 16px 0;font-size:16px;line-height:25px;color:#3d3d3d;">${ask}</p>
+            <p style="margin:0;font-size:15px;line-height:23px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:11px 14px;"><strong>Please reply by Wednesday, June&nbsp;3</strong> &mdash; that&rsquo;s when we place the kitchen order.</p>
           </td></tr>
           <tr><td align="center" class="card-pad" style="padding:18px 40px 32px 40px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
             <table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr>

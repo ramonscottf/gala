@@ -21,6 +21,8 @@ body{font-family:var(--font);color:var(--ink);background:var(--paper);line-heigh
 .bar .mark{font-family:var(--display);font-size:1.7rem;font-weight:700;letter-spacing:1px;margin-top:4px;}
 .bar .mark .y{color:#ffb400;}
 .wrap{max-width:540px;margin:0 auto;padding:28px 20px 60px;}
+.deadline{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:540px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 16px;font-size:0.9rem;font-weight:600;color:#92400e;text-align:center;line-height:1.4;}
+.deadline .clock{font-size:1rem;}
 .card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:28px 24px;box-shadow:0 12px 32px rgba(13,27,61,0.08);}
 h1{font-family:var(--display);font-size:1.6rem;font-weight:700;color:var(--navy-950);line-height:1.2;margin-bottom:10px;}
 .lead{font-size:1rem;color:var(--ink-soft);margin-bottom:6px;}
@@ -60,6 +62,7 @@ h1{font-family:var(--display);font-size:1.6rem;font-weight:700;color:var(--navy-
   <div class="mark"><span class="y">Gala</span> 2026 · Dinner</div>
 </div>
 <div class="wrap">
+  <div class="deadline"><span class="clock">&#9201;</span><span>Please reply by <strong>Wednesday, June&nbsp;3</strong> &mdash; that&rsquo;s when the kitchen order goes in.</span></div>
   <div class="card">
 
     <!-- loading -->
@@ -103,7 +106,7 @@ h1{font-family:var(--display);font-size:1.6rem;font-weight:700;color:var(--navy-
       <div class="done-ico">✓</div>
       <h1 id="done-h">Thank you!</h1>
       <p class="lead" id="done-msg">We've got it noted for the kitchen.</p>
-      <p class="muted" style="margin-top:14px;">Changed your mind? You can tap your link again any time before the event.</p>
+      <p class="muted" style="margin-top:14px;">Need to change it? Tap your link again before <strong>Wednesday, June&nbsp;3</strong> — after that the order&rsquo;s in.</p>
     </div>
 
   </div>
