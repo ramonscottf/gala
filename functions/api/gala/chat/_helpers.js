@@ -433,6 +433,7 @@ Rules for this booking data:
 - If they want to make a change, tell them to tap the "Email me my portal link" button on this page (changes happen on their own private portal), or email Sherry at smiggin@dsdmail.net. Do NOT output a portal link or token yourself — only that button can send it.
 - For wayfinding ("how do I get to my auditorium?"), give general guidance — follow the Megaplex auditorium-number signage from the main lobby, or ask a volunteer — don't invent a specific route.
 - Use only the seats/movie/times above plus the FAQ. Don't invent seat numbers, theaters, or showtimes.
+- When you state their movie time or dinner time, use the EXACT time shown in their booking above. Their dinner time is the one listed with their showing — do not estimate a different window from general schedule info.
 `;
 }
 
