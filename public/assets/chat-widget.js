@@ -429,10 +429,33 @@
     window.visualViewport.addEventListener('resize', syncKeyboardViewport);
     window.visualViewport.addEventListener('scroll', syncKeyboardViewport);
   }
+  // Lock the page behind the full-screen panel so iOS can't scroll the
+  // document when the input is focused (that page-scroll is what threw the
+  // layout around). Standard position:fixed scroll-lock; restored on close.
+  let _savedScroll = 0;
+  function lockScroll() {
+    const b = document.body;
+    if (b.style.position === 'fixed') return;
+    _savedScroll = window.scrollY || window.pageYOffset || 0;
+    b.style.position = 'fixed';
+    b.style.top = '-' + _savedScroll + 'px';
+    b.style.left = '0'; b.style.right = '0'; b.style.width = '100%';
+    b.style.overflow = 'hidden';
+  }
+  function unlockScroll() {
+    const b = document.body;
+    if (b.style.position !== 'fixed') return;
+    b.style.position = ''; b.style.top = ''; b.style.left = '';
+    b.style.right = ''; b.style.width = ''; b.style.overflow = '';
+    window.scrollTo(0, _savedScroll);
+  }
+  function syncScrollLock() {
+    if (state.open && state.fullscreen) lockScroll(); else unlockScroll();
+  }
   function toggleFullscreen() {
     state.fullscreen = !state.fullscreen;
     applyFullscreen();
-    input && input.focus();
+    syncScrollLock();
   }
   if (expandBtn) expandBtn.addEventListener('click', toggleFullscreen);
   const dot = btn.querySelector('#gx-dot');
@@ -651,10 +674,12 @@
     }
     state.open = !state.open;
     panel.style.display = state.open ? 'flex' : 'none';
-    if (state.open) dot.classList.remove('gx-show');
+    if (state.open) { dot.classList.remove('gx-show'); syncScrollLock(); }
+    else unlockScroll();
   });
   $('.gx-close').addEventListener('click', () => {
     state.open = false; panel.style.display = 'none';
+    unlockScroll();
   });
 
   // Gate removed — chat starts automatically when panel opens (autoStart below)
@@ -764,16 +789,23 @@
       setMode(data.mode || 'ai');
       // Greet only on the first start of a session. Resumed threads
       // already have message history rendered (or about to be polled).
+      const greeting = SELFSERVE
+        ? "Hey! I'm Booker. I can pull up your gala tickets and show you your seats, movie, and dinner — just tell me your company name, or the email you used to RSVP. Or ask me anything about the night."
+        : "Hey! I'm Booker. Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, parking. What's on your mind?";
       if (!data.resumed) {
-        appendMsg('ai', SELFSERVE
-          ? "Hey! I'm Booker. I can pull up your gala tickets and show you your seats, movie, and dinner — just tell me your company name, or the email you used to RSVP. Or ask me anything about the night."
-          : "Hey! I'm Booker. Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, parking. What's on your mind?");
+        appendMsg('ai', greeting);
       } else {
-        // Could pollOnce() here to fetch any messages we missed, but the
-        // existing poll logic will catch it on the next tick.
+        // Resumed thread: render any history; if it turns out empty (the
+        // thread was created on a prior visit but never used), still greet so
+        // Booker is never a blank screen.
         if (typeof pollOnce === 'function') pollOnce();
+        setTimeout(() => {
+          if (!bodyEl.querySelector('.gx-msg')) appendMsg('ai', greeting);
+        }, 700);
       }
-      input.focus();
+      // Deliberately NOT auto-focusing the input — auto-popping the keyboard on
+      // open is non-native and (in full-screen) throws the iOS layout around.
+      // The keyboard appears when the user taps the input.
     } catch (err) {
       appendMsg('system', "Network error — please try again.");
       autoStarted = false;
