@@ -2,7 +2,7 @@
 title: Gala Admin — Mobile & Visual Unification
 status: in-progress
 project: gala
-phase: "Phase 5 of 6 (next up); Phase 0–4 shipped"
+phase: "Phase 6 of 6 (FINALE next up); Phase 0–5 shipped"
 source_chat: 2026-06-02 gala admin mobile overhaul
 created: 2026-06-02
 last_updated: 2026-06-02
@@ -57,8 +57,8 @@ confirms on his phone → says "next." No giant blind commits 9 days out.
 - [x] **Phase 2 — Sponsors finish (React island pass 2)** ✅ shipped+verified (`512c23f`)
 - [x] **Phase 3 — Volunteers tab conversion** ✅ shipped+verified (`00abe6c`)
 - [x] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)** ✅ shipped+verified (`262800e`)
-- [ ] **Phase 5 — Overview + Marketing tabs**  ← NEXT
-- [ ] **Phase 6 — Global polish + inline-style purge + a11y**
+- [x] **Phase 5 — Overview + Marketing tabs** ✅ shipped+verified (`367fa30`)
+- [ ] **Phase 6 — Global polish + inline-style purge + a11y**  ← NEXT (FINALE)
 
 ---
 
@@ -225,6 +225,12 @@ kill the `mkt-*` one-off button variants where they duplicate `.ga-btn`.
 Deploy green.
 
 **Risk:** low.
+
+**SHIPPED 2026-06-02 (`367fa30`):** Overview's 4 inline <h2> headers →
+.ga-section-head; Marketing activity buttons → .ga-btn. KEPT the .kpi-card hero
+tiles on both (polished gradient-icon component, already 2-up on mobile —
+flattening would downgrade). Live render-integrity clean. ⏳ Scott: Overview +
+Marketing — section headers should read consistent with the rest.
 
 ---
 
