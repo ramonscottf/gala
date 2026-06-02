@@ -2,7 +2,7 @@
 title: Gala Admin — Mobile & Visual Unification
 status: in-progress
 project: gala
-phase: "Phase 2 of 6 (next up); Phase 0–1 shipped"
+phase: "Phase 3 of 6 (next up); Phase 0–2 shipped"
 source_chat: 2026-06-02 gala admin mobile overhaul
 created: 2026-06-02
 last_updated: 2026-06-02
@@ -54,8 +54,8 @@ confirms on his phone → says "next." No giant blind commits 9 days out.
 
 - [x] **Phase 0 — Foundation already shipped** ✅ (pre-plan, 2026-06-02)
 - [x] **Phase 1 — Shared component layer (design system)** ✅ shipped+verified (`e47398e`)
-- [ ] **Phase 2 — Sponsors finish (React island pass 2)**  ← NEXT
-- [ ] **Phase 3 — Volunteers tab conversion**
+- [x] **Phase 2 — Sponsors finish (React island pass 2)** ✅ shipped+verified (`512c23f`)
+- [ ] **Phase 3 — Volunteers tab conversion**  ← NEXT
 - [ ] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)**
 - [ ] **Phase 5 — Overview + Marketing tabs**
 - [ ] **Phase 6 — Global polish + inline-style purge + a11y**
@@ -140,6 +140,13 @@ modal. Deploy green; live bundle carries the changes.
 
 **Risk:** medium (React build step; test the seat-assignment modal carefully —
 it's load-bearing for the event).
+
+**SHIPPED 2026-06-02 (`512c23f`):** CSS-only (no JSX/logic change, seat flow
+untouched). Composer/Change-seats/Move-show modals → full-height bottom sheets
+that scroll; forms single-column w/ 16px inputs (no iOS zoom); seat map scrolls
+horizontally; footers stack to full-width ≥44px buttons; timeline time wraps;
+badges nowrap. Rebuilt bundle, live-verified. ⏳ Scott: open Sponsors → expand a
+row → open Change-seats; confirm it's a usable sheet, not a cramped box.
 
 ---
 
