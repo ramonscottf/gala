@@ -1429,9 +1429,9 @@ body {
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
          Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
-    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021331">
+    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021350">
     <div id="sponsors-mount"></div>
-    <script src="/admin/assets/sponsors.js?v=202606021331" defer></script>
+    <script src="/admin/assets/sponsors.js?v=202606021350" defer></script>
   </div>
 
   <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->
@@ -1442,7 +1442,7 @@ body {
   <div class="tab-panel" id="panel-volunteers">
 
     <!-- ── Dense unified dashboard card (Child Spree pattern) ── -->
-    <div id="vol-dashboard" style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:12px; transition:border-color 0.18s;">
+    <div id="vol-dashboard" class="ga-card ga-card--pad" style="margin-bottom:12px;">
       <!-- Row 1: segmented type control + filter dropdowns + KPI pills -->
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
         <!-- Adults / Students segmented control -->
@@ -1490,13 +1490,15 @@ body {
     </div>
 
     <!-- Search + actions row -->
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
-      <input type="text" id="vol-search" placeholder="Search volunteers..." style="flex:1; min-width:200px; padding:8px 10px; font-size:13px; background:#fff; border:1px solid var(--border); border-radius:8px; color:var(--text-primary);"/>
-      <button class="btn btn-primary" id="vol-compose-btn" style="padding:8px 12px; font-size:12px;">Message</button>
-      <button class="btn btn-secondary" id="vol-test-btn" title="Test SMS and email pipelines" style="padding:8px 12px; font-size:12px;">Test Pipes</button>
-      <button class="btn btn-secondary" id="vol-export-btn" style="padding:8px 12px; font-size:12px;">Export</button>
-      <button class="btn btn-secondary" id="vol-refresh-btn" style="padding:8px 12px; font-size:12px;">Refresh</button>
-      <a href="/volunteer" target="_blank" class="btn btn-secondary" style="padding:8px 12px; font-size:12px;">Public Signup ↗</a>
+    <div class="ga-search" style="margin-bottom:10px;">
+      <input type="text" id="vol-search" class="ga-input" placeholder="Search volunteers..."/>
+    </div>
+    <div class="ga-btn-row" style="margin-bottom:12px;">
+      <button class="ga-btn ga-btn--primary" id="vol-compose-btn">Message</button>
+      <button class="ga-btn" id="vol-test-btn" title="Test SMS and email pipelines">Test Pipes</button>
+      <button class="ga-btn" id="vol-export-btn">Export</button>
+      <button class="ga-btn" id="vol-refresh-btn">Refresh</button>
+      <a href="/volunteer" target="_blank" class="ga-btn">Public Signup ↗</a>
     </div>
 
     <!-- Volunteer list (expandable cards, childspree pattern) -->
