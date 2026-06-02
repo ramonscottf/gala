@@ -325,7 +325,7 @@
     .gx-typing span:nth-child(3) { animation-delay: .3s; }
     @keyframes gxBounce { 0%,80%,100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-4px); } }
     .gx-input-row { padding: 10px 12px; border-top: 1px solid #e5e9f0; display: flex; gap: 8px; background: white; }
-    .gx-input-row textarea { flex: 1; resize: none; border: 1px solid #d1d5db; border-radius: 18px; padding: 9px 12px; font-size: 16px; font-family: inherit; outline: none; max-height: 100px; min-height: 38px; line-height: 1.4; }
+    .gx-input-row textarea { flex: 1; resize: none; border: 1px solid #d1d5db; border-radius: 18px; padding: 9px 12px; font-size: 16px; font-family: inherit; outline: none; max-height: 100px; min-height: 38px; line-height: 1.4; touch-action: manipulation; }
     .gx-input-row textarea:focus { border-color: ${BLUE}; }
     .gx-input-row button { border: 0; background: ${NAVY}; color: white; width: 38px; height: 38px; border-radius: 19px; cursor: pointer; align-self: flex-end; display: flex; align-items: center; justify-content: center; }
     .gx-input-row button:disabled { opacity: .4; cursor: default; }
@@ -405,6 +405,29 @@
   function applyFullscreen() {
     panel.classList.toggle('gx-fullscreen', !!state.fullscreen);
     if (expandBtn) expandBtn.textContent = state.fullscreen ? '⤡' : '⤢';
+    syncKeyboardViewport();
+  }
+  // Native-texting feel: in full-screen mode the fixed panel doesn't shrink
+  // when the soft keyboard slides up, so iOS scroll-zooms to reveal the input
+  // (feels non-native). Pin the panel to the *visible* viewport above the
+  // keyboard using the visualViewport API. No-op without fullscreen / the API,
+  // and it clears its inline styles so the card-mode CSS takes back over.
+  function syncKeyboardViewport() {
+    const vv = window.visualViewport;
+    if (!state.fullscreen || !vv) {
+      panel.style.height = '';
+      panel.style.top = '';
+      panel.style.bottom = '';
+      return;
+    }
+    panel.style.height = vv.height + 'px';
+    panel.style.top = vv.offsetTop + 'px';
+    panel.style.bottom = 'auto';
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncKeyboardViewport);
+    window.visualViewport.addEventListener('scroll', syncKeyboardViewport);
   }
   function toggleFullscreen() {
     state.fullscreen = !state.fullscreen;
@@ -639,6 +662,14 @@
   // No mode toggle anymore — AI Helper is the only mode
 
   let typingExpressionTimer = null;
+  input.addEventListener('focus', () => {
+    // Keep the input above the keyboard and the latest message in view —
+    // native-texting feel. visualViewport also fires resize, but a nudge
+    // here covers the focus-before-resize gap on iOS.
+    setTimeout(syncKeyboardViewport, 60);
+    setTimeout(() => { bodyEl.scrollTop = bodyEl.scrollHeight; }, 80);
+  });
+
   input.addEventListener('input', () => {
     sendBtn.disabled = !input.value.trim();
     input.style.height = 'auto';
