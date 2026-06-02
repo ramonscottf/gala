@@ -711,15 +711,15 @@ function widthPct(a,b){ return ((b - a) / (T_END - T_START)) * 100; }
 
 const TRACKS = [
   { id: 'a8',  label: 'Aud #8',  cap: 'IMAX · 266' },
-  { id: 'a9',  label: 'Aud #9',  cap: 'S1 · 102' },
-  { id: 'a5',  label: 'Aud #5',  cap: 'S2 · 101' },
+  { id: 'a9',  label: 'Aud #9',  cap: 'S1+S2 · 135' },
+  { id: 'a5',  label: 'Aud #5',  cap: 'S1+S2 · 135' },
   { id: 'a3',  label: 'Aud #3',  cap: 'S1 · 67' },
   { id: 'a13', label: 'Aud #13', cap: 'S1 · 68' },
   { id: 'a4',  label: 'Aud #4',  cap: 'S2 · 63' },
   { id: 'a12', label: 'Aud #12', cap: 'S2 · 67' },
   { id: 'a7',  label: 'Aud #7',  cap: '203 seats' },
-  { id: 'a2',  label: 'Aud #2',  cap: 'S1 · 113' },
-  { id: 'a1',  label: 'Aud #1',  cap: 'S2 · 94' },
+  { id: 'a2',  label: 'Aud #2',  cap: 'S1+S2 · 145' },
+  { id: 'a1',  label: 'Aud #1',  cap: 'S1+S2 · 123' },
   { id: 'a10', label: 'Aud #10', cap: 'Plan B · 67' },
   { id: 'a6',  label: 'Aud #6',  cap: 'Overflow · 68' },
   { id: 'a11', label: 'Aud #11', cap: 'Staff' },
@@ -736,6 +736,8 @@ const SHOWS = [
   ['a2',  'pad',        'Paddington 2',104, m(16, 0), m(16,30), 1],
   ['a10', 'planb',      'Plan B',      100, m(16, 0), m(16,30), 1],
   ['a6',  'planb',      'Overflow',    100, m(16, 0), m(16,30), 1],
+  ['a5',  'bread',      'Breadwinner',  95, m(16, 0), m(16,30), 1],
+  ['a1',  'bread',      'Breadwinner',  95, m(16, 0), m(16,30), 1],
   // Showing 2 — doors 6:45 (Mando IMAX 7:02), lights 7:15
   ['a8',  'mando-imax', 'Mandalorian', 132, m(19, 2), m(19,15), 2],
   ['a5',  'mando',      'Mandalorian', 132, m(18,45), m(19,15), 2],
@@ -745,6 +747,8 @@ const SHOWS = [
   ['a1',  'pad',        'Paddington 2',104, m(18,45), m(19,15), 2],
   ['a10', 'planb',      'Plan B',      100, m(18,45), m(19,15), 2],
   ['a6',  'planb',      'Overflow',    100, m(18,45), m(19,15), 2],
+  ['a9',  'bread',      'Breadwinner',  95, m(18,45), m(19,15), 2],
+  ['a2',  'bread',      'Breadwinner',  95, m(18,45), m(19,15), 2],
   // Staff
   ['a11', 'staff',      'Staff / Staging', T_END - m(15,15), m(15,15), m(15,15), 0],
   ['a14', 'staff',      'Staff / Staging', T_END - m(15,15), m(15,15), m(15,15), 0],

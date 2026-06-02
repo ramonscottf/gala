@@ -163,7 +163,7 @@ export async function onRequestGet(context) {
        JOIN movies m ON m.id = s.movie_id
        LEFT JOIN theaters t ON t.id = s.theater_id
       WHERE m.active = 1
-      ORDER BY s.showing_number, m.title, s.theater_id`
+      ORDER BY s.showing_number, m.title, s.is_extra DESC, s.theater_id`
   ).all();
   const showtimes = showtimesQ.results || [];
 
