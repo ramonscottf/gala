@@ -2,7 +2,7 @@
 title: Gala Admin — Mobile & Visual Unification
 status: in-progress
 project: gala
-phase: "Phase 3 of 6 (next up); Phase 0–2 shipped"
+phase: "Phase 4 of 6 (next up); Phase 0–3 shipped"
 source_chat: 2026-06-02 gala admin mobile overhaul
 created: 2026-06-02
 last_updated: 2026-06-02
@@ -55,8 +55,8 @@ confirms on his phone → says "next." No giant blind commits 9 days out.
 - [x] **Phase 0 — Foundation already shipped** ✅ (pre-plan, 2026-06-02)
 - [x] **Phase 1 — Shared component layer (design system)** ✅ shipped (`e47398e`); ⚠️ introduced a nested-`<style>` regression (CSS leaked as page text) — FIXED `bd737fa`
 - [x] **Phase 2 — Sponsors finish (React island pass 2)** ✅ shipped+verified (`512c23f`)
-- [ ] **Phase 3 — Volunteers tab conversion**  ← NEXT
-- [ ] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)**
+- [x] **Phase 3 — Volunteers tab conversion** ✅ shipped+verified (`00abe6c`)
+- [ ] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)**  ← NEXT
 - [ ] **Phase 5 — Overview + Marketing tabs**
 - [ ] **Phase 6 — Global polish + inline-style purge + a11y**
 
@@ -176,6 +176,13 @@ emits inline styles).
 wrap; no horizontal overflow. Deploy green.
 
 **Risk:** low–medium (touches the volunteers render function).
+
+**SHIPPED 2026-06-02 (`00abe6c`):** search+action row → .ga-search + .ga-btn-row
+(wraps, full-width ≥44px on mobile); dashboard card → .ga-card. All IDs/JS
+bindings preserved; live render-integrity CLEAN (4 style blocks, no nest, no
+leak). Volunteer-row card internals (JS-string inline styles) left for the
+Phase 6 purge — they render fine, low gain / higher edit risk now. ⏳ Scott:
+check Volunteers — the button row should wrap cleanly instead of cramming.
 
 ---
 
