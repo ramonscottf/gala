@@ -1155,9 +1155,9 @@ body {
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
          Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
-    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606020210">
+    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606020225">
     <div id="sponsors-mount"></div>
-    <script src="/admin/assets/sponsors.js?v=202606020210" defer></script>
+    <script src="/admin/assets/sponsors.js?v=202606020225" defer></script>
   </div>
 
   <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->
@@ -1672,83 +1672,412 @@ body {
       <div id="movies-conflict-list" style="font-size:0.85rem; color:#0d1b3d; margin-top:6px;"></div>
     </div>
 
-    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px;">
-      <h3 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin:0;">Schedule &amp; auditoriums</h3>
-      <a href="/admin/seating.html" style="font-size:0.78rem; color:var(--muted); font-weight:600;">Advanced (TMDB, seat maps, dinner menu) ↗</a>
-    </div>
-
-    <style>
-/* ── Movies-tab live timeline editor ─────────────────────────────── */
+<style>
+/* ── Movies-tab console: live timeline + auditorium cards + edit modal ── */
 .tl-wrap { margin-top: 8px; }
-.tl-bar {
-  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  margin-bottom:14px;
-}
+.tl-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
 .tl-bar .tl-hint { font-size:0.8rem; color:var(--muted); }
 .tl-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:0.72rem; color:var(--muted); margin-bottom:10px; }
 .tl-legend span { display:inline-flex; align-items:center; gap:6px; }
 .tl-legend i { width:14px; height:14px; border-radius:4px; display:inline-block; }
-
 .tl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--border); border-radius:14px; background:var(--card); }
 .tl-grid { min-width:760px; position:relative; }
-
 .tl-ticks { position:relative; height:26px; border-bottom:1px solid var(--border); margin-left:120px; }
 .tl-tick { position:absolute; top:0; bottom:0; border-left:1px solid var(--border); }
 .tl-tick-lab { position:absolute; top:4px; font-size:0.66rem; color:var(--light); transform:translateX(4px); white-space:nowrap; }
-
 .tl-row { display:flex; align-items:stretch; border-bottom:1px solid var(--border); min-height:52px; }
 .tl-row:last-child { border-bottom:none; }
 .tl-rowlab { width:120px; flex-shrink:0; padding:8px 10px; border-right:1px solid var(--border); background:var(--card-alt); }
 .tl-rowlab .a { font-weight:800; font-size:0.82rem; color:var(--text); }
 .tl-rowlab .c { font-size:0.68rem; color:var(--muted); margin-top:2px; }
 .tl-track { position:relative; flex:1; }
-
-.tl-block {
-  position:absolute; top:6px; bottom:6px; border-radius:8px; padding:6px 9px;
-  display:flex; flex-direction:column; justify-content:center; gap:1px;
-  color:#fff; cursor:pointer; overflow:hidden; border:1.5px solid rgba(255,255,255,0.18);
-  box-shadow:0 2px 6px rgba(0,0,0,0.14); transition:filter .12s, transform .12s;
-}
+.tl-block { position:absolute; top:6px; bottom:6px; border-radius:8px; padding:6px 9px; display:flex; flex-direction:column; justify-content:center; gap:1px; color:#fff; cursor:pointer; overflow:hidden; border:1.5px solid rgba(255,255,255,0.18); box-shadow:0 2px 6px rgba(0,0,0,0.14); transition:filter .12s, transform .12s; }
 .tl-block:active { transform:scale(0.985); }
 .tl-block:hover { filter:brightness(1.06); }
 .tl-block .t { font-weight:800; font-size:0.76rem; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .tl-block .s { font-size:0.64rem; opacity:0.92; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .tl-block.is-extra::after { content:'NEW'; position:absolute; top:3px; right:4px; font-size:0.52rem; font-weight:900; letter-spacing:0.06em; background:rgba(255,255,255,0.92); color:#0b1b3c; padding:1px 4px; border-radius:99px; }
 .tl-block.conflict { outline:2px solid var(--red); outline-offset:-2px; }
-
-.tl-empty {
-  position:absolute; top:8px; bottom:8px; border-radius:8px;
-  border:1.5px dashed var(--border-strong); background:transparent;
-  display:flex; align-items:center; justify-content:center; gap:6px;
-  color:var(--light); cursor:pointer; font-size:0.7rem; font-weight:700;
-}
+.tl-empty { position:absolute; top:8px; bottom:8px; border-radius:8px; border:1.5px dashed var(--border-strong); background:transparent; display:flex; align-items:center; justify-content:center; gap:6px; color:var(--light); cursor:pointer; font-size:0.7rem; font-weight:700; }
 .tl-empty:hover { border-color:var(--pink); color:var(--pink); }
-
 .tl-staff { position:absolute; top:8px; bottom:8px; left:2%; right:2%; border-radius:8px; background:repeating-linear-gradient(45deg,var(--card-alt),var(--card-alt) 8px,#e9eef5 8px,#e9eef5 16px); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:var(--muted); font-style:italic; }
+/* toast */
+.tl-toasts { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:1400; display:flex; flex-direction:column; gap:8px; width:min(420px,92vw); }
+.tl-toast { padding:11px 14px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.18); font-size:0.86rem; color:#fff; background:#0b1b3c; }
+.tl-toast.success { background:#047857; } .tl-toast.error { background:#b91c1c; } .tl-toast.info { background:#1f4484; }
+.tl-toast .tt-title { font-weight:800; } .tl-toast .tt-msg { opacity:0.95; }
+/* section divider */
+.mm-section-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:26px 0 4px; }
+.mm-section-head h3 { margin:0; color:var(--text-secondary); font-size:0.85rem; text-transform:uppercase; letter-spacing:0.05em; }
 
-/* editor sheet */
-.tl-sheet-bg { position:fixed; inset:0; background:rgba(8,19,42,0.55); z-index:1200; display:flex; align-items:flex-end; justify-content:center; }
-.tl-sheet { width:100%; max-width:520px; max-height:90vh; overflow:auto; background:var(--card); border-radius:18px 18px 0 0; padding:18px 18px max(22px,env(safe-area-inset-bottom)); box-shadow:0 -10px 40px rgba(0,0,0,0.3); }
-@media(min-width:560px){ .tl-sheet-bg{align-items:center} .tl-sheet{border-radius:18px} }
-.tl-sheet h3 { margin:0 0 2px; font-size:1.1rem; color:var(--text); }
-.tl-sheet .sub { font-size:0.78rem; color:var(--muted); margin-bottom:16px; }
-.tl-field { margin-bottom:13px; }
-.tl-field label { display:block; font-size:0.68rem; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
-.tl-field select, .tl-field input { width:100%; box-sizing:border-box; padding:11px 12px; border:1px solid var(--border-strong); border-radius:10px; font-size:0.95rem; background:var(--card); color:var(--text); -webkit-appearance:none; appearance:none; }
-.tl-row2 { display:flex; gap:10px; } .tl-row2 > * { flex:1; }
-.tl-sheet-actions { display:flex; gap:8px; margin-top:18px; }
-.tl-sheet-actions .btn { flex:1; }
-.tl-clearbtn { background:transparent; border:1.5px solid var(--border-strong); color:var(--muted); border-radius:10px; padding:11px; font-weight:700; font-size:0.85rem; cursor:pointer; width:100%; margin-top:6px; }
-.tl-clearbtn:hover { border-color:var(--red); color:var(--red); }
-.tl-msg { font-size:0.8rem; padding:9px 11px; border-radius:8px; margin-top:10px; display:none; }
-.tl-msg.err { display:block; background:var(--red-bg); color:var(--red); }
-.tl-msg.ok { display:block; background:#ecfdf5; color:#047857; }
+.mm-head__sub { font-size: 0.82rem; opacity: 0.78; margin-top: 2px; }
+
+
+.mm-tabs {
+  display: flex; gap: 4px;
+  padding: 0 24px;
+  background: var(--bg-card, #fff);
+  border-bottom: 1px solid var(--border, #e6e8ef);
+}
+
+.mm-tab {
+  padding: 12px 18px;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted, #6a7180);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+
+.mm-tab:hover { color: var(--text, #0d1b3d); }
+
+.mm-tab.is-active { color: var(--gala-red, #CB262C); border-bottom-color: var(--gala-red, #CB262C); }
+
+
+/* — Auditorium matrix — */
+.mm-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.mm-aud {
+  background: #fff;
+  border: 1px solid #e3e6ee;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex; gap: 12px;
+  cursor: pointer;
+  transition: border-color .12s, transform .12s, box-shadow .12s;
+}
+
+.mm-aud:hover { border-color: var(--gala-red, #CB262C); transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.06); }
+
+.mm-aud__poster {
+  width: 56px; height: 84px;
+  border-radius: 6px;
+  background: #e9ecf3 center/cover no-repeat;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem;
+  color: #b0b6c4;
+}
+
+.mm-aud__body { flex: 1; min-width: 0; }
+
+.mm-aud__title {
+  font-weight: 700; font-size: 0.95rem;
+  color: var(--text, #0d1b3d);
+  margin-bottom: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.mm-aud__sub { font-size: 0.74rem; color: var(--text-muted, #6a7180); margin-bottom: 6px; }
+
+.mm-aud__chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem; font-weight: 600;
+  background: #fdeded; color: #a01f24;
+}
+
+.mm-aud__chip--late { background: #e7edff; color: #1b2c5a; }
+
+.mm-aud__chip--empty { background: #fff4e0; color: #8a5500; }
+
+.mm-aud__movie { font-size: 0.84rem; font-weight: 600; color: var(--text); margin-top: 4px; line-height: 1.2; }
+
+.mm-aud__movie-empty { font-size: 0.8rem; color: #b89400; font-style: italic; margin-top: 4px; }
+
+.mm-aud__times { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+.mm-aud__metabadges { display: flex; gap: 5px; margin-top: 4px; }
+
+.mm-aud__metabadge {
+  display: inline-flex; padding: 2px 6px;
+  border-radius: 4px;
+  background: #eef0f5;
+  color: #2c3858;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mm-aud__metabadge--rating { background: #0d1b3d; color: #fff; }
+
+.mm-aud--conflict { border-color: #cb262c; box-shadow: 0 0 0 2px rgba(203,38,44,0.18); }
+
+.mm-aud--tight { border-color: #d68900; }
+
+.mm-aud__conflict {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: #fdeded;
+  color: #a01f24;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 5px;
+}
+
+.mm-aud__conflict--tight { background: #fff4e0; color: #8a5500; }
+
+
+.mm-conflicts {
+  background: #fff;
+  border: 1px solid #f4c4c6;
+  border-left: 4px solid #cb262c;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+
+.mm-conflicts__head { font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; }
+
+.mm-conflicts__head--hard { color: #a01f24; }
+
+.mm-conflicts__head--tight { color: #8a5500; margin-top: 8px; }
+
+.mm-conflicts__item {
+  font-size: 0.8rem;
+  color: var(--text);
+  padding: 3px 0;
+}
+
+
+.mm-lib-item__badges { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+
+.mm-lib-item__badge {
+  display: inline-flex;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #eef0f5;
+  color: #2c3858;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.mm-lib-item__badge--ok { background: #dcf6e7; color: #166534; }
+
+.mm-lib-item__badge--warn { background: #fff4e0; color: #8a5500; }
+
+.mm-lib-item__actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+
+.mm-assign__timeline {
+  margin: 4px 0 14px;
+  padding: 10px 12px;
+  background: #f0f3f9;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.mm-assign__timeline:empty { display: none; }
+
+.mm-assign__timeline strong { color: #0d1b3d; }
+
+.mm-assign__timeline--warn {
+  background: #fdeded;
+  color: #a01f24;
+}
+
+.mm-assign__timeline--warn strong { color: #a01f24; }
+
+.mm-assign__timeline--tight {
+  background: #fff4e0;
+  color: #8a5500;
+}
+
+.mm-assign__timeline--tight strong { color: #8a5500; }
+
+
+.mm-section-title {
+  font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted, #6a7180);
+  margin: 4px 0 12px;
+}
+
+.mm-showing-block { margin-bottom: 26px; }
+
+
+/* — Library list — */
+.mm-lib-search {
+  display: flex; gap: 10px; margin-bottom: 16px;
+  align-items: center;
+}
+
+.mm-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d3d8e3;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.mm-input:focus { outline: none; border-color: var(--gala-red, #CB262C); box-shadow: 0 0 0 3px rgba(203,38,44,0.12); }
+
+
+.mm-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.mm-result {
+  background: #fff;
+  border: 1px solid #e3e6ee;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .12s, transform .12s;
+  display: flex; flex-direction: column;
+}
+
+.mm-result:hover { border-color: var(--gala-red, #CB262C); transform: translateY(-2px); }
+
+.mm-result__poster {
+  width: 100%; aspect-ratio: 2/3;
+  background: #e9ecf3 center/cover no-repeat;
+  display: flex; align-items: center; justify-content: center;
+  color: #b0b6c4; font-size: 2rem;
+}
+
+.mm-result__body { padding: 10px 12px; }
+
+.mm-result__title { font-weight: 600; font-size: 0.86rem; line-height: 1.25; color: var(--text); }
+
+.mm-result__meta { font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; }
+
+
+.mm-lib-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.mm-lib-item {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff;
+  border: 1px solid #e3e6ee;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.mm-lib-item__poster {
+  width: 40px; height: 60px;
+  border-radius: 5px;
+  background: #e9ecf3 center/cover no-repeat;
+  flex-shrink: 0;
+}
+
+.mm-lib-item__body { flex: 1; min-width: 0; }
+
+.mm-lib-item__title { font-weight: 600; font-size: 0.92rem; color: var(--text); }
+
+.mm-lib-item__meta { font-size: 0.78rem; color: var(--text-muted); }
+
+.mm-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid #d3d8e3;
+  background: #fff;
+  font-size: 0.82rem; font-weight: 600;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+
+.mm-btn:hover { border-color: var(--gala-red, #CB262C); }
+
+.mm-btn--danger { color: #a01f24; border-color: #f4c4c6; }
+
+.mm-btn--danger:hover { background: #fdeded; border-color: #cb262c; }
+
+.mm-btn--primary {
+  background: var(--gala-red, #CB262C);
+  color: #fff; border-color: var(--gala-red, #CB262C);
+}
+
+.mm-btn--primary:hover { background: var(--gala-red-deep, #A01F24); border-color: var(--gala-red-deep, #A01F24); }
+
+.mm-btn--ghost { background: transparent; border-color: transparent; color: var(--text-muted); }
+
+.mm-btn--ghost:hover { background: #f0f2f7; color: var(--text); }
+
+.mm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+
+.mm-empty {
+  text-align: center; padding: 28px 18px;
+  color: var(--text-muted, #6a7180);
+  font-size: 0.88rem;
+  background: #fff;
+  border: 1px dashed #d3d8e3;
+  border-radius: 10px;
+}
+
+
+/* Assignment modal (inner — over the overlay) */
+.mm-assign {
+  position: fixed; inset: 0;
+  background: rgba(15, 22, 35, 0.5);
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 20px;
+  z-index: 1100;
+}
+
+.mm-assign.is-open { display: flex; }
+
+.mm-assign__card {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%; max-width: 520px;
+  padding: 22px 24px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+
+.mm-assign__title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+
+.mm-assign__sub { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 16px; }
+
+.mm-assign__field { margin-bottom: 14px; }
+
+.mm-assign__label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+
+.mm-assign__select {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid #d3d8e3; border-radius: 8px;
+  font-size: 0.95rem; background: #fff;
+}
+
+.mm-assign__row { display: flex; gap: 10px; }
+
+.mm-assign__row > * { flex: 1; }
+
+.mm-assign__actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+
+  .mm-tabs { padding: 0 12px; overflow-x: auto; }
+
+  .mm-tab { padding: 12px 14px; font-size: 0.86rem; white-space: nowrap; }
+
+  .mm-matrix { grid-template-columns: 1fr; }
+
+  .mm-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }/* inline-render overrides (was a full-screen overlay in seating.html) */
+.mm-tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:16px; }
+.mm-pane[hidden] { display:none; }
+.mm-assign { position:fixed; inset:0; background:rgba(8,19,42,0.55); z-index:1300; display:none; align-items:flex-end; justify-content:center; }
+.mm-assign.is-open { display:flex; }
+@media(min-width:560px){ .mm-assign{align-items:center} }
 </style>
 
 <div class="tl-wrap">
   <div class="tl-bar">
     <button class="btn btn-secondary" id="tl-refresh" style="padding:7px 12px; font-size:0.8rem;">↻ Refresh</button>
-    <span class="tl-hint">Tap any film to move it, change its time, or swap the title. Tap an empty slot to assign a film.</span>
+    <span class="tl-hint">Tap any film in the timeline or the list below to move it, change its time, or swap the title.</span>
   </div>
   <div class="tl-legend">
     <span><i style="background:#0b1b3c"></i>Mandalorian</span>
@@ -1761,197 +2090,301 @@ body {
   <div class="tl-scroll"><div class="tl-grid" id="tl-grid"><div style="padding:28px;text-align:center;color:var(--muted)">Loading schedule…</div></div></div>
 </div>
 
+<div class="mm-section-head">
+  <h3>Auditoriums &amp; movies</h3>
+</div>
+<div class="mm-tabs">
+  <button class="mm-tab is-active" data-mm-tab="auds">Auditoriums</button>
+  <button class="mm-tab" data-mm-tab="search">Add from TMDB</button>
+  <button class="mm-tab" data-mm-tab="library">Movie Library</button>
+</div>
+
+<div class="mm-pane" data-mm-pane="auds">
+  <div class="mm-conflicts" id="mm-conflicts" hidden></div>
+  <div class="mm-showing-block" data-showing="1">
+    <div class="mm-section-title">Showing 1 · Early (staggered: 4:00 / 4:30)</div>
+    <div class="mm-matrix" id="mm-matrix-1"></div>
+  </div>
+  <div class="mm-showing-block" data-showing="2">
+    <div class="mm-section-title">Showing 2 · Late (7:15 / 7:45)</div>
+    <div class="mm-matrix" id="mm-matrix-2"></div>
+  </div>
+</div>
+
+<div class="mm-pane" data-mm-pane="search" hidden>
+  <div class="mm-lib-search">
+    <input type="text" class="mm-input" id="mm-search-input" placeholder="Search TMDB — try “Paddington”, “Wonka”…" autocomplete="off">
+    <button class="mm-btn mm-btn--ghost" id="mm-search-clear" type="button">Clear</button>
+  </div>
+  <div class="mm-results" id="mm-search-results">
+    <div class="mm-empty" style="grid-column:1/-1;">Type a movie title above to search.</div>
+  </div>
+</div>
+
+<div class="mm-pane" data-mm-pane="library" hidden>
+  <div class="mm-section-title">Saved movies</div>
+  <div class="mm-lib-list" id="mm-library-list"></div>
+</div>
+
+<!-- Edit modal (the one you like) -->
+<div class="mm-assign" id="mm-assign">
+  <div class="mm-assign__card">
+    <div class="mm-assign__title" id="mm-assign-title">Assign movie</div>
+    <div class="mm-assign__sub" id="mm-assign-sub"></div>
+    <div class="mm-assign__field">
+      <label class="mm-assign__label" for="mm-assign-movie">Movie</label>
+      <select class="mm-assign__select" id="mm-assign-movie"></select>
+    </div>
+    <div class="mm-assign__row">
+      <div class="mm-assign__field"><label class="mm-assign__label" for="mm-assign-dinner">Dinner time</label><input type="text" class="mm-assign__select" id="mm-assign-dinner" placeholder="4:30 PM"></div>
+      <div class="mm-assign__field"><label class="mm-assign__label" for="mm-assign-show">Show start</label><input type="text" class="mm-assign__select" id="mm-assign-show" placeholder="5:00 PM"></div>
+    </div>
+    <div class="mm-assign__field"><label class="mm-assign__label" for="mm-assign-trailer-min">Pre-roll (DEF intro video, min)</label><input type="number" min="0" max="60" class="mm-assign__select" id="mm-assign-trailer-min" placeholder="5"></div>
+    <div class="mm-assign__timeline" id="mm-assign-timeline"></div>
+    <div class="mm-assign__actions">
+      <button class="mm-btn mm-btn--danger" id="mm-assign-clear" style="margin-right:auto;">Clear assignment</button>
+      <button class="mm-btn mm-btn--ghost" id="mm-assign-cancel">Cancel</button>
+      <button class="mm-btn mm-btn--primary" id="mm-assign-save">Save</button>
+    </div>
+  </div>
+</div>
+<div class="tl-toasts" id="tl-toasts"></div>
 <script>
-/* ════ Movies-tab unified timeline editor (live D1 via /api/gala/movies) ════
-   One place: see the schedule + tap a film to reassign/retime/swap.
-   Replaces the bounce-out to /admin/seating.html for day-to-day edits. */
+/* ════════ Movies-tab unified console (live D1 via /api/gala/movies) ════════
+   One place: a live theater-by-theater timeline (top) + the auditorium card
+   list & edit modal (the proven seating.html manager, brought over). Tap a
+   film in EITHER the timeline or the list to reassign/retime/swap; Add from
+   TMDB and Movie Library are here too. Fully replaces /admin/seating.html for
+   movie management — nothing links out anymore. */
 (function(){
-  const TL = { layouts:null, movies:[], showtimes:[], conflicts:[] };
-  const DAY_START = 15*60, DAY_END = 22*60;       // 3 PM → 10 PM window
-  const span = DAY_END - DAY_START;
-  const pct = min => ((min - DAY_START)/span)*100;
+  const S = { layouts:[], movies:[], showtimes:[], conflicts:[],
+              default_trailers_minutes:5, messaging_minutes:0, turnover_minutes:30,
+              showing_2_floor_minutes:19*60+45, pending:null, searchAbort:null, searchTimer:null };
+  const SHOWING_LABEL = { 1:'Early · 4:30 / 5:00', 2:'Late · 7:15 / 7:45' };
+  const SHOWING_DEFAULTS = { 1:{dinner_time:'4:30 PM',show_start:'5:00 PM'}, 2:{dinner_time:'7:15 PM',show_start:'7:45 PM'} };
+  const STAFF = new Set([11,14]);
+
+  /* timeline geometry */
+  const DAY_START=15*60, DAY_END=22*60, SPAN=DAY_END-DAY_START;
+  const pct = m => ((m-DAY_START)/SPAN)*100;
   const COLORS = { mando:'#0b1b3c', bread:'#b45309', pad:'#c2410c', dragon:'#1d4ed8', other:'#475569' };
-  function colorFor(title){
-    const t=(title||'').toLowerCase();
-    if(t.includes('mandalorian')) return COLORS.mando;
-    if(t.includes('breadwinner')) return COLORS.bread;
-    if(t.includes('paddington')) return COLORS.pad;
-    if(t.includes('dragon')) return COLORS.dragon;
-    return COLORS.other;
-  }
-  function parseMin(s){
-    if(!s) return null;
-    const m=String(s).trim().match(/^(\d{1,2}):(\d{2})\s*([AP])M$/i);
-    if(!m) return null;
-    let h=+m[1]%12; if(m[3].toUpperCase()==='P') h+=12;
-    return h*60 + (+m[2]);
-  }
-  function fmtMin(min){
-    if(min==null) return '';
-    let h=Math.floor(min/60), mm=min%60, ap=h>=12?'PM':'AM', h12=((h+11)%12)+1;
-    return `${h12}:${String(mm).padStart(2,'0')} ${ap}`;
-  }
+  function colorFor(title){ const t=(title||'').toLowerCase();
+    if(t.includes('mandalorian'))return COLORS.mando; if(t.includes('breadwinner'))return COLORS.bread;
+    if(t.includes('paddington'))return COLORS.pad; if(t.includes('dragon'))return COLORS.dragon; return COLORS.other; }
+
+  /* time helpers (mirror _movie_time.js) */
+  function parseT(input){ if(!input)return null; const raw=String(input).trim();
+    const m12=raw.match(/^(\d{1,2}):?(\d{2})?\s*([ap])\.?\s*m\.?$/i);
+    if(m12){ let h=Number(m12[1]); const mn=Number(m12[2]||0); const pm=m12[3].toLowerCase()==='p';
+      if(h===12)h=pm?12:0; else if(pm)h+=12; if(h<0||h>23||mn<0||mn>59)return null; return h*60+mn; }
+    const m24=raw.match(/^(\d{1,2}):(\d{2})$/); if(m24)return Number(m24[1])*60+Number(m24[2]); return null; }
+  function fmtT(mins){ if(mins==null)return ''; const h24=Math.floor(mins/60)%24; const m=((mins%60)+60)%60;
+    const ap=h24>=12?'PM':'AM'; const h12=h24%12||12; return `${h12}:${String(m).padStart(2,'0')} ${ap}`; }
+  function fmtTimeStr(input){ const p=parseT(input); return p==null?(input||''):fmtT(p); }
+
+  const showtimeFor=(tid,sn)=>S.showtimes.find(s=>s.theater_id===tid&&s.showing_number===sn)||null;
+  const movieById=id=>S.movies.find(m=>m.id===id)||null;
+  const theaterById=id=>S.layouts.find(t=>t.id===id)||null;
+
+  /* ── toast ── */
+  function toast(o){ const wrap=document.getElementById('tl-toasts'); if(!wrap)return;
+    const el=document.createElement('div'); el.className='tl-toast '+(o.type||'info');
+    el.innerHTML=`<div class="tt-title">${escapeHtml(o.title||'')}</div>${o.message?`<div class="tt-msg">${escapeHtml(o.message)}</div>`:''}`;
+    wrap.appendChild(el); setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, o.type==='error'?4200:2600); }
+
+  /* ── API ── */
+  async function api(action,payload){ const r=await fetch('/api/gala/movies',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
+    const d=await r.json().catch(()=>({})); if(!r.ok||d.error) throw new Error(d.error||`HTTP ${r.status}`); return d; }
 
   async function load(){
     const grid=document.getElementById('tl-grid');
     try{
-      if(!TL.layouts){ const r=await fetch('/data/theater-layouts.json'); TL.layouts=(await r.json()).theaters||[]; }
-      const data=await fetchJSON('/api/gala/movies');
-      TL.movies=data.movies||[]; TL.showtimes=data.showtimes||[]; TL.conflicts=data.conflicts||[];
-      render();
-    }catch(e){ grid.innerHTML=`<div style="padding:24px;text-align:center;color:var(--red)">Couldn't load schedule: ${escapeHtml(e.message||String(e))}</div>`; }
+      if(!S.layouts.length){ const r=await fetch('/data/theater-layouts.json'); S.layouts=(await r.json()).theaters||[]; }
+      const r=await fetch('/api/gala/movies',{credentials:'same-origin'}); const d=await r.json();
+      S.movies=d.movies||[]; S.showtimes=d.showtimes||[]; S.conflicts=d.conflicts||[];
+      S.default_trailers_minutes=d.default_trailers_minutes??5; S.messaging_minutes=d.messaging_minutes??0;
+      S.turnover_minutes=d.turnover_minutes??30; S.showing_2_floor_minutes=d.showing_2_floor_minutes??(19*60+45);
+      renderTimeline(); renderMatrix(); renderLibrary();
+    }catch(e){ if(grid) grid.innerHTML=`<div style="padding:24px;text-align:center;color:var(--red)">Couldn't load: ${escapeHtml(e.message||String(e))}</div>`; }
   }
 
-  function render(){
-    const grid=document.getElementById('tl-grid');
-    const conflictAuds=new Set(TL.conflicts.filter(c=>!c.ok).map(c=>c.theater_id));
-    // ticks
+  /* ── Timeline (top) ── */
+  function renderTimeline(){
+    const grid=document.getElementById('tl-grid'); if(!grid)return;
+    const confAuds=new Set(S.conflicts.filter(c=>!c.ok).map(c=>c.theater_id));
     let ticks='<div class="tl-ticks">';
     for(let h=15;h<=22;h++){ const left=pct(h*60); ticks+=`<div class="tl-tick" style="left:${left}%"></div><div class="tl-tick-lab" style="left:${left}%">${((h+11)%12)+1} ${h<12?'AM':'PM'}</div>`; }
     ticks+='</div>';
-
-    // showtimes grouped by theater
-    const byT={};
-    for(const s of TL.showtimes){ (byT[s.theater_id]=byT[s.theater_id]||[]).push(s); }
-
-    // order rows: assigned auditoriums first (by id), then any empties; staff rooms (11,14) last
-    const STAFF=new Set([11,14]);
-    const auds=TL.layouts.slice().sort((a,b)=>{
-      const sa=STAFF.has(a.id)?2:0, sb=STAFF.has(b.id)?2:0;
-      if(sa!==sb) return sa-sb;
-      return a.id-b.id;
-    });
-
+    const auds=S.layouts.slice().sort((a,b)=>{ const sa=STAFF.has(a.id)?2:0, sb=STAFF.has(b.id)?2:0; return sa!==sb?sa-sb:a.id-b.id; });
     let rows='';
     for(const aud of auds){
-      const isStaff=STAFF.has(aud.id);
-      const shows=(byT[aud.id]||[]);
-      let track='';
-      if(isStaff){
-        track=`<div class="tl-staff">Staff / Staging</div>`;
-      }else{
-        // two showing slots
-        for(const sn of [1,2]){
-          const st=shows.find(s=>s.showing_number===sn);
-          const slotStart = sn===1 ? (15*60) : (18*60+45);
-          const slotEnd   = sn===1 ? (18*60+30) : (22*60);
-          if(st && st.movie_id){
-            const start=parseMin(st.show_start) ?? slotStart;
-            const end=st.show_end_minutes ?? (start+(st.movie_runtime||100)+(st.trailer_minutes??5));
-            const left=pct(start), w=Math.max(6,pct(end)-pct(start));
-            const conf=conflictAuds.has(aud.id)?' conflict':'';
-            const extra=st.is_extra?' is-extra':'';
-            track+=`<div class="tl-block${conf}${extra}" style="left:${left}%;width:${w}%;background:${colorFor(st.movie_title)}"
-                      data-edit="1" data-tid="${aud.id}" data-sn="${sn}">
-                      <div class="t">${escapeHtml(st.movie_title||'?')}</div>
-                      <div class="s">${escapeHtml(fmtMin(start))}–${escapeHtml(fmtMin(end))}</div>
-                    </div>`;
-          }else{
-            const left=pct(slotStart), w=pct(slotEnd)-pct(slotStart);
-            track+=`<div class="tl-empty" style="left:${left}%;width:${w}%" data-edit="1" data-tid="${aud.id}" data-sn="${sn}">+ ${sn===1?'Early':'Late'}</div>`;
-          }
-        }
-      }
-      const capLabel = isStaff ? 'Staff' : `${aud.totalSeats} seats`;
-      rows+=`<div class="tl-row">
-        <div class="tl-rowlab"><div class="a">Aud #${aud.id}</div><div class="c">${escapeHtml(capLabel)}</div></div>
-        <div class="tl-track">${track}</div>
-      </div>`;
+      const isStaff=STAFF.has(aud.id); let track='';
+      if(isStaff){ track='<div class="tl-staff">Staff / Staging</div>'; }
+      else{ for(const sn of [1,2]){
+        const st=showtimeFor(aud.id,sn);
+        const slotStart=sn===1?(15*60):(18*60+45), slotEnd=sn===1?(18*60+30):(22*60);
+        if(st&&st.movie_id){ const start=parseT(st.show_start)??slotStart;
+          const end=st.show_end_minutes??(start+(st.movie_runtime||100)+(st.trailer_minutes??5));
+          const left=pct(start), w=Math.max(6,pct(end)-pct(start));
+          track+=`<div class="tl-block${confAuds.has(aud.id)?' conflict':''}${st.is_extra?' is-extra':''}" style="left:${left}%;width:${w}%;background:${colorFor(st.movie_title)}" data-edit="1" data-tid="${aud.id}" data-sn="${sn}"><div class="t">${escapeHtml(st.movie_title||'?')}</div><div class="s">${escapeHtml(fmtT(start))}–${escapeHtml(fmtT(end))}</div></div>`;
+        } else { const left=pct(slotStart), w=pct(slotEnd)-pct(slotStart);
+          track+=`<div class="tl-empty" style="left:${left}%;width:${w}%" data-edit="1" data-tid="${aud.id}" data-sn="${sn}">+ ${sn===1?'Early':'Late'}</div>`; } } }
+      rows+=`<div class="tl-row"><div class="tl-rowlab"><div class="a">Aud #${aud.id}</div><div class="c">${isStaff?'Staff':(aud.totalSeats+' seats')}</div></div><div class="tl-track">${track}</div></div>`;
     }
-
-    grid.innerHTML = ticks + rows;
-    grid.querySelectorAll('[data-edit]').forEach(el=>{
-      el.addEventListener('click',()=>openSheet(+el.dataset.tid, +el.dataset.sn));
-    });
+    grid.innerHTML=ticks+rows;
+    grid.querySelectorAll('[data-edit]').forEach(el=>el.addEventListener('click',()=>openAssign(+el.dataset.tid,+el.dataset.sn)));
   }
 
-  function openSheet(tid, sn){
-    const aud=TL.layouts.find(a=>a.id===tid)||{id:tid,totalSeats:0};
-    const st=TL.showtimes.find(s=>s.theater_id===tid && s.showing_number===sn) || {};
-    const def = sn===1 ? {dinner:'4:30 PM',show:'5:00 PM'} : {dinner:'7:15 PM',show:'7:45 PM'};
-    const cur = {
-      movie_id: st.movie_id||'',
-      show_start: st.show_start||def.show,
-      dinner_time: st.dinner_time||def.dinner,
-      capacity: st.capacity!=null?st.capacity:aud.totalSeats,
-      tid, sn,
-    };
-    const movieOpts = ['<option value="">— No film (empty this slot) —</option>']
-      .concat(TL.movies.map(m=>`<option value="${m.id}" ${m.id===cur.movie_id?'selected':''}>${escapeHtml(m.title)}${m.runtime_minutes?` · ${m.runtime_minutes}m`:''}</option>`)).join('');
-    const audOpts = TL.layouts.filter(a=>![11,14].includes(a.id))
-      .map(a=>`<option value="${a.id}" ${a.id===tid?'selected':''}>Aud #${a.id} · ${a.totalSeats} seats</option>`).join('');
-
-    const bg=document.createElement('div'); bg.className='tl-sheet-bg';
-    bg.innerHTML=`<div class="tl-sheet" role="dialog" aria-modal="true">
-      <h3>${st.movie_id?'Edit screening':'Assign a film'}</h3>
-      <div class="sub">Auditorium #${tid} · ${sn===1?'Early showing':'Late showing'}</div>
-      <div class="tl-field"><label>Film</label><select id="tl-movie">${movieOpts}</select></div>
-      <div class="tl-field"><label>Auditorium</label><select id="tl-aud">${audOpts}</select></div>
-      <div class="tl-row2">
-        <div class="tl-field"><label>Showing</label><select id="tl-sn"><option value="1" ${sn===1?'selected':''}>Early</option><option value="2" ${sn===2?'selected':''}>Late</option></select></div>
-        <div class="tl-field"><label>Capacity</label><input id="tl-cap" type="number" min="0" value="${cur.capacity}"></div>
-      </div>
-      <div class="tl-row2">
-        <div class="tl-field"><label>Dinner time</label><input id="tl-dinner" value="${escapeAttr(cur.dinner_time)}"></div>
-        <div class="tl-field"><label>Show start</label><input id="tl-show" value="${escapeAttr(cur.show_start)}"></div>
-      </div>
-      <div class="tl-msg" id="tl-msg"></div>
-      <div class="tl-sheet-actions">
-        <button class="btn btn-secondary" id="tl-cancel">Cancel</button>
-        <button class="btn btn-primary" id="tl-save">Save</button>
-      </div>
-      ${st.movie_id?`<button class="tl-clearbtn" id="tl-clear">Remove film from Aud #${tid} ${sn===1?'Early':'Late'}</button>`:''}
-    </div>`;
-    document.body.appendChild(bg);
-    const close=()=>bg.remove();
-    bg.addEventListener('click',e=>{ if(e.target===bg) close(); });
-    bg.querySelector('#tl-cancel').addEventListener('click',close);
-
-    const msg=bg.querySelector('#tl-msg');
-    const showMsg=(t,k)=>{ msg.textContent=t; msg.className='tl-msg '+k; };
-
-    bg.querySelector('#tl-save').addEventListener('click', async ()=>{
-      const newTid=+bg.querySelector('#tl-aud').value;
-      const newSn=+bg.querySelector('#tl-sn').value;
-      const movie_id=bg.querySelector('#tl-movie').value ? +bg.querySelector('#tl-movie').value : null;
-      const capacity=bg.querySelector('#tl-cap').value!==''?+bg.querySelector('#tl-cap').value:null;
-      const dinner_time=bg.querySelector('#tl-dinner').value.trim();
-      const show_start=bg.querySelector('#tl-show').value.trim();
-      // guard: moving onto an occupied target slot
-      const target=TL.showtimes.find(s=>s.theater_id===newTid && s.showing_number===newSn && s.movie_id && !(s.theater_id===tid && s.showing_number===sn));
-      if(target && movie_id){
-        if(!confirm(`Aud #${newTid} ${newSn===1?'Early':'Late'} already has "${target.movie_title}". Overwrite it?`)) return;
+  /* ── Auditorium card matrix (the list you like) ── */
+  function renderMatrix(){
+    const conflictBy={}; for(const c of S.conflicts) conflictBy[c.theater_id]=c;
+    const banner=document.getElementById('mm-conflicts');
+    if(banner){ const hard=S.conflicts.filter(c=>!c.ok), tight=S.conflicts.filter(c=>c.ok&&c.tight);
+      if(!hard.length&&!tight.length){ banner.hidden=true; banner.innerHTML=''; }
+      else{ banner.hidden=false; const parts=[];
+        if(hard.length){ parts.push(`<div class="mm-conflicts__head mm-conflicts__head--hard">⚠ ${hard.length} overlap${hard.length===1?'':'s'} between showings</div>`);
+          for(const c of hard){ const t=theaterById(c.theater_id); parts.push(`<div class="mm-conflicts__item">${escapeHtml(t?.name||'Aud '+c.theater_id)} · ${escapeHtml(c.message||'')}</div>`); } }
+        if(tight.length){ parts.push(`<div class="mm-conflicts__head mm-conflicts__head--tight">⏱ ${tight.length} tight turnaround${tight.length===1?'':'s'}</div>`);
+          for(const c of tight){ const t=theaterById(c.theater_id); parts.push(`<div class="mm-conflicts__item">${escapeHtml(t?.name||'Aud '+c.theater_id)} · ${escapeHtml(c.message||'')}</div>`); } }
+        banner.innerHTML=parts.join(''); } }
+    const auds=S.layouts.slice().sort((a,b)=>{ const sa=STAFF.has(a.id)?2:0, sb=STAFF.has(b.id)?2:0; return sa!==sb?sa-sb:a.id-b.id; });
+    for(const showing of [1,2]){
+      const root=document.getElementById(`mm-matrix-${showing}`); if(!root)continue; root.innerHTML='';
+      for(const t of auds){
+        if(STAFF.has(t.id)) continue;
+        const st=showtimeFor(t.id,showing); const movie=st&&st.movie_id?movieById(st.movie_id):null; const conflict=conflictBy[t.id];
+        const card=document.createElement('div'); card.className='mm-aud';
+        if(conflict&&!conflict.ok)card.classList.add('mm-aud--conflict'); else if(conflict&&conflict.tight)card.classList.add('mm-aud--tight');
+        const posterStyle=movie&&movie.poster_url?`background-image:url('${escapeHtml(movie.poster_url)}');`:'';
+        const posterFallback=(!movie||!movie.poster_url)?'🎬':'';
+        const chipClass=showing===2?'mm-aud__chip--late':'';
+        const movieLine=movie?`<div class="mm-aud__movie">${escapeHtml(movie.title)}${movie.year?` · ${movie.year}`:''}</div>`:`<div class="mm-aud__movie-empty">⚠ Unassigned — click to set</div>`;
+        let timesLine=''; if(st&&(st.dinner_time||st.show_start)){ const start=st.show_start?fmtTimeStr(st.show_start):'—'; const dinner=st.dinner_time?fmtTimeStr(st.dinner_time):'—'; const end=st.show_end_label||'';
+          timesLine=`<div class="mm-aud__times">Dinner ${escapeHtml(dinner)} · Show ${escapeHtml(start)}${end?` → <strong>${escapeHtml(end)}</strong>`:''}</div>`; }
+        const meta=[]; if(movie?.rating)meta.push(`<span class="mm-aud__metabadge mm-aud__metabadge--rating">${escapeHtml(movie.rating)}</span>`); if(movie?.runtime_minutes)meta.push(`<span class="mm-aud__metabadge">${movie.runtime_minutes} min</span>`);
+        card.innerHTML=`<div class="mm-aud__poster" style="${posterStyle}">${posterFallback}</div><div class="mm-aud__body"><div class="mm-aud__title">${escapeHtml(t.name||`Auditorium ${t.id}`)}</div><div class="mm-aud__sub">${t.totalSeats||'—'} seats</div><span class="mm-aud__chip ${movie?chipClass:'mm-aud__chip--empty'}">${movie?SHOWING_LABEL[showing]:'Needs movie'}</span>${movieLine}${meta.length?`<div class="mm-aud__metabadges">${meta.join('')}</div>`:''}${timesLine}${conflict&&!conflict.ok?'<div class="mm-aud__conflict">⚠ Overlaps with other showing</div>':''}${conflict&&conflict.tight?'<div class="mm-aud__conflict mm-aud__conflict--tight">⏱ Tight turnaround</div>':''}</div>`;
+        card.addEventListener('click',()=>openAssign(t.id,showing)); root.appendChild(card);
       }
-      bg.querySelector('#tl-save').disabled=true; showMsg('Saving…','ok');
-      try{
-        // if the room/showing changed, clear the old slot first so we don't leave a duplicate
-        if(newTid!==tid || newSn!==sn){
-          await postMovies({action:'clear_showtime', theater_id:tid, showing_number:sn});
-        }
-        await postMovies({action:'set_showtime', theater_id:newTid, showing_number:newSn, movie_id, dinner_time, show_start, capacity});
-        close(); await load();
-      }catch(e){ showMsg(e.message||'Save failed','err'); bg.querySelector('#tl-save').disabled=false; }
-    });
-
-    const clearBtn=bg.querySelector('#tl-clear');
-    if(clearBtn) clearBtn.addEventListener('click', async ()=>{
-      if(!confirm(`Remove "${st.movie_title}" from Aud #${tid}?`)) return;
-      try{ await postMovies({action:'clear_showtime', theater_id:tid, showing_number:sn}); close(); await load(); }
-      catch(e){ showMsg(e.message||'Failed','err'); }
-    });
+    }
   }
 
-  async function postMovies(body){
-    const r=await fetch('/api/gala/movies',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!r.ok){ let m; try{ m=(await r.json()).error; }catch{ m=`HTTP ${r.status}`; } throw new Error(m||`HTTP ${r.status}`); }
-    return r.json();
+  /* ── Library ── */
+  function renderLibrary(){
+    const root=document.getElementById('mm-library-list'); if(!root)return;
+    if(!S.movies.length){ root.innerHTML='<div class="mm-empty">No movies yet. Add some from the TMDB tab.</div>'; return; }
+    root.innerHTML='';
+    for(const m of S.movies){
+      const item=document.createElement('div'); item.className='mm-lib-item';
+      const posterStyle=m.poster_url?`background-image:url('${escapeHtml(m.poster_url)}');`:'';
+      const badges=[]; if(m.stream_uid)badges.push('<span class="mm-lib-item__badge mm-lib-item__badge--ok">📹 Stream ready</span>'); else if(m.trailer_url)badges.push('<span class="mm-lib-item__badge">▶ YouTube</span>'); else badges.push('<span class="mm-lib-item__badge mm-lib-item__badge--warn">No trailer</span>');
+      item.innerHTML=`<div class="mm-lib-item__poster" style="${posterStyle}"></div><div class="mm-lib-item__body"><div class="mm-lib-item__title">${escapeHtml(m.title)}${m.year?` <span style="color:var(--text-muted);font-weight:400;">· ${m.year}</span>`:''}</div><div class="mm-lib-item__meta">${m.runtime_minutes?m.runtime_minutes+' min':'—'}${m.rating?' · '+escapeHtml(m.rating):''}${m.tmdb_id?' · TMDB #'+m.tmdb_id:''}</div><div class="mm-lib-item__badges">${badges.join(' ')}</div></div><div class="mm-lib-item__actions"><button class="mm-btn" data-mm-edit="${m.id}">Edit</button><button class="mm-btn mm-btn--danger" data-mm-delete="${m.id}">Remove</button></div>`;
+      root.appendChild(item);
+    }
+    root.querySelectorAll('[data-mm-edit]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openEdit(+b.dataset.mmEdit);}));
+    root.querySelectorAll('[data-mm-delete]').forEach(b=>b.addEventListener('click',async e=>{e.stopPropagation(); const id=+b.dataset.mmDelete; const m=movieById(id); if(!m)return;
+      if(!confirm(`Remove "${m.title}" from the library?\n\nThis also unassigns it from any auditoriums.`))return;
+      try{ await api('delete_movie',{id}); toast({type:'success',title:'Removed',message:`"${m.title}" removed.`}); await load(); }catch(err){ toast({type:'error',title:'Failed',message:err.message}); } }));
   }
 
-  document.getElementById('tl-refresh')?.addEventListener('click', load);
-  // expose so the Movies-tab loader can trigger it
+  function openEdit(movieId){ const m=movieById(movieId); if(!m)return;
+    const streamUid=prompt(`Edit "${m.title}"\n\nCloudflare Stream UID for the trailer (blank if none).`, m.stream_uid||''); if(streamUid===null)return;
+    const trailerUrl=prompt('YouTube trailer URL (fallback if no Stream UID). Blank for none.', m.trailer_url||''); if(trailerUrl===null)return;
+    const runtimeStr=prompt('Runtime in minutes:', m.runtime_minutes?String(m.runtime_minutes):''); if(runtimeStr===null)return;
+    const runtime=runtimeStr.trim()?Number(runtimeStr):null;
+    api('update_movie',{id:movieId,stream_uid:streamUid.trim()||null,trailer_url:trailerUrl.trim()||null,runtime_minutes:runtime})
+      .then(()=>{ toast({type:'success',title:'Saved',message:`"${m.title}" updated.`}); return load(); })
+      .catch(err=>toast({type:'error',title:'Save failed',message:err.message})); }
+
+  /* ── Showing-2 recommend (mirror server) ── */
+  function recommendS2(theaterId){ const s1=showtimeFor(theaterId,1); if(!s1||!s1.movie_id||!s1.show_start)return null;
+    const mv=movieById(s1.movie_id); if(!mv||!mv.runtime_minutes)return null; const s1Start=parseT(s1.show_start); if(s1Start==null)return null;
+    const trailer=(s1.trailer_minutes!=null)?s1.trailer_minutes:S.default_trailers_minutes; const s1End=s1Start+S.messaging_minutes+trailer+mv.runtime_minutes;
+    const base=s1End+S.turnover_minutes; const rounded=base%5===0?base:base+(5-(base%5)); return fmtT(Math.max(rounded,S.showing_2_floor_minutes)); }
+
+  /* ── Edit modal ── */
+  function openAssign(theaterId,showingNumber){
+    const t=theaterById(theaterId); const st=showtimeFor(theaterId,showingNumber); S.pending={theater_id:theaterId,showing_number:showingNumber};
+    document.getElementById('mm-assign-title').textContent=`${t?(t.name||'Auditorium '+theaterId):'Auditorium '+theaterId} · ${SHOWING_LABEL[showingNumber]}`;
+    document.getElementById('mm-assign-sub').textContent=`${t&&t.totalSeats?t.totalSeats+' seats':''}${st&&st.movie_id?' · currently: '+(movieById(st.movie_id)?.title||'?'):' · no movie assigned'}`;
+    const sel=document.getElementById('mm-assign-movie'); sel.innerHTML='<option value="">— No movie —</option>';
+    for(const m of S.movies){ const o=document.createElement('option'); o.value=m.id; o.textContent=`${m.title}${m.year?' ('+m.year+')':''}${m.runtime_minutes?' · '+m.runtime_minutes+'min':''}${m.rating?' · '+m.rating:''}`; if(st&&st.movie_id===m.id)o.selected=true; sel.appendChild(o); }
+    const def=SHOWING_DEFAULTS[showingNumber]||{};
+    document.getElementById('mm-assign-dinner').value=(st&&st.dinner_time)||def.dinner_time||'';
+    let start=(st&&st.show_start)||def.show_start||''; if(showingNumber===2&&!(st&&st.show_start)){ const r=recommendS2(theaterId); if(r)start=r; }
+    document.getElementById('mm-assign-show').value=start;
+    document.getElementById('mm-assign-trailer-min').value=(st&&st.trailer_minutes!=null)?st.trailer_minutes:S.default_trailers_minutes;
+    document.getElementById('mm-assign-clear').style.display=(st&&st.movie_id)?'':'none';
+    document.getElementById('mm-assign').classList.add('is-open'); updateTimeline();
+  }
+  function closeAssign(){ document.getElementById('mm-assign').classList.remove('is-open'); S.pending=null; }
+
+  function updateTimeline(){
+    const root=document.getElementById('mm-assign-timeline'); if(!root||!S.pending)return;
+    const movieId=document.getElementById('mm-assign-movie').value; const movie=movieId?movieById(Number(movieId)):null;
+    const showStart=document.getElementById('mm-assign-show').value.trim(); const trailer=Number(document.getElementById('mm-assign-trailer-min').value)||0; const msg=S.messaging_minutes;
+    if(!movie||!movie.runtime_minutes||!showStart){ root.className='mm-assign__timeline'; root.innerHTML=''; return; }
+    const startMin=parseT(showStart); if(startMin==null){ root.className='mm-assign__timeline'; root.innerHTML=''; return; }
+    const endMin=startMin+msg+trailer+movie.runtime_minutes; const total=msg+trailer+movie.runtime_minutes;
+    const otherNum=S.pending.showing_number===1?2:1; const otherSt=showtimeFor(S.pending.theater_id,otherNum);
+    let warn='', cls='mm-assign__timeline';
+    if(otherSt&&otherSt.movie_id){ const om=movieById(otherSt.movie_id); const oStart=otherSt.show_start?parseT(otherSt.show_start):null; const oTrailer=otherSt.trailer_minutes??5;
+      const oEnd=(oStart!=null&&om?.runtime_minutes)?oStart+msg+oTrailer+om.runtime_minutes:null;
+      if(S.pending.showing_number===1&&oStart!=null){ if(endMin>oStart){ cls+=' mm-assign__timeline--warn'; warn=`<br><strong>⚠ Overlap:</strong> ends ${fmtT(endMin)} but Showing 2 starts ${escapeHtml(fmtTimeStr(otherSt.show_start))}.`; } else if(oStart-endMin<30){ cls+=' mm-assign__timeline--tight'; warn=`<br>⏱ <strong>Tight:</strong> only ${oStart-endMin} min before Showing 2.`; } }
+      else if(S.pending.showing_number===2&&oEnd!=null){ if(startMin<oEnd){ cls+=' mm-assign__timeline--warn'; warn=`<br><strong>⚠ Overlap:</strong> starts ${escapeHtml(fmtTimeStr(showStart))} but Showing 1 ends ~${fmtT(oEnd)}.`; } else if(startMin-oEnd<30){ cls+=' mm-assign__timeline--tight'; warn=`<br>⏱ <strong>Tight:</strong> only ${startMin-oEnd} min after Showing 1.`; } } }
+    root.className=cls; root.innerHTML=`<strong>${escapeHtml(movie.title)}</strong> runs <strong>${movie.runtime_minutes} min</strong> + <strong>${trailer} min</strong> trailers + <strong>${msg} min</strong> messaging.<br>Show ends ~<strong>${fmtT(endMin)}</strong> (${total} min total).${warn}`;
+  }
+
+  async function save(){ if(!S.pending)return;
+    const movieId=document.getElementById('mm-assign-movie').value; const dinner=document.getElementById('mm-assign-dinner').value.trim();
+    const show=document.getElementById('mm-assign-show').value.trim(); const trailer=Number(document.getElementById('mm-assign-trailer-min').value);
+    try{ await api('set_showtime',{theater_id:S.pending.theater_id,showing_number:S.pending.showing_number,movie_id:movieId?Number(movieId):null,dinner_time:dinner||null,show_start:show||null,trailer_minutes:!isNaN(trailer)?trailer:5});
+      toast({type:'success',title:'Saved',message:'Showtime updated.'}); closeAssign(); await load(); }catch(err){ toast({type:'error',title:'Save failed',message:err.message}); } }
+  async function clear(){ if(!S.pending)return; if(!confirm('Clear the movie from this auditorium for this showing?'))return;
+    try{ await api('clear_showtime',{theater_id:S.pending.theater_id,showing_number:S.pending.showing_number}); toast({type:'success',title:'Cleared',message:'Auditorium is now unassigned.'}); closeAssign(); await load(); }catch(err){ toast({type:'error',title:'Clear failed',message:err.message}); } }
+
+  /* ── TMDB search ── */
+  function runSearch(){ const q=document.getElementById('mm-search-input').value.trim(); const results=document.getElementById('mm-search-results');
+    if(!q){ results.innerHTML='<div class="mm-empty" style="grid-column:1/-1;">Type a movie title above to search.</div>'; return; } if(q.length<2)return;
+    if(S.searchAbort)S.searchAbort.abort(); S.searchAbort=new AbortController();
+    results.innerHTML='<div class="mm-empty" style="grid-column:1/-1;">Searching TMDB…</div>';
+    fetch(`/api/gala/movies/search?q=${encodeURIComponent(q)}`,{credentials:'same-origin',signal:S.searchAbort.signal}).then(r=>r.json()).then(d=>{
+      if(d.error)throw new Error(d.error); const list=d.results||[];
+      if(!list.length){ results.innerHTML='<div class="mm-empty" style="grid-column:1/-1;">No results.</div>'; return; }
+      results.innerHTML=''; for(const r of list){ const c=document.createElement('div'); c.className='mm-result';
+        const ps=r.poster_url?`background-image:url('${escapeHtml(r.poster_url)}');`:'';
+        c.innerHTML=`<div class="mm-result__poster" style="${ps}">${r.poster_url?'':'🎬'}</div><div class="mm-result__body"><div class="mm-result__title">${escapeHtml(r.title)}</div><div class="mm-result__meta">${r.year||'—'}${r.vote_average?' · ★ '+r.vote_average.toFixed(1):''}</div></div>`;
+        c.addEventListener('click',()=>addFromTmdb(r)); results.appendChild(c); }
+    }).catch(err=>{ if(err.name==='AbortError')return; results.innerHTML=`<div class="mm-empty" style="grid-column:1/-1;">Search failed: ${escapeHtml(err.message)}</div>`; }); }
+
+  async function addFromTmdb(result){ if(!result.tmdb_id&&!result.imdb_id){ toast({type:'error',title:'Cannot import',message:'No TMDB id.'}); return; }
+    toast({type:'info',title:'Importing…',message:result.title});
+    try{ let detail=result; if(result.tmdb_id){ const res=await fetch(`/api/gala/movies/search?tmdb_id=${result.tmdb_id}`,{credentials:'same-origin'}); const d=await res.json(); if(d.movie)detail=d.movie; }
+      const r=await api('add_movie',{title:detail.title,year:detail.year,runtime_minutes:detail.runtime_minutes,poster_url:detail.poster_url,backdrop_url:detail.backdrop_url,synopsis:detail.synopsis,tmdb_id:detail.tmdb_id,rating:detail.rating,release_date:detail.release_date,trailer_url:detail.trailer_url});
+      toast(r.deduped?{type:'info',title:'Already saved',message:`"${detail.title}" is already in the library.`}:{type:'success',title:'Added',message:`"${detail.title}" saved. Now assign it.`});
+      await load(); switchTab('library');
+    }catch(err){ toast({type:'error',title:'Import failed',message:err.message}); } }
+
+  function switchTab(name){ document.querySelectorAll('.mm-tab').forEach(t=>t.classList.toggle('is-active',t.dataset.mmTab===name));
+    document.querySelectorAll('.mm-pane').forEach(p=>{ p.hidden=p.dataset.mmPane!==name; }); }
+
+  /* ── wire ── */
+  function wire(){
+    document.getElementById('tl-refresh')?.addEventListener('click',load);
+    document.querySelectorAll('.mm-tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.mmTab)));
+    document.getElementById('mm-search-input')?.addEventListener('input',()=>{ clearTimeout(S.searchTimer); S.searchTimer=setTimeout(runSearch,280); });
+    document.getElementById('mm-search-clear')?.addEventListener('click',()=>{ document.getElementById('mm-search-input').value=''; runSearch(); });
+    document.getElementById('mm-assign-cancel')?.addEventListener('click',closeAssign);
+    document.getElementById('mm-assign-save')?.addEventListener('click',save);
+    document.getElementById('mm-assign-clear')?.addEventListener('click',clear);
+    ['mm-assign-movie','mm-assign-show','mm-assign-trailer-min'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('change',updateTimeline); el.addEventListener('input',updateTimeline); } });
+    document.getElementById('mm-assign')?.addEventListener('click',e=>{ if(e.target.id==='mm-assign')closeAssign(); });
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.getElementById('mm-assign')?.classList.contains('is-open'))closeAssign(); });
+  }
+  wire();
   window.__loadTimelineEditor = load;
 })();
 </script>
+
 
   </div>
 
@@ -5702,7 +6135,7 @@ async function loadMoviesOverview() {
     const strip = document.getElementById('overview-lineup-strip');
     if (!strip) return;
     if (!lineup.length) {
-      strip.innerHTML = `<div class="overview-lineup-strip__empty">No movies scheduled yet. <a href="/admin/seating.html" style="color:var(--gala-red,#cb262c); font-weight:600;">Set the lineup →</a></div>`;
+      strip.innerHTML = `<div class="overview-lineup-strip__empty">No movies scheduled yet. <a href="#" onclick="document.querySelector('.nav-tab[data-tab=&quot;movies&quot;]')?.click();return false;" style="color:var(--gala-red,#cb262c); font-weight:600;">Set the lineup →</a></div>`;
       return;
     }
     strip.innerHTML = '';
