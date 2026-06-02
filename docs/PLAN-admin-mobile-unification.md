@@ -53,7 +53,7 @@ confirms on his phone → says "next." No giant blind commits 9 days out.
 ## PHASE STATUS
 
 - [x] **Phase 0 — Foundation already shipped** ✅ (pre-plan, 2026-06-02)
-- [x] **Phase 1 — Shared component layer (design system)** ✅ shipped+verified (`e47398e`)
+- [x] **Phase 1 — Shared component layer (design system)** ✅ shipped (`e47398e`); ⚠️ introduced a nested-`<style>` regression (CSS leaked as page text) — FIXED `bd737fa`
 - [x] **Phase 2 — Sponsors finish (React island pass 2)** ✅ shipped+verified (`512c23f`)
 - [ ] **Phase 3 — Volunteers tab conversion**  ← NEXT
 - [ ] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)**
@@ -113,6 +113,16 @@ the existing admin CSS).
 existing tokens, balanced 53/53 braces, 0 markup usages (provably additive — no
 tab changed). Live + verified in served admin HTML. ⏳ Scott: nothing to see yet
 by design; confirm later phases as tabs convert onto it.
+
+**⚠️ REGRESSION + FIX (`bd737fa`):** the layer was injected as a NESTED
+`<style>` inside the existing admin `<style>`; the inner `</style>` closed the
+original block early, dumping the reset/body/.dash-header CSS as raw TEXT at the
+top of every admin page and stripping styling below it. Caught from Scott's
+screenshots. Root cause: Phase 1 was marked "verified" on text-presence alone.
+Fix removed the wrapper tags (CSS merged into the main block); re-verified on
+LIVE served HTML that all rules sit inside `<style>` and nothing leaks. **New
+rule: any CSS injection must validate style-tag structure (no nesting, balanced)
+and render integrity on served HTML — not just that the text is present.**
 
 ---
 
