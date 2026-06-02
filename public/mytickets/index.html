@@ -147,6 +147,10 @@
 
 <script>
 (function(){
+  // Tell Booker this is the self-serve My Tickets page — he runs the lookup
+  // concierge (Sonnet + lookup_booking) and finds tickets for the guest
+  // instead of pointing at this form. Set before the deferred widget loads.
+  try { window.__galaBookingContext = { selfserve: true }; } catch (e) {}
   var mode = 'email';
   var els = {
     tabEmail: document.getElementById('tab-email'),
@@ -243,7 +247,7 @@
     // widget forwards it so Booker can answer "which theater am I in?" etc.
     try {
       if (window.GalaChat && data.sponsor_id != null) window.GalaChat.setBookingContext(data.sponsor_id);
-      else window.__galaBookingContext = (data.sponsor_id != null) ? { id: data.sponsor_id } : null;
+      else window.__galaBookingContext = (data.sponsor_id != null) ? { selfserve: true, id: data.sponsor_id } : { selfserve: true };
     } catch (e) {}
 
     var sendBtn = document.getElementById('sendLink');

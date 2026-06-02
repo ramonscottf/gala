@@ -14,7 +14,7 @@ import {
   getOrCreateThread, recordMessage, loadFaqContext, loadShowtimes,
   loadHistory, callHaiku, callSonnet, buildSystemPrompt, postToSlack, jsonResponse,
 } from './_helpers.js';
-import { TOOL_DEFINITIONS, getTokenContext, getMyticketsContext, dispatchTool } from './_tools.js';
+import { TOOL_DEFINITIONS, SELFSERVE_TOOL_DEFINITIONS, getTokenContext, getMyticketsContext, dispatchTool } from './_tools.js';
 
 export async function onRequestPost({ request, env }) {
   let body;
@@ -46,6 +46,11 @@ export async function onRequestPost({ request, env }) {
   // (no tools) but booking-aware for personalized day-of questions.
   const myticketsContext = tokenContext ? null : await getMyticketsContext(request, env);
 
+  // /mytickets self-serve concierge: the widget sets X-Gala-Selfserve on the
+  // My Tickets page so Booker runs Sonnet + the lookup_booking tool and finds
+  // bookings conversationally ("do it for me"). Only when there's no token.
+  const selfserve = !tokenContext && (request.headers.get('X-Gala-Selfserve') || '').trim() === '1';
+
   // ----- AI MODE -----
   if (thread.mode === 'ai') {
     try {
@@ -55,12 +60,15 @@ export async function onRequestPost({ request, env }) {
         loadHistory(env, thread.id, 20),
       ]);
       const liveHelp = !!(env.SLACK_BOT_TOKEN && env.SLACK_HELPLINE_CHANNEL);
-      const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext, myticketsContext, liveHelp);
+      const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext, myticketsContext, liveHelp, selfserve);
 
       let reply;
       if (tokenContext) {
-        // Concierge mode: Sonnet + tools.
+        // Concierge mode: Sonnet + full tools (token-scoped).
         reply = await callSonnet(env, systemPrompt, history, TOOL_DEFINITIONS, dispatchTool, tokenContext);
+      } else if (selfserve) {
+        // Self-serve My Tickets concierge: Sonnet + lookup_booking (no token).
+        reply = await callSonnet(env, systemPrompt, history, SELFSERVE_TOOL_DEFINITIONS, dispatchTool, null);
       } else {
         // FAQ-only mode: Haiku, no tools.
         reply = await callHaiku(env, systemPrompt, history);

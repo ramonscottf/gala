@@ -66,6 +66,36 @@ export const TOOL_DEFINITIONS = [
   },
 ];
 
+// lookup_booking — token-free lookup for the public "My Tickets" page. Booker
+// searches by company name or RSVP email and shows the (non-secret) booking
+// himself, instead of telling the guest to use a form. Same data the open
+// /api/gala/mytickets/lookup endpoint already returns on screen.
+export const LOOKUP_TOOL = {
+  name: 'lookup_booking',
+  description:
+    "Find a guest's gala booking by their COMPANY NAME or the EMAIL they used to RSVP, and return their seats, theater/auditorium, movie, showtimes, and dinner choices. Use this on the My Tickets page whenever someone wants to find or see their tickets/seats — DO IT FOR THEM, never tell them to type into a form. If you don't yet know their company or email, ask for it, then call this. If it returns multiple matching companies, show that list and ask which one. If it finds nothing, ask them to try a shorter company name or their email. This is READ-ONLY — it shows the booking but cannot change anything.",
+  input_schema: {
+    type: 'object',
+    properties: {
+      query: {
+        type: 'string',
+        description: "The company name or email address to look up. If it looks like an email (contains @), it's matched exactly; otherwise it's a company-name search.",
+      },
+    },
+    required: ['query'],
+  },
+};
+
+// Toolset for the self-serve My Tickets concierge (no token). lookup_booking
+// + the token-free informational tools. Deliberately excludes get_my_booking
+// and get_portal_link (both require a token / would emit a token link).
+export const SELFSERVE_TOOL_DEFINITIONS = [
+  LOOKUP_TOOL,
+  ...TOOL_DEFINITIONS.filter(
+    t => t.name === 'list_movies' || t.name === 'check_showing_availability'
+  ),
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Token context — extract the sponsor or delegation context from the request
 // ─────────────────────────────────────────────────────────────────────────────
@@ -112,6 +142,23 @@ export async function getMyticketsContext(request, env) {
   ).bind(id).first();
   if (!sponsor) return null;
 
+  const showings = await loadShowingsForSponsor(env, id);
+  const name = sponsor.first_name
+    ? `${sponsor.first_name} ${sponsor.last_name || ''}`.trim()
+    : sponsor.company;
+
+  return {
+    kind: 'mytickets',
+    name,
+    company: sponsor.company,
+    showings,
+  };
+}
+
+// Shared seat-grouping loader — used by getMyticketsContext (injected snapshot)
+// and the lookup_booking tool. Groups a sponsor's seats by theater:showing
+// with movie + showtimes + dinner labels. Read-only, non-secret seat data.
+async function loadShowingsForSponsor(env, sponsorId) {
   const rs = await env.GALA_DB.prepare(
     `SELECT sa.theater_id, sa.showing_number, sa.row_label, sa.seat_num, sa.dinner_choice,
             m.title AS movie_title, st.show_start, st.dinner_time
@@ -121,7 +168,7 @@ export async function getMyticketsContext(request, env) {
        LEFT JOIN movies m ON m.id = st.movie_id
       WHERE sa.sponsor_id = ?
       ORDER BY sa.theater_id, sa.showing_number, sa.row_label, CAST(sa.seat_num AS INTEGER)`
-  ).bind(id).all();
+  ).bind(sponsorId).all();
 
   const groups = new Map();
   for (const r of (rs.results || [])) {
@@ -143,16 +190,66 @@ export async function getMyticketsContext(request, env) {
         : null,
     });
   }
+  return Array.from(groups.values());
+}
 
+// lookup_booking implementation — search by email (exact) or company (LIKE),
+// return the read-only booking, a candidate list for multi-match, or not-found.
+// Mirrors the public /api/gala/mytickets/lookup search. No token, no contact
+// info, no portal link in the output.
+async function lookupBooking(env, input) {
+  const query = String(input?.query || '').trim();
+  if (!query) {
+    return { found: false, message: 'Ask the guest for their company name or the email they used to RSVP, then look it up.' };
+  }
+
+  if (query.includes('@')) {
+    const email = query.toLowerCase();
+    const sponsor = await env.GALA_DB.prepare(
+      `SELECT id, company, first_name, last_name FROM sponsors
+        WHERE archived_at IS NULL AND (LOWER(email) = ? OR LOWER(secondary_email) = ?)
+        LIMIT 1`
+    ).bind(email, email).first();
+    if (!sponsor) {
+      return { found: false, message: `No booking found for ${query}. Double-check the email, or try the company name instead.` };
+    }
+    return await bookingResult(env, sponsor);
+  }
+
+  const like = `%${query}%`;
+  const rs = await env.GALA_DB.prepare(
+    `SELECT id, company, first_name, last_name FROM sponsors
+      WHERE archived_at IS NULL AND company LIKE ? COLLATE NOCASE
+      ORDER BY CASE WHEN company LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END, company
+      LIMIT 10`
+  ).bind(like, `${query}%`).all();
+  const rows = rs.results || [];
+  if (rows.length === 0) {
+    return { found: false, message: `No booking found for "${query}". Try a shorter version of the company name, or the email used to RSVP.` };
+  }
+  if (rows.length > 1) {
+    return {
+      found: false,
+      multiple: true,
+      candidates: rows.map(r => r.company),
+      message: 'Multiple companies match — list them and ask the guest which one.',
+    };
+  }
+  return await bookingResult(env, rows[0]);
+}
+
+async function bookingResult(env, sponsor) {
+  const showings = await loadShowingsForSponsor(env, sponsor.id);
   const name = sponsor.first_name
     ? `${sponsor.first_name} ${sponsor.last_name || ''}`.trim()
     : sponsor.company;
-
   return {
-    kind: 'mytickets',
+    found: true,
     name,
     company: sponsor.company,
-    showings: Array.from(groups.values()),
+    has_seats: showings.length > 0,
+    showings,
+    note: 'READ-ONLY. To change anything, the guest taps "Email me my portal link" on this page or emails Sherry (smiggin@dsdmail.net). Do not output a portal link or token.',
   };
 }
 
@@ -162,6 +259,8 @@ export async function getMyticketsContext(request, env) {
 
 export async function dispatchTool(env, tokenContext, name, input) {
   switch (name) {
+    case 'lookup_booking':
+      return await lookupBooking(env, input);
     case 'get_my_booking':
       return await getMyBooking(env, tokenContext);
     case 'list_movies':

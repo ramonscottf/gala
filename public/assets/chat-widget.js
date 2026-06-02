@@ -40,15 +40,18 @@
   // Set via window.GalaChat.setBookingContext(id), or the
   // window.__galaBookingContext global if the page set it before we loaded.
   let MYTICKETS_SPONSOR = null;
+  let SELFSERVE = false;
   try {
     const g = window.__galaBookingContext;
     if (g && g.id != null) MYTICKETS_SPONSOR = String(g.id);
+    if (g && g.selfserve) SELFSERVE = true;
   } catch (_) {}
 
   function chatHeaders() {
     const h = { 'Content-Type': 'application/json' };
-    if (SPONSOR_TOKEN) h['X-Gala-Sponsor-Token'] = SPONSOR_TOKEN;
-    else if (MYTICKETS_SPONSOR) h['X-Gala-Mytickets-Sponsor'] = MYTICKETS_SPONSOR;
+    if (SPONSOR_TOKEN) { h['X-Gala-Sponsor-Token'] = SPONSOR_TOKEN; return h; }
+    if (MYTICKETS_SPONSOR) h['X-Gala-Mytickets-Sponsor'] = MYTICKETS_SPONSOR;
+    if (SELFSERVE) h['X-Gala-Selfserve'] = '1';
     return h;
   }
 
@@ -57,6 +60,7 @@
     MYTICKETS_SPONSOR = (id == null || id === '') ? null : String(id);
   };
   window.GalaChat.clearBookingContext = function () { MYTICKETS_SPONSOR = null; };
+  window.GalaChat.setSelfserve = function (on) { SELFSERVE = !!on; };
 
   // Page-aware theming. The widget detects which gala page it's on and
   // picks a palette that matches. The teaser page (/event/) uses a midnight
@@ -328,6 +332,14 @@
     .gx-input-row button svg { width: 18px; height: 18px; fill: white; }
     .gx-mode-banner { font-size: 12px; padding: 6px 14px; text-align: center; background: ${GREY}; color: #4b5563; border-bottom: 1px solid #e5e9f0; }
     .gx-mode-banner.gx-live { background: #fff4e5; color: #92400e; }
+    .gx-header-actions { display: flex; align-items: center; gap: 2px; }
+    .gx-expand { background: transparent; border: 0; color: white; cursor: pointer; font-size: 17px; line-height: 1; padding: 4px 8px; opacity: .85; }
+    .gx-expand:hover { opacity: 1; }
+    .gx-panel.gx-fullscreen {
+      inset: 0; right: 0; left: 0; top: 0; bottom: 0;
+      width: 100vw; height: 100vh; height: 100dvh;
+      max-width: none; max-height: none; border-radius: 0;
+    }
     @media (max-width: 480px) {
       .gx-panel { right: 8px; bottom: 190px; width: calc(100vw - 16px); height: calc(100vh - 210px); }
     }
@@ -364,7 +376,10 @@
         <h3>Ask Booker</h3>
         <div class="gx-sub">DEF Gala · June 10 · Legacy Crossing</div>
       </div>
-      <button class="gx-close" aria-label="Close">&times;</button>
+      <div class="gx-header-actions">
+        <button class="gx-expand" aria-label="Toggle full screen" title="Full screen">⤢</button>
+        <button class="gx-close" aria-label="Close">&times;</button>
+      </div>
     </div>
     <div class="gx-mode-banner" id="gx-banner" style="display:none"></div>
     <div class="gx-body" id="gx-body">
@@ -385,6 +400,18 @@
   const sendBtn = $('#gx-send');
   // toggle was removed; AI-only mode
   const banner = $('#gx-banner');
+  const expandBtn = $('.gx-expand');
+  const isMobileView = () => { try { return window.matchMedia('(max-width: 480px)').matches; } catch (_) { return false; } };
+  function applyFullscreen() {
+    panel.classList.toggle('gx-fullscreen', !!state.fullscreen);
+    if (expandBtn) expandBtn.textContent = state.fullscreen ? '⤡' : '⤢';
+  }
+  function toggleFullscreen() {
+    state.fullscreen = !state.fullscreen;
+    applyFullscreen();
+    input && input.focus();
+  }
+  if (expandBtn) expandBtn.addEventListener('click', toggleFullscreen);
   const dot = btn.querySelector('#gx-dot');
   const booker = btn.querySelector('#gx-booker');
   const thinkDots = btn.querySelector('#gx-think-dots');
@@ -462,7 +489,7 @@
 
 
   let state = {
-    open: false, threadId: null, mode: 'ai', liveAvailable: false,
+    open: false, threadId: null, mode: 'ai', liveAvailable: false, fullscreen: null,
     lastSeen: '1970-01-01T00:00:00.000Z', pollTimer: null,
   };
 
@@ -594,6 +621,10 @@
     if (!state.open) {
       setBookerExpression('big-smile');  // greet on open
       autoStart();                        // open or resume the chat session
+      // On mobile, open full-screen so Booker is the whole interface. Desktop
+      // stays the card. User can toggle either way via the header button.
+      if (state.fullscreen === null) state.fullscreen = isMobileView();
+      applyFullscreen();
     }
     state.open = !state.open;
     panel.style.display = state.open ? 'flex' : 'none';
@@ -703,7 +734,9 @@
       // Greet only on the first start of a session. Resumed threads
       // already have message history rendered (or about to be polled).
       if (!data.resumed) {
-        appendMsg('ai', "Hey! I'm Booker. Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, parking. What's on your mind?");
+        appendMsg('ai', SELFSERVE
+          ? "Hey! I'm Booker. I can pull up your gala tickets and show you your seats, movie, and dinner — just tell me your company name, or the email you used to RSVP. Or ask me anything about the night."
+          : "Hey! I'm Booker. Ask me anything about the gala — what to wear, what's in the auction, when to show up, the movies, seating, parking. What's on your mind?");
       } else {
         // Could pollOnce() here to fetch any messages we missed, but the
         // existing poll logic will catch it on the next tick.

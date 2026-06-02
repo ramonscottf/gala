@@ -325,15 +325,18 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
   };
 }
 
-export function buildSystemPrompt(faqText, showtimesText, tokenContext = null, myticketsContext = null, liveHelp = false) {
+export function buildSystemPrompt(faqText, showtimesText, tokenContext = null, myticketsContext = null, liveHelp = false, selfserve = false) {
   // Build the optional "WHO YOU'RE TALKING TO" identity block when the user
   // is on a sponsor portal page (token resolved). When this is present, the
   // model is also given function-calling tools and should use them to look
   // up real booking data instead of inventing answers.
   const identityBlock = buildIdentityBlock(tokenContext);
-  // On /mytickets there's no token, but the page may have handed us a
-  // read-only booking snapshot. Mutually exclusive with identityBlock.
-  const myticketsBlock = buildMyticketsBlock(myticketsContext);
+  // On /mytickets there's no token. In self-serve mode Booker has a
+  // lookup_booking tool and finds bookings conversationally (selfserveBlock);
+  // otherwise it may have a pre-injected read-only snapshot (myticketsBlock).
+  // These are mutually exclusive with each other and with identityBlock.
+  const selfserveBlock = selfserve ? buildSelfserveBlock(myticketsContext) : '';
+  const myticketsBlock = selfserve ? '' : buildMyticketsBlock(myticketsContext);
   // Whether the Slack-backed Live Help handoff is connected right now. Controls
   // whether Booker is allowed to point people at the "Talk to a person" toggle.
   const liveHelpLine = liveHelp
@@ -360,7 +363,7 @@ Rules:
 - The only names you should use are: Sherry Miggin (Executive Director, smiggin@dsdmail.net) and Scott (handles tech/seating questions).
 - The Davis Education Foundation supports Davis School District in Utah — unrelated to similarly named foundations elsewhere.
 ${liveHelpLine}
-${identityBlock}${myticketsBlock}
+${identityBlock}${myticketsBlock}${selfserveBlock}
 # FAQ KNOWLEDGE BASE
 
 ${faqText}
@@ -439,6 +442,35 @@ Rules for this booking data:
 - For wayfinding ("how do I get to my auditorium?"), give general guidance — follow the Megaplex auditorium-number signage from the main lobby, or ask a volunteer — don't invent a specific route.
 - Use only the seats/movie/times above plus the FAQ. Don't invent seat numbers, theaters, or showtimes.
 - When you state their movie time or dinner time, use the EXACT time shown in their booking above. Their dinner time is the one listed with their showing — do not estimate a different window from general schedule info.
+`;
+}
+
+// Self-serve "My Tickets" concierge block. Booker has the lookup_booking tool
+// and FINDS the booking for the guest instead of pointing at a form. If the
+// guest already used the on-page lookup form, myticketsContext pre-identifies
+// them so Booker greets them without re-asking.
+function buildSelfserveBlock(myticketsContext) {
+  let known = '';
+  if (myticketsContext && (myticketsContext.name || myticketsContext.company)) {
+    const who = myticketsContext.name || myticketsContext.company;
+    const co = (myticketsContext.company && myticketsContext.company !== who)
+      ? ` (${myticketsContext.company})` : '';
+    known = `\nThe guest already looked themselves up on this page — they are **${who}**${co}. You can answer questions about their booking directly; only call lookup_booking again if they ask about a different company.\n`;
+  }
+  return `
+# YOU'RE ON THE "MY TICKETS" PAGE — YOU FIND TICKETS FOR PEOPLE
+
+People open this page to find their gala tickets and see their seats. You have a \`lookup_booking\` tool — USE IT to find their booking yourself.
+
+- DO IT FOR THEM. Never tell someone to "use the form", "type your company in the box", or "look yourself up" — YOU run the lookup.
+- If you don't yet know their company or the email they RSVP'd with, ask once: "What's your company name, or the email you used to RSVP?" Then call \`lookup_booking\`.
+- If \`lookup_booking\` returns multiple matching companies, list them and ask which one, then look that one up.
+- If it finds nothing, ask them to try a shorter company name or their email.
+- Once found, show their theater/auditorium, movie, exact showtime, dinner choice, and seat numbers clearly and warmly. Use only what the tool returns — don't invent seats, theaters, or times.
+${known}
+Read-only rules:
+- You can SEE bookings but CANNOT change them. Never offer to move seats, switch movies, or edit dinner, and never imply you did.
+- To make a change, tell them to tap the "Email me my portal link" button on this page, or email Sherry at smiggin@dsdmail.net. Never output a portal link or token yourself.
 `;
 }
 
