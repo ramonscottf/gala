@@ -1155,9 +1155,9 @@ body {
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
          Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
-    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606020102">
+    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606020210">
     <div id="sponsors-mount"></div>
-    <script src="/admin/assets/sponsors.js?v=202606020102" defer></script>
+    <script src="/admin/assets/sponsors.js?v=202606020210" defer></script>
   </div>
 
   <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->
@@ -1667,19 +1667,292 @@ body {
       </div>
     </div>
 
-    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px;">
-      <a href="/admin/seating.html" class="btn btn-primary" style="min-width:240px;">🎬 Manage Movies & Auditoriums</a>
-    </div>
-
-    <div id="movies-conflict-banner" style="display:none; padding:14px 18px; background:#fdeded; border-left:4px solid #cb262c; border-radius:8px; margin-bottom:24px;">
+    <div id="movies-conflict-banner" style="display:none; padding:14px 18px; background:#fdeded; border-left:4px solid #cb262c; border-radius:8px; margin-bottom:20px;">
       <div style="font-weight:700; color:#a01f24; font-size:0.92rem;" id="movies-conflict-title"></div>
       <div id="movies-conflict-list" style="font-size:0.85rem; color:#0d1b3d; margin-top:6px;"></div>
     </div>
 
-    <h3 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Lineup</h3>
-    <div id="movies-lineup-grid" class="movies-lineup-grid">
-      <div style="grid-column:1/-1; padding:24px; text-align:center; color:var(--text-muted);">Loading…</div>
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px;">
+      <h3 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin:0;">Schedule &amp; auditoriums</h3>
+      <a href="/admin/seating.html" style="font-size:0.78rem; color:var(--muted); font-weight:600;">Advanced (TMDB, seat maps, dinner menu) ↗</a>
     </div>
+
+    <style>
+/* ── Movies-tab live timeline editor ─────────────────────────────── */
+.tl-wrap { margin-top: 8px; }
+.tl-bar {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.tl-bar .tl-hint { font-size:0.8rem; color:var(--muted); }
+.tl-legend { display:flex; gap:14px; flex-wrap:wrap; font-size:0.72rem; color:var(--muted); margin-bottom:10px; }
+.tl-legend span { display:inline-flex; align-items:center; gap:6px; }
+.tl-legend i { width:14px; height:14px; border-radius:4px; display:inline-block; }
+
+.tl-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--border); border-radius:14px; background:var(--card); }
+.tl-grid { min-width:760px; position:relative; }
+
+.tl-ticks { position:relative; height:26px; border-bottom:1px solid var(--border); margin-left:120px; }
+.tl-tick { position:absolute; top:0; bottom:0; border-left:1px solid var(--border); }
+.tl-tick-lab { position:absolute; top:4px; font-size:0.66rem; color:var(--light); transform:translateX(4px); white-space:nowrap; }
+
+.tl-row { display:flex; align-items:stretch; border-bottom:1px solid var(--border); min-height:52px; }
+.tl-row:last-child { border-bottom:none; }
+.tl-rowlab { width:120px; flex-shrink:0; padding:8px 10px; border-right:1px solid var(--border); background:var(--card-alt); }
+.tl-rowlab .a { font-weight:800; font-size:0.82rem; color:var(--text); }
+.tl-rowlab .c { font-size:0.68rem; color:var(--muted); margin-top:2px; }
+.tl-track { position:relative; flex:1; }
+
+.tl-block {
+  position:absolute; top:6px; bottom:6px; border-radius:8px; padding:6px 9px;
+  display:flex; flex-direction:column; justify-content:center; gap:1px;
+  color:#fff; cursor:pointer; overflow:hidden; border:1.5px solid rgba(255,255,255,0.18);
+  box-shadow:0 2px 6px rgba(0,0,0,0.14); transition:filter .12s, transform .12s;
+}
+.tl-block:active { transform:scale(0.985); }
+.tl-block:hover { filter:brightness(1.06); }
+.tl-block .t { font-weight:800; font-size:0.76rem; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tl-block .s { font-size:0.64rem; opacity:0.92; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.tl-block.is-extra::after { content:'NEW'; position:absolute; top:3px; right:4px; font-size:0.52rem; font-weight:900; letter-spacing:0.06em; background:rgba(255,255,255,0.92); color:#0b1b3c; padding:1px 4px; border-radius:99px; }
+.tl-block.conflict { outline:2px solid var(--red); outline-offset:-2px; }
+
+.tl-empty {
+  position:absolute; top:8px; bottom:8px; border-radius:8px;
+  border:1.5px dashed var(--border-strong); background:transparent;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  color:var(--light); cursor:pointer; font-size:0.7rem; font-weight:700;
+}
+.tl-empty:hover { border-color:var(--pink); color:var(--pink); }
+
+.tl-staff { position:absolute; top:8px; bottom:8px; left:2%; right:2%; border-radius:8px; background:repeating-linear-gradient(45deg,var(--card-alt),var(--card-alt) 8px,#e9eef5 8px,#e9eef5 16px); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:var(--muted); font-style:italic; }
+
+/* editor sheet */
+.tl-sheet-bg { position:fixed; inset:0; background:rgba(8,19,42,0.55); z-index:1200; display:flex; align-items:flex-end; justify-content:center; }
+.tl-sheet { width:100%; max-width:520px; max-height:90vh; overflow:auto; background:var(--card); border-radius:18px 18px 0 0; padding:18px 18px max(22px,env(safe-area-inset-bottom)); box-shadow:0 -10px 40px rgba(0,0,0,0.3); }
+@media(min-width:560px){ .tl-sheet-bg{align-items:center} .tl-sheet{border-radius:18px} }
+.tl-sheet h3 { margin:0 0 2px; font-size:1.1rem; color:var(--text); }
+.tl-sheet .sub { font-size:0.78rem; color:var(--muted); margin-bottom:16px; }
+.tl-field { margin-bottom:13px; }
+.tl-field label { display:block; font-size:0.68rem; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.tl-field select, .tl-field input { width:100%; box-sizing:border-box; padding:11px 12px; border:1px solid var(--border-strong); border-radius:10px; font-size:0.95rem; background:var(--card); color:var(--text); -webkit-appearance:none; appearance:none; }
+.tl-row2 { display:flex; gap:10px; } .tl-row2 > * { flex:1; }
+.tl-sheet-actions { display:flex; gap:8px; margin-top:18px; }
+.tl-sheet-actions .btn { flex:1; }
+.tl-clearbtn { background:transparent; border:1.5px solid var(--border-strong); color:var(--muted); border-radius:10px; padding:11px; font-weight:700; font-size:0.85rem; cursor:pointer; width:100%; margin-top:6px; }
+.tl-clearbtn:hover { border-color:var(--red); color:var(--red); }
+.tl-msg { font-size:0.8rem; padding:9px 11px; border-radius:8px; margin-top:10px; display:none; }
+.tl-msg.err { display:block; background:var(--red-bg); color:var(--red); }
+.tl-msg.ok { display:block; background:#ecfdf5; color:#047857; }
+</style>
+
+<div class="tl-wrap">
+  <div class="tl-bar">
+    <button class="btn btn-secondary" id="tl-refresh" style="padding:7px 12px; font-size:0.8rem;">↻ Refresh</button>
+    <span class="tl-hint">Tap any film to move it, change its time, or swap the title. Tap an empty slot to assign a film.</span>
+  </div>
+  <div class="tl-legend">
+    <span><i style="background:#0b1b3c"></i>Mandalorian</span>
+    <span><i style="background:#b45309"></i>Breadwinner</span>
+    <span><i style="background:#c2410c"></i>Paddington</span>
+    <span><i style="background:#1d4ed8"></i>Dragon</span>
+    <span><i style="background:#475569"></i>Other</span>
+    <span><i style="background:#fff;border:1px solid var(--border-strong)"></i>Empty</span>
+  </div>
+  <div class="tl-scroll"><div class="tl-grid" id="tl-grid"><div style="padding:28px;text-align:center;color:var(--muted)">Loading schedule…</div></div></div>
+</div>
+
+<script>
+/* ════ Movies-tab unified timeline editor (live D1 via /api/gala/movies) ════
+   One place: see the schedule + tap a film to reassign/retime/swap.
+   Replaces the bounce-out to /admin/seating.html for day-to-day edits. */
+(function(){
+  const TL = { layouts:null, movies:[], showtimes:[], conflicts:[] };
+  const DAY_START = 15*60, DAY_END = 22*60;       // 3 PM → 10 PM window
+  const span = DAY_END - DAY_START;
+  const pct = min => ((min - DAY_START)/span)*100;
+  const COLORS = { mando:'#0b1b3c', bread:'#b45309', pad:'#c2410c', dragon:'#1d4ed8', other:'#475569' };
+  function colorFor(title){
+    const t=(title||'').toLowerCase();
+    if(t.includes('mandalorian')) return COLORS.mando;
+    if(t.includes('breadwinner')) return COLORS.bread;
+    if(t.includes('paddington')) return COLORS.pad;
+    if(t.includes('dragon')) return COLORS.dragon;
+    return COLORS.other;
+  }
+  function parseMin(s){
+    if(!s) return null;
+    const m=String(s).trim().match(/^(\d{1,2}):(\d{2})\s*([AP])M$/i);
+    if(!m) return null;
+    let h=+m[1]%12; if(m[3].toUpperCase()==='P') h+=12;
+    return h*60 + (+m[2]);
+  }
+  function fmtMin(min){
+    if(min==null) return '';
+    let h=Math.floor(min/60), mm=min%60, ap=h>=12?'PM':'AM', h12=((h+11)%12)+1;
+    return `${h12}:${String(mm).padStart(2,'0')} ${ap}`;
+  }
+
+  async function load(){
+    const grid=document.getElementById('tl-grid');
+    try{
+      if(!TL.layouts){ const r=await fetch('/data/theater-layouts.json'); TL.layouts=(await r.json()).theaters||[]; }
+      const data=await fetchJSON('/api/gala/movies');
+      TL.movies=data.movies||[]; TL.showtimes=data.showtimes||[]; TL.conflicts=data.conflicts||[];
+      render();
+    }catch(e){ grid.innerHTML=`<div style="padding:24px;text-align:center;color:var(--red)">Couldn't load schedule: ${escapeHtml(e.message||String(e))}</div>`; }
+  }
+
+  function render(){
+    const grid=document.getElementById('tl-grid');
+    const conflictAuds=new Set(TL.conflicts.filter(c=>!c.ok).map(c=>c.theater_id));
+    // ticks
+    let ticks='<div class="tl-ticks">';
+    for(let h=15;h<=22;h++){ const left=pct(h*60); ticks+=`<div class="tl-tick" style="left:${left}%"></div><div class="tl-tick-lab" style="left:${left}%">${((h+11)%12)+1} ${h<12?'AM':'PM'}</div>`; }
+    ticks+='</div>';
+
+    // showtimes grouped by theater
+    const byT={};
+    for(const s of TL.showtimes){ (byT[s.theater_id]=byT[s.theater_id]||[]).push(s); }
+
+    // order rows: assigned auditoriums first (by id), then any empties; staff rooms (11,14) last
+    const STAFF=new Set([11,14]);
+    const auds=TL.layouts.slice().sort((a,b)=>{
+      const sa=STAFF.has(a.id)?2:0, sb=STAFF.has(b.id)?2:0;
+      if(sa!==sb) return sa-sb;
+      return a.id-b.id;
+    });
+
+    let rows='';
+    for(const aud of auds){
+      const isStaff=STAFF.has(aud.id);
+      const shows=(byT[aud.id]||[]);
+      let track='';
+      if(isStaff){
+        track=`<div class="tl-staff">Staff / Staging</div>`;
+      }else{
+        // two showing slots
+        for(const sn of [1,2]){
+          const st=shows.find(s=>s.showing_number===sn);
+          const slotStart = sn===1 ? (15*60) : (18*60+45);
+          const slotEnd   = sn===1 ? (18*60+30) : (22*60);
+          if(st && st.movie_id){
+            const start=parseMin(st.show_start) ?? slotStart;
+            const end=st.show_end_minutes ?? (start+(st.movie_runtime||100)+(st.trailer_minutes??5));
+            const left=pct(start), w=Math.max(6,pct(end)-pct(start));
+            const conf=conflictAuds.has(aud.id)?' conflict':'';
+            const extra=st.is_extra?' is-extra':'';
+            track+=`<div class="tl-block${conf}${extra}" style="left:${left}%;width:${w}%;background:${colorFor(st.movie_title)}"
+                      data-edit="1" data-tid="${aud.id}" data-sn="${sn}">
+                      <div class="t">${escapeHtml(st.movie_title||'?')}</div>
+                      <div class="s">${escapeHtml(fmtMin(start))}–${escapeHtml(fmtMin(end))}</div>
+                    </div>`;
+          }else{
+            const left=pct(slotStart), w=pct(slotEnd)-pct(slotStart);
+            track+=`<div class="tl-empty" style="left:${left}%;width:${w}%" data-edit="1" data-tid="${aud.id}" data-sn="${sn}">+ ${sn===1?'Early':'Late'}</div>`;
+          }
+        }
+      }
+      const capLabel = isStaff ? 'Staff' : `${aud.totalSeats} seats`;
+      rows+=`<div class="tl-row">
+        <div class="tl-rowlab"><div class="a">Aud #${aud.id}</div><div class="c">${escapeHtml(capLabel)}</div></div>
+        <div class="tl-track">${track}</div>
+      </div>`;
+    }
+
+    grid.innerHTML = ticks + rows;
+    grid.querySelectorAll('[data-edit]').forEach(el=>{
+      el.addEventListener('click',()=>openSheet(+el.dataset.tid, +el.dataset.sn));
+    });
+  }
+
+  function openSheet(tid, sn){
+    const aud=TL.layouts.find(a=>a.id===tid)||{id:tid,totalSeats:0};
+    const st=TL.showtimes.find(s=>s.theater_id===tid && s.showing_number===sn) || {};
+    const def = sn===1 ? {dinner:'4:30 PM',show:'5:00 PM'} : {dinner:'7:15 PM',show:'7:45 PM'};
+    const cur = {
+      movie_id: st.movie_id||'',
+      show_start: st.show_start||def.show,
+      dinner_time: st.dinner_time||def.dinner,
+      capacity: st.capacity!=null?st.capacity:aud.totalSeats,
+      tid, sn,
+    };
+    const movieOpts = ['<option value="">— No film (empty this slot) —</option>']
+      .concat(TL.movies.map(m=>`<option value="${m.id}" ${m.id===cur.movie_id?'selected':''}>${escapeHtml(m.title)}${m.runtime_minutes?` · ${m.runtime_minutes}m`:''}</option>`)).join('');
+    const audOpts = TL.layouts.filter(a=>![11,14].includes(a.id))
+      .map(a=>`<option value="${a.id}" ${a.id===tid?'selected':''}>Aud #${a.id} · ${a.totalSeats} seats</option>`).join('');
+
+    const bg=document.createElement('div'); bg.className='tl-sheet-bg';
+    bg.innerHTML=`<div class="tl-sheet" role="dialog" aria-modal="true">
+      <h3>${st.movie_id?'Edit screening':'Assign a film'}</h3>
+      <div class="sub">Auditorium #${tid} · ${sn===1?'Early showing':'Late showing'}</div>
+      <div class="tl-field"><label>Film</label><select id="tl-movie">${movieOpts}</select></div>
+      <div class="tl-field"><label>Auditorium</label><select id="tl-aud">${audOpts}</select></div>
+      <div class="tl-row2">
+        <div class="tl-field"><label>Showing</label><select id="tl-sn"><option value="1" ${sn===1?'selected':''}>Early</option><option value="2" ${sn===2?'selected':''}>Late</option></select></div>
+        <div class="tl-field"><label>Capacity</label><input id="tl-cap" type="number" min="0" value="${cur.capacity}"></div>
+      </div>
+      <div class="tl-row2">
+        <div class="tl-field"><label>Dinner time</label><input id="tl-dinner" value="${escapeAttr(cur.dinner_time)}"></div>
+        <div class="tl-field"><label>Show start</label><input id="tl-show" value="${escapeAttr(cur.show_start)}"></div>
+      </div>
+      <div class="tl-msg" id="tl-msg"></div>
+      <div class="tl-sheet-actions">
+        <button class="btn btn-secondary" id="tl-cancel">Cancel</button>
+        <button class="btn btn-primary" id="tl-save">Save</button>
+      </div>
+      ${st.movie_id?`<button class="tl-clearbtn" id="tl-clear">Remove film from Aud #${tid} ${sn===1?'Early':'Late'}</button>`:''}
+    </div>`;
+    document.body.appendChild(bg);
+    const close=()=>bg.remove();
+    bg.addEventListener('click',e=>{ if(e.target===bg) close(); });
+    bg.querySelector('#tl-cancel').addEventListener('click',close);
+
+    const msg=bg.querySelector('#tl-msg');
+    const showMsg=(t,k)=>{ msg.textContent=t; msg.className='tl-msg '+k; };
+
+    bg.querySelector('#tl-save').addEventListener('click', async ()=>{
+      const newTid=+bg.querySelector('#tl-aud').value;
+      const newSn=+bg.querySelector('#tl-sn').value;
+      const movie_id=bg.querySelector('#tl-movie').value ? +bg.querySelector('#tl-movie').value : null;
+      const capacity=bg.querySelector('#tl-cap').value!==''?+bg.querySelector('#tl-cap').value:null;
+      const dinner_time=bg.querySelector('#tl-dinner').value.trim();
+      const show_start=bg.querySelector('#tl-show').value.trim();
+      // guard: moving onto an occupied target slot
+      const target=TL.showtimes.find(s=>s.theater_id===newTid && s.showing_number===newSn && s.movie_id && !(s.theater_id===tid && s.showing_number===sn));
+      if(target && movie_id){
+        if(!confirm(`Aud #${newTid} ${newSn===1?'Early':'Late'} already has "${target.movie_title}". Overwrite it?`)) return;
+      }
+      bg.querySelector('#tl-save').disabled=true; showMsg('Saving…','ok');
+      try{
+        // if the room/showing changed, clear the old slot first so we don't leave a duplicate
+        if(newTid!==tid || newSn!==sn){
+          await postMovies({action:'clear_showtime', theater_id:tid, showing_number:sn});
+        }
+        await postMovies({action:'set_showtime', theater_id:newTid, showing_number:newSn, movie_id, dinner_time, show_start, capacity});
+        close(); await load();
+      }catch(e){ showMsg(e.message||'Save failed','err'); bg.querySelector('#tl-save').disabled=false; }
+    });
+
+    const clearBtn=bg.querySelector('#tl-clear');
+    if(clearBtn) clearBtn.addEventListener('click', async ()=>{
+      if(!confirm(`Remove "${st.movie_title}" from Aud #${tid}?`)) return;
+      try{ await postMovies({action:'clear_showtime', theater_id:tid, showing_number:sn}); close(); await load(); }
+      catch(e){ showMsg(e.message||'Failed','err'); }
+    });
+  }
+
+  async function postMovies(body){
+    const r=await fetch('/api/gala/movies',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok){ let m; try{ m=(await r.json()).error; }catch{ m=`HTTP ${r.status}`; } throw new Error(m||`HTTP ${r.status}`); }
+    return r.json();
+  }
+
+  document.getElementById('tl-refresh')?.addEventListener('click', load);
+  // expose so the Movies-tab loader can trigger it
+  window.__loadTimelineEditor = load;
+})();
+</script>
+
   </div>
 
 </div>
@@ -5343,8 +5616,9 @@ document.querySelector('.nav-tab[data-tab="marketing"]')?.addEventListener('clic
 /* ── Movies tab ─────────────────────────────────────────────────────── */
 let moviesLoaded = false;
 async function loadMovies() {
-  const grid = document.getElementById('movies-lineup-grid');
-  if (!grid) return;
+  // KPIs + conflict banner stay here; the live timeline editor (below) is the
+  // single place to see the schedule and reassign/retime films. No more
+  // bounce-out to seating.html for day-to-day edits.
   try {
     const data = await fetchJSON('/api/gala/movies');
     const movies = data.movies || [];
@@ -5352,12 +5626,15 @@ async function loadMovies() {
     const conflicts = data.conflicts || [];
 
     // KPIs
-    document.getElementById('movies-library-count').textContent = String(movies.length);
+    const libEl = document.getElementById('movies-library-count');
+    if (libEl) libEl.textContent = String(movies.length);
     const audsAssigned = new Set(showtimes.filter(s => s.movie_id).map(s => `${s.theater_id}:${s.showing_number}`)).size;
-    document.getElementById('movies-auds-assigned').textContent = String(audsAssigned);
+    const audEl = document.getElementById('movies-auds-assigned');
+    if (audEl) audEl.textContent = String(audsAssigned);
     const hardConflicts = conflicts.filter(c => !c.ok).length;
     const tightConflicts = conflicts.filter(c => c.ok && c.tight).length;
-    document.getElementById('movies-conflicts-count').textContent =
+    const confEl = document.getElementById('movies-conflicts-count');
+    if (confEl) confEl.textContent =
       hardConflicts + tightConflicts > 0
         ? `${hardConflicts}${tightConflicts ? ` (+${tightConflicts} tight)` : ''}`
         : '0';
@@ -5372,79 +5649,19 @@ async function loadMovies() {
         const title = document.getElementById('movies-conflict-title');
         const list = document.getElementById('movies-conflict-list');
         const totalIssues = conflicts.length;
-        title.textContent = `⚠ ${totalIssues} schedule issue${totalIssues === 1 ? '' : 's'} detected`;
-        list.innerHTML = conflicts.map(c => {
+        if (title) title.textContent = `\u26a0 ${totalIssues} schedule issue${totalIssues === 1 ? '' : 's'} detected`;
+        if (list) list.innerHTML = conflicts.map(c => {
           const audName = `Aud ${c.theater_id}`;
-          return `<div style="padding:3px 0;">${audName} — ${c.message || (c.ok ? 'tight turnaround' : 'overlap')}</div>`;
+          return `<div style="padding:3px 0;">${audName} \u2014 ${c.message || (c.ok ? 'tight turnaround' : 'overlap')}</div>`;
         }).join('');
       }
     }
-
-    // Lineup grid — one card per unique movie that has at least one showtime
-    if (!movies.length) {
-      grid.innerHTML = `
-        <div style="grid-column:1/-1; padding:32px; text-align:center; color:var(--text-muted); border:1px dashed var(--border); border-radius:12px;">
-          <div style="font-size:2rem; margin-bottom:8px;">🎬</div>
-          <div style="font-weight:600; color:var(--text);">No movies in the lineup yet</div>
-          <div style="margin-top:6px; font-size:0.88rem;">Open <a href="/admin/seating.html" style="color:var(--gala-red,#cb262c); font-weight:600;">Manage Movies & Auditoriums</a> to add titles from TMDB.</div>
-        </div>`;
-      return;
-    }
-
-    const showsByMovie = {};
-    for (const st of showtimes) {
-      if (!st.movie_id) continue;
-      if (!showsByMovie[st.movie_id]) showsByMovie[st.movie_id] = [];
-      showsByMovie[st.movie_id].push(st);
-    }
-    const conflictTheaterIds = new Set(conflicts.map(c => c.theater_id));
-
-    grid.innerHTML = '';
-    for (const m of movies) {
-      const shows = showsByMovie[m.id] || [];
-      const showings = { 1: shows.filter(s => s.showing_number === 1), 2: shows.filter(s => s.showing_number === 2) };
-      const audsCount = shows.length;
-      const totalSeats = shows.reduce((sum, s) => sum + (s.capacity || 0), 0);
-
-      const card = document.createElement('div');
-      card.className = 'lineup-card';
-      const heroBg = m.backdrop_url || m.poster_url;
-
-      const showLineHtml = (n) => {
-        const list = showings[n];
-        if (!list || !list.length) {
-          return `<div class="lineup-card__show"><span class="lineup-card__show-label">Showing ${n}</span><span class="lineup-card__show-time" style="color:var(--text-muted);">— not scheduled</span></div>`;
-        }
-        const start = formatTime12(list[0].show_start);
-        const endLabel = list[0].show_end_label || '';
-        const hasConflict = list.some(s => conflictTheaterIds.has(s.theater_id));
-        return `<div class="lineup-card__show ${hasConflict ? 'lineup-card__show--conflict' : ''}">
-          <span class="lineup-card__show-label">${n === 1 ? 'Early' : 'Late'} (${list.length} aud${list.length===1?'':'s'})</span>
-          <span class="lineup-card__show-time">${start}${endLabel ? ` → ${endLabel}` : ''}${hasConflict ? ' ⚠' : ''}</span>
-        </div>`;
-      };
-
-      card.innerHTML = `
-        <div class="lineup-card__poster" ${heroBg ? `style="background-image:linear-gradient(to bottom,rgba(13,27,61,0.15),rgba(13,27,61,0.6)),url('${escapeAttr(heroBg)}');"` : ''}>
-          ${!heroBg ? '🎬' : ''}
-        </div>
-        <div class="lineup-card__body">
-          <div class="lineup-card__title">${escapeHtml(m.title)}${m.year ? ` <span style="color:var(--text-muted);font-weight:400;">· ${m.year}</span>` : ''}</div>
-          <div class="lineup-card__badges">
-            ${m.rating ? `<span class="lineup-card__badge lineup-card__badge--rating">${escapeHtml(m.rating)}</span>` : ''}
-            ${m.runtime_minutes ? `<span class="lineup-card__badge">${m.runtime_minutes} min</span>` : ''}
-          </div>
-          <div class="lineup-card__auds">${audsCount} auditorium${audsCount===1?'':'s'} · ${totalSeats} seats total</div>
-          <div class="lineup-card__shows">
-            ${showLineHtml(1)}
-            ${showLineHtml(2)}
-          </div>
-        </div>`;
-      grid.appendChild(card);
-    }
   } catch (e) {
-    grid.innerHTML = `<div style="grid-column:1/-1; padding:24px; text-align:center; color:var(--red,#a01f24);">Could not load movies: ${escapeHtml(e.message || 'unknown')}</div>`;
+    /* KPIs stay blank on error; the timeline below shows its own error state */
   }
+
+  // Render / refresh the live tap-to-edit timeline.
+  if (window.__loadTimelineEditor) { try { await window.__loadTimelineEditor(); } catch (e) {} }
 }
 
 function formatTime12(input) {
