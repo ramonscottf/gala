@@ -1378,22 +1378,22 @@ body {
       </div>
     </div>
 
-    <h2 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 28px 0 16px;">Seat Fill by Movie</h2>
+    <div class="ga-section-head"><h3>Seat Fill by Movie</h3></div>
     <div id="seat-fill" style="display:flex; flex-direction:column; gap:18px;">
       <div class="shimmer" style="width: 100%; height: 120px;"></div>
     </div>
 
-    <h2 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 28px 0 16px;">Still to Select &mdash; by Tier</h2>
+    <div class="ga-section-head"><h3>Still to Select &mdash; by Tier</h3></div>
     <div id="unpicked-strip" class="summary-bar" style="justify-content: center;">
       <div class="shimmer" style="width: 100%; height: 40px;"></div>
     </div>
 
-    <h2 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Sponsor Breakdown by Tier</h2>
+    <div class="ga-section-head"><h3>Sponsor Breakdown by Tier</h3></div>
     <div id="tier-breakdown" class="summary-bar" style="justify-content: center;">
       <div class="shimmer" style="width: 100%; height: 40px;"></div>
     </div>
 
-    <h2 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 28px 0 16px;">Movie Lineup</h2>
+    <div class="ga-section-head"><h3>Movie Lineup</h3></div>
     <div id="overview-lineup-strip" class="overview-lineup-strip">
       <div style="color: var(--text-muted); font-size: 0.88rem; padding: 16px;">Loading…</div>
     </div>
@@ -1429,9 +1429,9 @@ body {
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
          Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
-    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021402">
+    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021554">
     <div id="sponsors-mount"></div>
-    <script src="/admin/assets/sponsors.js?v=202606021402" defer></script>
+    <script src="/admin/assets/sponsors.js?v=202606021554" defer></script>
   </div>
 
   <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->
@@ -1803,8 +1803,8 @@ body {
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <span id="mkt-activity-live-dot" style="display:none; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 0 rgba(34,197,94,0.5); animation:mkt-pulse 1.5s infinite;"></span>
-          <button id="mkt-activity-refresh" style="padding:7px 14px; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer;">↻ Refresh</button>
-          <button id="mkt-activity-toggle-btn" style="padding:7px 14px; font-size:12px; background:#0d1b3d; color:#fff; border:0; border-radius:6px; cursor:pointer; font-weight:600;">Expand ▾</button>
+          <button id="mkt-activity-refresh" class="ga-btn ga-btn--sm">↻ Refresh</button>
+          <button id="mkt-activity-toggle-btn" class="ga-btn ga-btn--sm ga-btn--primary">Expand ▾</button>
         </div>
       </div>
 
