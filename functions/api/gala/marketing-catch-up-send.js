@@ -22,7 +22,7 @@
 // piece" surface.
 
 import { verifyGalaAuth, jsonError, jsonOk } from './_auth.js';
-import { sendEmail, galaEmailHtml } from './_notify.js';
+import { sendEmail, galaEmailHtml, sendSMS } from './_notify.js';
 import { displayName } from './_audience.js';
 import { SENDS } from './marketing-test.js';
 
@@ -132,17 +132,17 @@ export async function onRequestPost({ request, env }) {
     return jsonError('Sponsor has no email on file', 400);
   }
   if (channel === 'sms') {
-    // SMS catch-up is intentionally not yet supported for sponsors —
-    // the sponsors table doesn't carry an opt-in flag yet, and TCPA
-    // forbids sending SMS to anyone who hasn't explicitly consented.
-    // When we add a sponsor opt-in surface (likely Phase 5.17 of the
-    // marketing pipeline), this branch can be unblocked. Until then,
-    // refuse rather than guess.
-    return jsonError(
-      'SMS catch-up not yet supported for sponsors (no opt-in flag on the schema). ' +
-      'Email touchpoints work — use those, or send a text manually via the Compose text button.',
-      400
-    );
+    // SMS catch-up uses the SAME recipient rule as the bulk SMS pipeline
+    // (marketing-sms-send-now.js): a sponsor with a phone number on file in
+    // the targeted audience. There is no separate opt-in flag in the schema
+    // — bulk marketing SMS already goes to these exact sponsors on phone
+    // presence alone, via the A2P-registered messaging service. Catch-up is
+    // the same message to the same audience, just to someone who missed the
+    // scheduled send (or joined the tier after it fired), so the consent
+    // posture is identical. We refuse only when there's no phone to send to.
+    if (!(sponsor.phone && String(sponsor.phone).trim())) {
+      return jsonError('Sponsor has no phone on file', 400);
+    }
   }
 
   // ── 4. Substitute {TOKEN} ──────────────────────────────────────────────
@@ -189,12 +189,21 @@ export async function onRequestPost({ request, env }) {
       errorMessage = e.message;
     }
   } else if (channel === 'sms') {
-    // Unreachable — blocked at preflight above until sponsor SMS opt-in
-    // is modeled. Kept structurally so a future Skippy implementing
-    // sponsor opt-in only has to flip the preflight, not re-add the
-    // send logic. If you're reading this and adding sponsor SMS, see
-    // the comment block at the preflight check.
-    return jsonError('SMS catch-up path not yet enabled', 400);
+    // Plain SMS — bodyForRecipient is the marketing_sends SMS body with
+    // {TOKEN} substituted. No MMS hero (disabled 2026-05-27 — carrier
+    // filtering). Mirrors marketing-sms-send-now.js's send path.
+    try {
+      const res = await sendSMS(env, sponsor.phone, bodyForRecipient);
+      if (!res.ok) {
+        status = 'failed';
+        errorMessage = res.error || 'Twilio returned not-ok';
+      } else {
+        resendId = res.sid || null; // store Twilio sid for traceability
+      }
+    } catch (e) {
+      status = 'failed';
+      errorMessage = e.message;
+    }
   } else {
     return jsonError(`Unsupported channel: ${channel}`, 400);
   }

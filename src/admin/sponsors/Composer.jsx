@@ -67,28 +67,26 @@ export function Composer({ sponsor, channel, onClose, onSend, onCatchUpSent }) {
           <button className="gs-modal-close" onClick={onClose}>×</button>
         </div>
 
-        {/* Mode tabs — email channel only. SMS keeps the simple custom-only UI. */}
-        {channel === 'email' && (
-          <div
-            style={{
-              display: 'flex',
-              gap: 4,
-              marginBottom: 14,
-              borderBottom: '1px solid var(--def-border)',
-            }}
-          >
-            <ModeTab
-              active={mode === 'custom'}
-              onClick={() => setMode('custom')}
-              label="✏️ Custom message"
-            />
-            <ModeTab
-              active={mode === 'replay'}
-              onClick={() => setMode('replay')}
-              label="📨 Resend a marketing piece"
-            />
-          </div>
-        )}
+        {/* Mode tabs — both channels. SMS now has a catch-up (resend) tab too. */}
+        <div
+          style={{
+            display: 'flex',
+            gap: 4,
+            marginBottom: 14,
+            borderBottom: '1px solid var(--def-border)',
+          }}
+        >
+          <ModeTab
+            active={mode === 'custom'}
+            onClick={() => setMode('custom')}
+            label="✏️ Custom message"
+          />
+          <ModeTab
+            active={mode === 'replay'}
+            onClick={() => setMode('replay')}
+            label={channel === 'sms' ? '📨 Resend a marketing text' : '📨 Resend a marketing piece'}
+          />
+        </div>
 
         <div style={{ marginBottom: 12 }}>
           <div className="gs-label">To</div>
@@ -109,9 +107,10 @@ export function Composer({ sponsor, channel, onClose, onSend, onCatchUpSent }) {
           />
         )}
 
-        {mode === 'replay' && channel === 'email' && (
+        {mode === 'replay' && (
           <ReplayMode
             sponsor={sponsor}
+            channel={channel}
             onClose={onClose}
             onSent={onCatchUpSent}
           />
@@ -185,7 +184,7 @@ function CustomMode({ channel, subject, setSubject, body, setBody, charCount, sm
   );
 }
 
-function ReplayMode({ sponsor, onClose, onSent }) {
+function ReplayMode({ sponsor, channel, onClose, onSent }) {
   // pipeline: null = loading; [] = nothing to show; otherwise array of
   // { phase, title, range, color, desc, sends: [...] } phases (email-only,
   // with empty phases stripped out).
@@ -200,15 +199,18 @@ function ReplayMode({ sponsor, onClose, onSent }) {
     loadMarketingPipeline()
       .then(phases => {
         if (cancelled) return;
-        // Filter to email only — SMS catch-up to sponsors is intentionally
-        // blocked by the send endpoint (no sponsor SMS opt-in flag in
-        // schema yet; TCPA forbids guessing). Drop phases that have no
-        // remaining sends so the UI doesn't show empty section headers.
+        // Filter to the channel this composer is in — the email composer
+        // shows email touchpoints, the text composer shows SMS touchpoints.
+        // SMS catch-up uses the same recipient rule as the bulk SMS pipeline
+        // (phone on file), so the consent posture matches what already goes
+        // out. Drop phases with no remaining sends so we don't render empty
+        // section headers.
+        const want = (channel || 'email').toLowerCase();
         const filtered = phases
           .map(p => ({
             ...p,
             sends: (p.sends || []).filter(
-              s => (s.channel || '').toLowerCase() === 'email'
+              s => (s.channel || '').toLowerCase() === want
             ),
           }))
           .filter(p => p.sends.length > 0);
@@ -218,7 +220,7 @@ function ReplayMode({ sponsor, onClose, onSent }) {
         if (!cancelled) setErr(e.message || 'Failed to load marketing pipeline');
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [channel]);
 
   const handleConfirm = async () => {
     if (!confirming) return;
@@ -281,8 +283,8 @@ function ReplayMode({ sponsor, onClose, onSent }) {
           textAlign: 'center',
         }}
       >
-        No email marketing pieces are configured. Use the Custom message tab
-        for a one-off email.
+        No {channel === 'sms' ? 'text' : 'email'} marketing pieces are configured. Use the Custom message tab
+        for a one-off {channel === 'sms' ? 'text' : 'email'}.
       </div>
     );
   }
@@ -313,7 +315,7 @@ function ReplayMode({ sponsor, onClose, onSent }) {
   return (
     <>
       <div style={{ fontSize: 12, color: 'var(--def-muted)', marginBottom: 10 }}>
-        Replay a marketing email that's already been sent, or pre-deliver one
+        Replay a marketing {channel === 'sms' ? 'text' : 'email'} that's already been sent, or pre-deliver one
         that's scheduled. Either way this sponsor gets the exact copy
         (with their portal link baked in) and the send is logged on their timeline.
       </div>
@@ -326,6 +328,7 @@ function ReplayMode({ sponsor, onClose, onSent }) {
             classifyTier={classifyTier}
             onSend={send => setConfirming({ send })}
             disabled={busy}
+            channel={channel}
           />
         ))}
       </div>
@@ -357,13 +360,14 @@ function ReplayMode({ sponsor, onClose, onSent }) {
           busy={busy}
           onCancel={() => setConfirming(null)}
           onConfirm={handleConfirm}
+          channel={channel}
         />
       )}
     </>
   );
 }
 
-function PhaseGroup({ phase, classifyTier, onSend, disabled }) {
+function PhaseGroup({ phase, classifyTier, onSend, disabled, channel }) {
   // Soft-tinted phase header band: left border in the phase color (matching
   // the Marketing tab pills), background at ~6% of the same color so the
   // section reads as a unit. Range shown in muted text on the right.
@@ -396,13 +400,14 @@ function PhaseGroup({ phase, classifyTier, onSend, disabled }) {
             tier={classifyTier(s.audience)}
             onSend={() => onSend(s)}
             disabled={disabled}
+            channel={channel}
           />
         ))}
       </div>
     </div>
   );
 }
-function ReplayRow({ send, tier, onSend, disabled }) {
+function ReplayRow({ send, tier, onSend, disabled, channel }) {
   // 'tier' is 'match' | 'broad' | 'off'. Off-tier rows are visually dimmed
   // per spec — admin can still send to them, the dim is a soft hint.
   const fired = !!send.firstSentAt;
@@ -511,7 +516,7 @@ function ReplayRow({ send, tier, onSend, disabled }) {
           )}
         </div>
         <div style={{ fontSize: 11, color: 'var(--def-muted)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <span>📧 {send.audience}</span>
+          <span>{channel === 'sms' ? '📱' : '📧'} {send.audience}</span>
           {fired && (
             <>
               <span>·</span>
@@ -539,7 +544,7 @@ function ReplayRow({ send, tier, onSend, disabled }) {
   );
 }
 
-function ConfirmDialog({ send, sponsor, busy, onCancel, onConfirm }) {
+function ConfirmDialog({ send, sponsor, busy, onCancel, onConfirm, channel }) {
   return (
     <div
       className="gs-modal-bg"
@@ -561,8 +566,8 @@ function ConfirmDialog({ send, sponsor, busy, onCancel, onConfirm }) {
         </div>
         <div style={{ fontSize: 13, color: 'var(--def-text)', lineHeight: 1.55, marginBottom: 16 }}>
           {send.firstSentAt
-            ? <>We'll send the exact same email that <strong>{send.audience}</strong> already received — with {sponsor.first_name || sponsor.company}'s portal link baked in — to:</>
-            : <>This email is scheduled to go to <strong>{send.audience}</strong>{send.date ? ` on ${send.date}` : ''}. We'll pre-deliver it to {sponsor.first_name || sponsor.company} right now — with their portal link baked in — to:</>
+            ? <>We'll send the exact same {channel === 'sms' ? 'text' : 'email'} that <strong>{send.audience}</strong> already received — with {sponsor.first_name || sponsor.company}'s portal link baked in — to:</>
+            : <>This {channel === 'sms' ? 'text' : 'email'} is scheduled to go to <strong>{send.audience}</strong>{send.date ? ` on ${send.date}` : ''}. We'll pre-deliver it to {sponsor.first_name || sponsor.company} right now — with their portal link baked in — to:</>
           }
           <div
             style={{
@@ -576,7 +581,7 @@ function ConfirmDialog({ send, sponsor, busy, onCancel, onConfirm }) {
               wordBreak: 'break-all',
             }}
           >
-            {sponsor.email}
+            {channel === 'sms' ? sponsor.phone : sponsor.email}
           </div>
           <div style={{ marginTop: 10, fontSize: 12, color: 'var(--def-muted)' }}>
             {send.firstSentAt
