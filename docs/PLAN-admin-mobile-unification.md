@@ -2,7 +2,7 @@
 title: Gala Admin — Mobile & Visual Unification
 status: in-progress
 project: gala
-phase: "Phase 1 of 6 (next up)"
+phase: "Phase 2 of 6 (next up); Phase 0–1 shipped"
 source_chat: 2026-06-02 gala admin mobile overhaul
 created: 2026-06-02
 last_updated: 2026-06-02
@@ -53,8 +53,8 @@ confirms on his phone → says "next." No giant blind commits 9 days out.
 ## PHASE STATUS
 
 - [x] **Phase 0 — Foundation already shipped** ✅ (pre-plan, 2026-06-02)
-- [ ] **Phase 1 — Shared component layer (design system)**  ← NEXT
-- [ ] **Phase 2 — Sponsors finish (React island pass 2)**
+- [x] **Phase 1 — Shared component layer (design system)** ✅ shipped+verified (`e47398e`)
+- [ ] **Phase 2 — Sponsors finish (React island pass 2)**  ← NEXT
 - [ ] **Phase 3 — Volunteers tab conversion**
 - [ ] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)**
 - [ ] **Phase 5 — Overview + Marketing tabs**
@@ -108,6 +108,11 @@ the existing admin CSS).
 - Bump admin `?v=`. Deploy green. Spot-check Movies + Sponsors still fine.
 
 **Risk:** low (additive CSS, no markup changes).
+
+**SHIPPED 2026-06-02 (`e47398e`):** layer injected after :root, built only on
+existing tokens, balanced 53/53 braces, 0 markup usages (provably additive — no
+tab changed). Live + verified in served admin HTML. ⏳ Scott: nothing to see yet
+by design; confirm later phases as tabs convert onto it.
 
 ---
 
