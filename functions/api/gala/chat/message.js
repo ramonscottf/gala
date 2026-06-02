@@ -52,7 +52,7 @@ export async function onRequestPost({ request, env }) {
       const [faq, showtimes, history] = await Promise.all([
         loadFaqContext(env),
         loadShowtimes(env),
-        loadHistory(env, thread.id, 10),
+        loadHistory(env, thread.id, 20),
       ]);
       const liveHelp = !!(env.SLACK_BOT_TOKEN && env.SLACK_HELPLINE_CHANNEL);
       const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext, myticketsContext, liveHelp);
