@@ -2,7 +2,7 @@
 title: Gala Admin — Mobile & Visual Unification
 status: in-progress
 project: gala
-phase: "Phase 4 of 6 (next up); Phase 0–3 shipped"
+phase: "Phase 5 of 6 (next up); Phase 0–4 shipped"
 source_chat: 2026-06-02 gala admin mobile overhaul
 created: 2026-06-02
 last_updated: 2026-06-02
@@ -56,8 +56,8 @@ confirms on his phone → says "next." No giant blind commits 9 days out.
 - [x] **Phase 1 — Shared component layer (design system)** ✅ shipped (`e47398e`); ⚠️ introduced a nested-`<style>` regression (CSS leaked as page text) — FIXED `bd737fa`
 - [x] **Phase 2 — Sponsors finish (React island pass 2)** ✅ shipped+verified (`512c23f`)
 - [x] **Phase 3 — Volunteers tab conversion** ✅ shipped+verified (`00abe6c`)
-- [ ] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)**  ← NEXT
-- [ ] **Phase 5 — Overview + Marketing tabs**
+- [x] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)** ✅ shipped+verified (`262800e`)
+- [ ] **Phase 5 — Overview + Marketing tabs**  ← NEXT
 - [ ] **Phase 6 — Global polish + inline-style purge + a11y**
 
 ---
@@ -201,6 +201,13 @@ food-choice action rows → `.ga-btn` rows. Lunch Angels intro card →
 the page; headers stick; actions thumb-friendly. Deploy green.
 
 **Risk:** low (mostly wrapper + class swaps).
+
+**SHIPPED 2026-06-02 (`262800e`):** Lunch Angels + Salad GF tables wrapped in
+.ga-scroll + .ga-table (sticky navy header, min-width → scroll instead of crush
+— the "charts that don't scroll" fix). Food/LA/SaladGF intro cards → .ga-card;
+action rows → .ga-btn-row (full-width ≥44px on mobile). Row builders untouched;
+IDs preserved. Live render-integrity CLEAN. ⏳ Scott: open Lunch Angels on phone
+— the table should scroll sideways instead of crushing the Shift column.
 
 ---
 
