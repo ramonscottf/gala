@@ -1004,6 +1004,7 @@ h1 {
         <li><a href="/" class="is-active">Home</a></li>
         <li><a href="/schedule">Schedule</a></li>
         <li><a href="/auction">Auction</a></li>
+        <li><a href="https://daviskids.org/49ers">49ers Drawing</a></li>
         <li><a href="/faq">FAQ</a></li>
         <li><a href="/#sign-in" class="wpn__cta">Sign in</a></li>
       </ul>
@@ -1070,6 +1071,41 @@ h1 {
   </header>
 
   <main>
+    <!-- ── 49ers Opportunity Drawing callout ── -->
+    <style>
+      .niner-callout{max-width:1100px;margin:28px auto 0;padding:0 20px;}
+      .niner-card{position:relative;overflow:hidden;display:flex;flex-wrap:wrap;align-items:center;gap:22px;
+        background:linear-gradient(135deg,var(--navy-deep) 0%,var(--navy) 60%,#3a0d12 100%);
+        border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:24px 26px;
+        box-shadow:0 10px 40px rgba(0,0,0,0.35);}
+      .niner-card::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;
+        background:linear-gradient(180deg,#aa0000,#d72846);}
+      .niner-card__body{flex:1;min-width:260px;}
+      .niner-card__eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+        color:var(--gold);margin:0 0 6px;}
+      .niner-card__title{font-size:clamp(1.25rem,3.4vw,1.7rem);font-weight:800;line-height:1.12;color:#fff;margin:0 0 8px;}
+      .niner-card__title span{color:#ff5d54;}
+      .niner-card__sub{font-size:.95rem;color:rgba(255,255,255,0.82);margin:0 0 4px;line-height:1.5;}
+      .niner-card__meta{font-size:.8rem;color:rgba(255,255,255,0.6);margin:8px 0 0;}
+      .niner-card__cta{flex-shrink:0;display:inline-flex;align-items:center;gap:8px;min-height:48px;
+        padding:0 24px;border-radius:999px;background:#d72846;color:#fff;font-weight:800;font-size:1rem;
+        text-decoration:none;box-shadow:0 6px 18px rgba(215,40,70,0.4);transition:filter .15s,transform .08s;}
+      .niner-card__cta:hover{filter:brightness(1.08);}
+      .niner-card__cta:active{transform:scale(.98);}
+      @media(max-width:640px){.niner-card{padding:20px;gap:16px}.niner-card__cta{width:100%;justify-content:center}}
+    </style>
+    <div class="niner-callout">
+      <div class="niner-card">
+        <div class="niner-card__body">
+          <p class="niner-card__eyebrow">🏈 Opportunity Drawing · Drawn at the Gala</p>
+          <h2 class="niner-card__title">Win the <span>49ers Home Game Getaway</span></h2>
+          <p class="niner-card__sub">A $100 donation to school lunch enters you to win six lower-bowl 49ers tickets plus a $2,000 travel card — a $5,000 trip of a lifetime.</p>
+          <p class="niner-card__meta">Only 200 entries available · Winner drawn June 10 at the Gala · Need not be present</p>
+        </div>
+        <a class="niner-card__cta" href="https://daviskids.org/49ers">Enter to win →</a>
+      </div>
+    </div>
+
     <section class="section compact signin-section" id="sign-in" aria-labelledby="signin-heading">
       <div class="section-header">
         <h2 id="signin-heading">Sponsor sign-in</h2>
