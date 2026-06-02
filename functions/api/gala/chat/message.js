@@ -14,7 +14,7 @@ import {
   getOrCreateThread, recordMessage, loadFaqContext, loadShowtimes,
   loadHistory, callHaiku, callSonnet, buildSystemPrompt, postToSlack, jsonResponse,
 } from './_helpers.js';
-import { TOOL_DEFINITIONS, getTokenContext, dispatchTool } from './_tools.js';
+import { TOOL_DEFINITIONS, getTokenContext, getMyticketsContext, dispatchTool } from './_tools.js';
 
 export async function onRequestPost({ request, env }) {
   let body;
@@ -40,6 +40,12 @@ export async function onRequestPost({ request, env }) {
   // what flips the model from FAQ-Haiku to concierge-Sonnet.
   const tokenContext = await getTokenContext(request, env);
 
+  // On /mytickets there's no token, but the page may have handed us a
+  // read-only booking snapshot (X-Gala-Mytickets-Sponsor). Only resolve it
+  // when there's no sponsor token — token wins. This keeps Booker on Haiku
+  // (no tools) but booking-aware for personalized day-of questions.
+  const myticketsContext = tokenContext ? null : await getMyticketsContext(request, env);
+
   // ----- AI MODE -----
   if (thread.mode === 'ai') {
     try {
@@ -48,7 +54,7 @@ export async function onRequestPost({ request, env }) {
         loadShowtimes(env),
         loadHistory(env, thread.id, 10),
       ]);
-      const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext);
+      const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext, myticketsContext);
 
       let reply;
       if (tokenContext) {

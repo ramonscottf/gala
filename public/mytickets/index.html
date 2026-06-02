@@ -233,9 +233,18 @@
         + '. Switch to <strong>By email</strong> and enter that address.</p></div>';
     }
 
+    html += '<p style="text-align:center;color:var(--muted);font-size:13px;margin:16px 4px 2px;line-height:1.5;">Questions about the night? Tap <strong>Booker</strong> (bottom-right) — it knows your seats, movie, and dinner. ↘</p>';
     html += '<button class="restart" id="restart">← Look up a different ticket</button>';
     els.results.innerHTML = html;
     els.results.style.display = 'block';
+
+    // Hand Booker read-only awareness of this booking. sponsor_id is a
+    // non-secret row id (same data this page already shows on screen); the
+    // widget forwards it so Booker can answer "which theater am I in?" etc.
+    try {
+      if (window.GalaChat && data.sponsor_id != null) window.GalaChat.setBookingContext(data.sponsor_id);
+      else window.__galaBookingContext = (data.sponsor_id != null) ? { id: data.sponsor_id } : null;
+    } catch (e) {}
 
     var sendBtn = document.getElementById('sendLink');
     if (sendBtn) sendBtn.addEventListener('click', function(){ emailLink(sendBtn.getAttribute('data-email')); });
@@ -265,6 +274,7 @@
     els.results.innerHTML = '';
     els.card.style.display = '';
     setStatus('');
+    try { if (window.GalaChat && window.GalaChat.clearBookingContext) window.GalaChat.clearBookingContext(); window.__galaBookingContext = null; } catch (e) {}
     (mode === 'email' ? els.inEmail : els.inCompany).focus();
   }
 
@@ -335,5 +345,6 @@
   setMode('email');
 })();
 </script>
+<script src="/assets/chat-widget.js" defer></script>
 </body>
 </html>

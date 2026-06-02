@@ -325,12 +325,15 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
   };
 }
 
-export function buildSystemPrompt(faqText, showtimesText, tokenContext = null) {
+export function buildSystemPrompt(faqText, showtimesText, tokenContext = null, myticketsContext = null) {
   // Build the optional "WHO YOU'RE TALKING TO" identity block when the user
   // is on a sponsor portal page (token resolved). When this is present, the
   // model is also given function-calling tools and should use them to look
   // up real booking data instead of inventing answers.
   const identityBlock = buildIdentityBlock(tokenContext);
+  // On /mytickets there's no token, but the page may have handed us a
+  // read-only booking snapshot. Mutually exclusive with identityBlock.
+  const myticketsBlock = buildMyticketsBlock(myticketsContext);
 
   return `You are Booker, the friendly mascot-assistant for the Davis Education Foundation Gala 2026 — a fundraising event on Wednesday, June 10, 2026 at Megaplex Theatres at Legacy Crossing in Centerville, Utah.
 
@@ -352,7 +355,7 @@ Rules:
 - The only names you should use are: Sherry Miggin (Executive Director, smiggin@dsdmail.net) and Scott (handles tech/seating questions).
 - The Davis Education Foundation supports Davis School District in Utah — unrelated to similarly named foundations elsewhere.
 - Don't mention "Live Help" or a live agent toggle — that feature isn't active right now.
-${identityBlock}
+${identityBlock}${myticketsBlock}
 # FAQ KNOWLEDGE BASE
 
 ${faqText}
@@ -396,6 +399,40 @@ Tool usage guidance:
 - "I want to change something" / "Can you switch me to..." → call \`get_portal_link\` and tell them they can make changes themselves on their booking page (Booker is read-only — writes go through the portal)
 
 Do not invent attendee names, theater numbers, or seat assignments. If a tool returns no data or an error, say you couldn't find their booking and suggest they double-check the link from their email.
+`;
+}
+
+// Builds a READ-ONLY booking block for the /mytickets walk-up page. The guest
+// looked up their tickets (by email or company), so we know their seats but we
+// have NO edit token and grant NO edit ability. Booker can answer personalized
+// day-of questions from these facts but must never offer to change anything or
+// emit a portal link. Returns '' when there's no mytickets context.
+function buildMyticketsBlock(ctx) {
+  if (!ctx) return '';
+  const who = ctx.name || ctx.company || 'this guest';
+  const lines = [];
+  for (const g of (ctx.showings || [])) {
+    const seats = (g.seats || [])
+      .map(s => (s.dinner_label ? `${s.seat} (${s.dinner_label})` : s.seat))
+      .join(', ');
+    const when = g.show_start ? ` — movie at ${g.show_start}` : '';
+    const dinner = g.dinner_time ? `, dinner served ${g.dinner_time}` : '';
+    lines.push(`- Auditorium ${g.auditorium}: "${g.movie_title}"${when}${dinner}. Seat(s): ${seats || '(none placed yet)'}`);
+  }
+  const body = lines.length ? lines.join('\n') : '(No seats placed yet — they can use the "Email me my portal link" button on this page to pick seats.)';
+
+  return `
+# WHO YOU'RE TALKING TO (read-only booking)
+
+You're chatting with **${who}** on their "My Tickets" page. Here is their CONFIRMED booking — use it to answer personalized day-of questions like "which theater am I in?", "when does my movie start?", "what did I order for dinner?", "where do I go when I get there?":
+
+${body}
+
+Rules for this booking data:
+- This is READ-ONLY. You can SEE their booking but you CANNOT change anything. Never offer to move seats, switch movies, or change dinner, and never imply you did.
+- If they want to make a change, tell them to tap the "Email me my portal link" button on this page (changes happen on their own private portal), or email Sherry at smiggin@dsdmail.net. Do NOT output a portal link or token yourself — only that button can send it.
+- For wayfinding ("how do I get to my auditorium?"), give general guidance — follow the Megaplex auditorium-number signage from the main lobby, or ask a volunteer — don't invent a specific route.
+- Use only the seats/movie/times above plus the FAQ. Don't invent seat numbers, theaters, or showtimes.
 `;
 }
 
