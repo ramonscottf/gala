@@ -1025,6 +1025,145 @@ body {
 </head>
 <body>
 
+<style>
+/* ════ Mobile pill nav + slim header (Foster signature, matches portal-v2) ════
+   Desktop (>768px) is unchanged: full dash-header + horizontal nav-tabs show,
+   pill nav hidden. Mobile (<=768px): full header + horizontal tabs hide; a
+   fixed floating navy pill with a hamburger drawer takes over. */
+.apn { display: none; }            /* hidden on desktop */
+.apn-spacer { display: none; }
+
+@media (max-width: 768px) {
+  /* Collapse the big header to a slim wordmark-only bar */
+  .dash-header__eyebrow,
+  .dash-header__sub,
+  .dash-header__right,
+  .dash-header .nav-tabs { display: none !important; }
+  .dash-header { padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; }
+  .dash-header::before { display: none !important; }
+  .dash-header__inner { padding: 0 !important; }
+  .dash-header__top { display: none !important; }
+
+  /* Show the floating pill */
+  .apn { display: block; }
+  .apn-spacer { display: block; height: 4px; }
+
+  .main { padding-top: 78px !important; }   /* clear the fixed pill */
+
+  /* tighten KPIs so they don't eat the screen */
+  .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .kpi-card { padding: 12px 13px !important; border-radius: 12px !important; }
+  .kpi-card__icon { width: 28px !important; height: 28px !important; margin-bottom: 7px !important; }
+  .kpi-card__value { font-size: 1.35rem !important; }
+  .kpi-card__label { font-size: 0.66rem !important; }
+}
+
+/* ── The pill itself ── */
+.apn {
+  --apn-bg: rgba(11,27,60,0.82);
+  --apn-bg-scrolled: rgba(8,13,40,0.95);
+  --apn-border: rgba(255,255,255,0.10);
+  --apn-fg: #fff;
+  --apn-gold: #ffc24d;
+  --apn-card-bg: #0f1639;
+  --apn-ease: cubic-bezier(.16,1,.3,1);
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%; transform: translateX(-50%);
+  z-index: 1000; width: calc(100% - 20px); max-width: 760px;
+  background: var(--apn-bg);
+  -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+  border-radius: 50px; border: 1px solid var(--apn-border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.30);
+  transition: top .35s var(--apn-ease), background .35s var(--apn-ease), box-shadow .35s var(--apn-ease);
+}
+.apn.is-scrolled { top: max(6px, env(safe-area-inset-top)); background: var(--apn-bg-scrolled); box-shadow: 0 12px 40px rgba(0,0,0,0.45); }
+.apn__inner { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 7px 8px 7px 14px; position: relative; }
+.apn__brand { display: flex; align-items: center; min-width: 0; }
+.apn__brand img { height: 30px; width: auto; object-fit: contain; display: block; }
+.apn__wordmark { justify-self: center; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--apn-gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; text-align: center; pointer-events: none; }
+.apn__toggle { display: block; background: none; border: none; cursor: pointer; padding: 10px; position: relative; z-index: 2; flex-shrink: 0; }
+.apn__toggle span { display: block; width: 22px; height: 2px; background: var(--apn-fg); margin: 5px 0; transition: transform .3s, opacity .3s; border-radius: 2px; }
+.apn__toggle.is-open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+.apn__toggle.is-open span:nth-child(2) { opacity: 0; }
+.apn__toggle.is-open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+.apn__drawer { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: var(--apn-card-bg); border-radius: 18px; border: 1px solid var(--apn-border); box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.30); padding: 0 10px; margin: 0; list-style: none; overflow: hidden; max-height: 0; opacity: 0; transform: translateY(-6px); pointer-events: none; transition: max-height .42s var(--apn-ease), opacity .28s ease, transform .42s var(--apn-ease), padding .42s var(--apn-ease); }
+.apn__drawer.is-open { max-height: 78vh; opacity: 1; transform: translateY(0); pointer-events: auto; padding: 6px 10px 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.apn__drawer .apn__group { padding: 8px 4px 4px; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+.apn__drawer li { list-style: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.apn__drawer li:last-child { border-bottom: none; }
+.apn__drawer button, .apn__drawer a { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; box-sizing: border-box; background: none; border: none; text-align: left; font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; color: #fff; padding: 14px 8px; font-weight: 400; letter-spacing: .3px; text-decoration: none; cursor: pointer; opacity: .9; transition: opacity .2s, color .2s; }
+.apn__drawer button:hover, .apn__drawer a:hover { opacity: 1; color: var(--apn-gold); }
+.apn__drawer button.is-active { color: var(--apn-gold); opacity: 1; font-weight: 600; }
+.apn__drawer button.is-active::after { content: '●'; font-size: 9px; }
+</style>
+
+<nav class="apn" id="apn" aria-label="Dashboard navigation">
+  <div class="apn__inner">
+    <span class="apn__brand"><img src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation"></span>
+    <span class="apn__wordmark" aria-hidden="true">Lights · Camera · Take Action · 2026</span>
+    <button class="apn__toggle" id="apn-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="apn-drawer" type="button"><span></span><span></span><span></span></button>
+    <ul class="apn__drawer" id="apn-drawer">
+      <li class="apn__group" role="presentation">Sections</li>
+      <li><button type="button" data-apn-tab="overview">Overview</button></li>
+      <li><button type="button" data-apn-tab="sponsors">Sponsors</button></li>
+      <li><button type="button" data-apn-tab="movies">Movies</button></li>
+      <li><button type="button" data-apn-tab="volunteers">Volunteers</button></li>
+      <li><button type="button" data-apn-tab="lunchangels">Lunch Angels</button></li>
+      <li><button type="button" data-apn-tab="food">Food Choices</button></li>
+      <li><button type="button" data-apn-tab="saladgf">Salad GF</button></li>
+      <li><button type="button" data-apn-tab="marketing">Marketing</button></li>
+      <li class="apn__group" role="presentation">Tools</li>
+      <li><a href="/admin/seating.html">Seating Chart</a></li>
+      <li><a href="/schedule" target="_blank" rel="noopener">📅 Schedule</a></li>
+      <li><a href="/events-gala.html" target="_blank" rel="noopener">Public Page</a></li>
+      <li><a href="#" id="apn-signout">Sign Out</a></li>
+    </ul>
+  </div>
+</nav>
+<div class="apn-spacer"></div>
+
+<script>
+(function(){
+  const pill = document.getElementById('apn');
+  const toggle = document.getElementById('apn-toggle');
+  const drawer = document.getElementById('apn-drawer');
+  if (!pill || !toggle || !drawer) return;
+  const setOpen = (o) => {
+    toggle.classList.toggle('is-open', o);
+    drawer.classList.toggle('is-open', o);
+    toggle.setAttribute('aria-expanded', o ? 'true' : 'false');
+    toggle.setAttribute('aria-label', o ? 'Close menu' : 'Open menu');
+  };
+  toggle.addEventListener('click', () => setOpen(!drawer.classList.contains('is-open')));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+  // tab buttons → drive the real nav-tabs, then close + sync active state
+  drawer.querySelectorAll('[data-apn-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const real = document.querySelector(`.nav-tab[data-tab="${btn.dataset.apnTab}"]`);
+      if (real) real.click();
+      syncActive();
+      setOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+  function syncActive(){
+    const active = document.querySelector('.nav-tab.active')?.dataset.tab;
+    drawer.querySelectorAll('[data-apn-tab]').forEach(b => b.classList.toggle('is-active', b.dataset.apnTab === active));
+  }
+  // keep drawer state in sync if user taps a desktop tab too
+  document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', syncActive));
+  syncActive();
+  // sign out mirrors the header button
+  document.getElementById('apn-signout')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('logout-btn')?.click(); setOpen(false); });
+  // scrolled state
+  const onScroll = () => pill.classList.toggle('is-scrolled', window.scrollY > 8);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+})();
+</script>
+
+
 <!-- ═══ DASHBOARD HEADER ═══ -->
 <div class="dash-header">
   <div class="dash-header__inner">
@@ -1155,9 +1294,9 @@ body {
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
          Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
-    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606020225">
+    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606020252">
     <div id="sponsors-mount"></div>
-    <script src="/admin/assets/sponsors.js?v=202606020225" defer></script>
+    <script src="/admin/assets/sponsors.js?v=202606020252" defer></script>
   </div>
 
   <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->

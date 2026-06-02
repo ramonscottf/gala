@@ -709,7 +709,9 @@ function timeStr(mins) {
 function pct(mins)    { return ((mins - T_START) / (T_END - T_START)) * 100; }
 function widthPct(a,b){ return ((b - a) / (T_END - T_START)) * 100; }
 
-const TRACKS = [
+// Hardcoded fallback — used only if the live API fetch fails, so the page
+// never goes blank. Normally TRACKS/SHOWS are rebuilt from live D1 in init().
+const TRACKS_FALLBACK = [
   { id: 'a8',  label: 'Aud #8',  cap: 'IMAX · 266' },
   { id: 'a9',  label: 'Aud #9',  cap: 'S1+S2 · 135' },
   { id: 'a5',  label: 'Aud #5',  cap: 'S1+S2 · 135' },
@@ -726,7 +728,7 @@ const TRACKS = [
   { id: 'a14', label: 'Aud #14', cap: 'Staff' },
 ];
 
-const SHOWS = [
+const SHOWS_FALLBACK = [
   // Showing 1 — doors 4:00, lights 4:30
   ['a8',  'mando-imax', 'Mandalorian', 132, m(16, 0), m(16,30), 1],
   ['a9',  'mando',      'Mandalorian', 132, m(16, 0), m(16,30), 1],
@@ -754,6 +756,77 @@ const SHOWS = [
   ['a14', 'staff',      'Staff / Staging', T_END - m(15,15), m(15,15), m(15,15), 0],
 ];
 
+// Live-bound; populated by buildFromLive() before render, fallback otherwise.
+let TRACKS = TRACKS_FALLBACK;
+let SHOWS = SHOWS_FALLBACK;
+
+// Map a movie title to the timeline color/character class.
+function klassFor(title) {
+  const t = (title || '').toLowerCase();
+  if (t.includes('mandalorian')) return 'mando';
+  if (t.includes('breadwinner')) return 'bread';
+  if (t.includes('paddington'))  return 'pad';
+  if (t.includes('dragon'))      return 'dragon';
+  return 'planb';
+}
+function parseClock(s) {
+  if (!s) return null;
+  const mt = String(s).trim().match(/^(\d{1,2}):(\d{2})\s*([AP])M$/i);
+  if (!mt) return null;
+  let h = (+mt[1]) % 12; if (mt[3].toUpperCase() === 'P') h += 12;
+  return h * 60 + (+mt[2]);
+}
+const STAFF_IDS = new Set([11, 14]);
+
+// Build TRACKS + SHOWS from live D1 (same shape the renderer expects).
+async function buildFromLive() {
+  const [mvRes, layoutRes] = await Promise.all([
+    fetch('/api/gala/movies').then(r => r.json()),
+    fetch('/data/theater-layouts.json').then(r => r.json()),
+  ]);
+  const theaters = (layoutRes.theaters || []).slice();
+  const showtimes = mvRes.showtimes || [];
+  const stFor = (tid, sn) => showtimes.find(s => s.theater_id === tid && s.showing_number === sn);
+
+  // Order rows: assigned auds first (by id), staff (11/14) last — matches admin.
+  theaters.sort((a, b) => {
+    const sa = STAFF_IDS.has(a.id) ? 2 : 0, sb = STAFF_IDS.has(b.id) ? 2 : 0;
+    return sa !== sb ? sa - sb : a.id - b.id;
+  });
+
+  const tracks = [];
+  const shows = [];
+  for (const t of theaters) {
+    const id = 'a' + t.id;
+    if (STAFF_IDS.has(t.id)) {
+      tracks.push({ id, label: `Aud #${t.id}`, cap: 'Staff' });
+      shows.push([id, 'staff', 'Staff / Staging', T_END - m(15,15), m(15,15), m(15,15), 0]);
+      continue;
+    }
+    // capacity label: which showings are assigned + the larger capacity
+    const s1 = stFor(t.id, 1), s2 = stFor(t.id, 2);
+    const tags = [];
+    if (s1 && s1.movie_id) tags.push('S1');
+    if (s2 && s2.movie_id) tags.push('S2');
+    const cap = tags.length ? `${tags.join('+')} · ${t.totalSeats}` : `${t.totalSeats} seats`;
+    tracks.push({ id, label: `Aud #${t.id}`, cap });
+
+    for (const sn of [1, 2]) {
+      const st = stFor(t.id, sn);
+      if (!st || !st.movie_id) continue;
+      const start = parseClock(st.show_start);
+      const dinner = parseClock(st.dinner_time);
+      if (start == null) continue;
+      const runtime = st.movie_runtime || 100;
+      const dinnerStart = (dinner != null && dinner < start) ? dinner : start;
+      shows.push([id, klassFor(st.movie_title), st.movie_title || '?', runtime, dinnerStart, start, sn]);
+    }
+  }
+  TRACKS = tracks;
+  SHOWS = shows;
+}
+
+function renderSchedule() {
 const grid = document.getElementById('grid');
 for (let h = 15; h <= 22; h++) {
   const tick = document.createElement('div');
@@ -863,6 +936,14 @@ doorsMarker.style.borderLeftColor = 'rgba(244,185,66,0.55)';
 doorsMarker.style.left = `calc(124px + (100% - 124px) * ${(m(16, 0) - T_START) / (T_END - T_START)})`;
 doorsMarker.innerHTML = `<span class="marker-label" style="color:#a76b00;background:rgba(255,255,255,0.94)">DOORS · 4:00 PM</span>`;
 document.querySelector('.timeline-inner').appendChild(doorsMarker);
+}
+
+// Load live data, then render. Falls back to the baked-in arrays on failure.
+(async function init() {
+  try { await buildFromLive(); }
+  catch (e) { console.warn('[schedule] live load failed, using fallback', e); }
+  renderSchedule();
+})();
 </script>
 
 <script src="/assets/chat-widget.js" defer></script>
