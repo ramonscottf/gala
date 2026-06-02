@@ -757,3 +757,58 @@
   /* Search bar + add-sponsor stack instead of fighting for width */
   .gs-searchbar { flex-wrap: wrap; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   PHASE 2 — Sponsors mobile finish (2026-06-02)
+   Modals were center-anchored floating boxes (cramped on a phone) and the
+   forms/seat-map could overflow. On <=640px: modals become full-height bottom
+   sheets that scroll; forms go single-column; controls hit >=44px; the seat
+   map scrolls horizontally instead of clipping; badges/timeline wrap cleanly.
+   ════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Modals → bottom sheets, full width, scrollable, safe-area aware */
+  .gs-modal-bg { align-items: flex-end; padding: 0; }
+  .gs-modal {
+    max-width: 100%; width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+    padding: 18px 16px max(20px, env(safe-area-inset-bottom));
+  }
+  .gs-seatmodal, .gs-movemodal {
+    max-width: 100%; width: 100%;
+    border-radius: 18px 18px 0 0;
+    max-height: 92vh;
+  }
+  /* bigger close target */
+  .gs-modal-close { width: 40px; height: 40px; font-size: 26px; }
+
+  /* Edit + composer forms: single column */
+  .gs-form-grid { grid-template-columns: 1fr; gap: 12px; }
+  .gs-input, .gs-textarea, .gs-select { padding: 11px 12px; font-size: 16px; } /* 16px = no iOS zoom-on-focus */
+
+  /* Seat map scrolls horizontally rather than clipping in the sheet */
+  .gs-seatmodal-body { padding: 0 12px; }
+  .gs-seatmodal-map { justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px; }
+
+  /* Footers: stack the summary above full-width action buttons */
+  .gs-seatmodal-foot, .gs-movemodal-foot, .gs-exp-footer {
+    flex-direction: column; align-items: stretch; gap: 10px;
+  }
+  .gs-seatmodal-foot > div, .gs-movemodal-foot > div { display: flex; gap: 8px; width: 100%; }
+  .gs-seatmodal-foot .gs-btn,
+  .gs-movemodal-foot .gs-btn,
+  .gs-exp-footer .gs-btn { flex: 1 1 0; width: 100%; min-height: 44px; }
+  .gs-seatmodal-summary, .gs-move-from { text-align: center; }
+
+  /* Portal link row: stack input + copy button */
+  .gs-portal-link { flex-wrap: wrap; }
+  .gs-portal-link input { flex: 1 1 100%; }
+
+  /* Timeline rows: let the time wrap under instead of squeezing the title */
+  .gs-tl-row { flex-wrap: wrap; }
+  .gs-tl-time { width: 100%; padding-left: 36px; }
+
+  /* Badges/pills never overflow their row */
+  .gs-row-titleline { gap: 6px; }
+  .gs-badge { white-space: nowrap; }
+}
