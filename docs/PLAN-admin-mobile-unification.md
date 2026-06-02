@@ -1,8 +1,8 @@
 ---
 title: Gala Admin — Mobile & Visual Unification
-status: in-progress
+status: complete
 project: gala
-phase: "Phase 6 of 6 (FINALE next up); Phase 0–5 shipped"
+phase: "COMPLETE — all 6 phases shipped"
 source_chat: 2026-06-02 gala admin mobile overhaul
 created: 2026-06-02
 last_updated: 2026-06-02
@@ -58,7 +58,7 @@ confirms on his phone → says "next." No giant blind commits 9 days out.
 - [x] **Phase 3 — Volunteers tab conversion** ✅ shipped+verified (`00abe6c`)
 - [x] **Phase 4 — Lunch Angels + Food + Salad GF (the tables)** ✅ shipped+verified (`262800e`)
 - [x] **Phase 5 — Overview + Marketing tabs** ✅ shipped+verified (`367fa30`)
-- [ ] **Phase 6 — Global polish + inline-style purge + a11y**  ← NEXT (FINALE)
+- [x] **Phase 6 — Global polish + inline-style purge + a11y** ✅ shipped+verified (`83d8a0c`)
 
 ---
 
@@ -251,6 +251,14 @@ interactive targets comfortable, nothing clipped, nothing unscrollable.
 Final `?v=` bump. Deploy green.
 
 **Risk:** low (cleanup), but it's the longest single pass.
+
+**SHIPPED 2026-06-02 (`83d8a0c`) — PLAN COMPLETE:** global :focus-visible a11y
+outlines; mobile ≥44px tap-target floor applied to .btn + .ga-btn + .ga-pill +
+mkt-* (fixes all 37 legacy .btn sites at once, no markup churn); prefers-
+reduced-motion respected; consistent panel spacing. Cross-tab audit @390px:
+7/7 tables wrapped, 0 overflow widths. Live-verified (DYNAMIC, rules present).
+Inline styles 629→589 (rest are dynamic JS values). ⏳ Scott: final eyeball —
+open each tab on your phone; should read as one consistent app.
 
 ---
 
