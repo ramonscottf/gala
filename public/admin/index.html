@@ -203,6 +203,43 @@
   .ga-stat-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   PHASE 6 — Global polish + a11y (2026-06-02). Cross-cutting safety nets so
+   every tab (incl. legacy .btn buttons and JS-rendered inline ones) gets
+   consistent tap targets, focus states, and table behavior without rewriting
+   each call site.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* a11y: visible keyboard focus on every interactive element (was missing) */
+.btn:focus-visible, .ga-btn:focus-visible, .ga-pill:focus-visible,
+.nav-tab:focus-visible, .ga-input:focus-visible, .ga-select:focus-visible,
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 2px solid var(--pink, #cb262c);
+  outline-offset: 2px;
+}
+
+/* Mobile: floor the tap target on ALL buttons/links-styled-as-buttons,
+   including legacy .btn and JS-rendered ones, without changing desktop. */
+@media (max-width: 768px) {
+  .btn, .ga-btn, .ga-pill,
+  button.mkt-edit-btn, button.mkt-test-btn, button.mkt-save-btn, button.mkt-cancel-btn {
+    min-height: 44px;
+  }
+  /* Legacy .btn inside a wrapping row: let it breathe, not crush */
+  .btn { font-size: 13px; }
+  /* Any data table that slipped through gets the scroll wrapper behavior */
+  .tab-panel table { min-width: 0; }
+  .ga-table { min-width: 520px; }   /* re-assert: ga-tables still scroll */
+}
+
+/* Consistent vertical rhythm: tab panels share top spacing under the header */
+.tab-panel { padding-bottom: 40px; }
+
+/* Reduced-motion respect (a11y) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1429,9 +1466,9 @@ body {
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
          Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
-    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021554">
+    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021612">
     <div id="sponsors-mount"></div>
-    <script src="/admin/assets/sponsors.js?v=202606021554" defer></script>
+    <script src="/admin/assets/sponsors.js?v=202606021612" defer></script>
   </div>
 
   <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->
