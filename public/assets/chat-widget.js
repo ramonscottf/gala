@@ -31,6 +31,33 @@
   }
   const SPONSOR_TOKEN = getSponsorToken();
 
+  // ── MyTickets read-only booking context ──────────────────────────────
+  // On the /mytickets walk-up page there's no sponsor token in the URL. Once
+  // a guest looks up their tickets, the page hands us their (non-secret)
+  // sponsor id, which we forward as X-Gala-Mytickets-Sponsor so the server
+  // can give Booker READ-ONLY awareness of their seats / movie / dinner —
+  // no token, no edit path, same data the open lookup already shows on screen.
+  // Set via window.GalaChat.setBookingContext(id), or the
+  // window.__galaBookingContext global if the page set it before we loaded.
+  let MYTICKETS_SPONSOR = null;
+  try {
+    const g = window.__galaBookingContext;
+    if (g && g.id != null) MYTICKETS_SPONSOR = String(g.id);
+  } catch (_) {}
+
+  function chatHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (SPONSOR_TOKEN) h['X-Gala-Sponsor-Token'] = SPONSOR_TOKEN;
+    else if (MYTICKETS_SPONSOR) h['X-Gala-Mytickets-Sponsor'] = MYTICKETS_SPONSOR;
+    return h;
+  }
+
+  window.GalaChat = window.GalaChat || {};
+  window.GalaChat.setBookingContext = function (id) {
+    MYTICKETS_SPONSOR = (id == null || id === '') ? null : String(id);
+  };
+  window.GalaChat.clearBookingContext = function () { MYTICKETS_SPONSOR = null; };
+
   // Page-aware theming. The widget detects which gala page it's on and
   // picks a palette that matches. The teaser page (/event/) uses a midnight
   // navy + indigo with cyan/red accents; the sponsor portal (/sponsor/*)
@@ -579,7 +606,7 @@
     try {
       const r = await fetch('/api/gala/chat/message', {
         method: 'POST', credentials: 'include',
-        headers: SPONSOR_TOKEN ? { 'Content-Type': 'application/json', 'X-Gala-Sponsor-Token': SPONSOR_TOKEN } : { 'Content-Type': 'application/json' },
+        headers: chatHeaders(),
         body: JSON.stringify({ content: text }),
       });
       const data = await r.json();
@@ -621,7 +648,7 @@
     try {
       const r = await fetch('/api/gala/chat/start', {
         method: 'POST', credentials: 'include',
-        headers: SPONSOR_TOKEN ? { 'Content-Type': 'application/json', 'X-Gala-Sponsor-Token': SPONSOR_TOKEN } : { 'Content-Type': 'application/json' },
+        headers: chatHeaders(),
         body: JSON.stringify({}),
       });
       const data = await r.json();

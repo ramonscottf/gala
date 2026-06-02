@@ -145,6 +145,7 @@ export async function onRequestPost(context) {
     return jsonOk({
       ok: true,
       match: 'email',
+      sponsor_id: sponsor.id,
       company: sponsor.company,
       name: sponsor.first_name
         ? `${sponsor.first_name} ${sponsor.last_name || ''}`.trim()
@@ -251,6 +252,7 @@ export async function onRequestPost(context) {
     placed: groups.reduce((n, g) => n + g.seats.length, 0),
     showings: groups,
     canEdit: false,                                   // ownership unproven
+    sponsor_id: sponsor.id,
     maskedEmail: maskEmail(sponsor.email || sponsor.secondary_email),
   });
 }
@@ -279,6 +281,7 @@ export async function onRequestGet(context) {
     placed: groups.reduce((n, g) => n + g.seats.length, 0),
     showings: groups,
     canEdit: false,
+    sponsor_id: sponsor.id,
     maskedEmail: maskEmail(sponsor.email || sponsor.secondary_email),
   });
 }

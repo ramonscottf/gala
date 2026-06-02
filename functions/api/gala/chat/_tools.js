@@ -82,6 +82,81 @@ export async function getTokenContext(request, env) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// getMyticketsContext — read-only booking awareness for the /mytickets page
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// On the walk-up /mytickets page there is no edit token. After a guest looks
+// up their tickets, the page forwards the matched (non-secret) sponsor id via
+// the X-Gala-Mytickets-Sponsor header. We resolve it to the SAME read-only
+// seat snapshot the open lookup endpoint already returns on screen — seats,
+// movie, showtimes, dinner. Deliberately NO token, NO portal link, NO contact
+// info. This gives Booker enough to answer personalized day-of questions
+// ("which theater am I in?", "when does my movie start?") without granting any
+// ability to change anything. Returns null when the header is absent/invalid.
+const MYTICKETS_DINNER_LABELS = {
+  frenchdip: 'Hot French Dip',
+  salad: 'Chicken Salad',
+  veggie: 'Vegetarian',
+  kids: 'Kids Meal',
+};
+
+export async function getMyticketsContext(request, env) {
+  const raw = (request.headers.get('X-Gala-Mytickets-Sponsor') || '').trim();
+  if (!raw) return null;
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) return null;
+
+  const sponsor = await env.GALA_DB.prepare(
+    `SELECT id, company, first_name, last_name
+       FROM sponsors WHERE id = ? AND archived_at IS NULL LIMIT 1`
+  ).bind(id).first();
+  if (!sponsor) return null;
+
+  const rs = await env.GALA_DB.prepare(
+    `SELECT sa.theater_id, sa.showing_number, sa.row_label, sa.seat_num, sa.dinner_choice,
+            m.title AS movie_title, st.show_start, st.dinner_time
+       FROM seat_assignments sa
+       LEFT JOIN showtimes st ON st.theater_id = sa.theater_id
+            AND st.showing_number = sa.showing_number
+       LEFT JOIN movies m ON m.id = st.movie_id
+      WHERE sa.sponsor_id = ?
+      ORDER BY sa.theater_id, sa.showing_number, sa.row_label, CAST(sa.seat_num AS INTEGER)`
+  ).bind(id).all();
+
+  const groups = new Map();
+  for (const r of (rs.results || [])) {
+    const key = `${r.theater_id}:${r.showing_number}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        auditorium: r.theater_id,
+        showing_number: r.showing_number,
+        movie_title: r.movie_title || 'Movie TBA',
+        show_start: r.show_start || null,
+        dinner_time: r.dinner_time || null,
+        seats: [],
+      });
+    }
+    groups.get(key).seats.push({
+      seat: `${r.row_label}${r.seat_num}`,
+      dinner_label: r.dinner_choice
+        ? (MYTICKETS_DINNER_LABELS[r.dinner_choice] || r.dinner_choice)
+        : null,
+    });
+  }
+
+  const name = sponsor.first_name
+    ? `${sponsor.first_name} ${sponsor.last_name || ''}`.trim()
+    : sponsor.company;
+
+  return {
+    kind: 'mytickets',
+    name,
+    company: sponsor.company,
+    showings: Array.from(groups.values()),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Tool dispatcher
 // ─────────────────────────────────────────────────────────────────────────────
 
