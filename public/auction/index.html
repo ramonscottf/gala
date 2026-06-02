@@ -16,14 +16,18 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --navy: #0d1b3d; --navy-900: #081427; --navy-700: #182a55; --navy-500: #2d3f6d;
+    /* matched to gala.daviskids.org home page */
+    --navy: #11194a; --navy-900: #080d28; --navy-deep: #080916; --navy-700: #1c2760; --navy-500: #242f68;
     --navy-300: #5a6a8c; --navy-100: #c8cfde;
-    --blue: #1e88e5; --blue-bright: #4a9af0; --red: #e53935; --red-deep: #c62828;
-    --gold: #ffc24d; --gold-soft: #ffd77f;
+    --indigo: #4d54b3; --cyan: #62c8ff; --blue: #1e88e5; --blue-bright: #62c8ff;
+    --red: #d72846; --red-soft: #ff4d70; --red-deep: #c62828;
+    --gold: #f4b942; --gold-soft: #ffd77f;
+    --muted: rgba(255,255,255,0.72); --subtle: rgba(255,255,255,0.54); --rule: rgba(255,255,255,0.14);
+    --shadow: 0 24px 70px rgba(0,0,0,0.34);
     --grey-50: #f8fafc; --grey-100: #f1f5f9; --grey-200: #e2e8f0; --grey-300: #cbd5e1;
     --grey-500: #64748b; --grey-700: #334155; --grey-900: #0f172a;
   }
@@ -33,44 +37,67 @@
   a { color: inherit; text-decoration: none; }
   img { display: block; }
 
-  .masthead { background: var(--navy); color: #fff; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 5; }
-  .masthead a.wordmark { color: #fff; font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; letter-spacing: .5px; }
-  .masthead .nav { display: flex; gap: 20px; }
-  .masthead .nav a { font-size: 14px; font-weight: 500; opacity: .9; }
-  .masthead .nav a:hover, .masthead .nav a[aria-current] { opacity: 1; color: var(--gold); }
-  .strip { height: 3px; background: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%); }
+  /* ── Cinematic top: dark atmosphere wrapping masthead + hero ── */
+  .topwrap {
+    position: relative; overflow: hidden; color: var(--ink, #fff);
+    background:
+      radial-gradient(circle at 8% 12%, rgba(215,40,70,0.26), transparent 30%),
+      radial-gradient(circle at 88% 8%, rgba(98,200,255,0.14), transparent 28%),
+      linear-gradient(135deg, #080916 0%, #11194a 52%, #171845 100%);
+  }
+  .topwrap::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 78%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 78%);
+  }
 
-  .hero { position: relative; overflow: hidden; background: var(--navy-900); color: #fff; }
-  .hero-grid { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; min-height: 460px; }
-  .hero-copy { padding: 60px 40px 56px; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 2; }
-  .hero .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
-  .hero .eyebrow::before { content: ""; width: 26px; height: 1.5px; background: var(--gold); }
-  .hero h1 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(34px, 4.6vw, 56px); line-height: 1.02; margin: 0 0 18px; letter-spacing: -.01em; }
-  .hero h1 .flair { font-style: italic; font-weight: 700; color: var(--blue-bright); }
-  .hero p.lead { color: rgba(255,255,255,.78); font-size: 17px; max-width: 46ch; margin: 0 0 26px; }
-  .hero .meta { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 13.5px; color: rgba(255,255,255,.62); font-weight: 500; }
-  .hero .meta b { color: #fff; font-weight: 700; }
-  .hero .meta span { display: inline-flex; align-items: center; gap: 7px; }
-  .hero-spot { position: relative; min-height: 380px; }
-  .hero-spot .shade { position: absolute; inset: 0; z-index: 2; background: linear-gradient(90deg, var(--navy-900) 0%, rgba(8,20,39,.35) 28%, transparent 55%), linear-gradient(0deg, rgba(8,20,39,.85) 0%, transparent 45%); }
-  .hero-spot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .hero-spot .spotcard { position: absolute; left: 24px; right: 24px; bottom: 24px; z-index: 3; cursor: pointer; }
-  .hero-spot .spot-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-soft); margin-bottom: 8px; }
-  .hero-spot .spot-title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 22px; line-height: 1.18; color: #fff; margin: 0 0 10px; max-width: 22ch; text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+  .masthead { width: min(1240px, calc(100% - 48px)); margin: 0 auto; padding: 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; position: relative; z-index: 5; }
+  .masthead .brand { display: flex; align-items: center; gap: 15px; min-width: 0; }
+  .masthead .brand img { width: 108px; height: auto; }
+  .masthead .brand-mark { width: 40px; height: 2px; background: linear-gradient(90deg, var(--gold), var(--red)); }
+  .masthead .brand-title { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.76); font-weight: 800; white-space: nowrap; }
+  .masthead .nav { display: flex; align-items: center; gap: 9px; }
+  .masthead .nav a { min-height: 42px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 800; color: #fff; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
+  .masthead .nav a:hover { background: rgba(255,255,255,.15); }
+  .masthead .nav a[aria-current] { border: 0; background: linear-gradient(95deg, var(--red), #883bb5 76%, var(--indigo)); box-shadow: 0 14px 34px rgba(215,40,70,.28); }
+
+  .hero { width: min(1240px, calc(100% - 48px)); margin: 0 auto; padding: 50px 0 56px; display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(330px, .82fr); align-items: center; gap: 46px; position: relative; z-index: 2; }
+  .hero-copy { position: relative; z-index: 2; }
+  .hero .eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; color: var(--gold); font-size: 12px; font-weight: 900; letter-spacing: .22em; text-transform: uppercase; }
+  .hero .eyebrow::before { content: ""; width: 34px; height: 2px; border-radius: 999px; background: currentColor; }
+  .hero h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: clamp(46px, 7vw, 88px); line-height: .9; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
+  .hero h1 .flair { color: var(--gold); }
+  .hero p.lead { color: var(--muted); font-size: clamp(16px, 2vw, 20px); max-width: 52ch; margin: 22px 0 0; }
+  .hero .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .hero .meta span { padding: 13px 16px; border-radius: 14px; background: rgba(255,255,255,.075); border: 1px solid rgba(255,255,255,.12); font-size: 13.5px; color: var(--muted); font-weight: 500; }
+  .hero .meta b { color: #fff; font-weight: 800; }
+
+  /* Hero spotlight = poster-style featured Premier lot */
+  .hero-spot { position: relative; min-height: 420px; cursor: pointer; }
+  .hero-spot .poster { position: absolute; inset: 0; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.22); box-shadow: var(--shadow); }
+  .hero-spot .poster img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-spot .poster::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(8,9,22,.86) 0%, rgba(8,9,22,.15) 46%, transparent 70%); }
+  .hero-spot .spotcard { position: absolute; left: 22px; right: 22px; bottom: 22px; z-index: 3; }
+  .hero-spot .spot-eyebrow { font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 9px; }
+  .hero-spot .spot-title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 23px; line-height: 1.12; color: #fff; margin: 0 0 12px; max-width: 24ch; }
   .hero-spot .spot-row { display: flex; align-items: center; gap: 14px; }
-  .hero-spot .spot-val { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 20px; color: #fff; }
-  .hero-spot .spot-btn { font-size: 13px; font-weight: 700; color: var(--navy); background: var(--gold); padding: 8px 16px; border-radius: 999px; white-space: nowrap; }
+  .hero-spot .spot-val { font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: 22px; color: #fff; }
+  .hero-spot .spot-btn { font-size: 13px; font-weight: 800; color: #fff; background: linear-gradient(95deg, var(--red), #883bb5 76%, var(--indigo)); padding: 9px 17px; border-radius: 999px; white-space: nowrap; box-shadow: 0 12px 28px rgba(215,40,70,.3); }
 
-  .notice { background: var(--navy-700); color: #fff; text-align: center; padding: 11px 24px; font-size: 13.5px; font-weight: 500; }
-  .notice b { color: var(--gold); font-weight: 700; }
+  .notice { position: relative; z-index: 2; text-align: center; padding: 13px 24px; font-size: 13.5px; font-weight: 600; color: #fff; background: rgba(9,13,38,.55); border-top: 1px solid rgba(255,255,255,.1); border-bottom: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(8px); }
+  .notice b { color: var(--gold); font-weight: 800; }
 
-  .section { max-width: 1240px; margin: 0 auto; padding: 38px 24px 6px; }
-  .section.tight { padding-top: 30px; }
-  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-  .sec-head h2 { font-family: 'Playfair Display', serif; font-weight: 800; color: var(--navy); font-size: clamp(20px, 2.6vw, 27px); margin: 0; letter-spacing: -.01em; }
-  .sec-head .kick { font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--red); display: block; margin-bottom: 5px; }
-  .sec-head .seeall { font-size: 13.5px; font-weight: 600; color: var(--blue); white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-  .sec-head .seeall:hover { color: var(--red); }
+  .section { max-width: 1240px; margin: 0 auto; padding: 44px 24px 6px; }
+  .section.tight { padding-top: 34px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+  .sec-head h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--navy); font-size: clamp(26px, 3.4vw, 40px); margin: 0; letter-spacing: -.02em; line-height: .98; }
+  .sec-head .kick { font-size: 11.5px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; color: var(--red); display: block; margin-bottom: 8px; }
+  .sec-head .seeall { font-size: 13.5px; font-weight: 800; color: var(--red); white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .sec-head .seeall:hover { color: var(--indigo); }
   .sec-head .seeall svg { transition: transform .14s; }
   .sec-head .seeall:hover svg { transform: translateX(3px); }
 
@@ -90,7 +117,7 @@
   .card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(13,27,61,.13); border-color: var(--grey-300); }
   .card .imgwrap { position: relative; aspect-ratio: 4/3; background: var(--grey-100); overflow: hidden; }
   .card .imgwrap img { width: 100%; height: 100%; object-fit: cover; }
-  .card .imgwrap .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--grey-300); font-family: 'Playfair Display', serif; font-size: 40px; }
+  .card .imgwrap .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--grey-300); font-family: 'Fraunces', Georgia, serif; font-size: 40px; }
   .badge { position: absolute; top: 10px; left: 10px; font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; color: #fff; }
   .badge.premier { background: var(--red); }
   .badge.raffle { background: var(--navy); }
@@ -101,7 +128,7 @@
   .card h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin: 0 0 10px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .card .foot { margin-top: auto; padding-top: 11px; border-top: 1px solid var(--grey-100); display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .card .vlabel { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--grey-500); }
-  .card .value { font-size: 17px; font-weight: 800; color: var(--navy); font-family: 'Playfair Display', serif; }
+  .card .value { font-size: 18px; font-weight: 700; color: var(--navy); font-family: 'Fraunces', Georgia, serif; }
 
   .rail.premier-rail .card { width: 300px; border-color: rgba(229,57,53,.28); }
   .rail.premier-rail .card .imgwrap { aspect-ratio: 16/10; }
@@ -141,7 +168,7 @@
   .gallery { background: var(--grey-100); position: relative; }
   .gallery .main { position: relative; aspect-ratio: 4/3; background: var(--grey-200); }
   .gallery .main img { width: 100%; height: 100%; object-fit: cover; }
-  .gallery .main .noimg { width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--grey-300);font-family:'Playfair Display',serif;font-size:64px; }
+  .gallery .main .noimg { width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--grey-300);font-family:'Fraunces',Georgia,serif;font-size:64px; }
   .gallery .gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.92); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--navy); box-shadow: 0 2px 10px rgba(0,0,0,.2); font-size: 20px; line-height: 1; }
   .gallery .gnav:hover { background: var(--navy); color: #fff; }
   .gallery .gnav.prev { left: 12px; } .gallery .gnav.next { right: 12px; }
@@ -154,12 +181,12 @@
   .mdetail .mbadge.premier { background: rgba(229,57,53,.1); color: var(--red-deep); }
   .mdetail .mbadge.raffle { background: rgba(13,27,61,.08); color: var(--navy); }
   .mdetail .mbadge.tag { background: var(--grey-100); color: var(--navy-300); }
-  .mdetail h2 { font-family: 'Playfair Display', serif; font-weight: 800; color: var(--navy); font-size: 25px; line-height: 1.15; margin: 0 0 6px; }
+  .mdetail h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--navy); font-size: 25px; line-height: 1.15; margin: 0 0 6px; }
   .mdetail .mnum { font-size: 12.5px; color: var(--grey-500); font-weight: 500; margin-bottom: 16px; }
   .mdetail .mdesc { font-size: 14.5px; color: var(--grey-700); line-height: 1.62; margin: 0 0 22px; max-height: 280px; overflow-y: auto; }
   .mdetail .mval-row { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--grey-200); display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .mdetail .mval-label { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--grey-500); }
-  .mdetail .mval { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 30px; color: var(--navy); }
+  .mdetail .mval { font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: 30px; color: var(--navy); }
   .mdetail .mhint { font-size: 12.5px; color: var(--grey-500); margin-top: 14px; text-align: center; padding: 9px; background: var(--grey-50); border-radius: 9px; }
   .mdetail .mhint b { color: var(--red-deep); }
 
@@ -168,15 +195,19 @@
   footer.site b { color: #fff; } footer.site a { color: var(--gold); }
 
   @media (max-width: 880px) {
-    .hero-grid { grid-template-columns: 1fr; min-height: 0; }
-    .hero-copy { padding: 44px 24px 30px; }
-    .hero-spot { min-height: 320px; }
+    .hero { grid-template-columns: 1fr; gap: 30px; padding: 36px 0 44px; }
+    .hero-spot { min-height: 300px; }
     .modal-grid { grid-template-columns: 1fr; }
     .gallery .main { aspect-ratio: 16/10; }
     .mdetail { padding: 24px 22px 26px; }
   }
   @media (max-width: 560px) {
-    .masthead { padding: 15px 18px; }
+    .masthead { width: calc(100% - 32px); padding: 18px 0; flex-wrap: wrap; gap: 12px; }
+    .masthead .brand img { width: 92px; }
+    .masthead .nav { gap: 7px; flex-wrap: wrap; }
+    .masthead .nav a { padding: 0 13px; min-height: 38px; font-size: 13px; }
+    .hero { width: calc(100% - 32px); }
+    .hero .meta span { padding: 11px 13px; font-size: 12.5px; }
     .section { padding: 30px 18px 4px; }
     .rail-wrap { margin: 0 -18px; }
     .rail { padding: 4px 18px 20px; }
@@ -184,41 +215,43 @@
     .rail.premier-rail .card { width: 250px; }
     .controls-inner, .browse-grid { padding-left: 18px; padding-right: 18px; }
     .grid { gap: 14px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-    .hero h1 { font-size: 32px; }
     .modal-back { padding: 0; align-items: stretch; }
     .modal { border-radius: 0; min-height: 100%; }
   }
 </style>
 </head>
 <body>
-  <header class="masthead">
-    <a class="wordmark" href="/">DEF Gala 2026</a>
-    <nav class="nav">
-      <a href="/">Home</a>
-      <a href="/schedule">Schedule</a>
-      <a href="/auction" aria-current="page">Auction</a>
-      <a href="/faq">FAQ</a>
-    </nav>
-  </header>
-  <div class="strip"></div>
+  <div class="topwrap">
+    <header class="masthead">
+      <a class="brand" href="/" aria-label="Davis Education Foundation Gala home">
+        <img src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-title">Silent Auction</span>
+      </a>
+      <nav class="nav" aria-label="Gala navigation">
+        <a href="/">Home</a>
+        <a href="/schedule">Schedule</a>
+        <a href="/auction" aria-current="page">Auction</a>
+        <a href="/faq">FAQ</a>
+      </nav>
+    </header>
 
-  <section class="hero">
-    <div class="hero-grid">
+    <section class="hero">
       <div class="hero-copy">
-        <div class="eyebrow">Premier Experiences</div>
+        <div class="eyebrow">Lights · Camera · Take Action · 2026</div>
         <h1>The night's <span class="flair">headliners</span>.</h1>
-        <p class="lead">A first look at the marquee getaways, once-a-year experiences, and showstoppers coming to the 2026 Lights, Camera, ACTION! Silent Auction. Start building your wish list.</p>
+        <p class="lead">A first look at the marquee getaways, once-a-year experiences, and showstoppers coming to this year's Silent Auction. Start building your wish list.</p>
         <div class="meta">
-          <span><b id="meta-count">…</b>&nbsp;items</span>
+          <span><b id="meta-count">…</b>&nbsp;items in the catalog</span>
           <span>📅 <b>June 10, 2026</b></span>
           <span>📍 <b>Megaplex · Centerville</b></span>
         </div>
       </div>
-      <div class="hero-spot" id="hero-spot"><div class="shade"></div></div>
-    </div>
-  </section>
+      <div class="hero-spot" id="hero-spot"></div>
+    </section>
 
-  <div class="notice">This is a <b>preview</b> — bidding opens the night of the Gala. Items and values are subject to change.</div>
+    <div class="notice">This is a <b>preview</b> — bidding opens the night of the Gala. Items and values are subject to change.</div>
+  </div>
 
   <section class="section" id="premier-sec" style="display:none">
     <div class="sec-head"><div><span class="kick">Don't miss these</span><h2>Premier Lots</h2></div></div>
@@ -298,8 +331,9 @@ function buildHero() {
   const hero = cands.sort((a,b)=>b.value_num-a.value_num)[0] || ITEMS.find(i=>i.images.length);
   if (!hero) return;
   const spot = document.getElementById("hero-spot");
-  spot.insertAdjacentHTML("afterbegin", `<img src="${esc(hero.images[0])}" alt="${esc(hero.title)}">`);
-  spot.insertAdjacentHTML("beforeend", `<div class="spotcard" data-id="${esc(hero.id)}"><div class="spot-eyebrow">★ Featured Premier Lot</div><h3 class="spot-title">${esc(hero.title)}</h3><div class="spot-row"><span class="spot-val">${esc(hero.value)}</span><span class="spot-btn">View details →</span></div></div>`);
+  spot.dataset.id = hero.id;
+  spot.innerHTML = `<div class="poster"><img src="${esc(hero.images[0])}" alt="${esc(hero.title)}"></div>
+    <div class="spotcard"><div class="spot-eyebrow">★ Featured Premier Lot</div><h3 class="spot-title">${esc(hero.title)}</h3><div class="spot-row"><span class="spot-val">${esc(hero.value)}</span><span class="spot-btn">View details →</span></div></div>`;
 }
 
 function buildPremierRail() {
