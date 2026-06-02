@@ -1,0 +1,128 @@
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   GALA ADMIN — SHARED COMPONENT LAYER (Phase 1, 2026-06-02)
+   One canonical set of components so every tab stops reinventing. Built ONLY
+   on the existing :root tokens above (no new palette). ADDITIVE — defining
+   these does not change any current tab; conversions happen in later phases.
+   Namespace: .ga-*   Mobile-first, >=44px tap targets, everything scrolls.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Spacing scale (one rhythm everywhere) ── */
+:root { --ga-s1:4px; --ga-s2:8px; --ga-s3:12px; --ga-s4:16px; --ga-s5:24px; --ga-s6:32px; }
+
+/* ── Card: the one container treatment ── */
+.ga-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.ga-card--pad { padding: 16px 18px; }
+.ga-card--soft { background: var(--card-alt); box-shadow: none; }
+.ga-card--accent { border-left: 4px solid var(--pink); }
+.ga-card + .ga-card { margin-top: 12px; }
+
+/* ── Section header (consistent titles) ── */
+.ga-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin: 24px 0 10px;
+}
+.ga-section-head h3, .ga-section-title {
+  margin: 0; color: var(--muted); font-size: 0.8rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.ga-section-head__action { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+
+/* ── Buttons: one family, >=44px on mobile ── */
+.ga-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 40px; padding: 0 16px; box-sizing: border-box;
+  border-radius: var(--radius-sm); border: 1.5px solid var(--border-strong);
+  background: var(--card); color: var(--text);
+  font-family: inherit; font-size: 0.88rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap; text-decoration: none;
+  transition: filter .12s, background .12s, border-color .12s, transform .08s;
+}
+.ga-btn:hover { background: var(--card-alt); border-color: var(--border-strong); }
+.ga-btn:active { transform: scale(0.98); }
+.ga-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ga-btn--primary { background: var(--navy); border-color: var(--navy); color: #fff; }
+.ga-btn--primary:hover { filter: brightness(1.12); background: var(--navy); }
+.ga-btn--danger  { background: var(--pink); border-color: var(--pink); color: #fff; }
+.ga-btn--danger:hover { filter: brightness(1.08); background: var(--pink); }
+.ga-btn--ghost   { background: transparent; border-color: transparent; color: var(--muted); }
+.ga-btn--ghost:hover { background: var(--card-alt); }
+.ga-btn--sm { min-height: 34px; padding: 0 12px; font-size: 0.8rem; }
+.ga-btn--block { width: 100%; }
+/* Button rows that wrap and go full-width-equal on phones */
+.ga-btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* ── Stat tiles: one KPI pattern ── */
+.ga-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.ga-stat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 14px; text-align: left;
+}
+.ga-stat--tap { cursor: pointer; transition: border-color .15s, transform .06s; }
+.ga-stat--tap:hover { border-color: var(--border-strong); }
+.ga-stat--tap:active { transform: scale(0.98); }
+.ga-stat--tap.is-active { border-color: var(--navy); }
+.ga-stat__n { font-size: 1.6rem; font-weight: 800; line-height: 1; color: var(--text); }
+.ga-stat__l { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--light); margin-top: 6px; }
+
+/* ── Filter pills ── */
+.ga-pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ga-pill {
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px;
+  border-radius: 999px; border: 1.5px solid var(--border-strong);
+  background: var(--card); color: var(--text);
+  font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.ga-pill:hover { background: var(--card-alt); }
+.ga-pill.is-active { background: var(--pink); border-color: var(--pink); color: #fff; }
+
+/* ── Scroll wrapper: ANY wide content/table scrolls inside this ── */
+.ga-scroll {
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--card);
+}
+.ga-scroll--bleed { border-radius: 0; border-left: none; border-right: none; }
+
+/* ── Table: one style, sticky header, scrolls inside .ga-scroll ── */
+.ga-table { width: 100%; border-collapse: collapse; min-width: 520px; }
+.ga-table th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--navy); color: #fff;
+  text-align: left; font-size: 0.7rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 12px 14px; white-space: nowrap;
+}
+.ga-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.88rem; color: var(--text); vertical-align: top; }
+.ga-table tbody tr:last-child td { border-bottom: none; }
+.ga-table tbody tr:nth-child(even) td { background: var(--card-alt); }
+
+/* ── Inputs / selects (consistent form controls) ── */
+.ga-input, .ga-select {
+  width: 100%; box-sizing: border-box; min-height: 44px; padding: 0 14px;
+  border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--text);
+  font-family: inherit; font-size: 0.95rem; -webkit-appearance: none; appearance: none;
+}
+.ga-search { position: relative; }
+.ga-search .ga-input { padding-left: 38px; }
+.ga-search::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; opacity: 0.6; pointer-events: none; }
+
+/* ── Mobile rules for the shared layer ── */
+@media (max-width: 768px) {
+  .ga-stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .ga-stat__n { font-size: 1.4rem; }
+  .ga-btn { min-height: 44px; }
+  .ga-btn-row .ga-btn { flex: 1 1 0; min-width: 0; }
+  .ga-card--pad { padding: 14px; }
+}
+@media (max-width: 420px) {
+  .ga-stat-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
