@@ -1,0 +1,343 @@
+/* ============================================================
+   WICKO PILL NAV — v1.0
+   The Foster ecosystem signature mobile navigation.
+   Floating pill at top, hamburger morphs to X in place,
+   menu drops as a card beneath the pill at the same width.
+   Optional accordion for sites with deep sub-page hierarchies.
+
+   Theme by overriding CSS custom properties — see :root section.
+   Built April 30, 2026.
+   ============================================================ */
+
+:root {
+  /* ─── COLOR ─── */
+  --wpn-bg:               rgba(253, 246, 236, 0.92);   /* pill background (translucent) */
+  --wpn-bg-scrolled:      rgba(253, 246, 236, 0.98);   /* pill background after scroll */
+  --wpn-border:           rgba(180, 160, 130, 0.15);   /* pill border */
+  --wpn-shadow:           rgba(100, 80, 50, 0.10);     /* pill shadow */
+  --wpn-shadow-scrolled:  rgba(100, 80, 50, 0.15);
+  --wpn-fg:               #2f2f2f;                      /* hamburger bars + brand text */
+  --wpn-fg-soft:          rgba(47, 47, 47, 0.6);       /* desktop link color */
+  --wpn-fg-strong:        #2f2f2f;                      /* hover/active link color */
+
+  --wpn-card-bg:          #fdf6ec;                      /* dropdown card background */
+  --wpn-card-shadow:      rgba(30, 27, 23, 0.18);
+  --wpn-card-divider:     rgba(47, 47, 47, 0.06);
+
+  --wpn-cta-bg:           #d9514b;                      /* primary CTA button */
+  --wpn-cta-bg-hover:     #c4443f;
+  --wpn-cta-fg:           #fdf6ec;
+  --wpn-cta-shadow:       rgba(217, 81, 75, 0.30);
+
+  --wpn-accent:           #d9514b;                      /* underline + accordion accent */
+
+  /* ─── SHAPE ─── */
+  --wpn-pill-radius:      50px;
+  --wpn-card-radius:      16px;
+  --wpn-cta-radius:       100px;
+
+  /* ─── TYPE ─── */
+  --wpn-link-font:        'cheap-pine-sans','Playfair Display',Georgia,serif;
+  --wpn-link-size:        20px;
+  --wpn-link-weight:      400;
+  --wpn-cta-font:         'DM Sans', sans-serif;
+  --wpn-cta-size:         14px;
+
+  /* ─── EASING (used internally) ─── */
+  --wpn-ease:             cubic-bezier(.16, 1, .3, 1);
+}
+
+/* ─────────────── BASE PILL (desktop default) ─────────────── */
+.wpn {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: calc(100% - 40px);
+  max-width: 1000px;
+  background: var(--wpn-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--wpn-pill-radius);
+  border: 1px solid var(--wpn-border);
+  box-shadow: 0 8px 32px var(--wpn-shadow);
+  transition: top .5s var(--wpn-ease), background .5s var(--wpn-ease), box-shadow .5s var(--wpn-ease);
+}
+.wpn.is-scrolled {
+  top: 12px;
+  background: var(--wpn-bg-scrolled);
+  box-shadow: 0 12px 40px var(--wpn-shadow-scrolled);
+}
+
+.wpn__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 10px 24px;
+}
+
+.wpn__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.wpn__brand-icon { height: 36px; width: auto; flex-shrink: 0; transition: transform .3s var(--wpn-ease); }
+.wpn__brand-icon img { height: 100%; width: auto; object-fit: contain; display: block; }
+.wpn__brand:hover .wpn__brand-icon { transform: scale(1.06); }
+
+.wpn__links {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wpn__links a {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--wpn-fg-soft);
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  position: relative;
+  transition: color .3s;
+  text-decoration: none;
+}
+.wpn__links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--wpn-accent);
+  transition: width .3s var(--wpn-ease);
+  border-radius: 1px;
+}
+.wpn__links a:hover,
+.wpn__links a.is-active { color: var(--wpn-fg-strong); }
+.wpn__links a:hover::after,
+.wpn__links a.is-active::after { width: 100%; }
+
+.wpn__cta {
+  background: var(--wpn-cta-bg) !important;
+  color: var(--wpn-cta-fg) !important;
+  padding: 10px 24px;
+  border-radius: var(--wpn-cta-radius);
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  box-shadow: 0 4px 16px var(--wpn-cta-shadow);
+  transition: background .3s, transform .3s, box-shadow .3s;
+}
+.wpn__cta::after { display: none !important; }
+.wpn__cta:hover {
+  background: var(--wpn-cta-bg-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* Hamburger toggle */
+.wpn__toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 10000;
+  position: relative;
+}
+.wpn__toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--wpn-fg);
+  margin: 5px 0;
+  transition: transform .3s, opacity .3s;
+  border-radius: 2px;
+}
+.wpn__toggle.is-open span:nth-child(1) { transform: rotate(45deg)  translate(5px,  5px); }
+.wpn__toggle.is-open span:nth-child(2) { opacity: 0; }
+.wpn__toggle.is-open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* Hours / status line (optional) */
+.wpn__status { display: none; }
+
+
+/* ─────────────── MOBILE: dropdown card ─────────────── */
+@media (max-width: 768px) {
+  .wpn {
+    width: calc(100% - 24px);
+    top: max(8px, env(safe-area-inset-top));
+    border-radius: 16px;
+    overflow: visible;
+  }
+  .wpn.is-scrolled { top: max(6px, env(safe-area-inset-top)); }
+
+  .wpn__inner {
+    padding: 8px 12px 8px 16px;
+    position: relative;
+    z-index: 2;
+  }
+  .wpn__brand-icon { height: 28px; }
+  .wpn__toggle    { display: block; }
+
+  /* Card hangs below the pill, collapsed by default */
+  .wpn__links {
+    display: flex !important;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: var(--wpn-card-bg);
+    border-radius: var(--wpn-card-radius);
+    box-shadow: 0 20px 60px var(--wpn-card-shadow), 0 4px 12px rgba(30,27,23,.08);
+    padding: 0 12px;
+    margin: 0;
+    list-style: none;
+    z-index: 1;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition:
+      max-height .42s var(--wpn-ease),
+      opacity   .28s ease,
+      transform .42s var(--wpn-ease),
+      padding   .42s var(--wpn-ease);
+  }
+  .wpn__links.is-open {
+    max-height: 80vh;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    padding: 8px 12px 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    z-index: 1001; /* sit above page hero overlays */
+  }
+
+  .wpn__links li {
+    list-style: none;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid var(--wpn-card-divider);
+  }
+  .wpn__links li:last-child { border-bottom: none; }
+
+  .wpn__links a {
+    display: block;
+    font-family: var(--wpn-link-font);
+    font-size: var(--wpn-link-size);
+    color: var(--wpn-fg);
+    padding: 16px 12px;
+    font-weight: var(--wpn-link-weight);
+    letter-spacing: .4px;
+    text-transform: none;
+    opacity: .8;
+    border: none;
+    text-decoration: none;
+    transition: color .2s, opacity .2s;
+  }
+  .wpn__links a::after { display: none !important; }
+  .wpn__links a:hover,
+  .wpn__links a.is-active { opacity: 1; color: var(--wpn-accent); }
+
+  /* Primary CTA inside the card */
+  .wpn__links .wpn__cta,
+  .wpn__cta {
+    font-family: var(--wpn-cta-font) !important;
+    font-size: var(--wpn-cta-size) !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase;
+    background: var(--wpn-cta-bg) !important;
+    color: var(--wpn-cta-fg) !important;
+    opacity: 1 !important;
+    border-radius: var(--wpn-cta-radius);
+    padding: 14px 32px !important;
+    margin: 12px auto 0;
+    width: auto;
+    display: inline-block;
+    box-shadow: 0 8px 24px var(--wpn-cta-shadow);
+  }
+
+  .wpn__status {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(47, 47, 47, 0.45);
+    padding: 14px 8px 4px;
+    text-align: center;
+    letter-spacing: .3px;
+  }
+
+  /* ─── ACCORDION (optional, for sites with sub-pages) ─── */
+  .wpn__group {
+    width: 100%;
+    border-bottom: 1px solid var(--wpn-card-divider);
+  }
+  .wpn__group:last-child { border-bottom: none; }
+
+  .wpn__group-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .wpn__group-row > a {
+    flex: 1;
+    text-align: left;
+    padding-right: 0;
+  }
+  .wpn__group-toggle {
+    background: none;
+    border: none;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wpn-fg);
+    opacity: .5;
+    transition: opacity .2s, transform .3s var(--wpn-ease);
+    flex-shrink: 0;
+  }
+  .wpn__group-toggle svg {
+    width: 12px;
+    height: 7px;
+    transition: transform .3s var(--wpn-ease);
+  }
+  .wpn__group.is-expanded .wpn__group-toggle { opacity: 1; }
+  .wpn__group.is-expanded .wpn__group-toggle svg { transform: rotate(180deg); }
+
+  .wpn__sub {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height .35s var(--wpn-ease), opacity .25s ease, padding .35s var(--wpn-ease);
+  }
+  .wpn__group.is-expanded .wpn__sub {
+    max-height: 1200px; /* generous; tightened by content */
+    opacity: 1;
+    padding: 0 0 12px;
+  }
+  .wpn__sub li { border-bottom: none; text-align: left; }
+  .wpn__sub a {
+    font-family: 'DM Sans', system-ui, sans-serif !important;
+    font-size: 14px !important;
+    padding: 10px 24px !important;
+    opacity: .65 !important;
+    letter-spacing: .2px !important;
+    font-weight: 500 !important;
+  }
+  .wpn__sub a:hover { opacity: 1 !important; }
+}

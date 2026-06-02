@@ -983,11 +983,34 @@ h1 {
   color: var(--muted);
   border-color: var(--rule);
 }
+
+/* Hide the legacy in-flow nav — the floating Wicko pill replaces it */
+.nav { display: none !important; }
 </style>
+<link rel="stylesheet" href="/assets/wicko-pill-nav/wicko-pill-nav.css?v=1">
+<link rel="stylesheet" href="/assets/wicko-pill-nav/gala-theme.css?v=1">
+<script src="/assets/wicko-pill-nav/wicko-pill-nav.js?v=1" defer></script>
 </head>
 
 <body>
 <div class="page-shell">
+
+  <nav class="wpn" aria-label="Main navigation">
+    <div class="wpn__inner">
+      <a href="/" class="wpn__brand" aria-label="Davis Education Foundation Gala home">
+        <div class="wpn__brand-icon"><img src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation"></div>
+      </a>
+      <ul class="wpn__links">
+        <li><a href="/" class="is-active">Home</a></li>
+        <li><a href="/schedule">Schedule</a></li>
+        <li><a href="/auction">Auction</a></li>
+        <li><a href="/faq">FAQ</a></li>
+        <li><a href="/#sign-in" class="wpn__cta">Sign in</a></li>
+      </ul>
+      <button class="wpn__toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
   <nav class="nav" aria-label="Event preview navigation">
     <a class="brand" href="/" aria-label="Davis Education Foundation Gala home">
       <img src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation">

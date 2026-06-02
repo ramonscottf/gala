@@ -16,15 +16,19 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --navy: #0d1b3d;
+    --navy: #11194a;
+    --navy-deep: #080916;
     --navy-700: #182a55;
     --navy-300: #5a6a8c;
+    --indigo: #4d54b3;
+    --cyan: #62c8ff;
+    --gold: #f4b942;
     --blue: #1e88e5;
-    --red: #e53935;
+    --red: #d72846;
     --grey-50: #f8fafc;
     --grey-100: #f1f5f9;
     --grey-200: #e2e8f0;
@@ -39,56 +43,71 @@
     background: white;
     line-height: 1.55;
   }
-  .masthead {
-    background: var(--navy);
-    color: white;
-    padding: 18px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .masthead a {
-    color: white;
-    text-decoration: none;
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: .5px;
-  }
-  .masthead .nav { display: flex; gap: 20px; font-size: 14px; }
-  .masthead .nav a { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; opacity: .9; }
-  .masthead .nav a:hover { opacity: 1; }
-  .strip { height: 3px; background: linear-gradient(90deg, var(--blue) 0%, var(--red) 100%); }
+  /* Legacy masthead replaced by the floating Wicko pill */
+  .masthead, .strip { display: none !important; }
 
   .hero {
-    background: var(--grey-50);
-    padding: 56px 24px 40px;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    padding: 116px 24px 52px;
     text-align: center;
-    border-bottom: 1px solid var(--grey-200);
+    background:
+      radial-gradient(circle at 8% 12%, rgba(215,40,70,0.26), transparent 30%),
+      radial-gradient(circle at 88% 8%, rgba(98,200,255,0.14), transparent 28%),
+      linear-gradient(135deg, #080916 0%, #11194a 52%, #171845 100%);
   }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 80%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 80%);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    z-index: 3;
+    background: linear-gradient(90deg, var(--red) 0%, var(--gold) 50%, var(--indigo) 100%);
+  }
+  .hero > * { position: relative; z-index: 2; }
   .hero h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 42px;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(40px, 7vw, 76px);
     font-weight: 700;
-    color: var(--navy);
-    margin: 0 0 12px;
-    letter-spacing: -0.5px;
+    color: #fff;
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
   }
   .hero p {
     font-size: 17px;
-    color: var(--grey-500);
+    color: rgba(255,255,255,0.74);
     max-width: 640px;
-    margin: 0 auto 20px;
+    margin: 0 auto 22px;
   }
   .hero .meta {
     display: inline-flex;
-    gap: 18px;
-    font-size: 14px;
-    color: var(--navy-300);
+    gap: 10px;
+    font-size: 13.5px;
     flex-wrap: wrap;
     justify-content: center;
   }
-  .hero .meta strong { color: var(--navy); font-weight: 600; }
+  .hero .meta span {
+    padding: 11px 15px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.075);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.72);
+  }
+  .hero .meta strong { color: #fff; font-weight: 800; }
 
   .search-row {
     max-width: 720px;
@@ -117,7 +136,7 @@
     margin-bottom: 36px;
   }
   .category h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Fraunces', Georgia, serif;
     font-size: 24px;
     color: var(--navy);
     margin: 0 0 16px;
@@ -193,7 +212,7 @@
     border: 1px solid var(--grey-200);
   }
   .cta h3 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Fraunces', Georgia, serif;
     margin: 0 0 8px;
     font-size: 22px;
     color: var(--navy);
@@ -221,16 +240,26 @@
     .category h2 { font-size: 20px; }
   }
 </style>
+<link rel="stylesheet" href="/assets/wicko-pill-nav/wicko-pill-nav.css?v=1">
+<link rel="stylesheet" href="/assets/wicko-pill-nav/gala-theme.css?v=1">
+<script src="/assets/wicko-pill-nav/wicko-pill-nav.js?v=1" defer></script>
 </head>
 <body>
-  <header class="masthead">
-    <a href="/">DEF Gala 2026</a>
-    <nav class="nav">
-      <a href="/">Home</a>
-      <a href="/faq">FAQ</a>
-    </nav>
-  </header>
-  <div class="strip"></div>
+  <nav class="wpn" aria-label="Main navigation">
+    <div class="wpn__inner">
+      <a href="/" class="wpn__brand" aria-label="Davis Education Foundation Gala home">
+        <div class="wpn__brand-icon"><img src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation"></div>
+      </a>
+      <ul class="wpn__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/schedule">Schedule</a></li>
+        <li><a href="/auction">Auction</a></li>
+        <li><a href="/faq" class="is-active">FAQ</a></li>
+        <li><a href="/#sign-in" class="wpn__cta">Sign in</a></li>
+      </ul>
+      <button class="wpn__toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
 
   <section class="hero">
     <h1>Frequently Asked Questions</h1>

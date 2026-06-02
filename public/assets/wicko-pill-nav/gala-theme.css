@@ -1,0 +1,73 @@
+/* ============================================================
+   WICKO PILL NAV — DEF Gala 2026 theme
+   Navy + gold over translucent glass, matched to the gala home
+   page palette (red #d72846 / gold #f4b942 / cyan / indigo).
+   Unlike the def-site theme, the gala site has no desktop
+   glass-header, so .wpn is shown on ALL viewports.
+   ============================================================ */
+
+:root {
+  --wpn-bg:               rgba(9, 13, 38, 0.78);
+  --wpn-bg-scrolled:      rgba(9, 13, 38, 0.95);
+  --wpn-border:           rgba(255, 255, 255, 0.16);
+  --wpn-shadow:           rgba(0, 0, 0, 0.34);
+  --wpn-shadow-scrolled:  rgba(0, 0, 0, 0.44);
+  --wpn-fg:               rgba(255, 255, 255, 0.82);
+  --wpn-fg-soft:          rgba(255, 255, 255, 0.66);
+  --wpn-fg-strong:        #ffffff;
+
+  --wpn-card-bg:          rgba(9, 13, 38, 0.97);
+  --wpn-card-shadow:      rgba(0, 0, 0, 0.5);
+  --wpn-card-divider:     rgba(255, 255, 255, 0.10);
+
+  --wpn-cta-bg:           #d72846;          /* fallback if gradient unsupported */
+  --wpn-cta-bg-hover:     #c01f3b;
+  --wpn-cta-fg:           #ffffff;
+  --wpn-cta-shadow:       rgba(215, 40, 70, 0.32);
+  --wpn-cta-radius:       999px;
+
+  --wpn-accent:           #f4b942;
+
+  --wpn-link-font:        Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --wpn-link-size:        13px;
+  --wpn-link-weight:      700;
+}
+
+/* Brand mark: small DEF logo in the pill */
+.wpn__brand-icon { height: 30px; }
+.wpn__brand-icon img { height: 100%; width: auto; }
+
+/* CTA = the home-page red→purple→indigo gradient */
+.wpn__cta {
+  background: linear-gradient(95deg, var(--red, #d72846), #883bb5 76%, var(--indigo, #4d54b3)) !important;
+  letter-spacing: .04em !important;
+  text-transform: none !important;
+}
+.wpn__cta:hover { background: linear-gradient(95deg, #c01f3b, #7a32a4 76%, #434aa6) !important; }
+
+/* Desktop links: uppercase micro-label like the home buttons */
+@media (min-width: 769px) {
+  .wpn__links a:not(.wpn__cta) {
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: 12px;
+  }
+}
+
+/* Mobile drop-card: white-on-navy links, gold active/hover */
+@media (max-width: 768px) {
+  .wpn__links a {
+    color: #ffffff;
+    opacity: .86;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 21px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .wpn__links a:hover,
+  .wpn__links a.is-active { color: var(--wpn-accent); opacity: 1; }
+  .wpn__links .wpn__cta {
+    font-family: Inter, sans-serif !important;
+    font-size: 14px !important;
+  }
+}
