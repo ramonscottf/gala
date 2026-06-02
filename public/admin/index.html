@@ -1429,9 +1429,9 @@ body {
     <!-- Sponsors React island — childspree-style expandable rows + touchpoint timeline.
          All filtering, sorting, KPI strip, status pills happen inside the island.
          Legacy renderSponsors() in the host page no-ops (no #sponsors-grid). -->
-    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021350">
+    <link rel="stylesheet" href="/admin/assets/sponsors.css?v=202606021402">
     <div id="sponsors-mount"></div>
-    <script src="/admin/assets/sponsors.js?v=202606021350" defer></script>
+    <script src="/admin/assets/sponsors.js?v=202606021402" defer></script>
   </div>
 
   <!-- ── Tickets tab removed — superseded by Sponsors tab (May 2026, D1 canonical) ── -->
@@ -1604,7 +1604,7 @@ body {
 
   <!-- ── Lunch Angels Tab (DSD nutrition-services cooks serving dinner) ── -->
   <div class="tab-panel" id="panel-lunchangels">
-    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:12px;">
+    <div class="ga-card ga-card--pad" style="margin-bottom:12px;">
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div style="font-size:13px; color:var(--text-secondary, #64748b); flex:1; min-width:240px; line-height:1.5;">
           <strong style="color:var(--navy,#0a1733);">Lunch Angels</strong> — Davis School District nutrition-services cooks serving dinner on June 10. They're all signed up; shirt sizes fill in here as they respond at
@@ -1620,25 +1620,25 @@ body {
       </div>
     </div>
 
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
-      <button class="btn btn-secondary" id="la-remind-btn" title="Email + text only the cooks who haven't picked a size yet" style="padding:8px 12px; font-size:12px;">Remind those awaiting</button>
-      <button class="btn btn-secondary" id="la-export-btn" style="padding:8px 12px; font-size:12px;">Export</button>
-      <button class="btn btn-secondary" id="la-refresh-btn" style="padding:8px 12px; font-size:12px;">Refresh</button>
+    <div class="ga-btn-row" style="margin-bottom:12px;">
+      <button class="ga-btn" id="la-remind-btn" title="Email + text only the cooks who haven't picked a size yet">Remind those awaiting</button>
+      <button class="ga-btn" id="la-export-btn">Export</button>
+      <button class="ga-btn" id="la-refresh-btn">Refresh</button>
       <span id="la-note" style="font-size:12px; color:#94a3b8;"></span>
     </div>
 
-    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden;">
-      <table style="width:100%; border-collapse:collapse; font-size:13px;">
-        <thead><tr style="background:#0a1733; color:#fff; text-align:left;">
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Name</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Email</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Phone</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Shift</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Shirt size</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600;">Status</th>
+    <div class="ga-scroll">
+      <table class="ga-table">
+        <thead><tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Shift</th>
+          <th>Shirt size</th>
+          <th>Status</th>
         </tr></thead>
         <tbody id="la-tbody">
-          <tr><td colspan="6" style="padding:14px;"><div class="empty-state"><div class="empty-state__text">Loading Lunch Angels…</div></div></td></tr>
+          <tr><td colspan="6"><div class="empty-state"><div class="empty-state__text">Loading Lunch Angels…</div></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -1646,7 +1646,7 @@ body {
 
   <!-- ── Food Choices Tab (dinner selections for the kitchen) ── -->
   <div class="tab-panel" id="panel-food">
-    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:12px;">
+    <div class="ga-card ga-card--pad" style="margin-bottom:12px;">
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div style="font-size:13px; color:var(--text-secondary, #64748b); flex:1; min-width:240px; line-height:1.5;">
           <strong style="color:var(--navy,#0a1733);">Dinner selections</strong> — the kitchen count, pulled live from seat assignments. Each assigned seat carries one choice.
@@ -1661,9 +1661,9 @@ body {
       </div>
     </div>
 
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
-      <button class="btn btn-secondary" id="food-export-btn" style="padding:8px 12px; font-size:12px;">Export kitchen count</button>
-      <button class="btn btn-secondary" id="food-refresh-btn" style="padding:8px 12px; font-size:12px;">Refresh</button>
+    <div class="ga-btn-row" style="margin-bottom:12px;">
+      <button class="ga-btn" id="food-export-btn">Export kitchen count</button>
+      <button class="ga-btn" id="food-refresh-btn">Refresh</button>
       <span id="food-note" style="font-size:12px; color:#94a3b8;"></span>
     </div>
 
@@ -1684,7 +1684,7 @@ body {
 
   <!-- ── Salad GF Tab (gluten-free poll for salad guests) ── -->
   <div class="tab-panel" id="panel-saladgf">
-    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:12px;">
+    <div class="ga-card ga-card--pad" style="margin-bottom:12px;">
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <div style="font-size:13px; color:var(--text-secondary, #64748b); flex:1; min-width:240px; line-height:1.5;">
           <strong style="color:var(--navy,#0a1733);">Gluten-free salad poll</strong> — salad guests get a one-tap link to choose regular or gluten-free. Delegates are polled directly; the rest go through the sponsor who placed them.
@@ -1699,26 +1699,26 @@ body {
       </div>
     </div>
 
-    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
-      <button class="btn btn-primary" id="sg-send-btn" style="padding:8px 12px; font-size:12px;">Send poll to all</button>
-      <button class="btn btn-secondary" id="sg-remind-btn" style="padding:8px 12px; font-size:12px;">Remind those awaiting</button>
-      <button class="btn btn-secondary" id="sg-test-btn" title="Send a sample poll to Scott only" style="padding:8px 12px; font-size:12px;">Test to me</button>
-      <button class="btn btn-secondary" id="sg-export-btn" style="padding:8px 12px; font-size:12px;">Export</button>
-      <button class="btn btn-secondary" id="sg-refresh-btn" style="padding:8px 12px; font-size:12px;">Refresh</button>
+    <div class="ga-btn-row" style="margin-bottom:12px;">
+      <button class="ga-btn ga-btn--primary" id="sg-send-btn">Send poll to all</button>
+      <button class="ga-btn" id="sg-remind-btn">Remind those awaiting</button>
+      <button class="ga-btn" id="sg-test-btn" title="Send a sample poll to Scott only">Test to me</button>
+      <button class="ga-btn" id="sg-export-btn">Export</button>
+      <button class="ga-btn" id="sg-refresh-btn">Refresh</button>
       <span id="sg-note" style="font-size:12px; color:#94a3b8;"></span>
     </div>
 
-    <div style="background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden;">
-      <table style="width:100%; border-collapse:collapse; font-size:13px;">
-        <thead><tr style="background:#0a1733; color:#fff; text-align:left;">
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Name</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Type</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Salads</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">GF</th>
-          <th style="padding:10px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;">Status</th>
+    <div class="ga-scroll">
+      <table class="ga-table">
+        <thead><tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Salads</th>
+          <th>GF</th>
+          <th>Status</th>
         </tr></thead>
         <tbody id="sg-tbody">
-          <tr><td colspan="5" style="padding:14px;"><div class="empty-state"><div class="empty-state__text">Loading…</div></div></td></tr>
+          <tr><td colspan="5"><div class="empty-state"><div class="empty-state__text">Loading…</div></div></td></tr>
         </tbody>
       </table>
     </div>
