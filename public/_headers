@@ -1,0 +1,16 @@
+# The admin app ships as fixed-name bundles (/admin/assets/sponsors.js,
+# sponsors.css) rather than content-hashed files. With normal caching a
+# deploy can leave admins running a stale bundle for hours — which is
+# exactly how a fixed client/server bug appeared "still broken" after it
+# was deployed (the browser kept POSTing the old payload).
+#
+# Force these to always revalidate so a deploy is picked up on the next
+# load. The admin HTML itself is tiny; keep it fresh too.
+/admin/assets/sponsors.js
+  Cache-Control: no-cache, must-revalidate
+/admin/assets/sponsors.css
+  Cache-Control: no-cache, must-revalidate
+/admin/
+  Cache-Control: no-cache, must-revalidate
+/admin/index.html
+  Cache-Control: no-cache, must-revalidate
