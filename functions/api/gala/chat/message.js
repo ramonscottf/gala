@@ -54,7 +54,8 @@ export async function onRequestPost({ request, env }) {
         loadShowtimes(env),
         loadHistory(env, thread.id, 10),
       ]);
-      const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext, myticketsContext);
+      const liveHelp = !!(env.SLACK_BOT_TOKEN && env.SLACK_HELPLINE_CHANNEL);
+      const systemPrompt = buildSystemPrompt(faq, showtimes, tokenContext, myticketsContext, liveHelp);
 
       let reply;
       if (tokenContext) {

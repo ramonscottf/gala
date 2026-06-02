@@ -19,6 +19,7 @@ export async function onRequestPost({ request, env }) {
   }
   const name = body.name ? body.name.toString().trim().slice(0, 80) : null;
   const email = body.email ? body.email.toString().trim().toLowerCase().slice(0, 200) : null;
+  const liveHelpAvailable = !!(env.SLACK_BOT_TOKEN && env.SLACK_HELPLINE_CHANNEL);
 
   // Validate email format only if provided
   if (email && (!email.includes('@') || !email.includes('.'))) {
@@ -34,6 +35,7 @@ export async function onRequestPost({ request, env }) {
       name: existing.thread.attendee_name,
       email: existing.thread.attendee_email,
       resumed: true,
+      live_help_available: liveHelpAvailable,
     });
   }
 
@@ -49,6 +51,7 @@ export async function onRequestPost({ request, env }) {
       name: created.thread.attendee_name,
       email: created.thread.attendee_email,
       resumed: false,
+      live_help_available: liveHelpAvailable,
     },
     { headers: { 'Set-Cookie': created.cookieHeader } }
   );

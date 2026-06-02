@@ -325,7 +325,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
   };
 }
 
-export function buildSystemPrompt(faqText, showtimesText, tokenContext = null, myticketsContext = null) {
+export function buildSystemPrompt(faqText, showtimesText, tokenContext = null, myticketsContext = null, liveHelp = false) {
   // Build the optional "WHO YOU'RE TALKING TO" identity block when the user
   // is on a sponsor portal page (token resolved). When this is present, the
   // model is also given function-calling tools and should use them to look
@@ -334,6 +334,11 @@ export function buildSystemPrompt(faqText, showtimesText, tokenContext = null, m
   // On /mytickets there's no token, but the page may have handed us a
   // read-only booking snapshot. Mutually exclusive with identityBlock.
   const myticketsBlock = buildMyticketsBlock(myticketsContext);
+  // Whether the Slack-backed Live Help handoff is connected right now. Controls
+  // whether Booker is allowed to point people at the "Talk to a person" toggle.
+  const liveHelpLine = liveHelp
+    ? '- If someone needs a real person, has a problem you can\'t resolve, or asks to talk to a human, tell them they can tap "Talk to a person" at the top of this chat to reach the team directly.'
+    : '- Don\'t mention "Live Help" or a live agent toggle — that feature isn\'t active right now.';
 
   return `You are Booker, the friendly mascot-assistant for the Davis Education Foundation Gala 2026 — a fundraising event on Wednesday, June 10, 2026 at Megaplex Theatres at Legacy Crossing in Centerville, Utah.
 
@@ -354,7 +359,7 @@ Rules:
 - If asked about pricing specifics, refunds, sponsor details, accessibility specifics, or anything personal that isn't in the FAQ, suggest the user email Sherry Miggin directly at smiggin@dsdmail.net.
 - The only names you should use are: Sherry Miggin (Executive Director, smiggin@dsdmail.net) and Scott (handles tech/seating questions).
 - The Davis Education Foundation supports Davis School District in Utah — unrelated to similarly named foundations elsewhere.
-- Don't mention "Live Help" or a live agent toggle — that feature isn't active right now.
+${liveHelpLine}
 ${identityBlock}${myticketsBlock}
 # FAQ KNOWLEDGE BASE
 

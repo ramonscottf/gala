@@ -462,7 +462,7 @@
 
 
   let state = {
-    open: false, threadId: null, mode: 'ai',
+    open: false, threadId: null, mode: 'ai', liveAvailable: false,
     lastSeen: '1970-01-01T00:00:00.000Z', pollTimer: null,
   };
 
@@ -510,12 +510,52 @@
   }
 
   function setMode(mode) {
-    // AI-only mode while Slack live-help is offline. Banner is hidden — the
-    // chat panel header already says "DEF Gala 2026 Help · Booker" which is
-    // signal enough.
-    state.mode = 'ai';
-    banner.style.display = 'none';
-    stopPolling();
+    if (!state.liveAvailable) {
+      // Live Help not connected (no Slack secrets) — AI-only, banner hidden.
+      // This is the original behavior; the toggle simply never appears.
+      state.mode = 'ai';
+      banner.style.display = 'none';
+      stopPolling();
+      return;
+    }
+    state.mode = (mode === 'live') ? 'live' : 'ai';
+    renderBanner();
+    if (state.mode === 'live') startPolling(); else stopPolling();
+  }
+
+  // The mode banner doubles as the AI↔Live toggle. Only rendered when the
+  // server reports Live Help is connected (Slack secrets present), so in the
+  // default/offline state it stays invisible and inert.
+  function renderBanner() {
+    if (!state.liveAvailable) { banner.style.display = 'none'; return; }
+    banner.style.display = '';
+    var linkStyle = 'background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;font-weight:700;';
+    if (state.mode === 'live') {
+      banner.className = 'gx-mode-banner gx-live';
+      banner.innerHTML = '🟢 Live Help — a team member will reply right here. <button type="button" class="gx-mode-link" data-mode="ai" style="' + linkStyle + '">Back to Booker</button>';
+    } else {
+      banner.className = 'gx-mode-banner';
+      banner.innerHTML = 'Need a real person? <button type="button" class="gx-mode-link" data-mode="live" style="' + linkStyle + '">Talk to a person</button>';
+    }
+    var lnk = banner.querySelector('.gx-mode-link');
+    if (lnk) lnk.addEventListener('click', function () { toggleLive(lnk.getAttribute('data-mode')); });
+  }
+
+  async function toggleLive(mode) {
+    try {
+      const r = await fetch('/api/gala/chat/toggle', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: mode }),
+      });
+      const data = await r.json();
+      if (!r.ok) { appendMsg('system', "Couldn't switch modes — please try again."); return; }
+      setMode(data.mode || mode);
+      if (data.system_note) appendMsg('system', data.system_note);
+      if ((data.mode || mode) === 'live') input.focus();
+    } catch (e) {
+      appendMsg('system', 'Network error switching modes — please try again.');
+    }
   }
 
   function startPolling() {
@@ -658,6 +698,7 @@
         return;
       }
       state.threadId = data.thread_id;
+      state.liveAvailable = !!data.live_help_available;
       setMode(data.mode || 'ai');
       // Greet only on the first start of a session. Resumed threads
       // already have message history rendered (or about to be polled).
