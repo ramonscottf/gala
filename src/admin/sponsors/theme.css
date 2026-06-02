@@ -699,3 +699,61 @@
 /* Guest-assigned (delegated) seat chips — read-only */
 .gs-seatchip.is-guest { background: #eef2fb; border-color: #d7e0f3; }
 .gs-seatchip-meal-ro { font-size: 11px; color: var(--def-muted, #64748b); padding: 2px 0; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   MOBILE OVERHAUL (<=640px) — 2026-06-02
+   The row head was a single horizontal flex row: [main | actions | chevron].
+   On a phone that crams the action buttons + chevron into the right third and
+   squeezes the company name. Fix: stack — main content full width on top,
+   actions as a full-width button row beneath, chevron pinned top-right. Also
+   bump tap targets to >=44px and let buttons breathe.
+   ════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Row head becomes a vertical stack */
+  .gs-row-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .gs-row-main { width: 100%; }
+  .gs-row-name { font-size: 16px; line-height: 1.25; white-space: normal; }
+  .gs-row-meta { white-space: normal; }
+
+  /* Actions: full-width row of equal buttons under the content */
+  .gs-row-actions {
+    width: 100%;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .gs-row-actions .gs-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 13px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Chevron out of the flow, pinned to the top-right corner */
+  .gs-chev {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    font-size: 13px;
+  }
+
+  /* Tap targets everywhere in the island */
+  .gs-btn { min-height: 40px; font-size: 12px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; }
+
+  /* KPI strip: 2-up on phones instead of 3 cramped columns */
+  .gs-kpis { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gs-kpi { padding: 12px 8px; }
+  .gs-kpi-n { font-size: 22px; }
+
+  /* Search bar + add-sponsor stack instead of fighting for width */
+  .gs-searchbar { flex-wrap: wrap; }
+}
