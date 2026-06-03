@@ -158,9 +158,9 @@
   .empty { text-align: center; padding: 60px 24px; color: var(--grey-500); }
   .empty button { margin-top: 14px; padding: 9px 18px; border: 1px solid var(--grey-300); background: #fff; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
 
-  .modal-back { position: fixed; inset: 0; z-index: 100; background: rgba(8,20,39,.62); backdrop-filter: blur(3px); display: none; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+  .modal-back { position: fixed; inset: 0; z-index: 2000; background: rgba(8,20,39,.62); backdrop-filter: blur(3px); display: none; align-items: flex-start; justify-content: center; padding: 28px 20px; overflow-y: auto; }
   .modal-back.open { display: flex; }
-  .modal { background: #fff; border-radius: 18px; overflow: hidden; max-width: 880px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,.4); position: relative; }
+  .modal { margin: auto; background: #fff; border-radius: 18px; overflow: hidden; max-width: 880px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,.4); position: relative; }
   .modal .mstrip { height: 3px; background: linear-gradient(90deg, var(--blue), var(--red)); }
   .modal-close { position: absolute; top: 14px; right: 14px; z-index: 6; width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.92); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--navy); box-shadow: 0 2px 10px rgba(0,0,0,.18); }
   .modal-close:hover { background: var(--navy); color: #fff; }
@@ -220,6 +220,60 @@
   }
   /* Legacy in-page masthead replaced by the floating Wicko pill */
   .masthead { display: none !important; }
+
+  /* ── Sponsor recognition ──────────────────────────────── */
+  :root { --hogan-red: #e0312a; --af-blue: #1b4d8a; }
+
+  /* Inline alternating ribbons between category rails */
+  .spon-ribbon { max-width: 1240px; margin: 0 auto; padding: 6px 24px 30px; display: flex; }
+  .spon-ribbon.right { justify-content: flex-end; }
+  .spon-ribbon .lockup {
+    display: inline-flex; align-items: center; gap: 20px;
+    padding: 15px 26px; background: #fff; border: 1px solid var(--grey-200);
+    border-radius: 16px; box-shadow: 0 6px 22px rgba(13,27,61,.07);
+  }
+  .spon-ribbon.right .lockup { flex-direction: row-reverse; }
+  .spon-ribbon .role { font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; line-height: 1.2; }
+  .spon-ribbon.right .role { text-align: right; }
+  .spon-ribbon .role small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .03em; text-transform: none; color: var(--grey-500); margin-top: 3px; }
+  .spon-ribbon .divider { width: 1px; align-self: stretch; background: var(--grey-200); }
+  .spon-ribbon img { display: block; width: auto; }
+  .spon-ribbon.lead .role { color: var(--hogan-red); }
+  .spon-ribbon.lead img { height: 56px; }
+  .spon-ribbon.support .role { color: var(--af-blue); }
+  .spon-ribbon.support img { height: 38px; }
+
+  /* Closing "thank you" finale — Hogan large (presenting), AF smaller (supporting) */
+  .spon-finale {
+    background: var(--grey-50); border-top: 1px solid var(--grey-200);
+    margin-top: 18px; padding: 58px 24px 64px; text-align: center;
+  }
+  .spon-finale .eyebrow { font-size: 11.5px; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; }
+  .spon-finale h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--navy); font-size: clamp(28px, 3.6vw, 42px); margin: 0 0 12px; letter-spacing: -.02em; line-height: .98; }
+  .spon-finale p.note { color: var(--grey-500); font-size: 15.5px; max-width: 56ch; margin: 0 auto 34px; }
+  .spon-card {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 13px;
+    background: #fff; border: 1px solid var(--grey-200); border-radius: 18px;
+  }
+  .spon-card .role { font-size: 11px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+  .spon-card.lead { padding: 32px 60px; box-shadow: 0 16px 44px rgba(13,27,61,.11); border-top: 3px solid var(--hogan-red); }
+  .spon-card.lead .role { color: var(--hogan-red); }
+  .spon-card.lead img { height: 96px; width: auto; }
+  .spon-card.sup { padding: 22px 42px; border-top: 3px solid var(--af-blue); margin-top: 24px; }
+  .spon-card.sup .role { color: var(--af-blue); }
+  .spon-card.sup img { height: 50px; width: auto; }
+
+  @media (max-width: 560px) {
+    .spon-ribbon { padding: 4px 18px 24px; }
+    .spon-ribbon .lockup { gap: 14px; padding: 12px 18px; }
+    .spon-ribbon.lead img { height: 44px; }
+    .spon-ribbon.support img { height: 32px; }
+    .spon-finale { padding: 46px 18px 52px; }
+    .spon-card.lead { padding: 26px 32px; }
+    .spon-card.lead img { height: 70px; }
+    .spon-card.sup { padding: 18px 26px; }
+    .spon-card.sup img { height: 42px; }
+  }
 </style>
 <link rel="stylesheet" href="/assets/wicko-pill-nav/wicko-pill-nav.css?v=1">
 <link rel="stylesheet" href="/assets/wicko-pill-nav/gala-theme.css?v=1">
@@ -366,16 +420,52 @@ function buildPremierRail() {
   document.getElementById("premier-rail").innerHTML = prem.map(it=>cardHTML(it,{premier:true})).join("");
 }
 
+const SPONSORS = {
+  hogan: { img: "/assets/sponsors/hogan.webp", alt: "Hogan & Associates Construction", role: "Presenting Sponsor", cls: "lead" },
+  af:    { img: "/assets/sponsors/america-first.webp", alt: "America First Credit Union", role: "Proud Sponsor", cls: "support" },
+};
+// After which rail index to drop a ribbon, which sponsor, which side (alternating).
+const RIBBONS = [
+  { after: 0, key: "hogan", side: "left"  },
+  { after: 3, key: "af",    side: "right" },
+  { after: 6, key: "hogan", side: "left"  },
+  { after: 9, key: "hogan", side: "right" },
+];
+function ribbonHTML(key, side) {
+  const s = SPONSORS[key];
+  return `<div class="spon-ribbon ${s.cls} ${side}">
+    <div class="lockup">
+      <span class="role">${esc(s.role)}<small>2026 Auction</small></span>
+      <span class="divider"></span>
+      <img src="${esc(s.img)}" alt="${esc(s.alt)}" loading="lazy">
+    </div>
+  </div>`;
+}
+function finaleHTML() {
+  const h = SPONSORS.hogan, a = SPONSORS.af;
+  return `<section class="spon-finale">
+    <div class="eyebrow">With Gratitude</div>
+    <h2>Thank you to our auction sponsors</h2>
+    <p class="note">This year's silent auction is made possible by the generosity of our sponsors. Please join us in thanking them.</p>
+    <div><div class="spon-card lead"><span class="role">${esc(h.role)}</span><img src="${esc(h.img)}" alt="${esc(h.alt)}" loading="lazy"></div></div>
+    <div><div class="spon-card sup"><span class="role">Supporting Sponsor</span><img src="${esc(a.img)}" alt="${esc(a.alt)}" loading="lazy"></div></div>
+  </section>`;
+}
+
 function buildCatRails() {
   const counts = {};
   ITEMS.forEach(it => (it.tags||[]).forEach(t => counts[t]=(counts[t]||0)+1));
   const wrap = document.getElementById("cat-rails");
   const cats = TAG_ORDER.filter(t => counts[t] >= 3);
-  wrap.innerHTML = cats.map((cat, idx) => {
+  let html = cats.map((cat, idx) => {
     const list = ITEMS.filter(it => (it.tags||[]).includes(cat)).sort((a,b)=>{ const p=(isPrem(b)?1:0)-(isPrem(a)?1:0); return p||b.value_num-a.value_num; }).slice(0,12);
     const railId = `rail-${idx}`;
-    return `<section class="section"><div class="sec-head"><div><h2>${esc(cat)}</h2></div><span class="seeall" data-tag="${esc(cat)}">See all ${counts[cat]} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div><div class="rail-wrap"><button class="rail-btn left" data-rail="${railId}" data-dir="-1" aria-label="Scroll left">‹</button><button class="rail-btn right" data-rail="${railId}" data-dir="1" aria-label="Scroll right">›</button><div class="rail" id="${railId}">${list.map(it=>cardHTML(it)).join("")}</div></div></section>`;
+    const rail = `<section class="section"><div class="sec-head"><div><h2>${esc(cat)}</h2></div><span class="seeall" data-tag="${esc(cat)}">See all ${counts[cat]} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div><div class="rail-wrap"><button class="rail-btn left" data-rail="${railId}" data-dir="-1" aria-label="Scroll left">‹</button><button class="rail-btn right" data-rail="${railId}" data-dir="1" aria-label="Scroll right">›</button><div class="rail" id="${railId}">${list.map(it=>cardHTML(it)).join("")}</div></div></section>`;
+    const rib = RIBBONS.filter(r => r.after === idx).map(r => ribbonHTML(r.key, r.side)).join("");
+    return rail + rib;
   }).join("");
+  html += finaleHTML();
+  wrap.innerHTML = html;
 }
 
 function buildChips() {
