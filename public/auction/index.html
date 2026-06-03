@@ -77,10 +77,16 @@
   .hero .meta b { color: #fff; font-weight: 800; }
 
   /* Hero spotlight = poster-style featured Premier lot */
-  .hero-spot { position: relative; min-height: 420px; cursor: pointer; }
-  .hero-spot .poster { position: absolute; inset: 0; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.22); box-shadow: var(--shadow); }
-  .hero-spot .poster img { width: 100%; height: 100%; object-fit: cover; }
-  .hero-spot .poster::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(8,9,22,.94) 0%, rgba(8,9,22,.6) 36%, rgba(8,9,22,.18) 60%, transparent 78%); }
+  .hero-spot { position: relative; aspect-ratio: 16/9; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.22); box-shadow: var(--shadow); background: var(--navy-deep); cursor: pointer; }
+  .hero-spot .slide { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity .7s ease; }
+  .hero-spot .slide.active { opacity: 1; pointer-events: auto; }
+  .hero-spot .slide img { width: 100%; height: 100%; object-fit: contain; background: var(--navy-deep); display: block; }
+  .hero-spot .slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(8,9,22,.94) 0%, rgba(8,9,22,.6) 36%, rgba(8,9,22,.18) 60%, transparent 78%); pointer-events: none; }
+  .hero-spot .dots { position: absolute; top: 14px; right: 16px; z-index: 5; display: flex; gap: 7px; }
+  .hero-spot .dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.45); cursor: pointer; transition: width .25s, background .25s; }
+  .hero-spot .dot:hover { background: rgba(255,255,255,.8); }
+  .hero-spot .dot.active { background: var(--gold); width: 20px; }
+  @media (prefers-reduced-motion: reduce) { .hero-spot .slide { transition: none; } }
   .hero-spot .spotcard { position: absolute; left: 22px; right: 22px; bottom: 22px; z-index: 3; }
   .hero-spot .spot-eyebrow { font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 9px; }
   .hero-spot .spot-title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 23px; line-height: 1.12; color: #fff; margin: 0 0 12px; max-width: 24ch; }
@@ -195,7 +201,7 @@
 
   @media (max-width: 880px) {
     .hero { grid-template-columns: 1fr; gap: 30px; padding: 92px 0 40px; }
-    .hero-spot { min-height: 300px; }
+    .hero-spot .spot-title { font-size: 19px; }
     .modal-grid { grid-template-columns: 1fr; }
     .gallery .main { aspect-ratio: 16/9; }
     .mdetail { padding: 24px 22px 26px; }
@@ -427,13 +433,25 @@ function cardHTML(it, opts={}) {
 }
 
 function buildHero() {
-  const cands = ITEMS.filter(i => isPrem(i) && !i.raffle && i.images.length);
-  const hero = cands.sort((a,b)=>b.value_num-a.value_num)[0] || ITEMS.find(i=>i.images.length);
-  if (!hero) return;
+  const cands = ITEMS.filter(i => isPrem(i) && !i.raffle && i.images.length).sort((a,b)=>b.value_num-a.value_num).slice(0,6);
+  const list = cands.length ? cands : ITEMS.filter(i=>i.images.length).slice(0,1);
+  if (!list.length) return;
   const spot = document.getElementById("hero-spot");
-  spot.dataset.id = hero.id;
-  spot.innerHTML = `<div class="poster"><img src="${esc(hero.images[0])}" alt="${esc(hero.title)}"></div>
-    <div class="spotcard"><div class="spot-eyebrow">★ Featured Premier Lot</div><h3 class="spot-title">${esc(hero.title)}</h3><div class="spot-row"><span class="spot-val">${esc(hero.value)}</span><span class="spot-btn">View details →</span></div></div>`;
+  spot.innerHTML = list.map((it,i)=>`<div class="slide${i===0?' active':''}" data-id="${esc(it.id)}" role="button" tabindex="${i===0?0:-1}" aria-label="${esc(it.title)} — view details">
+      <img src="${esc(it.images[0])}" alt="${esc(it.title)}"${i?' loading="lazy"':''}>
+      <div class="spotcard"><div class="spot-eyebrow">★ Featured Premier Lot</div><h3 class="spot-title">${esc(it.title)}</h3><div class="spot-row"><span class="spot-val">${esc(it.value)}</span><span class="spot-btn">View details →</span></div></div>
+    </div>`).join("") + (list.length>1 ? `<div class="dots">${list.map((_,i)=>`<button class="dot${i?'':' active'}" type="button" data-i="${i}" aria-label="Show featured lot ${i+1}"></button>`).join("")}</div>` : "");
+  if (list.length < 2) return;
+  const slides = spot.querySelectorAll(".slide"), dots = spot.querySelectorAll(".dot");
+  let idx = 0, timer = null;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function go(n){ idx=(n+slides.length)%slides.length; slides.forEach((s,i)=>{ s.classList.toggle("active",i===idx); s.tabIndex=i===idx?0:-1; }); dots.forEach((d,i)=>d.classList.toggle("active",i===idx)); }
+  function start(){ if(!reduce && !timer) timer=setInterval(()=>go(idx+1), 5500); }
+  function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+  dots.forEach(d=>d.addEventListener("click", e=>{ e.stopPropagation(); go(+d.dataset.i); stop(); start(); }));
+  spot.addEventListener("mouseenter", stop);
+  spot.addEventListener("mouseleave", start);
+  start();
 }
 
 function buildPremierRail() {
