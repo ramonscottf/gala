@@ -14,3 +14,7 @@
   Cache-Control: no-cache, must-revalidate
 /admin/index.html
   Cache-Control: no-cache, must-revalidate
+
+# Allow the private fosterlabs "copy" tool to read the live item feed cross-origin.
+/data/*
+  Access-Control-Allow-Origin: *
