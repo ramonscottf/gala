@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register &amp; Bid · DEF Gala 2026</title>
+<meta name="description" content="Register for the Davis Education Foundation Gala on June 10, 2026, then download the free Givi app to bid in the silent auction from your phone.">
+<link rel="canonical" href="https://gala.daviskids.org/auction-registration/">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #11194a; --navy-deep: #080916; --indigo: #4d54b3;
+    --cyan: #62c8ff; --gold: #f4b942; --red: #d72846; --red-light: #ff4d70;
+    --grey-50: #f8fafc; --grey-100: #f1f5f9; --grey-200: #e2e8f0;
+    --grey-500: #64748b; --grey-700: #334155; --grey-900: #0f172a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--grey-900); background: #fff; line-height: 1.55; }
+  a { color: inherit; }
+  .nav { display: none !important; }
+
+  /* Cinematic hero (matches gala home) */
+  .topwrap { position: relative; overflow: hidden; color: #fff;
+    background:
+      radial-gradient(circle at 8% 12%, rgba(215,40,70,0.26), transparent 30%),
+      radial-gradient(circle at 88% 8%, rgba(98,200,255,0.14), transparent 28%),
+      linear-gradient(135deg, #080916 0%, #11194a 52%, #171845 100%); }
+  .topwrap::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 44px 44px; mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 82%); -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 82%); }
+  .topwrap::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3; background: linear-gradient(90deg, var(--red) 0%, var(--gold) 50%, var(--indigo) 100%); }
+
+  .hero { position: relative; z-index: 2; max-width: 880px; margin: 0 auto; padding: 116px 24px 60px; text-align: center; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 12px; font-size: 12px; letter-spacing: .2em; font-weight: 900; color: var(--gold); text-transform: uppercase; margin-bottom: 18px; }
+  .eyebrow::before, .eyebrow::after { content: ""; width: 26px; height: 2px; border-radius: 999px; background: currentColor; }
+  .hero h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: clamp(40px, 6.5vw, 70px); letter-spacing: -.02em; line-height: .96; margin: 0; }
+  .hero h1 .accent { color: var(--gold); }
+  .hero .lead { font-size: 18px; color: rgba(255,255,255,.78); max-width: 60ch; margin: 18px auto 0; }
+  .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: inherit; font-weight: 800; font-size: 15px; padding: 15px 28px; border-radius: 999px; border: 0; cursor: pointer; text-decoration: none; transition: transform .12s, box-shadow .12s, background .15s; letter-spacing: .01em; }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: linear-gradient(95deg, var(--red), #883bb5 76%, var(--indigo)); color: #fff; box-shadow: 0 12px 30px rgba(215,40,70,.28); }
+  .btn.primary:hover { box-shadow: 0 16px 38px rgba(215,40,70,.36); }
+  .btn.ghost { background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.22); }
+  .btn.ghost:hover { background: rgba(255,255,255,.14); }
+
+  .steps-mini { display: inline-flex; gap: 10px; align-items: center; margin-top: 34px; flex-wrap: wrap; justify-content: center; font-size: 13px; }
+  .steps-mini span { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border-radius: 999px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.13); color: rgba(255,255,255,.82); font-weight: 600; }
+  .steps-mini b { display: inline-flex; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: var(--navy-deep); font-weight: 900; align-items: center; justify-content: center; font-size: 12px; }
+  .steps-mini .arrow { color: rgba(255,255,255,.4); }
+
+  /* Steps */
+  main { max-width: 1180px; margin: 0 auto; }
+  .step { padding: 64px 24px; }
+  .step.alt { background: var(--grey-50); border-radius: 28px; margin: 8px 14px 36px; }
+  .step-head { text-align: center; max-width: 640px; margin: 0 auto 34px; }
+  .step-head .num { display: inline-block; font-size: 12px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: var(--red); margin-bottom: 10px; }
+  .step-head h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--navy); font-size: clamp(28px, 4vw, 44px); margin: 0 0 12px; letter-spacing: -.02em; line-height: 1; }
+  .step-head p { color: var(--grey-500); font-size: 16.5px; margin: 0; }
+
+  /* Embedded registration */
+  .embed-wrap { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid var(--grey-200); border-radius: 22px; box-shadow: 0 20px 60px rgba(13,27,61,.12); overflow: hidden; }
+  .reg-embed { display: block; width: 100%; height: 1180px; border: 0; }
+  .fallback { text-align: center; color: var(--grey-500); font-size: 14px; margin: 18px 0 0; }
+  .fallback a { color: var(--red); font-weight: 700; text-decoration: none; }
+  .reg-next { text-align: center; margin-top: 30px; }
+
+  /* App store buttons */
+  .store-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .store-btn { display: inline-flex; align-items: center; gap: 12px; background: #0b0b0f; color: #fff; padding: 13px 22px; border-radius: 14px; text-decoration: none; transition: transform .12s, box-shadow .12s; box-shadow: 0 8px 22px rgba(0,0,0,.16); }
+  .store-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0,0,0,.22); }
+  .store-btn svg { width: 26px; height: 26px; flex: 0 0 auto; }
+  .store-btn .lbl { display: flex; flex-direction: column; line-height: 1.1; text-align: left; }
+  .store-btn .lbl small { font-size: 10px; opacity: .82; letter-spacing: .02em; }
+  .store-btn .lbl b { font-size: 17px; font-weight: 700; }
+  .tip { text-align: center; color: var(--grey-500); font-size: 14.5px; max-width: 52ch; margin: 24px auto 0; }
+  .tip b { color: var(--grey-900); }
+
+  footer.site { background: var(--navy); color: rgba(255,255,255,.72); text-align: center; padding: 34px 24px; font-size: 13.5px; }
+  footer.site a { color: #fff; }
+
+  /* App popup modal */
+  .app-modal-back { position: fixed; inset: 0; z-index: 2000; background: rgba(8,9,22,.66); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 24px; }
+  .app-modal-back.open { display: flex; }
+  .app-modal { background: #fff; border-radius: 24px; max-width: 480px; width: 100%; padding: 38px 34px 34px; text-align: center; position: relative; box-shadow: 0 30px 80px rgba(0,0,0,.4); border-top: 4px solid var(--gold); }
+  .app-modal .amc { position: absolute; top: 14px; right: 16px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--grey-100); color: var(--grey-700); font-size: 20px; cursor: pointer; line-height: 1; }
+  .app-modal .amc:hover { background: var(--grey-200); }
+  .app-modal .eyebrow { color: var(--red); justify-content: center; }
+  .app-modal h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--navy); font-size: 27px; margin: 0 0 10px; line-height: 1.05; }
+  .app-modal p { color: var(--grey-500); font-size: 15px; margin: 0 0 22px; }
+  .app-modal .store-row { margin-bottom: 4px; }
+
+  @media (max-width: 560px) {
+    .hero { padding: 100px 20px 44px; }
+    .step { padding: 46px 18px; }
+    .step.alt { margin: 6px 8px 26px; border-radius: 22px; }
+    .reg-embed { height: 1320px; }
+    .btn { width: 100%; }
+    .hero-cta { flex-direction: column; }
+  }
+</style>
+<link rel="stylesheet" href="/assets/wicko-pill-nav/wicko-pill-nav.css?v=1">
+<link rel="stylesheet" href="/assets/wicko-pill-nav/gala-theme.css?v=1">
+<script src="/assets/wicko-pill-nav/wicko-pill-nav.js?v=1" defer></script>
+</head>
+<body>
+
+<div class="topwrap">
+  <nav class="wpn" aria-label="Main navigation">
+    <div class="wpn__inner">
+      <a href="/" class="wpn__brand" aria-label="Davis Education Foundation Gala home">
+        <div class="wpn__brand-icon"><img src="/assets/brand/def-logo-light.png" alt="Davis Education Foundation"></div>
+      </a>
+      <ul class="wpn__links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/schedule">Schedule</a></li>
+        <li><a href="/auction">Auction</a></li>
+        <li><a href="/49ers">49ers Drawing</a></li>
+        <li><a href="/faq">FAQ</a></li>
+        <li><a href="/#sign-in" class="wpn__cta">Sign in</a></li>
+      </ul>
+      <button class="wpn__toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="eyebrow">Gala Night · June 10, 2026</span>
+    <h1>Register, then bid<br>from <span class="accent">your phone.</span></h1>
+    <p class="lead">Two quick steps to join this year's silent auction: register for the gala, then download the free Givi app to bid on everything from anywhere in the room.</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="#register">Register for the Gala</a>
+      <button class="btn ghost" type="button" data-open-app>Download the Givi App</button>
+    </div>
+    <div class="steps-mini">
+      <span><b>1</b> Register</span>
+      <span class="arrow">→</span>
+      <span><b>2</b> Download Givi</span>
+      <span class="arrow">→</span>
+      <span><b>3</b> Bid &amp; win</span>
+    </div>
+  </header>
+</div>
+
+<main>
+  <section class="step" id="register">
+    <div class="step-head">
+      <span class="num">Step 1</span>
+      <h2>Register for the Gala</h2>
+      <p>Sign up below — it only takes a minute. Registration is free and gets you into the silent auction.</p>
+    </div>
+    <div class="embed-wrap">
+      <iframe class="reg-embed" src="https://secure.qgiv.com/event/def2026/register/" title="Register for the 2026 DEF Gala Silent Auction" loading="lazy" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <p class="fallback">Form not loading? <a href="https://secure.qgiv.com/event/def2026/register/" target="_blank" rel="noopener">Open registration in a new tab →</a></p>
+    <div class="reg-next">
+      <button class="btn primary" type="button" data-open-app>I've registered — get the bidding app →</button>
+    </div>
+  </section>
+
+  <section class="step alt" id="getapp">
+    <div class="step-head">
+      <span class="num">Step 2</span>
+      <h2>Download Givi to bid</h2>
+      <p>The silent auction runs in the free <b>Givi</b> app. Grab it now so you're ready the moment bidding opens.</p>
+    </div>
+    <div class="store-row" id="store-row-main"></div>
+    <p class="tip">Open Givi and <b>sign in with the same email you registered with</b> — the Davis Education Foundation auction will be waiting for you. Bid from your seat, set max bids, and get outbid alerts all night.</p>
+  </section>
+</main>
+
+<footer class="site">
+  <p>Davis Education Foundation Gala · Wednesday, June 10, 2026 · Megaplex Theatres at Legacy Crossing, Centerville</p>
+  <p><a href="/faq">Questions? Read the FAQ →</a></p>
+</footer>
+
+<div class="app-modal-back" id="app-modal" role="dialog" aria-modal="true" aria-labelledby="app-modal-title">
+  <div class="app-modal">
+    <button class="amc" type="button" data-close-app aria-label="Close">×</button>
+    <span class="eyebrow">You're almost set</span>
+    <h3 id="app-modal-title">Download Givi to start bidding</h3>
+    <p>The silent auction lives in the free Givi app. Sign in with the same email you registered with and you'll find the DEF auction ready to go.</p>
+    <div class="store-row" id="store-row-modal"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var APPLE = "https://apps.apple.com/us/app/givi-mobile-donations/id1289812506";
+  var PLAY  = "https://play.google.com/store/apps/details?id=com.qgiv.givi";
+
+  var appleSVG = '<svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M16.36 1.43c0 1.13-.46 2.18-1.2 2.95-.79.82-2.05 1.45-3.08 1.37-.12-1.09.42-2.25 1.13-2.99.79-.82 2.14-1.43 3.15-1.33zM20.5 17.2c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.39 3.52-4.12 3.53-1.54.01-1.93-1-4.02-.99-2.09.01-2.52.99-4.06.98-1.73-.01-3.06-1.78-4.05-3.35-2.77-4.37-3.06-9.5-1.35-12.22 1.21-1.95 3.13-3.09 4.93-3.09 1.84 0 2.99 1.01 4.51 1.01 1.47 0 2.37-1.01 4.5-1.01 1.61 0 3.32.88 4.54 2.4-3.99 2.18-3.34 7.88.65 9.77z"/></svg>';
+  var playSVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#00d3ff" d="M3.6 2.3c-.3.3-.5.8-.5 1.4v16.6c0 .6.2 1.1.5 1.4l.1.1L13 12.6v-.2L3.7 2.2z"/><path fill="#ffce00" d="M16.3 15.9 13 12.6v-.2l3.3-3.3.1.1 3.9 2.2c1.1.6 1.1 1.6 0 2.3l-3.9 2.2z"/><path fill="#ff3a44" d="M16.4 15.8 13 12.4 3.6 21.8c.4.4 1 .4 1.7.1l11.1-6.1z"/><path fill="#00f076" d="M16.4 9.2 5.3 3.1c-.7-.4-1.3-.4-1.7 0L13 12.4z"/></svg>';
+
+  var storeHTML =
+    '<a class="store-btn" href="' + APPLE + '" target="_blank" rel="noopener">' + appleSVG +
+      '<span class="lbl"><small>Download on the</small><b>App Store</b></span></a>' +
+    '<a class="store-btn" href="' + PLAY + '" target="_blank" rel="noopener">' + playSVG +
+      '<span class="lbl"><small>Get it on</small><b>Google Play</b></span></a>';
+
+  document.getElementById("store-row-main").innerHTML = storeHTML;
+  document.getElementById("store-row-modal").innerHTML = storeHTML;
+
+  var modal = document.getElementById("app-modal");
+  function openApp() { modal.classList.add("open"); document.body.style.overflow = "hidden"; }
+  function closeApp() { modal.classList.remove("open"); document.body.style.overflow = ""; }
+
+  document.querySelectorAll("[data-open-app]").forEach(function (b) { b.addEventListener("click", openApp); });
+  document.querySelectorAll("[data-close-app]").forEach(function (b) { b.addEventListener("click", closeApp); });
+  modal.addEventListener("click", function (e) { if (e.target === modal) closeApp(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeApp(); });
+
+  // Best-effort: if the Qgiv registration iframe ever posts a completion message, surface the app popup.
+  window.addEventListener("message", function (e) {
+    if (typeof e.origin === "string" && e.origin.indexOf("qgiv.com") !== -1) {
+      var d = (e.data && (e.data.type || e.data.event || e.data)) || "";
+      d = String(d).toLowerCase();
+      if (d.indexOf("complet") !== -1 || d.indexOf("confirm") !== -1 || d.indexOf("thank") !== -1 || d.indexOf("success") !== -1) {
+        openApp();
+      }
+    }
+  }, false);
+})();
+</script>
+</body>
+</html>
