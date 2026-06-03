@@ -397,14 +397,19 @@ const SPONSORS = {
   af:    { img: "/assets/sponsors/america-first.webp", alt: "America First Credit Union" },
 };
 // Marquee logo sequence — Hogan ~2x as often as America First (frequency is the only difference).
-function marqueeHTML(right) {
+function marqueeHTML(right, hoganOnly) {
   const H = SPONSORS.hogan, A = SPONSORS.af;
-  const seq = ["h","a","h","a","h","a","h","a","h","a","h","a"]; // alternating, no adjacent doubles
+  const seq = hoganOnly
+    ? ["h","h","h","h","h","h","h","h","h","h","h","h"]   // Hogan only
+    : ["h","a","h","a","h","a","h","a","h","a","h","a"];  // both, alternating (no doubles)
   const img = k => (k === "h")
     ? `<img src="${esc(H.img)}" alt="" loading="lazy">`
     : `<img src="${esc(A.img)}" alt="" loading="lazy">`;
   const half = seq.map(img).join("");
-  return `<div class="spon-marquee ${right ? "right" : ""}" role="img" aria-label="Our auction sponsors: Hogan & Associates Construction and America First Credit Union"><div class="track">${half}${half}</div></div>`;
+  const label = hoganOnly
+    ? "Auction sponsor: Hogan & Associates Construction"
+    : "Our auction sponsors: Hogan & Associates Construction and America First Credit Union";
+  return `<div class="spon-marquee ${right ? "right" : ""}" role="img" aria-label="${label}"><div class="track">${half}${half}</div></div>`;
 }
 function railNav(railId) {
   return `<div class="rail-nav"><button class="rnav" data-rail="${railId}" data-dir="-1" aria-label="Scroll left">‹</button><button class="rnav" data-rail="${railId}" data-dir="1" aria-label="Scroll right">›</button></div>`;
@@ -415,16 +420,18 @@ function buildCatRails() {
   ITEMS.forEach(it => (it.tags||[]).forEach(t => counts[t]=(counts[t]||0)+1));
   const wrap = document.getElementById("cat-rails");
   const cats = TAG_ORDER.filter(t => counts[t] >= 3);
-  let right = true;
-  let html = marqueeHTML(right); right = !right; // marquee between Premier and the first category
+  // A marquee sits in EVERY gap, alternating type (both -> Hogan-only -> both ...)
+  // and scroll direction (right -> left -> right ...).
+  let right = true, hoganOnly = false;
+  const marquee = () => { const m = marqueeHTML(right, hoganOnly); right = !right; hoganOnly = !hoganOnly; return m; };
+  let html = marquee(); // between Premier and the first category
   cats.forEach((cat, idx) => {
     const list = ITEMS.filter(it => (it.tags||[]).includes(cat)).sort((a,b)=>{ const p=(isPrem(b)?1:0)-(isPrem(a)?1:0); return p||b.value_num-a.value_num; }).slice(0,12);
     const railId = `rail-${idx}`;
     html += `<section class="section"><div class="sec-head"><div><h2>${esc(cat)}</h2></div><span class="seeall" data-tag="${esc(cat)}">See all ${counts[cat]} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div><div class="rail-wrap"><div class="rail" id="${railId}">${list.map(it=>cardHTML(it)).join("")}</div></div>${railNav(railId)}</section>`;
-    // marquee every other section, alternating scroll direction
-    if (idx % 2 === 1 && idx !== cats.length - 1) { html += marqueeHTML(right); right = !right; }
+    if (idx !== cats.length - 1) html += marquee(); // marquee after every section
   });
-  html += marqueeHTML(right); // final marquee before Browse All
+  html += marquee(); // final marquee before Browse All
   wrap.innerHTML = html;
 }
 
