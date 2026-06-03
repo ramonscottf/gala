@@ -118,7 +118,7 @@
   .card .imgwrap { position: relative; aspect-ratio: 4/3; background: var(--grey-100); overflow: hidden; }
   .card .imgwrap img { width: 100%; height: 100%; object-fit: cover; }
   .card .imgwrap .noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--grey-300); font-family: 'Fraunces', Georgia, serif; font-size: 40px; }
-  .badge { position: absolute; top: 10px; left: 10px; font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; color: #fff; }
+  .badge { position: absolute; top: 9px; left: 9px; font-size: 8.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; color: #fff; }
   .badge.premier { background: var(--red); }
   .badge.raffle { background: var(--navy); }
   .imgcount { position: absolute; bottom: 10px; right: 10px; font-size: 11px; font-weight: 600; color: #fff; background: rgba(13,27,61,.7); padding: 3px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(2px); }
@@ -213,7 +213,7 @@
     .rail .card { width: 200px; }
     .rail.premier-rail .card { width: 250px; }
     .controls-inner, .browse-grid { padding-left: 18px; padding-right: 18px; }
-    .grid { gap: 14px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .grid { gap: 14px; grid-template-columns: repeat(2, 1fr); }
     .modal-back { padding: 0; align-items: stretch; }
     .modal { border-radius: 0; min-height: 100%; }
   }
@@ -399,7 +399,7 @@ const SPONSORS = {
 // Marquee logo sequence — Hogan ~2x as often as America First (frequency is the only difference).
 function marqueeHTML(right) {
   const H = SPONSORS.hogan, A = SPONSORS.af;
-  const seq = ["h","a","h","h","a","h","h","a","h","h","a","h"]; // H:8 A:4 = 2:1
+  const seq = ["h","a","h","a","h","a","h","a","h","a","h","a"]; // alternating, no adjacent doubles
   const img = k => (k === "h")
     ? `<img src="${esc(H.img)}" alt="" loading="lazy">`
     : `<img src="${esc(A.img)}" alt="" loading="lazy">`;
