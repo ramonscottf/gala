@@ -3601,7 +3601,7 @@ function renderLegend() {
   let html = '';
   for (const [key, info] of Object.entries(types)) {
     if (!usedTypes.has(key)) continue;
-    html += `<div class="legend-item"><div class="legend-swatch" style="background: ${info.color};"></div>${info.label}</div>`;
+    html += `<div class="legend-item"><div class="legend-swatch" style="background: transparent; border: 2px solid ${info.color}; box-sizing: border-box;"></div>${info.label}</div>`;
   }
   html += `<div class="legend-item"><div class="legend-swatch" style="background: var(--green);"></div>Assigned</div>`;
   legend.innerHTML = html;
@@ -3837,7 +3837,7 @@ function createSeat(theaterId, rowLabel, seatNum, type, isLoveseat, halfInfo = n
 
   const halfCls = halfInfo ? ` seat-loveseat-half seat-loveseat-half--${halfInfo.half}` : '';
   el.className = 'seat' + (isLoveseat ? ' seat-loveseat' : '') + halfCls + (isAssigned ? ' assigned' : '') + (isBlocked ? ' blocked' : '') + tierCls + splitCls;
-  el.style.cssText = (isAssigned ? '' : `background: ${color};`) + sponsorColorVar;
+  el.style.cssText = (isAssigned ? '' : `background: transparent; border-color: ${color}; border-width: 2px;`) + sponsorColorVar;
   el.dataset.key = key;
   el.dataset.row = rowLabel;
   el.dataset.seat = seatNum;
@@ -4033,9 +4033,13 @@ async function doAssign() {
     if (name) {
       seatEl.classList.add('assigned');
       seatEl.style.background = '';
+      seatEl.style.borderColor = '';
+      seatEl.style.borderWidth = '';
     } else {
       seatEl.classList.remove('assigned');
-      seatEl.style.background = theaterData.seatTypes[seatEl.dataset.type]?.color || '#6c757d';
+      seatEl.style.background = 'transparent';
+      seatEl.style.borderColor = theaterData.seatTypes[seatEl.dataset.type]?.color || '#6c757d';
+      seatEl.style.borderWidth = '2px';
     }
   }
 
@@ -4186,7 +4190,9 @@ document.getElementById('assignment-list').addEventListener('click', async e => 
   const seatEl = document.querySelector(`[data-key="${key}"]`);
   if (seatEl) {
     seatEl.classList.remove('assigned');
-    seatEl.style.background = theaterData.seatTypes[seatEl.dataset.type]?.color || '#6c757d';
+    seatEl.style.background = 'transparent';
+    seatEl.style.borderColor = theaterData.seatTypes[seatEl.dataset.type]?.color || '#6c757d';
+    seatEl.style.borderWidth = '2px';
   }
 
   updateStats();
