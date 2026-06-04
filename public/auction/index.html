@@ -189,6 +189,12 @@
   .mdetail h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: var(--navy); font-size: 25px; line-height: 1.15; margin: 0 0 6px; }
   .mdetail .mnum { font-size: 12.5px; color: var(--grey-500); font-weight: 500; margin-bottom: 16px; }
   .mdetail .mdesc { font-size: 14.5px; color: var(--grey-700); line-height: 1.62; margin: 0 0 22px; max-height: 280px; overflow-y: auto; }
+  .mdetail .mdesc p { margin: 0 0 11px; }
+  .mdetail .mdesc p:last-child { margin-bottom: 0; }
+  .mdetail .mdesc ul, .mdetail .mdesc ol { margin: 0 0 12px; padding-left: 22px; }
+  .mdetail .mdesc li { margin: 0 0 5px; }
+  .mdetail .mdesc strong, .mdetail .mdesc b { color: var(--navy); font-weight: 700; }
+  .mdetail .mdesc em, .mdetail .mdesc i { font-style: italic; }
   .mdetail .mval-row { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--grey-200); display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .mdetail .mval-label { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--grey-500); }
   .mdetail .mval { font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: 30px; color: var(--navy); }
@@ -542,7 +548,7 @@ function openModal(id) {
   if (isPrem(it)) badges.push(`<span class="mbadge premier">★ Premier Lot</span>`);
   (it.tags||[]).filter(t=>t!=="Premier").forEach(t=>badges.push(`<span class="mbadge tag">${esc(t)}</span>`));
   const gallery = `<div class="gallery"><div class="main" id="g-main">${galleryImgs.length?`<img src="${esc(galleryImgs[0])}" alt="${esc(it.title)}" id="g-img">`:`<div class="noimg">D</div>`}${galleryImgs.length>1?`<button class="gnav prev" id="g-prev" aria-label="Previous photo">‹</button><button class="gnav next" id="g-next" aria-label="Next photo">›</button>`:""}</div>${galleryImgs.length>1?`<div class="thumbs" id="g-thumbs">${galleryImgs.map((u,i)=>`<img src="${esc(u)}" data-i="${i}" class="${i===0?'active':''}" alt="">`).join("")}</div>`:""}</div>`;
-  const detail = `<div class="mdetail"><div class="mbadges">${badges.join("")}</div><h2>${esc(it.title)}</h2>${it.number?`<div class="mnum">Item #${esc(it.number)}</div>`:""}<div class="mdesc">${esc(it.desc)||"<em>Details coming soon.</em>"}</div><div class="mval-row"><span class="mval-label">${it.raffle?"Ticket value":"Estimated value"}</span><span class="mval">${esc(it.value)||"—"}</span></div><div class="mhint">Bidding opens the night of the Gala — <b>June 10</b>. This is a preview.</div></div>`;
+  const detail = `<div class="mdetail"><div class="mbadges">${badges.join("")}</div><h2>${esc(it.title)}</h2>${it.number?`<div class="mnum">Item #${esc(it.number)}</div>`:""}<div class="mdesc">${it.desc_html||esc(it.desc)||"<em>Details coming soon.</em>"}</div><div class="mval-row"><span class="mval-label">${it.raffle?"Ticket value":"Estimated value"}</span><span class="mval">${esc(it.value)||"—"}</span></div><div class="mhint">Bidding opens the night of the Gala — <b>June 10</b>. This is a preview.</div></div>`;
   document.getElementById("modal-grid").innerHTML = gallery + detail;
   if (galleryImgs.length>1) {
     document.getElementById("g-prev").onclick = ()=>step(-1);
