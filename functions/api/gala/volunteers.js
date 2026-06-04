@@ -221,6 +221,13 @@ export async function onRequestGet(context) {
 
 export async function onRequestPost(context) {
   const { request, env } = context;
+
+  // ── SIGNUPS CLOSED 2026-06-04 ──
+  // Public volunteer registration is closed. The signup UI already shows a
+  // "that's a wrap" panel; this guards the API so a stale link or bot can't
+  // create new signups. Existing-volunteer endpoints (portal, message,
+  // restore, check-in) are untouched. To re-open: delete this block.
+  return jsonError('Volunteer signups are closed — thank you! The roster is set for the 2026 gala.', 403);
   if (!env.GALA_DB) return jsonError('Database not configured', 503);
 
   let body;

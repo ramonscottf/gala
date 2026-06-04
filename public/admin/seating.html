@@ -991,6 +991,16 @@ body.bulk-mode .seat:not(.assigned):not(.blocked):not(.gap) {
 .seat.tier-Bronze    { background: #EA580C !important; border-color: #C2410C !important; }
 .seat.tier-CellPhone { background: #8B5CF6 !important; border-color: #6D28D9 !important; }
 
+/* ── Occupancy-clarity override (2026-06-04) ──
+   In "Seat type" mode the chart is about WHO'S SEATED, not sponsor tier.
+   Force every taken seat to solid green so it matches the "Assigned"
+   legend swatch; open seats stay hollow type-colored outlines.
+   Tier / per-sponsor colors still live in "Sponsor" color mode. */
+body[data-color-mode="type"] .seat.assigned {
+  background: var(--green) !important;
+  border-color: rgba(5,150,105,0.55) !important;
+}
+
 /* ═══ Color-by-sponsor / Split-block / Sponsor-hover overlays ═══
    Tier-1 admin visibility layer. The default chart colors assigned
    seats by tier (4 buckets) which makes every Platinum look identical.
