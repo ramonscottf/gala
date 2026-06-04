@@ -82,7 +82,60 @@
     .films{grid-template-columns:1fr 1fr;gap:12px}
     .film .title{font-size:15px}
   }
-</style>
+  /* ── Auditorium turnover timeline (2026-06-04) ── */
+  .board-sec{margin-top:6px}
+  .board-tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:0 0 14px}
+  .board-legend{display:flex;flex-wrap:wrap;gap:9px 14px;font-size:12.5px;color:var(--muted)}
+  .board-legend .lg{display:inline-flex;align-items:center;gap:6px}
+  .board-legend .sw{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .btn-csv{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:9px 15px;font:600 13.5px 'Inter',sans-serif;cursor:pointer;white-space:nowrap}
+  .btn-csv:hover{background:#16306b}
+  .board-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(16,30,60,.05)}
+  .board{position:relative}
+  .board-row{display:flex;align-items:stretch;border-top:1px solid #eef1f7}
+  .board-row.head{border-top:0;position:sticky;top:0;z-index:6;background:#fbfcfe}
+  .aud-label{position:sticky;left:0;z-index:4;flex:0 0 60px;background:#f4f6fc;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:700 12.5px 'Inter';color:var(--navy);padding:6px 4px;text-align:center}
+  .aud-label small{font-weight:600;color:var(--muted);font-size:9.5px}
+  .board-row.head .aud-label{background:#fbfcfe;color:var(--muted);font-size:10.5px;font-weight:700}
+  .track{position:relative;height:46px;flex:0 0 auto}
+  .board-row.head .track{height:24px}
+  .tick{position:absolute;top:0;bottom:0;border-left:1px solid #f0f3f8}
+  .tick.major{border-left:1px solid #dde3ef}
+  .tick-lbl{position:absolute;top:5px;font:700 10px 'Inter';color:var(--muted);transform:translateX(3px);white-space:nowrap}
+  .blk{position:absolute;top:6px;height:34px;border-radius:7px;color:#fff;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;justify-content:center;padding:3px 7px;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .1s,box-shadow .1s}
+  .blk:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.28);z-index:3}
+  .blk .bt{font:700 11px 'Inter';line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .blk .bs{font:600 10px 'Inter';opacity:.92;white-space:nowrap}
+  .blk.dinner{background:#dde5f0;color:#5b6472;box-shadow:none;border:1px dashed #b9c4d8;cursor:default;height:34px}
+  .gap-pill{position:absolute;top:13px;transform:translateX(-50%);background:#fff;border:1px solid #f0c0c0;color:#b3261e;font:700 10px 'Inter';padding:2px 7px;border-radius:999px;white-space:nowrap;z-index:2}
+  .gap-pill.ok{border-color:#cfe3d6;color:#1d7a4d}
+  .mv-starwars{background:#1f4484}.mv-breadwinner{background:#0f766e}.mv-paddington{background:#b45309}.mv-dragon{background:#6d28d9}.mv-flex{background:#94a3b8}
+  .board-hint{font-size:12px;color:var(--muted);margin:9px 2px 0}
+  /* tap detail modal */
+  .bd-modal{position:fixed;inset:0;background:rgba(12,20,40,.55);display:none;align-items:center;justify-content:center;z-index:9000;padding:16px}
+  .bd-modal.open{display:flex}
+  .bd-card{background:#fff;border-radius:18px;max-width:440px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.4)}
+  .bd-close{position:sticky;top:0;float:right;background:none;border:none;font-size:26px;line-height:1;color:#94a3b8;cursor:pointer;padding:8px 14px;z-index:2}
+  .bd-hd{display:flex;gap:14px;padding:18px 18px 14px}
+  .bd-hd img{width:62px;height:93px;object-fit:cover;border-radius:8px;background:#0d1b3d;flex:0 0 auto}
+  .bd-hd .ti{font:600 19px 'Fraunces',serif;color:var(--navy);line-height:1.08}
+  .bd-hd .me{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.55}
+  .bd-fill{padding:2px 18px 20px}
+  .bd-fill .nums{display:flex;align-items:baseline;gap:9px;margin-bottom:5px}
+  .bd-fill .pct{font:700 26px 'Fraunces',serif;color:var(--navy)}
+  .bd-fill .cnt{font-size:13px;color:var(--muted)}
+  .bd-bar{height:8px;border-radius:999px;background:#eef1f7;overflow:hidden;margin:2px 0 16px}
+  .bd-bar i{display:block;height:100%;background:linear-gradient(90deg,#16a34a,#0f766e)}
+  .bd-screen{text-align:center;font:700 9px 'Inter';letter-spacing:.2em;color:#aeb6c6;border-bottom:2px solid #dde3ef;margin:0 auto 9px;padding-bottom:3px;width:72%}
+  .smap{display:flex;flex-direction:column;gap:3px}
+  .smap .srow{display:grid;gap:2px}
+  .sseat{aspect-ratio:1;border-radius:2px;background:transparent;border:1px solid #cfd6e4;min-height:6px}
+  .sseat.f{background:#16a34a;border-color:#15803d}
+  .smap-legend{display:flex;gap:16px;justify-content:center;font-size:11px;color:var(--muted);margin-top:11px}
+  .smap-legend span{display:inline-flex;align-items:center;gap:5px}
+  .smap-legend i{width:11px;height:11px;border-radius:2px;display:inline-block}
+  @media(max-width:760px){ .aud-label{flex-basis:50px} }
+  </style>
 <link rel="stylesheet" href="/assets/wicko-pill-nav/wicko-pill-nav.css?v=1">
 <link rel="stylesheet" href="/assets/wicko-pill-nav/gala-theme.css?v=1">
 <script src="/assets/wicko-pill-nav/wicko-pill-nav.js?v=1" defer></script>
@@ -200,6 +253,19 @@
 
     </div>
 
+    <h2 class="sec-title">By Auditorium</h2>
+    <p class="sec-sub">Both showings on one timeline so the turnover (cleaning) window between them is easy to read. Tap any film for the room and its live seat fill.</p>
+    <div class="board-sec">
+      <div class="board-tools">
+        <div class="board-legend" id="board-legend"></div>
+        <button class="btn-csv" id="btn-csv" type="button">⬇ Download for theater (CSV)</button>
+      </div>
+      <div class="board-scroll"><div class="board" id="board"><div style="padding:26px;color:#5b6472;font:600 14px 'Inter'">Loading the lineup…</div></div></div>
+      <p class="board-hint">Swipe sideways to see the whole evening · red turnover pills = tight (under 40 min).</p>
+    </div>
+
+    <div class="bd-modal" id="bd-modal"><div class="bd-card" id="bd-card"></div></div>
+
     <div class="footnote">
       <strong>Your film, auditorium, and seats</strong> are listed on your ticket and in your seat confirmation email. Questions on the night? Find any DEF volunteer in the lobby.
     </div>
@@ -208,5 +274,142 @@
 
   <div class="pagefoot">Davis Education Foundation Gala · June 10, 2026 · Megaplex Theatres at Legacy Crossing</div>
 
+<script>
+(function(){
+  var DAY_START=16*60, PXMIN=2.6;
+  var LAYOUTS={}, SHOWTIMES=[], FILL={};
+  function mvClass(t){t=(t||'').toLowerCase();
+    if(t.indexOf('mandalor')>-1||t.indexOf('star wars')>-1)return 'mv-starwars';
+    if(t.indexOf('breadwinner')>-1)return 'mv-breadwinner';
+    if(t.indexOf('paddington')>-1)return 'mv-paddington';
+    if(t.indexOf('dragon')>-1)return 'mv-dragon';
+    return 'mv-flex';}
+  function mvShort(t){if(!t)return 'Flex / hold';
+    if(/mandalor|star wars/i.test(t))return 'Star Wars';
+    if(/breadwinner/i.test(t))return 'Breadwinner';
+    if(/paddington/i.test(t))return 'Paddington 2';
+    if(/dragon/i.test(t))return 'Dragon';
+    return t;}
+  function swColor(c){return {'mv-starwars':'#1f4484','mv-breadwinner':'#0f766e','mv-paddington':'#b45309','mv-dragon':'#6d28d9','mv-flex':'#94a3b8'}[c]||'#94a3b8';}
+  function parseMin(s){if(!s)return null;var m=String(s).match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);if(!m)return null;var h=(+m[1])%12;if(/pm/i.test(m[3]))h+=12;return h*60+(+m[2]);}
+  function fmt(min){if(min==null)return '';var h=Math.floor(min/60),m=min%60,ap=h>=12?'PM':'AM',hh=h%12||12;return hh+':'+String(m).padStart(2,'0')+' '+ap;}
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+  function blockEnd(st){if(st.show_end_minutes!=null)return st.show_end_minutes;var s=parseMin(st.show_start);if(s==null)return null;if(st.movie_runtime)return s+((st.trailer_minutes!=null)?st.trailer_minutes:5)+st.movie_runtime;return s+20;}
+
+  function load(){
+    Promise.all([
+      fetch('/api/gala/movies').then(function(r){return r.json();}),
+      fetch('/data/theater-layouts.json').then(function(r){return r.json();}),
+      fetch('/api/gala/board').then(function(r){return r.json();}).catch(function(){return {fill:{}};})
+    ]).then(function(res){
+      SHOWTIMES=(res[0].showtimes||[]).slice();
+      (res[1].theaters||[]).forEach(function(t){LAYOUTS[t.id]=t;});
+      FILL=(res[2]&&res[2].fill)||{};
+      render();
+    }).catch(function(){
+      document.getElementById('board').innerHTML='<div style="padding:24px;color:#b3261e;font:600 14px Inter">Could not load the lineup — refresh to retry.</div>';
+    });
+  }
+
+  function render(){
+    var maxEnd=DAY_START+360;
+    SHOWTIMES.forEach(function(st){var e=blockEnd(st);if(e!=null&&e>maxEnd)maxEnd=e;});
+    var END=Math.ceil((maxEnd+10)/15)*15, span=END-DAY_START, trackW=Math.round(span*PXMIN);
+    var byT={};
+    SHOWTIMES.forEach(function(st){(byT[st.theater_id]=byT[st.theater_id]||[]).push(st);});
+    var auds=Object.keys(byT).map(Number).sort(function(a,b){return a-b;});
+    var ticks='';
+    for(var m=DAY_START;m<=END;m+=15){var x=(m-DAY_START)*PXMIN,major=(m%30===0);ticks+='<div class="tick'+(major?' major':'')+'" style="left:'+x+'px"></div>';}
+    var html='<div class="board-row head"><div class="aud-label">Time</div><div class="track" style="width:'+trackW+'px">';
+    for(var m2=DAY_START;m2<=END;m2+=15){if(m2%30===0){var x2=(m2-DAY_START)*PXMIN;html+='<div class="tick major" style="left:'+x2+'px"></div><div class="tick-lbl" style="left:'+x2+'px">'+fmt(m2).replace(':00','').replace(' ','')+'</div>';}}
+    html+='</div></div>';
+    auds.forEach(function(aud){
+      var sts=byT[aud].slice().sort(function(a,b){return a.showing_number-b.showing_number;});
+      var lay=LAYOUTS[aud];
+      html+='<div class="board-row"><div class="aud-label">Aud '+aud+'<small>'+(lay?lay.totalSeats+' seats':'')+'</small></div><div class="track" style="width:'+trackW+'px">'+ticks;
+      var ends={};
+      sts.forEach(function(st){
+        var s=parseMin(st.show_start),e=blockEnd(st);if(s==null)return;
+        ends[st.showing_number]={s:s,e:e};
+        var d=parseMin(st.dinner_time);
+        if(d!=null&&d<s){var dx=(d-DAY_START)*PXMIN,dw=Math.max((s-d)*PXMIN,10);
+          html+='<div class="blk dinner" style="left:'+dx+'px;width:'+dw+'px" title="Dinner '+esc(st.dinner_time)+'"><div class="bs">🍽 '+esc((st.dinner_time||'').replace(' ',''))+'</div></div>';}
+        var x=(s-DAY_START)*PXMIN,w=Math.max((e-s)*PXMIN,46);
+        html+='<div class="blk '+mvClass(st.movie_title)+'" style="left:'+x+'px;width:'+w+'px"'+
+          ' data-aud="'+aud+'" data-sh="'+st.showing_number+'" data-title="'+esc(st.movie_title||'')+'"'+
+          ' data-poster="'+esc(st.movie_poster||'')+'" data-start="'+esc(st.show_start||'')+'" data-end="'+esc(st.show_end_label||fmt(e))+'"'+
+          ' data-dinner="'+esc(st.dinner_time||'')+'" data-rt="'+esc(st.movie_runtime||'')+'" data-cap="'+esc(st.capacity||'')+'">'+
+          '<div class="bt">'+esc(mvShort(st.movie_title))+'</div><div class="bs">'+esc((st.show_start||'').replace(' ',''))+'</div></div>';
+      });
+      if(ends[1]&&ends[2]&&ends[1].e!=null){var gap=ends[2].s-ends[1].e,mid=ends[1].e+gap/2,gx=(mid-DAY_START)*PXMIN;
+        html+='<div class="gap-pill'+(gap>=40?' ok':'')+'" style="left:'+gx+'px">↺ '+gap+'m</div>';}
+      html+='</div></div>';
+    });
+    document.getElementById('board').innerHTML=html;
+    var lg=[['Star Wars','mv-starwars'],['Breadwinner','mv-breadwinner'],['Paddington 2','mv-paddington'],['Dragon','mv-dragon'],['Flex / hold','mv-flex']];
+    document.getElementById('board-legend').innerHTML=lg.map(function(p){return '<span class="lg"><i class="sw" style="background:'+swColor(p[1])+'"></i>'+p[0]+'</span>';}).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('.blk:not(.dinner)'),function(b){b.addEventListener('click',function(){openDetail(b.dataset);});});
+  }
+
+  function seatMap(aud,sh){
+    var lay=LAYOUTS[aud];if(!lay)return '';
+    var occ={};((FILL[aud+':'+sh]&&FILL[aud+':'+sh].seats)||[]).forEach(function(k){occ[k]=1;});
+    var cols=(lay.maxCol-lay.minCol+1);
+    var h='<div class="bd-screen">SCREEN</div><div class="smap">';
+    (lay.rows||[]).forEach(function(r){
+      var cells={};
+      if(r.segments){r.segments.forEach(function(sg){(sg.seats||[]).forEach(function(num,i){cells[sg.cols[i]]=num;});});}
+      else if(r.numbers){r.numbers.forEach(function(num,i){cells[r.cols[i]]=num;});}
+      h+='<div class="srow" style="grid-template-columns:repeat('+cols+',1fr)">';
+      for(var c=lay.minCol;c<=lay.maxCol;c++){
+        if(cells[c]==null){h+='<div></div>';continue;}
+        var filled=occ[String(r.label)+String(cells[c])];
+        h+='<div class="sseat'+(filled?' f':'')+'"></div>';
+      }
+      h+='</div>';
+    });
+    return h+'</div><div class="smap-legend"><span><i style="background:#16a34a"></i>Taken</span><span><i style="border:1px solid #cfd6e4"></i>Open</span></div>';
+  }
+
+  function openDetail(d){
+    var aud=+d.aud,sh=+d.sh,key=aud+':'+sh;
+    var assigned=(FILL[key]&&FILL[key].assigned)||0;
+    var cap=+d.cap||(LAYOUTS[aud]?LAYOUTS[aud].totalSeats:0)||0;
+    var pct=cap?Math.round(assigned/cap*100):0;
+    var isFlex=!d.title;
+    var meta='Auditorium '+aud+' · Showing '+sh+'<br>';
+    if(!isFlex){meta+=esc(d.start)+(d.end?' – '+esc(d.end):'')+(d.rt?' · '+esc(d.rt)+' min':'')+(d.dinner?'<br>Dinner '+esc(d.dinner):'');}
+    else{meta+='Reserve room — no film assigned';}
+    var card=document.getElementById('bd-card');
+    card.innerHTML='<button class="bd-close" id="bd-x" aria-label="Close">×</button>'+
+      '<div class="bd-hd">'+(d.poster?'<img src="'+esc(d.poster)+'" alt="">':'')+
+        '<div><div class="ti">'+(isFlex?'Flex / hold':esc(d.title))+'</div><div class="me">'+meta+'</div></div></div>'+
+      '<div class="bd-fill"><div class="nums"><span class="pct">'+pct+'%</span><span class="cnt">'+assigned+' of '+cap+' seats filled</span></div>'+
+      '<div class="bd-bar"><i style="width:'+pct+'%"></i></div>'+seatMap(aud,sh)+'</div>';
+    document.getElementById('bd-modal').classList.add('open');
+    document.getElementById('bd-x').onclick=closeDetail;
+  }
+  function closeDetail(){document.getElementById('bd-modal').classList.remove('open');}
+  document.getElementById('bd-modal').addEventListener('click',function(e){if(e.target.id==='bd-modal')closeDetail();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDetail();});
+
+  document.getElementById('btn-csv').addEventListener('click',function(){
+    var byT={};SHOWTIMES.forEach(function(st){(byT[st.theater_id]=byT[st.theater_id]||[]).push(st);});
+    var rows=[['Showing','Auditorium','Movie','Dinner','Showtime','Runtime (min)','Approx End','Turnover After (min)','Total Seats','Notes']];
+    Object.keys(byT).map(Number).sort(function(a,b){return a-b;}).forEach(function(aud){
+      var sts=byT[aud].slice().sort(function(a,b){return a.showing_number-b.showing_number;});
+      var e1=null,s2=null;sts.forEach(function(st){if(st.showing_number===1)e1=blockEnd(st);if(st.showing_number===2)s2=parseMin(st.show_start);});
+      sts.forEach(function(st){
+        var turn=(st.showing_number===1&&e1!=null&&s2!=null)?(s2-e1):'';
+        rows.push(['Showing '+st.showing_number,'Aud '+aud,st.movie_title||'Flex / hold (no film)',st.dinner_time||'',st.show_start||'',st.movie_runtime||'',st.show_end_label||(blockEnd(st)!=null?fmt(blockEnd(st)):''),turn,st.capacity||'',(st.notes||'').replace(/\n/g,' ')]);
+      });
+    });
+    var csv=rows.map(function(r){return r.map(function(c){c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',');}).join('\n');
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='DEF-Gala-2026-Theatre-Schedule.csv';a.click();
+  });
+
+  load();
+})();
+</script>
 </body>
 </html>
