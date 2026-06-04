@@ -9,6 +9,7 @@
     mode:'tap',                 // 'tap' | 'drag'
     selected:null,              // seat id selected as the SOURCE
     moving:false,               // in "pick destination" mode
+    movingGroup:null,           // [{seat,row,num}] when relocating a whole party
   };
 
   var el = {
@@ -56,7 +57,7 @@
   }
 
   function clearTransient(){
-    state.selected=null; state.moving=false;
+    state.selected=null; state.moving=false; state.movingGroup=null;
     el.modebar.classList.remove('show');
     el.side.className='side empty';
     el.side.innerHTML="<div>Tap any seat to see who's there<br>and move them.</div>";
@@ -109,7 +110,8 @@
       s.classList.remove('selected','target-ok','dimmed','hot');
       var id=s.getAttribute('data-seat');
       if(state.moving){
-        if(id===state.selected){ s.classList.add('selected'); }
+        var inGroup = state.movingGroup && state.movingGroup.some(function(p){return p.seat===id;});
+        if(id===state.selected || inGroup){ s.classList.add('selected'); }
         else if(!s.classList.contains('assigned') && !s.classList.contains('gap')){ s.classList.add('target-ok'); }
         else if(!s.classList.contains('gap')){ s.classList.add('dimmed'); }
       } else if(id===state.selected){ s.classList.add('selected'); }
@@ -203,8 +205,13 @@
     html+='</div>';
     // Action: move the focused seat (only when a specific seat is in focus)
     if(focusSeat){
+      var _party=partyOf(focusSeat);
+      var _groupBtn = _party.length>1
+        ? '<button class="btn move" id="startGroupMove" style="background:#0d6efd;border-color:#0d6efd;">Move whole party ('+_party.length+') →</button>'
+        : '';
       html+='<div class="actions">'
         +'<button class="btn move" id="startMove">Move '+esc(focusSeat)+' →</button>'
+        +_groupBtn
         +'<button class="btn cancel" id="closeSide">Close</button></div>';
     } else {
       html+='<div class="actions"><p class="instr" style="margin:0 0 4px;">Tap any seat above to jump to it and move it.</p>'
@@ -222,6 +229,8 @@
     });
     var sm=document.getElementById('startMove');
     if(sm) sm.onclick=function(){ startMove(focusSeat); };
+    var sgm=document.getElementById('startGroupMove');
+    if(sgm) sgm.onclick=function(){ startGroupMove(focusSeat); };
     document.getElementById('closeSide').onclick=clearTransient;
   }
 
@@ -273,10 +282,91 @@
     }catch(e){ toast('Network error — try again','err'); }
   }
 
+  // ── group move: relocate a whole party (same sponsor + delegation) ──
+  function partyOf(focusSeat){
+    var a=state.assignBySeat[focusSeat]; if(!a) return [];
+    var key=a.sponsor_id+'|'+(a.delegation_id==null?'direct':a.delegation_id);
+    var out=[];
+    Object.keys(state.assignBySeat).forEach(function(id){
+      var x=state.assignBySeat[id];
+      var k=x.sponsor_id+'|'+(x.delegation_id==null?'direct':x.delegation_id);
+      if(k===key) out.push({seat:id,row:x.row,num:x.num});
+    });
+    out.sort(function(p,q){ return p.row===q.row ? (Number(p.num)-Number(q.num)) : (p.row<q.row?-1:1); });
+    return out;
+  }
+
+  function startGroupMove(focusSeat){
+    var party=partyOf(focusSeat);
+    if(party.length<2){ startMove(focusSeat); return; }
+    state.selected=focusSeat; state.moving=true; state.movingGroup=party;
+    el.modebar.classList.add('show');
+    var a=state.assignBySeat[focusSeat];
+    var labels=party.map(function(p){return p.seat;}).join(', ');
+    el.side.className='side open';
+    el.side.innerHTML='<div class="side-h"><div class="eyebrow">Moving whole party · '+party.length+' seats</div>'
+      +'<div class="seatbig" style="font-size:17px;line-height:1.25;">'+esc(labels)+'</div>'
+      +'<div class="who">'+esc(a.company||a.guest_name||'')+'</div></div>'
+      +'<div class="side-b"><p class="instr">Tap the <b>left-most seat</b> of where you want them. '
+      +'I\'ll keep all '+party.length+' together in that row.</p></div>'
+      +'<div class="actions"><button class="btn cancel" id="cancelMove">Cancel</button></div>';
+    document.getElementById('cancelMove').onclick=clearTransient;
+    applySelectionClasses();
+  }
+
+  // From a tapped anchor seat, find a contiguous N-seat block in that row
+  // (open seats, or seats the party already holds), then move the party there.
+  async function commitGroupMove(anchorId){
+    var party=state.movingGroup; var N=party.length;
+    var t=theater(); if(!t){ toast('No layout loaded','err'); return; }
+    var cell=el.map.querySelector('.seat[data-seat="'+anchorId+'"]');
+    if(!cell){ return; }
+    var rowLabel=cell.getAttribute('data-row');
+    var row=(t.rows||[]).find(function(r){return r.label===rowLabel;});
+    if(!row){ toast('Pick a seat in a seating row','err'); return; }
+    var nums=(row.numbers||[]).map(String);
+    var ownSeats={}; party.forEach(function(p){ ownSeats[p.row+p.num]=true; });
+    function blockAt(startIdx){
+      if(startIdx<0 || startIdx+N>nums.length) return null;
+      var ids=[];
+      for(var i=0;i<N;i++){
+        var id=rowLabel+nums[startIdx+i];
+        var taken = state.assignBySeat[id] && !ownSeats[id];
+        var held = state.holds[id] && !ownSeats[id];
+        if(taken||held) return null;
+        ids.push({row:rowLabel,num:nums[startIdx+i],seat:id});
+      }
+      return ids;
+    }
+    var anchorIdx=nums.indexOf(String(cell.getAttribute('data-num')));
+    if(anchorIdx<0){ toast('Pick a seat in a seating row','err'); return; }
+    var block=null;
+    for(var s=anchorIdx;s>=0 && !block;s--){ block=blockAt(s); }
+    if(!block){ for(var s2=anchorIdx+1;s2+N<=nums.length && !block;s2++){ block=blockAt(s2); } }
+    if(!block){ toast('No open '+N+'-seat block in row '+rowLabel+' — try another spot','err'); return; }
+    var moves=[];
+    for(var k=0;k<N;k++){
+      moves.push({from:{row_label:party[k].row,seat_num:String(party[k].num)},
+                  to:{row_label:block[k].row,seat_num:block[k].num}});
+    }
+    toast('Moving '+N+' seats…');
+    try{
+      var r=await fetch('/api/gala/admin/move-group',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({theater_id:state.theaterId,showing_number:state.showing,moves:moves})});
+      var j=await r.json();
+      if(!r.ok){ toast(j.error||('Move failed ('+r.status+')'),'err'); return; }
+      await loadAssignments(); clearTransient(); render();
+      toast('Moved party of '+N+' to '+block[0].seat+'–'+block[N-1].seat,'ok');
+    }catch(e){ toast('Network error — try again','err'); }
+  }
+
   // ── seat click (event delegation) ──
   el.map.addEventListener('click',function(e){
     var cell=e.target.closest('.seat'); if(!cell||cell.classList.contains('gap')) return;
     var id=cell.getAttribute('data-seat');
+    if(state.moving && state.movingGroup){
+      commitGroupMove(id); return;
+    }
     if(state.moving && state.selected){
       if(id===state.selected){ clearTransient(); render(); return; }
       commitMove(state.selected,id); return;
