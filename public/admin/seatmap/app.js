@@ -170,6 +170,7 @@
       +'<div class="who" style="margin-top:6px;color:#fff;">'
         +'<b>'+d.placed+'</b> of <b>'+s.purchased+'</b> seats placed'
         +(d.guest_placed?(' · '+d.guest_placed+' for guests'):'')+'</div>'
+      +'<div style="margin-top:9px;"><a href="/admin/sponsor-seating/?sponsor='+sponsorId+'" style="display:inline-block;background:#4f86ff;color:#fff;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">Edit all seats · every theater →</a></div>'
       +'</div>';
     // Body: seats grouped by auditorium+showing
     html+='<div class="side-b">';

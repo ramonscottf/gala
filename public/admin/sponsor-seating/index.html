@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Sponsor Seating · Master Control</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#121a36; --panel2:#0f1730; --rule:#243156;
+    --ink:#eaf0ff; --muted:#9fb0d8; --gold:#f4b942; --green:#1bbf7a;
+    --red:#ef5a6f; --blue:#4f86ff; --chip:#1b2546;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  a{color:var(--blue);text-decoration:none}
+  .topbar{position:sticky;top:0;z-index:30;background:rgba(11,16,32,.95);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--rule);
+    padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .topbar h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+  .topbar .back{font-size:13px;color:var(--muted)}
+  .searchwrap{position:relative;flex:1;min-width:200px;max-width:420px}
+  #search{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--rule);
+    background:var(--panel2);color:var(--ink);font-size:14px}
+  #results{position:absolute;top:44px;left:0;right:0;background:var(--panel);
+    border:1px solid var(--rule);border-radius:10px;max-height:300px;overflow:auto;
+    box-shadow:0 18px 40px rgba(0,0,0,.5);display:none;z-index:40}
+  #results.show{display:block}
+  #results button{display:flex;justify-content:space-between;gap:10px;width:100%;
+    text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);
+    color:var(--ink);padding:10px 12px;cursor:pointer;font-size:14px}
+  #results button:hover{background:var(--chip)}
+  #results .sub{color:var(--muted);font-size:12px}
+  .meta{font-size:13px;color:var(--muted);white-space:nowrap}
+  .meta b{color:var(--ink)}
+  main{display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:0;min-height:calc(100vh - 56px)}
+  @media(max-width:820px){ main{grid-template-columns:1fr} }
+  /* roster */
+  #roster{border-right:1px solid var(--rule);padding:14px;overflow:auto}
+  .empty{color:var(--muted);padding:40px 14px;text-align:center;line-height:1.5}
+  .grp{background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+    margin-bottom:12px;overflow:hidden}
+  .grp-h{padding:10px 12px;border-bottom:1px solid var(--rule);background:var(--panel2)}
+  .grp-h .movie{font-weight:700;font-size:14px}
+  .grp-h .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  .grp-b{padding:10px 12px}
+  .seatline{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px}
+  .seatline .chip{background:var(--gold);color:#3a2a00;font-weight:700;border-radius:6px;
+    padding:2px 7px;font-size:12px;min-width:34px;text-align:center}
+  .seatline .who{color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .grp-actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .btn{border:1px solid var(--rule);background:var(--chip);color:var(--ink);
+    border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn:hover{border-color:var(--blue)}
+  .btn.go{background:var(--blue);border-color:var(--blue);color:#fff}
+  .btn.gold{background:var(--gold);border-color:var(--gold);color:#3a2a00}
+  .btn.ghost{background:none}
+  .btn:disabled{opacity:.45;cursor:default}
+  /* workspace */
+  #workspace{padding:14px;overflow:auto}
+  .wbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  #destSel{padding:9px 12px;border-radius:10px;border:1px solid var(--rule);
+    background:var(--panel2);color:var(--ink);font-size:14px;max-width:100%}
+  .wtitle{font-size:13px;color:var(--muted)}
+  .wtitle b{color:var(--ink)}
+  #movebar{display:none;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--blue);border-radius:12px;
+    padding:10px 12px;margin-bottom:10px}
+  #movebar.show{display:flex}
+  #movebar .lbl{font-size:13px}
+  #movebar .lbl b{color:var(--gold)}
+  /* seat map */
+  #map{background:var(--panel2);border:1px solid var(--rule);border-radius:12px;
+    padding:14px;overflow:auto}
+  .screen{height:6px;background:linear-gradient(90deg,transparent,var(--muted),transparent);
+    border-radius:3px;margin:0 auto 14px;max-width:70%;opacity:.5}
+  .seatrow{display:flex;gap:4px;align-items:center;margin-bottom:4px;white-space:nowrap}
+  .rowlab{width:22px;color:var(--muted);font-size:11px;text-align:center;flex:none}
+  .seat{width:24px;height:24px;border-radius:5px;border:1px solid var(--rule);
+    background:#172143;color:#7e8db5;font-size:10px;
+    display:flex;align-items:center;justify-content:center;flex:none;user-select:none}
+  .seat.gap{background:none;border:0}
+  .seat.mine{background:var(--gold);color:#3a2a00;border-color:#caa030;font-weight:700}
+  .seat.other{background:#2a3358;color:#6c7aa6;border-color:#39456e}
+  .seat.held{outline:2px dashed var(--red);outline-offset:-2px}
+  .seat.target{cursor:pointer}
+  .seat.target:hover{border-color:var(--green);color:var(--green)}
+  .seat.proposed{background:var(--green);color:#04331f;border-color:#0f9c63;font-weight:700}
+  .seat.dim{opacity:.5}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(40px);
+    background:#0a0f22;border:1px solid var(--rule);color:var(--ink);padding:11px 16px;
+    border-radius:12px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:60;
+    box-shadow:0 16px 40px rgba(0,0,0,.55);max-width:90vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.ok{border-color:var(--green)} #toast.err{border-color:var(--red)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .legend .k{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:14px;height:14px;border-radius:4px;border:1px solid var(--rule);display:inline-block}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="/admin/seatmap/">‹ Seating chart</a>
+    <h1>Sponsor Seating</h1>
+    <div class="searchwrap">
+      <input id="search" placeholder="Search a sponsor by company or name…" autocomplete="off" />
+      <div id="results"></div>
+    </div>
+    <div class="meta" id="sponsorMeta"></div>
+  </div>
+
+  <main>
+    <section id="roster"><div class="empty">Search a sponsor above, or open one from the seating chart.<br>You'll see every seat they hold across every theater — and you can move any of it anywhere.</div></section>
+    <section id="workspace">
+      <div class="wbar">
+        <select id="destSel"></select>
+        <span class="wtitle" id="wtitle"></span>
+      </div>
+      <div id="movebar">
+        <span class="lbl" id="moveLbl"></span>
+        <button class="btn go" id="confirmMove" disabled>Confirm move</button>
+        <button class="btn ghost" id="cancelMove">Cancel</button>
+      </div>
+      <div id="map"><div class="empty">Pick a theater to see its seats.</div></div>
+      <div class="legend">
+        <span class="k"><span class="sw" style="background:var(--gold)"></span> This sponsor</span>
+        <span class="k"><span class="sw" style="background:#2a3358"></span> Someone else</span>
+        <span class="k"><span class="sw" style="background:#172143"></span> Open</span>
+        <span class="k"><span class="sw" style="background:var(--green)"></span> Proposed spot</span>
+      </div>
+    </section>
+  </main>
+  <div id="toast"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
