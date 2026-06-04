@@ -41,6 +41,11 @@ export const AUDIENCE_PRESETS = [
   // finishes before the next send drops off. Carries seats_remaining for the
   // {SEATS_LEFT} personalization token.
   'Incomplete Seat Selections',
+  // Dynamic: sponsors whose purchased seats are ALL placed but at least one
+  // placed seat still has no dinner_choice. The "your seats are set, your
+  // dinner isn't" nudge — kitchen needs final meal counts. Re-resolves at
+  // send time so anyone who finishes their meals drops off.
+  'Incomplete Meal Selections',
 ];
 
 // Companies that count as the "Platinum Internal" sandbox audience.
@@ -143,6 +148,44 @@ export async function resolveAudience(audience, db) {
     const miss = await db.prepare(missSql).bind(...eligTiers).all();
     return {
       tiers: ['Eligible · seats not finished'],
+      recipients: rec.results || [],
+      missingEmail: miss.results || [],
+    };
+  }
+
+  // Sponsors who have placed ALL their purchased seats (so they're NOT in the
+  // 'Incomplete Seat Selections' bucket) but still have >=1 placed seat with
+  // no dinner_choice. Meal choices are stored on seat_assignments.dinner_choice.
+  // Dynamic at send time. Checked before the tier substring branches.
+  if (lc.includes('incomplete meal') || lc.includes('incomplete dinner')) {
+    const placedExpr = '(SELECT COUNT(*) FROM seat_assignments sa WHERE sa.sponsor_id = s.id)';
+    const mealGapExpr = "(SELECT COUNT(*) FROM seat_assignments sa WHERE sa.sponsor_id = s.id AND (sa.dinner_choice IS NULL OR sa.dinner_choice = ''))";
+    const recSql = `
+      SELECT s.id, s.email, s.first_name, s.last_name, s.company, s.sponsorship_tier, s.rsvp_token,
+             s.seats_purchased,
+             ${placedExpr} AS placed,
+             ${mealGapExpr} AS meals_remaining
+      FROM sponsors s
+      WHERE s.archived_at IS NULL
+        AND s.email IS NOT NULL AND s.email != ''
+        AND s.rsvp_token IS NOT NULL AND s.rsvp_token != ''
+        AND ${placedExpr} >= s.seats_purchased
+        AND ${mealGapExpr} > 0
+      ORDER BY meals_remaining DESC, s.company COLLATE NOCASE
+    `;
+    const rec = await db.prepare(recSql).all();
+    const missSql = `
+      SELECT s.id, s.first_name, s.last_name, s.company, s.sponsorship_tier
+      FROM sponsors s
+      WHERE s.archived_at IS NULL
+        AND (s.email IS NULL OR s.email = '' OR s.rsvp_token IS NULL OR s.rsvp_token = '')
+        AND ${placedExpr} >= s.seats_purchased
+        AND ${mealGapExpr} > 0
+      ORDER BY s.company COLLATE NOCASE
+    `;
+    const miss = await db.prepare(missSql).all();
+    return {
+      tiers: ['Seats placed · meals not finished'],
       recipients: rec.results || [],
       missingEmail: miss.results || [],
     };
