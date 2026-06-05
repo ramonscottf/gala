@@ -374,7 +374,7 @@
   function openDetail(d){
     var aud=+d.aud,sh=+d.sh,key=aud+':'+sh;
     var assigned=(FILL[key]&&FILL[key].assigned)||0;
-    var cap=+d.cap||(LAYOUTS[aud]?LAYOUTS[aud].totalSeats:0)||0;
+    var cap=(LAYOUTS[aud]&&LAYOUTS[aud].totalSeats)||+d.cap||0;
     var pct=cap?Math.round(assigned/cap*100):0;
     var isFlex=!d.title;
     var meta='Auditorium '+aud+' · Showing '+sh+'<br>';
@@ -401,7 +401,7 @@
       var e1=null,s2=null;sts.forEach(function(st){if(st.showing_number===1)e1=blockEnd(st);if(st.showing_number===2)s2=parseMin(st.show_start);});
       sts.forEach(function(st){
         var turn=(st.showing_number===1&&e1!=null&&s2!=null)?(s2-e1):'';
-        rows.push(['Showing '+st.showing_number,'Aud '+aud,st.movie_title||'Flex / hold (no film)',st.dinner_time||'',st.show_start||'',st.movie_runtime||'',st.show_end_label||(blockEnd(st)!=null?fmt(blockEnd(st)):''),turn,st.capacity||'',(st.notes||'').replace(/\n/g,' ')]);
+        rows.push(['Showing '+st.showing_number,'Aud '+aud,st.movie_title||'Flex / hold (no film)',st.dinner_time||'',st.show_start||'',st.movie_runtime||'',st.show_end_label||(blockEnd(st)!=null?fmt(blockEnd(st)):''),turn,((LAYOUTS[st.theater_id]&&LAYOUTS[st.theater_id].totalSeats)||st.capacity||''),(st.notes||'').replace(/\n/g,' ')]);
       });
     });
     var csv=rows.map(function(r){return r.map(function(c){c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',');}).join('\n');
