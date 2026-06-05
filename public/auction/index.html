@@ -75,6 +75,13 @@
   .hero .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
   .hero .meta span { padding: 13px 16px; border-radius: 14px; background: rgba(255,255,255,.075); border: 1px solid rgba(255,255,255,.12); font-size: 13.5px; color: var(--muted); font-weight: 500; }
   .hero .meta b { color: #fff; font-weight: 800; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+  .hero-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 26px; border-radius: 999px; font-weight: 800; font-size: 15px; text-decoration: none; transition: transform .12s, filter .12s, background .12s; }
+  .hero-btn:active { transform: scale(.98); }
+  .hero-btn--primary { background: linear-gradient(95deg, var(--red), #883bb5 76%, var(--indigo)); color: #fff; box-shadow: 0 14px 34px rgba(215,40,70,.3); }
+  .hero-btn--primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .hero-btn--ghost { background: rgba(255,255,255,.06); color: #fff; border: 1px solid rgba(255,255,255,.24); }
+  .hero-btn--ghost:hover { background: rgba(255,255,255,.12); }
 
   /* Hero spotlight = poster-style featured Premier lot */
   .hero-spot { position: relative; aspect-ratio: 16/9; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.22); box-shadow: var(--shadow); background: var(--navy-deep); cursor: pointer; }
@@ -372,18 +379,15 @@
           <span>📅 <b>June 10, 2026</b></span>
           <span>📍 <b>Megaplex · Centerville</b></span>
         </div>
-        <a class="niner-cta" href="https://secure.qgiv.com/event/def2026/item/634103" data-niner-open>🏈 Enter the 49ers Drawing — $100</a>
-        <div class="hero-aside">
-          <div class="hero-getapp hero-getreg">
-            <span class="lbl">Join the auction</span>
-            <a class="hero-reg-btn" href="/auction-registration">Register — it's free →</a>
-          </div>
-          <div class="hero-sponsors">
-            <span class="lbl">Auction Sponsors</span>
-            <div class="chips-row">
-              <span class="chip"><img src="/assets/sponsors/hogan.webp" alt="Hogan &amp; Associates Construction"></span>
-              <span class="chip"><img src="/assets/sponsors/america-first.webp" alt="America First Credit Union"></span>
-            </div>
+        <div class="hero-actions">
+          <a class="hero-btn hero-btn--primary" href="/auction-registration">Register — it's free</a>
+          <a class="hero-btn hero-btn--ghost" href="https://secure.qgiv.com/event/def2026/item/634103" data-niner-open>🏈 49ers Drawing · $100</a>
+        </div>
+        <div class="hero-sponsors">
+          <span class="lbl">Auction Sponsors</span>
+          <div class="chips-row">
+            <span class="chip"><img src="/assets/sponsors/hogan.webp" alt="Hogan &amp; Associates Construction"></span>
+            <span class="chip"><img src="/assets/sponsors/america-first.webp" alt="America First Credit Union"></span>
           </div>
         </div>
       </div>
