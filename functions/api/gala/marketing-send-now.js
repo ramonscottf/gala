@@ -55,6 +55,14 @@ export async function onRequestPost({ request, env }) {
   const sentBy = 'admin';
   const bodyPreview = stripHtml(send.body).slice(0, 200);
 
+  // A send only needs a per-recipient token if its template actually uses one.
+  // Tier seat-selector sends embed {TOKEN}; broad static-link blasts (register
+  // push, "Everyone") don't — and their guest recipients have no rsvp_token.
+  // Only fail-loud when the template references {TOKEN} but a row lacks it.
+  const needsToken =
+    String(send.body || '').includes('{TOKEN}') ||
+    String(send.subject || '').includes('{TOKEN}');
+
   let sent = 0, failed = 0;
   const errors = [];
 
@@ -65,7 +73,8 @@ export async function onRequestPost({ request, env }) {
     // making the link dead. Fails loudly if a recipient is missing a
     // token rather than silently shipping a dead-link email — surfaces
     // in marketing_send_log as status=failed with a clear error.
-    if (!r.rsvp_token) {
+    // Only enforced when the template actually contains {TOKEN} (needsToken).
+    if (needsToken && !r.rsvp_token) {
       failed++;
       errors.push({ email: r.email, error: 'Recipient has no rsvp_token — would ship dead-link email' });
       try {

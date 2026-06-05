@@ -47,13 +47,26 @@ async function resolveSmsRecipients(audience, db) {
   }
 
   if (clause.all) {
-    // Everyone = every active sponsor with a phone, any tier. No tier filter.
+    // Everyone = purchasers + their invited guests, every row with a phone,
+    // deduped by phone. Guests live in sponsor_delegations (delegate_phone) —
+    // this used to read only `sponsors`, so it never texted a single guest.
+    // Reclaimed delegations excluded. Guests have no rsvp_token, so "Everyone"
+    // SMS is for static-link blasts (no {TOKEN}).
     const rows = await db.prepare(`
-      SELECT id, first_name, last_name, company, phone, rsvp_token
-      FROM sponsors
-      WHERE archived_at IS NULL
-        AND phone IS NOT NULL
-        AND phone != ''
+      SELECT MIN(id) AS id, first_name, last_name, company, phone, rsvp_token
+      FROM (
+        SELECT id, first_name, last_name, company, phone, rsvp_token
+        FROM sponsors
+        WHERE archived_at IS NULL AND phone IS NOT NULL AND phone != ''
+        UNION ALL
+        SELECT NULL AS id, d.delegate_name AS first_name, '' AS last_name,
+               (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+               d.delegate_phone AS phone, NULL AS rsvp_token
+        FROM sponsor_delegations d
+        WHERE d.status != 'reclaimed'
+          AND d.delegate_phone IS NOT NULL AND d.delegate_phone != ''
+      )
+      GROUP BY phone
       ORDER BY company
     `).all();
     return rows.results || [];
@@ -119,11 +132,16 @@ export async function onRequestPost({ request, env }) {
   const sentBy = 'admin';
   const bodyPreview = String(send.body).slice(0, 200);
 
+  // Only require a per-recipient token when the SMS body actually embeds {TOKEN}
+  // (tier seat-selector links). Static-link blasts ("Everyone", register push)
+  // don't, and their guest recipients have no rsvp_token.
+  const needsToken = String(send.body || '').includes('{TOKEN}');
+
   let sent = 0, failed = 0;
   const errors = [];
 
   for (const r of recipients) {
-    if (!r.rsvp_token) {
+    if (needsToken && !r.rsvp_token) {
       failed++;
       errors.push({ phone: r.phone, error: 'Recipient has no rsvp_token — would ship dead-link SMS' });
       try {

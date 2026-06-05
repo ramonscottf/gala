@@ -117,16 +117,39 @@ export async function resolveAudience(audience, db) {
   // "not archived, has an email." Use for gala-wide messaging (register
   // pushes, day-of). Checked early so it never falls through to a tier branch.
   if (lc === 'everyone' || lc === 'all contacts' || lc === 'everyone (all contacts)') {
+    // Reachable EMAIL universe = purchasers + their invited guests + donors,
+    // deduped by lowercased email. Guests live in sponsor_delegations with
+    // their OWN delegate_email (the "Manage Invite" contact). This branch
+    // used to read only `sponsors`, so it never saw a single guest — that was
+    // the bug. Reclaimed delegations (host pulled the seats back) are excluded.
+    // Guests carry no rsvp_token, so "Everyone" is for static-link blasts
+    // (register pushes, day-of) — never tier seat-selector sends that use {TOKEN}.
     const allSql = `
-      SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
-      FROM sponsors
-      WHERE archived_at IS NULL
-        AND email IS NOT NULL AND email != ''
+      SELECT MIN(id) AS id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+      FROM (
+        SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+        FROM sponsors
+        WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
+        UNION ALL
+        SELECT NULL AS id, d.delegate_email AS email, d.delegate_name AS first_name,
+               '' AS last_name,
+               (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+               'Guest' AS sponsorship_tier, NULL AS rsvp_token
+        FROM sponsor_delegations d
+        WHERE d.status != 'reclaimed'
+          AND d.delegate_email IS NOT NULL AND d.delegate_email != ''
+        UNION ALL
+        SELECT NULL AS id, email, first_name, last_name, company,
+               'Donor' AS sponsorship_tier, NULL AS rsvp_token
+        FROM donors
+        WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
+      )
+      GROUP BY lower(email)
       ORDER BY company COLLATE NOCASE
     `;
     const allRes = await db.prepare(allSql).all();
     return {
-      tiers: ['Everyone (all active contacts)'],
+      tiers: ['Everyone (purchasers + guests + donors)'],
       recipients: allRes.results || [],
       missingEmail: [],
     };

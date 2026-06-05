@@ -46,17 +46,22 @@ async function processOne(body, env) {
   }
 
   // Substitute the {TOKEN} placeholder with the recipient's portal token.
-  // If a recipient has no token, that's a data-integrity bug — fail loudly
-  // so we don't ship dead links. Sponsor records without rsvp_token shouldn't
-  // exist (migration:001 seeded tokens for every row, and the create-sponsor
-  // path generates them) — but defending against null here means a missing
-  // token surfaces in marketing_send_log as a 'failed' row, not a silent
+  // A per-recipient token is only required when the template actually embeds
+  // {TOKEN} (tier seat-selector links). Broad static-link blasts ("Everyone",
+  // register push) don't use {TOKEN}, and their guest recipients (from
+  // sponsor_delegations) have no rsvp_token — those must still send. So only
+  // fail loudly when the template references {TOKEN} but the row lacks one;
+  // that surfaces in marketing_send_log as a 'failed' row rather than a silent
   // dead-link delivery.
-  if (!recipient.rsvp_token) {
+  const needsToken =
+    String(sendRow.body || '').includes('{TOKEN}') ||
+    String(sendRow.subject || '').includes('{TOKEN}');
+  if (needsToken && !recipient.rsvp_token) {
     throw new Error(`Recipient ${recipient.email} has no rsvp_token — cannot substitute {TOKEN}`);
   }
-  const bodyWithToken = String(sendRow.body || '').replaceAll('{TOKEN}', recipient.rsvp_token);
-  const subjectWithToken = String(sendRow.subject || '').replaceAll('{TOKEN}', recipient.rsvp_token);
+  const tok = recipient.rsvp_token || '';
+  const bodyWithToken = String(sendRow.body || '').replaceAll('{TOKEN}', tok);
+  const subjectWithToken = String(sendRow.subject || '').replaceAll('{TOKEN}', tok);
 
   const html = galaEmailHtml({
     firstName: recipient.first_name || recipient.company || null,

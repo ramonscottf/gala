@@ -132,13 +132,25 @@ async function resolveSmsRecipients(audience, db) {
   }
 
   if (clause.all) {
-    // Everyone = every active sponsor with a phone, any tier. No tier filter.
+    // Everyone = purchasers + their invited guests with a phone, deduped by
+    // phone. Guests live in sponsor_delegations (delegate_phone). Mirrors the
+    // send-now resolver so the preview count matches what actually ships.
+    // Reclaimed delegations excluded.
     const rows = await db.prepare(`
-      SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
-      FROM sponsors
-      WHERE archived_at IS NULL
-        AND phone IS NOT NULL
-        AND phone != ''
+      SELECT MIN(id) AS id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
+      FROM (
+        SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
+        FROM sponsors
+        WHERE archived_at IS NULL AND phone IS NOT NULL AND phone != ''
+        UNION ALL
+        SELECT NULL AS id, d.delegate_name AS first_name, '' AS last_name,
+               (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+               d.delegate_phone AS phone, NULL AS rsvp_token, 'Guest' AS sponsorship_tier
+        FROM sponsor_delegations d
+        WHERE d.status != 'reclaimed'
+          AND d.delegate_phone IS NOT NULL AND d.delegate_phone != ''
+      )
+      GROUP BY phone
       ORDER BY company
     `).all();
     return rows.results || [];
