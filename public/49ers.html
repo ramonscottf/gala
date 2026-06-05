@@ -975,6 +975,22 @@
   </script>
 
   <!-- ── QGIV entry gate (auto-opens June 8, 2026) ── -->
+    <!-- ── 49ers entry checkout (in-page QGIV popup) ── -->
+  <div id="niner-checkout" role="dialog" aria-modal="true" aria-label="Enter the 49ers Home Game Getaway" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:16px;background:rgba(10,3,3,0.78);backdrop-filter:blur(6px);">
+    <div style="position:relative;width:100%;max-width:760px;height:min(90vh,880px);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.5);display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 18px;border-bottom:1px solid #ececec;flex:0 0 auto;">
+        <span style="font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:1.02rem;color:#0a0a0a;line-height:1.2;">49ers Home Game Getaway &middot; $100 entry</span>
+        <button type="button" data-checkout-close aria-label="Close" style="flex:0 0 auto;width:38px;height:38px;border:0;border-radius:999px;background:#f2f2f2;color:#333;font-size:22px;line-height:1;cursor:pointer;">&times;</button>
+      </div>
+      <div style="position:relative;flex:1 1 auto;background:#faf8f8;">
+        <iframe data-checkout-frame title="Enter the 49ers Home Game Getaway" allow="payment" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:block;"></iframe>
+      </div>
+      <div style="flex:0 0 auto;padding:9px 14px;text-align:center;border-top:1px solid #ececec;font-size:13px;color:#666;">
+        Trouble loading? <a href="https://secure.qgiv.com/event/def2026/item/634103" target="_blank" rel="noopener" style="color:#aa0000;font-weight:700;text-decoration:none;">Open in a new tab &rarr;</a>
+      </div>
+    </div>
+  </div>
+
   <div id="qgiv-gate" role="dialog" aria-modal="true" aria-labelledby="qgiv-gate-title" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:24px;background:rgba(10,3,3,0.72);backdrop-filter:blur(6px);">
     <div style="max-width:440px;width:100%;background:#fff;border-radius:18px;padding:32px 28px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.4);position:relative;">
       <div style="font-size:40px;line-height:1;margin-bottom:8px;">🏈</div>
@@ -986,30 +1002,51 @@
   </div>
 
   <script>
-    // QGIV entry gate: block donation link until June 8, 2026 (local), then let it through.
+    // 49ers entry: before June 8 -> "opens June 8" gate; on/after (or ?preview) -> in-page QGIV popup.
     (function() {
-      var OPEN = new Date(2026, 5, 8, 0, 0, 0); // June 8 2026 00:00 local (month is 0-indexed)
+      var OPEN = new Date(2026, 5, 8, 0, 0, 0); // June 8 2026 00:00 local (month 0-indexed)
+      var PREVIEW = /[?&]preview\b/.test(location.search) || location.hash === '#preview';
+      function isOpen() { return PREVIEW || new Date() >= OPEN; }
+
       var gate = document.getElementById('qgiv-gate');
-      function isOpen() { return new Date() >= OPEN; }
-      function show() {
-        gate.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+      var checkout = document.getElementById('niner-checkout');
+      var frame = checkout ? checkout.querySelector('[data-checkout-frame]') : null;
+
+      function lockScroll(on) { document.body.style.overflow = on ? 'hidden' : ''; }
+      function showGate() { gate.style.display = 'flex'; lockScroll(true); }
+      function hideGate() { gate.style.display = 'none'; lockScroll(false); }
+      function openCheckout(url) {
+        if (frame && !frame.src) { frame.src = url; }   // lazy-load QGIV only on first open
+        if (checkout) { checkout.style.display = 'flex'; lockScroll(true); }
       }
-      function hide() {
-        gate.style.display = 'none';
-        document.body.style.overflow = '';
-      }
+      function closeCheckout() { if (checkout) { checkout.style.display = 'none'; lockScroll(false); } }
+
       // Intercept every QGIV donate link
       document.querySelectorAll('a[data-qgiv]').forEach(function(a) {
         a.addEventListener('click', function(e) {
-          if (!isOpen()) { e.preventDefault(); show(); }
-          // once open, the link navigates normally to QGIV
+          e.preventDefault();
+          if (isOpen()) { openCheckout(a.getAttribute('href')); }
+          else { showGate(); }
         });
       });
-      gate.addEventListener('click', function(e) { if (e.target === gate) hide(); });
-      var closeBtn = gate.querySelector('[data-qgiv-close]');
-      if (closeBtn) closeBtn.addEventListener('click', hide);
-      document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && gate.style.display === 'flex') hide(); });
+
+      // gate close
+      gate.addEventListener('click', function(e) { if (e.target === gate) hideGate(); });
+      var gc = gate.querySelector('[data-qgiv-close]');
+      if (gc) gc.addEventListener('click', hideGate);
+
+      // checkout close
+      if (checkout) {
+        checkout.addEventListener('click', function(e) { if (e.target === checkout) closeCheckout(); });
+        var cc = checkout.querySelector('[data-checkout-close]');
+        if (cc) cc.addEventListener('click', closeCheckout);
+      }
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') return;
+        if (checkout && checkout.style.display === 'flex') { closeCheckout(); }
+        else if (gate.style.display === 'flex') { hideGate(); }
+      });
     })();
   </script>
 
