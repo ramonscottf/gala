@@ -49,6 +49,14 @@ function buildSeatPreview(portal) {
 export function ReceiveOverlay({ portal, token, onConfirmed }) {
   const identity = portal?.identity || {};
   const seats = buildSeatPreview(portal);
+  const placed = seats.length;
+  const allocated = Number(identity.seatsAllocated || 0);
+  const toPick = Math.max(0, allocated - placed);
+  // Three first-visit modes:
+  //   pick    — sponsor reserved seats and the delegate picks where to sit
+  //   confirm — every reserved seat is already placed; keep or tweak
+  //   waiting — nothing allocated yet (rare); just gather contact info
+  const mode = toPick > 0 ? 'pick' : placed > 0 ? 'confirm' : 'waiting';
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState(null);
   const [modifyOpen, setModifyOpen] = useState(false);
@@ -95,30 +103,56 @@ export function ReceiveOverlay({ portal, token, onConfirmed }) {
           {identity.parentCompany ? `${identity.parentCompany} · DEF Gala 2026` : 'DEF Gala 2026'}
         </div>
         <h1 className="p2-receive-headline">
-          Welcome, <span className="p2-italic-flair">{firstNameOf(identity.delegateName)}</span>.
-        </h1>
-        <p className="p2-receive-sub">
-          {seats.length === 0 ? (
+          {mode === 'pick' ? (
             <>
-              {identity.parentCompany || 'Your sponsor'} hasn't picked your seats yet — you're on
-              the list, and we'll text you the moment they're ready. While you wait, make sure your
-              contact info below is right so we can reach you.
+              Select your <span className="p2-italic-flair">seat</span>,{' '}
+              {firstNameOf(identity.delegateName)}.
             </>
           ) : (
+            <>
+              Welcome, <span className="p2-italic-flair">{firstNameOf(identity.delegateName)}</span>.
+            </>
+          )}
+        </h1>
+        <p className="p2-receive-sub">
+          {mode === 'pick' ? (
+            <>
+              {sponsorCap(identity)} reserved {allocated === 1 ? 'a seat' : `${allocated} seats`} for
+              you at the gala.{' '}
+              {placed > 0 ? (
+                <>
+                  You've placed {placed} so far — choose your{' '}
+                  {toPick === 1 ? 'last seat' : `remaining ${toPick} seats`} below.
+                </>
+              ) : (
+                <>Now the fun part: pick where you'd like to sit.</>
+              )}
+            </>
+          ) : mode === 'confirm' ? (
             <>
               Here's what {sponsorPossessive(identity)} set up for you. Tap{' '}
               <strong>Keep these seats</strong> to confirm, or <strong>Modify</strong> to change your
               contact info or meal choices.
             </>
+          ) : (
+            <>
+              {sponsorCap(identity)} hasn't set up your seats yet — you're on the list, and we'll
+              text you the moment they're ready. While you wait, make sure your contact info below is
+              right so we can reach you.
+            </>
           )}
         </p>
 
-        {seats.length === 0 ? (
+        {placed === 0 ? (
           <div className="p2-receive-empty">
-            <p>
-              No seats have been assigned to you yet. Your sponsor may still be picking your
-              spot — we'll text you when it's ready.
-            </p>
+            {mode === 'pick' ? (
+              <p>Your seats are wide open — tap below to grab the best ones before they go.</p>
+            ) : (
+              <p>
+                No seats assigned yet. Your sponsor is still setting things up — we'll text you
+                when it's ready.
+              </p>
+            )}
           </div>
         ) : (
           <div className="p2-receive-seats">
@@ -183,16 +217,30 @@ export function ReceiveOverlay({ portal, token, onConfirmed }) {
         )}
 
         <div className="p2-receive-actions">
-          {seats.length === 0 ? (
-            <button
-              type="button"
-              className="p2-btn primary"
-              disabled={pending}
-              onClick={() => setModifyOpen(true)}
-            >
-              Update my contact info →
-            </button>
-          ) : (
+          {mode === 'pick' ? (
+            <>
+              <button
+                type="button"
+                className="p2-btn primary"
+                disabled={pending}
+                onClick={confirmSeats}
+              >
+                {pending
+                  ? 'One sec…'
+                  : placed > 0
+                    ? 'Pick my remaining seats →'
+                    : 'Select my seats →'}
+              </button>
+              <button
+                type="button"
+                className="p2-btn ghost"
+                disabled={pending}
+                onClick={() => setModifyOpen(true)}
+              >
+                Update contact info →
+              </button>
+            </>
+          ) : mode === 'confirm' ? (
             <>
               <button
                 type="button"
@@ -211,6 +259,15 @@ export function ReceiveOverlay({ portal, token, onConfirmed }) {
                 {pending ? 'Confirming…' : 'Keep these seats →'}
               </button>
             </>
+          ) : (
+            <button
+              type="button"
+              className="p2-btn primary"
+              disabled={pending}
+              onClick={() => setModifyOpen(true)}
+            >
+              Update my contact info →
+            </button>
           )}
         </div>
       </div>
@@ -221,12 +278,12 @@ export function ReceiveOverlay({ portal, token, onConfirmed }) {
           token={token}
           selfView={true}
           onClose={() => {
-            // Closing the modify modal is an implicit confirm ONLY when
-            // there are seats to confirm. With nothing assigned yet, keep
-            // the waiting gate up (don't stamp confirmedAt) so the
-            // delegate sees the real keep/modify flow once their sponsor
-            // places seats.
-            if (seats.length > 0) confirmSeats();
+            // Closing the modify modal counts as an implicit confirm ONLY
+            // in confirm mode (every reserved seat already placed). In pick
+            // mode the delegate still has to choose seats; in waiting mode
+            // nothing is allocated yet — in both, keep the gate up (don't
+            // stamp confirmedAt) so the right flow shows on the next visit.
+            if (mode === 'confirm') confirmSeats();
             setModifyOpen(false);
           }}
           onRefresh={async () => {
@@ -251,4 +308,9 @@ function sponsorPossessive(identity) {
   // Returns the right phrasing: "Wicko Waypoint" or "your sponsor"
   if (identity.parentCompany) return identity.parentCompany;
   return 'your sponsor';
+}
+
+function sponsorCap(identity) {
+  // Capitalized for sentence starts: "Wicko Waypoint …" / "Your sponsor …"
+  return identity.parentCompany || 'Your sponsor';
 }

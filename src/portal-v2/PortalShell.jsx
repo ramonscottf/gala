@@ -264,7 +264,7 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
   const fullyResolved = remaining === 0 && total > 0;
   const daysOut = daysUntilGala();
   const isStaff = identity?.kind === 'staff';
-  const isDelegate = identity?.kind === 'delegate';
+  const isDelegate = identity?.kind === 'delegation';
   const tier = identity?.tier || (isStaff ? 'Staff' : isDelegate ? 'Guest' : 'Sponsor');
   const open = tierAccess?.open === true;
 
