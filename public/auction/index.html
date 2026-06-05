@@ -72,6 +72,7 @@
   .hero h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: clamp(46px, 7vw, 88px); line-height: .9; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
   .hero h1 .flair { color: var(--gold); }
   .hero p.lead { color: var(--muted); font-size: clamp(16px, 2vw, 20px); max-width: 52ch; margin: 22px 0 0; }
+  .hero-opens { margin: 18px 0 0; font-size: clamp(16px, 2vw, 20px); font-weight: 800; color: var(--gold); line-height: 1.5; }
   .hero .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
   .hero .meta span { padding: 13px 16px; border-radius: 14px; background: rgba(255,255,255,.075); border: 1px solid rgba(255,255,255,.12); font-size: 13.5px; color: var(--muted); font-weight: 500; }
   .hero .meta b { color: #fff; font-weight: 800; }
@@ -226,6 +227,17 @@
     .masthead .nav a { padding: 0 13px; min-height: 38px; font-size: 13px; }
     .hero { width: calc(100% - 32px); }
     .hero .meta span { padding: 11px 13px; font-size: 12.5px; }
+    .hero { padding: 84px 0 24px; gap: 22px; }
+    .hero .eyebrow { margin-bottom: 14px; }
+    .hero h1 { font-size: clamp(40px, 11vw, 56px); }
+    .hero p.lead { margin: 14px 0 0; }
+    .hero-opens { margin-top: 12px; }
+    .hero .meta { margin-top: 16px; }
+    .hero-actions { margin-top: 18px; flex-direction: column; }
+    .hero-btn { width: 100%; }
+    .hero-sponsors { margin-top: 18px; }
+    .hero-sponsors .chips-row { flex-wrap: nowrap; }
+    .hero-sponsors .chip { flex: 1 1 0; min-width: 0; }
     .section { padding: 30px 18px 4px; }
     .rail-wrap { margin: 0 -18px; }
     .rail { padding: 4px 18px 20px; }
@@ -241,9 +253,9 @@
 
   /* ── Sponsor recognition ──────────────────────────────── */
   /* Combined sponsor card in the hero (under the meta pills) */
-  .hero-sponsors { margin-top: 24px; display: inline-flex; flex-direction: column; gap: 11px; padding: 16px 18px; border-radius: 18px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); }
-  .hero-sponsors .lbl { font-size: 11px; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
-  .hero-sponsors .chips-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-sponsors { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .hero-sponsors .lbl { font-size: 11px; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); text-align: center; }
+  .hero-sponsors .chips-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
   .hero-sponsors .chip { background: #fff; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: center; min-width: 138px; }
   .hero-sponsors .chip img { height: 34px; width: auto; display: block; }
   .hero-aside { display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch; margin-top: 24px; }
@@ -374,10 +386,9 @@
         <div class="eyebrow">Lights · Camera · Take Action · 2026</div>
         <h1>The night's <span class="flair">headliners</span>.</h1>
         <p class="lead">A first look at the marquee getaways, once-a-year experiences, and showstoppers coming to this year's Silent Auction. Start building your wish list.</p>
+        <p class="hero-opens">Auction opens Monday, June 8</p>
         <div class="meta">
           <span><b id="meta-count">…</b>&nbsp;items in the catalog</span>
-          <span>📅 <b>June 10, 2026</b></span>
-          <span>📍 <b>Megaplex · Centerville</b></span>
         </div>
         <div class="hero-actions">
           <a class="hero-btn hero-btn--primary" href="/auction-registration">Register — it's free</a>
