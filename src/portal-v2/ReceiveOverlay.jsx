@@ -98,9 +98,19 @@ export function ReceiveOverlay({ portal, token, onConfirmed }) {
           Welcome, <span className="p2-italic-flair">{firstNameOf(identity.delegateName)}</span>.
         </h1>
         <p className="p2-receive-sub">
-          Here's what {sponsorPossessive(identity)} set up for you. Tap{' '}
-          <strong>Keep these seats</strong> to confirm, or <strong>Modify</strong> to change your
-          contact info or meal choices.
+          {seats.length === 0 ? (
+            <>
+              {identity.parentCompany || 'Your sponsor'} hasn't picked your seats yet — you're on
+              the list, and we'll text you the moment they're ready. While you wait, make sure your
+              contact info below is right so we can reach you.
+            </>
+          ) : (
+            <>
+              Here's what {sponsorPossessive(identity)} set up for you. Tap{' '}
+              <strong>Keep these seats</strong> to confirm, or <strong>Modify</strong> to change your
+              contact info or meal choices.
+            </>
+          )}
         </p>
 
         {seats.length === 0 ? (
@@ -173,22 +183,35 @@ export function ReceiveOverlay({ portal, token, onConfirmed }) {
         )}
 
         <div className="p2-receive-actions">
-          <button
-            type="button"
-            className="p2-btn ghost"
-            disabled={pending}
-            onClick={() => setModifyOpen(true)}
-          >
-            Modify →
-          </button>
-          <button
-            type="button"
-            className="p2-btn primary"
-            disabled={pending}
-            onClick={confirmSeats}
-          >
-            {pending ? 'Confirming…' : 'Keep these seats →'}
-          </button>
+          {seats.length === 0 ? (
+            <button
+              type="button"
+              className="p2-btn primary"
+              disabled={pending}
+              onClick={() => setModifyOpen(true)}
+            >
+              Update my contact info →
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="p2-btn ghost"
+                disabled={pending}
+                onClick={() => setModifyOpen(true)}
+              >
+                Modify →
+              </button>
+              <button
+                type="button"
+                className="p2-btn primary"
+                disabled={pending}
+                onClick={confirmSeats}
+              >
+                {pending ? 'Confirming…' : 'Keep these seats →'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -198,11 +221,12 @@ export function ReceiveOverlay({ portal, token, onConfirmed }) {
           token={token}
           selfView={true}
           onClose={() => {
-            // Closing the modify modal is also an implicit confirm —
-            // the delegate has interacted with their seats, the intent
-            // is clear. Stamp confirmedAt so they don't see this gate
-            // on subsequent visits.
-            confirmSeats();
+            // Closing the modify modal is an implicit confirm ONLY when
+            // there are seats to confirm. With nothing assigned yet, keep
+            // the waiting gate up (don't stamp confirmedAt) so the
+            // delegate sees the real keep/modify flow once their sponsor
+            // places seats.
+            if (seats.length > 0) confirmSeats();
             setModifyOpen(false);
           }}
           onRefresh={async () => {
