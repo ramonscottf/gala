@@ -737,7 +737,7 @@
       <li><a href="#enter">How to Enter</a></li>
       <li><a href="#rules">Rules</a></li>
       <li><a href="https://gala.daviskids.org/">Gala 2026</a></li>
-      <li><a class="rpn__cta" href="#enter">Enter Now</a></li>
+      <li><a class="rpn__cta" href="https://secure.qgiv.com/event/def2026/item/634103" data-qgiv>Enter Now</a></li>
     </ul>
   </div>
 </nav>
@@ -755,7 +755,7 @@
     </h1>
     <p class="lede">A <strong>$100 donation</strong> to school lunch enters you to win the <strong>trip of a lifetime</strong> — six lower-bowl tickets to a 2026–2027 49ers home game of your choice, plus a $2,000 travel card.</p>
     <div class="hero-actions">
-      <a href="#enter" class="btn-primary">Enter to win</a>
+      <a href="https://secure.qgiv.com/event/def2026/item/634103" class="btn-primary" data-qgiv>Enter to win</a>
       <a href="#prize" class="btn-secondary">See the prize</a>
     </div>
   </div>
@@ -841,7 +841,7 @@
         <p class="desc">Make your $100 donation through our secure donation page — each donation is one entry, recorded instantly.</p>
         <div class="details">
           <p><strong>Secure online entry</strong></p>
-          <p style="margin-top:6px;">Opens <strong>June 8</strong> · open through the Gala</p>
+          <p style="margin-top:6px;"><strong>Open now</strong> · enter through the Gala</p>
         </div>
         <a href="https://secure.qgiv.com/event/def2026/item/634103" class="cta cta-enter" data-qgiv>Donate &amp; enter →</a>
       </div>
@@ -903,7 +903,7 @@
           <li>Entries may be obtained for a $100 suggested donation. Donations may be made online through the Charity's secure donation page. No purchase or donation is necessary to enter or win; free entry of equal odds is available in person as described below.</li>
           <li>Entries may be obtained by the following methods:
             <ul class="sub">
-              <li>Online at the Charity's secure donation page (opens June 8, 2026)</li>
+              <li>Online at the Charity's secure donation page</li>
               <li>Free entry, no donation required, in person at the Davis Education Foundation office, 130 North Main Street, Farmington UT 84025, on June 8 and June 9, 2026 between 8:00 AM and 4:00 PM</li>
             </ul>
           </li>
@@ -1004,7 +1004,7 @@
   <script>
     // 49ers entry: before June 8 -> "opens June 8" gate; on/after (or ?preview) -> in-page QGIV popup.
     (function() {
-      var OPEN = new Date(2026, 5, 8, 0, 0, 0); // June 8 2026 00:00 local (month 0-indexed)
+      var OPEN = new Date(2020, 0, 1, 0, 0, 0); // entries OPEN now (gate disabled; QGIV controls the close)
       var PREVIEW = /[?&]preview\b/.test(location.search) || location.hash === '#preview';
       function isOpen() { return PREVIEW || new Date() >= OPEN; }
 
