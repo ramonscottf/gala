@@ -258,7 +258,7 @@
     <div class="board-sec">
       <div class="board-tools">
         <div class="board-legend" id="board-legend"></div>
-        <button class="btn-csv" id="btn-csv" type="button">⬇ Download for theater (CSV)</button>
+        <button class="btn-csv" id="btn-csv" type="button">⬇ Download for theater (Excel)</button>
       </div>
       <div class="board-scroll"><div class="board" id="board"><div style="padding:26px;color:#5b6472;font:600 14px 'Inter'">Loading the lineup…</div></div></div>
       <p class="board-hint">Swipe sideways to see the whole evening · red turnover pills = tight (under 40 min).</p>
@@ -393,19 +393,62 @@
   document.getElementById('bd-modal').addEventListener('click',function(e){if(e.target.id==='bd-modal')closeDetail();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDetail();});
 
-  document.getElementById('btn-csv').addEventListener('click',function(){
+  // ── Theater export: live, styled .xlsx (lazy-loads vendored ExcelJS) ──
+  function buildExportRows(){
     var byT={};SHOWTIMES.forEach(function(st){(byT[st.theater_id]=byT[st.theater_id]||[]).push(st);});
-    var rows=[['Showing','Auditorium','Movie','Dinner','Showtime','Runtime (min)','Approx End','Turnover After (min)','Total Seats','Notes']];
+    var out=[];
     Object.keys(byT).map(Number).sort(function(a,b){return a-b;}).forEach(function(aud){
       var sts=byT[aud].slice().sort(function(a,b){return a.showing_number-b.showing_number;});
       var e1=null,s2=null;sts.forEach(function(st){if(st.showing_number===1)e1=blockEnd(st);if(st.showing_number===2)s2=parseMin(st.show_start);});
       sts.forEach(function(st){
         var turn=(st.showing_number===1&&e1!=null&&s2!=null)?(s2-e1):'';
-        rows.push(['Showing '+st.showing_number,'Aud '+aud,st.movie_title||'Flex / hold (no film)',st.dinner_time||'',st.show_start||'',st.movie_runtime||'',st.show_end_label||(blockEnd(st)!=null?fmt(blockEnd(st)):''),turn,((LAYOUTS[st.theater_id]&&LAYOUTS[st.theater_id].totalSeats)||st.capacity||''),(st.notes||'').replace(/\n/g,' ')]);
+        var seats=(LAYOUTS[st.theater_id]&&LAYOUTS[st.theater_id].totalSeats)||st.capacity||'';
+        out.push({sh:st.showing_number,aud:aud,movie:st.movie_title||'— Flex / hold (no film) —',dinner:st.dinner_time||'',show:st.show_start||'',rt:st.movie_runtime||'—',end:st.show_end_label||(blockEnd(st)!=null?fmt(blockEnd(st)):'—'),turn:turn,seats:seats,notes:st.notes||''});
       });
     });
-    var csv=rows.map(function(r){return r.map(function(c){c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',');}).join('\n');
-    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='DEF-Gala-2026-Theatre-Schedule.csv';a.click();
+    return out;
+  }
+  function makeXlsx(){
+    var NAVY='FF0D1B3D',LBLUE='FFEAF0FB',LGOLD='FFFBF3DD',MUT='FF44506B',REDF='FFF8C9C9',REDT='FF9B1C1C',LINE='FFC9D2E3';
+    var border={top:{style:'thin',color:{argb:LINE}},left:{style:'thin',color:{argb:LINE}},bottom:{style:'thin',color:{argb:LINE}},right:{style:'thin',color:{argb:LINE}}};
+    var wb=new ExcelJS.Workbook();
+    var ws=wb.addWorksheet('Run of Show',{views:[{state:'frozen',ySplit:4}]});
+    var r1=ws.addRow(['Davis Education Foundation Gala 2026 — Theatre Run-of-Show']); ws.mergeCells('A1:J1');
+    var c1=r1.getCell(1); c1.font={name:'Arial',bold:true,size:15,color:{argb:'FFFFFFFF'}}; c1.fill={type:'pattern',pattern:'solid',fgColor:{argb:NAVY}}; c1.alignment={horizontal:'center',vertical:'middle'}; r1.height=26;
+    var r2=ws.addRow(['Wednesday, June 10, 2026  ·  Megaplex Theatres at Legacy Crossing, Centerville, UT  ·  Doors 4:00 PM']); ws.mergeCells('A2:J2');
+    var c2=r2.getCell(1); c2.font={name:'Arial',size:10,italic:true,color:{argb:MUT}}; c2.alignment={horizontal:'center'}; r2.height=18;
+    ws.addRow([]);
+    var hr=ws.addRow(['Showing','Auditorium','Movie','Dinner Served','Showtime','Runtime (min)','Approx. End','Turnover After (min)','Total Seats','Notes']); hr.height=30;
+    hr.eachCell(function(c){c.font={name:'Arial',bold:true,size:10,color:{argb:'FFFFFFFF'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:NAVY}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border=border;});
+    buildExportRows().forEach(function(d){
+      var r=ws.addRow(['Showing '+d.sh,'Aud '+d.aud,d.movie,d.dinner,d.show,d.rt,d.end,(d.turn===''?'—':d.turn),d.seats,d.notes]);
+      var band=d.sh===1?LBLUE:LGOLD;
+      for(var col=1;col<=10;col++){var c=r.getCell(col);c.font={name:'Arial',size:10};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:band}};c.alignment={horizontal:(col===3||col===10)?'left':'center',vertical:'middle'};c.border=border;}
+      if(typeof d.turn==='number'&&d.turn<40){var tc=r.getCell(8);tc.fill={type:'pattern',pattern:'solid',fgColor:{argb:REDF}};tc.font={name:'Arial',size:10,bold:true,color:{argb:REDT}};}
+    });
+    ws.addRow([]);
+    var fr=ws.addRow(["Total Seats = the room's physical seat count. Approx. End = showtime + ~5 min preshow reel + film runtime. Turnover After = minutes between this room's Showing-1 end and its Showing-2 start (cleaning/reseat window). Red = tight (<40 min)."]);
+    var fnn=fr.number; ws.mergeCells('A'+fnn+':J'+fnn); var fc=fr.getCell(1); fc.font={name:'Arial',size:9,italic:true,color:{argb:MUT}}; fc.alignment={wrapText:true,vertical:'top'}; fr.height=42;
+    var widths=[10,11,38,13,11,12,11,16,11,30]; for(var i=0;i<10;i++) ws.getColumn(i+1).width=widths[i];
+    return wb;
+  }
+  function loadExcelJS(cb){
+    if(window.ExcelJS) return cb();
+    var s=document.createElement('script'); s.src='/assets/exceljs.min.js';
+    s.onload=function(){cb();}; s.onerror=function(){cb('err');}; document.head.appendChild(s);
+  }
+  document.getElementById('btn-csv').addEventListener('click',function(){
+    var btn=this,label=btn.textContent; btn.textContent='Preparing…'; btn.disabled=true;
+    loadExcelJS(function(err){
+      if(err||!window.ExcelJS){btn.textContent=label;btn.disabled=false;alert('Could not load the export tool — please try again.');return;}
+      makeXlsx().xlsx.writeBuffer().then(function(buf){
+        var a=document.createElement('a');
+        a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+        a.download='DEF-Gala-2026-Theatre-Run-of-Show.xlsx'; a.click();
+        setTimeout(function(){URL.revokeObjectURL(a.href);},3000);
+        btn.textContent=label; btn.disabled=false;
+      }).catch(function(){btn.textContent=label;btn.disabled=false;alert('Export failed — please try again.');});
+    });
   });
 
   load();
