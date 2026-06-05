@@ -110,6 +110,7 @@ function audienceClause(name) {
   if (n === 'individual seats') return { tiers: ['Individual Seats'] };
   if (n === 'confirmed buyers') return { tiers: ['Platinum', 'Gold', 'Silver', 'Bronze', 'Friends and Family', 'Individual Seats'] };
   if (n === 'platinum internal') return { internal: true };
+  if (n === 'everyone' || n === 'all contacts') return { all: true };
   return null;
 }
 
@@ -125,6 +126,19 @@ async function resolveSmsRecipients(audience, db) {
         AND phone IS NOT NULL
         AND phone != ''
         AND email IN ('sfoster@dsdmail.net', 'smiggin@dsdmail.net', 'ktoone@dsdmail.net', 'karatoone@gmail.com')
+      ORDER BY company
+    `).all();
+    return rows.results || [];
+  }
+
+  if (clause.all) {
+    // Everyone = every active sponsor with a phone, any tier. No tier filter.
+    const rows = await db.prepare(`
+      SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
+      FROM sponsors
+      WHERE archived_at IS NULL
+        AND phone IS NOT NULL
+        AND phone != ''
       ORDER BY company
     `).all();
     return rows.results || [];

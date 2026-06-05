@@ -36,6 +36,7 @@ export const AUDIENCE_PRESETS = [
   'All Sponsors (paid)',
   'All Sponsors + Friends & Family',
   'Confirmed Buyers',          // Everyone who has bought a tier and is attending — all paid + F&F + Individual Seats
+  'Everyone',                  // Every active sponsor with an email, any tier — widest reach (all paid + F&F + Individual Seats + Donation). No tier filter.
   // Dynamic: every eligible-to-select tier (all but Individual Seats) whose
   // placed seats < seats_purchased. Re-resolves at send time, so anyone who
   // finishes before the next send drops off. Carries seats_remaining for the
@@ -106,6 +107,27 @@ export async function resolveAudience(audience, db) {
     return {
       tiers: ['Platinum (Internal sandbox)'],
       recipients: internalResult.results || [],
+      missingEmail: [],
+    };
+  }
+
+  // 'Everyone' = every active sponsor with an email, regardless of tier.
+  // The widest reach the system has: all paid tiers + Friends & Family +
+  // Individual Seats (guests) + Donation tier. No tier filter — just
+  // "not archived, has an email." Use for gala-wide messaging (register
+  // pushes, day-of). Checked early so it never falls through to a tier branch.
+  if (lc === 'everyone' || lc === 'all contacts' || lc === 'everyone (all contacts)') {
+    const allSql = `
+      SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+      FROM sponsors
+      WHERE archived_at IS NULL
+        AND email IS NOT NULL AND email != ''
+      ORDER BY company COLLATE NOCASE
+    `;
+    const allRes = await db.prepare(allSql).all();
+    return {
+      tiers: ['Everyone (all active contacts)'],
+      recipients: allRes.results || [],
       missingEmail: [],
     };
   }
