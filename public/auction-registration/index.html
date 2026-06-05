@@ -136,6 +136,7 @@
       <a class="btn primary" href="#register">Register for the Gala</a>
       <button class="btn ghost" type="button" data-open-app>Download the Givi App</button>
     </div>
+    <div class="store-row" id="store-row-hero" style="margin-top:20px;"></div>
     <div class="steps-mini">
       <span><b>1</b> Register</span>
       <span class="arrow">→</span>
@@ -204,6 +205,7 @@
 
   document.getElementById("store-row-main").innerHTML = storeHTML;
   document.getElementById("store-row-modal").innerHTML = storeHTML;
+  var heroRow = document.getElementById("store-row-hero"); if (heroRow) heroRow.innerHTML = storeHTML;
 
   var modal = document.getElementById("app-modal");
   function openApp() { modal.classList.add("open"); document.body.style.overflow = "hidden"; }
