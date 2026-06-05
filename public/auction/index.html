@@ -246,6 +246,9 @@
   .hero-getapp .store-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 0; }
   .hero-getapp .store-btn { padding: 10px 16px; }
   .hero-getapp .store-btn .lbl b { font-size: 15px; }
+  .hero-reg-btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: 999px; background: linear-gradient(95deg, var(--red), #883bb5 76%, var(--indigo)); color: #fff; font-weight: 800; font-size: 14.5px; text-decoration: none; box-shadow: 0 12px 30px rgba(215,40,70,.3); transition: transform .12s, filter .12s; }
+  .hero-reg-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .hero-reg-btn:active { transform: scale(.98); }
   .niner-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 13px 22px; border-radius: 999px; background: #aa0000; color: #fff; font-weight: 800; font-size: 14.5px; text-decoration: none; box-shadow: 0 12px 30px rgba(170,0,0,.32); transition: transform .12s, filter .12s; }
   .niner-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
   .niner-cta:active { transform: scale(.98); }
@@ -371,9 +374,9 @@
         </div>
         <a class="niner-cta" href="https://secure.qgiv.com/event/def2026/item/634103" data-niner-open>🏈 Enter the 49ers Drawing — $100</a>
         <div class="hero-aside">
-          <div class="hero-getapp">
-            <span class="lbl">Bid in the app</span>
-            <div class="store-row" id="hero-store-row"></div>
+          <div class="hero-getapp hero-getreg">
+            <span class="lbl">Join the auction</span>
+            <a class="hero-reg-btn" href="/auction-registration">Register — it's free →</a>
           </div>
           <div class="hero-sponsors">
             <span class="lbl">Auction Sponsors</span>
@@ -637,7 +640,7 @@ document.getElementById("sort").addEventListener("change", e => { sortMode=e.tar
   var storeHTML =
     '<a class="store-btn" href="' + APPLE + '" target="_blank" rel="noopener">' + appleSVG + '<span class="lbl"><small>Download on the</small><b>App Store</b></span></a>' +
     '<a class="store-btn" href="' + PLAY + '" target="_blank" rel="noopener">' + playSVG + '<span class="lbl"><small>Get it on</small><b>Google Play</b></span></a>';
-  ["reg-store-row", "reg-store-row-top", "hero-store-row"].forEach(function (id) {
+  ["reg-store-row", "reg-store-row-top"].forEach(function (id) {
     var el = document.getElementById(id); if (el) el.innerHTML = storeHTML;
   });
 
