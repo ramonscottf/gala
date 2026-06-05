@@ -36,7 +36,8 @@ export const AUDIENCE_PRESETS = [
   'All Sponsors (paid)',
   'All Sponsors + Friends & Family',
   'Confirmed Buyers',          // Everyone who has bought a tier and is attending — all paid + F&F + Individual Seats
-  'Everyone',                  // Every active sponsor with an email, any tier — widest reach (all paid + F&F + Individual Seats + Donation). No tier filter.
+  'Everyone',                  // Purchasers + invited guests (delegations) + donors with an email, deduped — widest reach. No tier filter; for static-link blasts.
+  'Missed Friday Email',       // One-off catch-up: the Everyone email universe MINUS anyone who already received push-fri-email (the 2026-06-05 "5 days out — 49ers" blast that fired before guests were wired into Everyone). ~235 guests/donors. Email only.
   // Dynamic: every eligible-to-select tier (all but Individual Seats) whose
   // placed seats < seats_purchased. Re-resolves at send time, so anyone who
   // finishes before the next send drops off. Carries seats_remaining for the
@@ -151,6 +152,49 @@ export async function resolveAudience(audience, db) {
     return {
       tiers: ['Everyone (purchasers + guests + donors)'],
       recipients: allRes.results || [],
+      missingEmail: [],
+    };
+  }
+
+  // One-off catch-up: everyone in the Everyone email universe who did NOT
+  // already receive push-fri-email — the 2026-06-05 "5 days out — 49ers"
+  // blast that fired against "Everyone" before guests were wired in, so it
+  // only reached the 109 purchasers. This resolves to the ~235 guests/donors
+  // who missed it (Everyone-union MINUS push-fri-email's status='sent' rows),
+  // deduped by email. Email only; static-link copy, no {TOKEN}.
+  if (lc === 'missed friday email' || lc === 'catch-up: friday email (missed)') {
+    const missedSql = `
+      SELECT MIN(id) AS id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+      FROM (
+        SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+        FROM sponsors
+        WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
+        UNION ALL
+        SELECT NULL AS id, d.delegate_email AS email, d.delegate_name AS first_name,
+               '' AS last_name,
+               (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+               'Guest' AS sponsorship_tier, NULL AS rsvp_token
+        FROM sponsor_delegations d
+        WHERE d.status != 'reclaimed'
+          AND d.delegate_email IS NOT NULL AND d.delegate_email != ''
+        UNION ALL
+        SELECT NULL AS id, email, first_name, last_name, company,
+               'Donor' AS sponsorship_tier, NULL AS rsvp_token
+        FROM donors
+        WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
+      )
+      WHERE lower(email) NOT IN (
+        SELECT lower(recipient_email) FROM marketing_send_log
+        WHERE send_id = 'push-fri-email' AND status = 'sent'
+          AND recipient_email IS NOT NULL AND recipient_email != ''
+      )
+      GROUP BY lower(email)
+      ORDER BY company COLLATE NOCASE
+    `;
+    const missedRes = await db.prepare(missedSql).all();
+    return {
+      tiers: ['Missed Friday Email (catch-up — 49ers/register)'],
+      recipients: missedRes.results || [],
       missingEmail: [],
     };
   }
