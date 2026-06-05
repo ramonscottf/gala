@@ -155,7 +155,10 @@ export async function onRequestPost({ request, env }) {
   // ── 5. Send ────────────────────────────────────────────────────────────
   const runId = 'catchup-' + crypto.randomUUID();
   const sentBy = 'admin-catchup';
-  const audienceLabel = 'Catch-up: ' + (send.audience || 'Unknown');
+  // Name the actual recipient — a single-sponsor resend, NOT a tier blast.
+  // Logging "Catch-up: <original audience>" (e.g. "Catch-up: Platinum
+  // Sponsors") made a 1-sponsor resend read tier-wide in the activity feeds.
+  const audienceLabel = 'Catch-up → ' + (sponsor.company || displayName(sponsor) || ('sponsor #' + sponsorId));
   const bodyPreview = stripHtml(bodyForRecipient).slice(0, 200);
   const recipientName = displayName(sponsor);
 

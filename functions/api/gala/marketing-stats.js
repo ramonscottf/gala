@@ -120,6 +120,7 @@ export async function onRequestGet({ request, env }) {
       SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
       MAX(sent_at) AS last_sent
     FROM marketing_send_log
+    WHERE COALESCE(sent_by, '') != 'admin-catchup'
     GROUP BY send_id
     ORDER BY last_sent DESC
     LIMIT 20

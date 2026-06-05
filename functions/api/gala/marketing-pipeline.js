@@ -53,6 +53,7 @@ async function handleGet(env) {
                 MIN(sent_at) AS first_sent_at,
                 MAX(sent_at) AS last_sent_at
            FROM marketing_send_log
+          WHERE COALESCE(sent_by, '') != 'admin-catchup'
           GROUP BY send_id
        ) log_agg ON log_agg.send_id = ms.send_id
        ORDER BY ms.phase, ms.sort_order`
