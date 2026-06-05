@@ -246,6 +246,9 @@
   .hero-getapp .store-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 0; }
   .hero-getapp .store-btn { padding: 10px 16px; }
   .hero-getapp .store-btn .lbl b { font-size: 15px; }
+  .niner-cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; padding: 13px 22px; border-radius: 999px; background: #aa0000; color: #fff; font-weight: 800; font-size: 14.5px; text-decoration: none; box-shadow: 0 12px 30px rgba(170,0,0,.32); transition: transform .12s, filter .12s; }
+  .niner-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .niner-cta:active { transform: scale(.98); }
 
   /* Scrolling sponsor logo marquee between sections */
   .spon-marquee { position: relative; overflow: hidden; padding: 26px 0; margin: 4px 0; border-block: 1px solid var(--grey-100); -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
@@ -366,6 +369,7 @@
           <span>📅 <b>June 10, 2026</b></span>
           <span>📍 <b>Megaplex · Centerville</b></span>
         </div>
+        <a class="niner-cta" href="https://secure.qgiv.com/event/def2026/item/634103" data-niner-open>🏈 Enter the 49ers Drawing — $100</a>
         <div class="hero-aside">
           <div class="hero-getapp">
             <span class="lbl">Bid in the app</span>
@@ -709,6 +713,47 @@ document.getElementById("sort").addEventListener("change", e => { sortMode=e.tar
     </div>
   </div>
 </div>
+
+<div class="reg-modal-back" id="niner-modal" role="dialog" aria-modal="true" aria-label="Enter the 49ers Home Game Getaway">
+  <div class="reg-modal">
+    <button class="rmc" type="button" data-niner-close aria-label="Close">×</button>
+    <div class="reg-modal-head">
+      <span class="kick">Opportunity Drawing · $100 entry</span>
+      <h3>Enter the 49ers Home Game Getaway</h3>
+      <p>Six lower-bowl 49ers tickets + a $2,000 travel card. Winner drawn live at the Gala — June 10.</p>
+    </div>
+    <div class="reg-embed-wrap">
+      <iframe class="reg-embed" id="niner-iframe" data-src="https://secure.qgiv.com/event/def2026/item/634103" title="Enter the 49ers Home Game Getaway" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <div class="reg-modal-foot">
+      <a class="reg-link" href="https://secure.qgiv.com/event/def2026/item/634103" target="_blank" rel="noopener">Open in a new tab ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── 49ers drawing entry: same clean popup as gala registration ── */
+(function () {
+  function init() {
+    var back = document.getElementById("niner-modal");
+    var iframe = document.getElementById("niner-iframe");
+    if (!back || !iframe) return;
+    function open() {
+      if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src; // lazy-load QGIV
+      back.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+    function close() { back.classList.remove("open"); document.body.style.overflow = ""; }
+    document.querySelectorAll("[data-niner-open]").forEach(function (a) {
+      a.addEventListener("click", function (e) { e.preventDefault(); open(); });
+    });
+    back.querySelectorAll("[data-niner-close]").forEach(function (b) { b.addEventListener("click", close); });
+    back.addEventListener("click", function (e) { if (e.target === back) close(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && back.classList.contains("open")) close(); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>
 
 </body>
 </html>

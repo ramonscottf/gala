@@ -327,6 +327,24 @@
     .enter-card .cta:hover { background: var(--niner-red-deep); color: #fff; }
     .enter-card .cta-secondary { background: var(--ink); }
     .enter-card .cta-secondary:hover { background: #2a2a2a; color: #fff; }
+    /* Clean checkout modal — mirrors the gala registration modal */
+    .nc-back { position: fixed; inset: 0; z-index: 10000; background: rgba(10,3,3,.78); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 16px; }
+    .nc-modal { background: #fff; border-radius: 22px; width: 100%; max-width: 720px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 30px 90px rgba(0,0,0,.5); border-top: 4px solid var(--niner-red); }
+    .nc-close { position: absolute; top: 12px; right: 14px; z-index: 5; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); color: var(--niner-red); font-size: 22px; line-height: 1; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.16); }
+    .nc-head { padding: 24px 28px 14px; text-align: center; }
+    .nc-head .kick { display: inline-block; font-size: 11px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; color: var(--niner-red); margin-bottom: 8px; }
+    .nc-head h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; color: #0a0a0a; font-size: 28px; margin: 0 0 6px; letter-spacing: -.02em; line-height: 1.04; }
+    .nc-head p { color: #555; font-size: 14.5px; margin: 0; line-height: 1.5; max-width: 46ch; margin-inline: auto; }
+    .nc-embed-wrap { flex: 1; min-height: 0; overflow-y: auto; background: #faf8f8; border-top: 1px solid #ececec; border-bottom: 1px solid #ececec; }
+    .nc-embed { display: block; width: 100%; height: 620px; border: 0; }
+    .nc-foot { padding: 12px 22px; text-align: center; font-size: 13px; color: #666; }
+    .nc-foot a { color: var(--niner-red); font-weight: 700; text-decoration: none; }
+    @media (max-width: 560px) {
+      .nc-back { padding: 0; }
+      .nc-modal { max-width: 100%; max-height: 100%; height: 100%; border-radius: 0; border-top: 0; }
+      .nc-head h3 { font-size: 23px; }
+      .nc-embed { height: 540px; }
+    }
 
     .drawing-date {
       max-width: 720px; margin: 56px auto 0; padding: 28px 32px;
@@ -976,18 +994,18 @@
 
   <!-- ── QGIV entry gate (auto-opens June 8, 2026) ── -->
     <!-- ── 49ers entry checkout (in-page QGIV popup) ── -->
-  <div id="niner-checkout" role="dialog" aria-modal="true" aria-label="Enter the 49ers Home Game Getaway" style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:16px;background:rgba(10,3,3,0.78);backdrop-filter:blur(6px);">
-    <div style="position:relative;width:100%;max-width:760px;height:min(90vh,880px);background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.5);display:flex;flex-direction:column;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 18px;border-bottom:1px solid #ececec;flex:0 0 auto;">
-        <span style="font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:1.02rem;color:#0a0a0a;line-height:1.2;">49ers Home Game Getaway &middot; $100 entry</span>
-        <button type="button" data-checkout-close aria-label="Close" style="flex:0 0 auto;width:38px;height:38px;border:0;border-radius:999px;background:#f2f2f2;color:#333;font-size:22px;line-height:1;cursor:pointer;">&times;</button>
+  <div class="nc-back" id="niner-checkout" role="dialog" aria-modal="true" aria-label="Enter the 49ers Home Game Getaway">
+    <div class="nc-modal">
+      <button class="nc-close" type="button" data-checkout-close aria-label="Close">&times;</button>
+      <div class="nc-head">
+        <span class="kick">Opportunity Drawing · $100 entry</span>
+        <h3>Enter the 49ers Home Game Getaway</h3>
+        <p>Six lower-bowl 49ers tickets + a $2,000 travel card. Winner drawn live at the Gala — June 10.</p>
       </div>
-      <div style="position:relative;flex:1 1 auto;background:#faf8f8;">
-        <iframe data-checkout-frame title="Enter the 49ers Home Game Getaway" allow="payment" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:block;"></iframe>
+      <div class="nc-embed-wrap">
+        <iframe class="nc-embed" data-checkout-frame title="Enter the 49ers Home Game Getaway" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </div>
-      <div style="flex:0 0 auto;padding:9px 14px;text-align:center;border-top:1px solid #ececec;font-size:13px;color:#666;">
-        Trouble loading? <a href="https://secure.qgiv.com/event/def2026/item/634103" target="_blank" rel="noopener" style="color:#aa0000;font-weight:700;text-decoration:none;">Open in a new tab &rarr;</a>
-      </div>
+      <div class="nc-foot">Trouble loading? <a href="https://secure.qgiv.com/event/def2026/item/634103" target="_blank" rel="noopener">Open in a new tab &rarr;</a></div>
     </div>
   </div>
 
