@@ -394,7 +394,7 @@ function Hero({ identity, seatMath, tierAccess, onPick }) {
                 'DTEND:20260610T220000',
                 'SUMMARY:DEF Gala 2026 — Lights · Camera · Take Action',
                 'LOCATION:Megaplex at Legacy Crossing\\, Centerville\\, UT',
-                'DESCRIPTION:Davis Education Foundation Gala 2026.\\nFilm showings at 4:30 PM (Early) and 7:15 PM (Late).\\nSilent auction bidding opens at 6:30 PM in the lobby.',
+                'DESCRIPTION:Davis Education Foundation Gala 2026.\\nFilm showings at 4:30 PM (Early) and 7:15 PM (Late).\\nSilent auction closes at 7:30 PM.',
                 'URL:https://gala.daviskids.org',
                 'END:VEVENT',
                 'END:VCALENDAR',

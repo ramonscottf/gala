@@ -83,8 +83,7 @@ export function AuctionRegistrationCard({
                 <p>
                   Download <b>Givi</b> on your phone before June 10. Sign in
                   with <b>{registrationEmail}</b> — your password is whatever
-                  you set during registration. Bidding opens at 6:30 PM in the
-                  lobby.
+                  you set during registration. Bidding closes at 7:30 PM on June 10.
                 </p>
               </div>
               <div className="p2-auction-store-row">

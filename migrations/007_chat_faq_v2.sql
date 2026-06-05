@@ -46,7 +46,7 @@ INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VA
 
 INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VALUES
 ('auction', 'How does the silent auction work?',
- 'Easy. Browse the items in the lobby during social hour, then bid from your phone — no paper bid sheets. The auction is on Bloomerang (the platform Davis Ed Foundation uses for fundraising). You''ll get a link to register and bid. Bidding stays open through the social hour and dinner; it closes at 6:30 PM, between the two movie showings.',
+ 'Easy. Browse the items in the lobby during social hour, then bid from your phone — no paper bid sheets. The auction is on Bloomerang (the platform Davis Ed Foundation uses for fundraising). You''ll get a link to register and bid. Bidding stays open through the social hour and dinner; it closes at 7:30 PM.',
  'silent auction bidding bloomerang qgiv mobile phone how', 1, 1);
 
 INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VALUES
@@ -61,7 +61,7 @@ INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VA
 
 INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VALUES
 ('auction', 'When does bidding close?',
- '6:30 PM, in between the two movie showings. The 49ers raffle drawing winner is announced around the same time. If you win something, you''ll get a notification and can pick up your items at the checkout table after the second showing ends.',
+ '7:30 PM. The 49ers raffle drawing winner is announced around the same time. If you win something, you''ll get a notification and can pick up your items at the checkout table after the second showing ends.',
  'auction close time end bidding 49ers raffle winner', 4, 1);
 
 INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VALUES
@@ -127,7 +127,7 @@ INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VA
 
 INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VALUES
 ('schedule', 'What''s the schedule for the night?',
- '3:15 PM doors open, social hour begins on the patios with music and snacks, and the auction is open in the lobby. Around 4:00 PM, early showing guests find their auditoriums; movies start about 4:30 PM with dinner served in your seat. First showing ends around 6:15 PM, auction closes at 6:30, and the 49ers raffle winner is drawn. Late showing takes their seats at 6:45, movies start at 7:30, and the night ends around 9:30.',
+ '3:15 PM doors open, social hour begins on the patios with music and snacks, and the auction is open in the lobby. Around 4:00 PM, early showing guests find their auditoriums; movies start about 4:30 PM with dinner served in your seat. First showing ends around 6:15 PM. Late showing takes their seats at 6:45, movies start at 7:15. The auction closes at 7:30 PM and the 49ers raffle winner is drawn. The night ends around 9:30.',
  'schedule timeline when what time start end agenda', 2, 1);
 
 INSERT INTO chat_faq (category, question, answer, keywords, priority, active) VALUES

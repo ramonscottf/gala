@@ -614,13 +614,13 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
       Four feature films across eight auditoriums per session. Doors open at <strong>4:00 PM</strong>,
       Showing 1 starts at <strong>4:30 PM</strong> across the board. Showing 2 starts at
       <strong>7:15 PM</strong> across the board. Between them, a 15-minute crew turnover, dinner served,
-      and the silent auction closes at 6:30 PM.
+      and the silent auction closes at 7:30 PM.
     </p>
     <div class="pills">
       <span class="pill">Pre-show: 5 min DEF intro video</span>
       <span class="pill">No trailers</span>
       <span class="pill amber">Cleaning: 15 min between sessions</span>
-      <span class="pill red">Auction closes 6:30 PM</span>
+      <span class="pill red">Auction closes 7:30 PM</span>
       <span class="pill green">All start times on :15 marks</span>
     </div>
   </section>
@@ -707,7 +707,7 @@ table.bare td.num { font-variant-numeric: tabular-nums; color: var(--ink-soft); 
       <li><strong>Doors open at 4:00 PM.</strong> Earliest guests can enter the building.</li>
       <li><strong>All Showing 1 movies start at 4:30 PM</strong> (5-min DEF intro, then feature). One call time for the whole house, simpler floor-ops than a staggered start.</li>
       <li><strong>Movies end 6:13 → 6:47 PM.</strong> Dragon at 6:13, Breadwinner at 6:15, Paddington 2 at 6:19, Mandalorian (longest) at 6:47.</li>
-      <li><strong>Auction closes 6:30 PM.</strong> Falls inside the spillover window — guests in shorter movies are out by then; Mandalorian audience is the IMAX premier crowd.</li>
+      <li><strong>Auction closes 7:30 PM.</strong> Falls inside the spillover window — guests in shorter movies are out by then; Mandalorian audience is the IMAX premier crowd.</li>
       <li class="warn"><strong>Mandalorian S1 → S2 turnaround is tight: 28 minutes</strong> (6:47 PM end → 7:15 PM lights). 15 min crew turnover finishes 7:02 PM, leaving 13 min for dinner serve and walk-in. Confirmed acceptable per Kara — last year's floor was 5:00 / 7:50 and this matches it.</li>
       <li><strong>Showing 2 dinner doors open 6:45 PM</strong> for the three shorter-movie auds; Mandalorian IMAX doors as soon as crew clears (~7:02 PM).</li>
       <li><strong>All Showing 2 movies start at 7:15 PM.</strong> Dinner serve + walk-in time is the binding constraint, not crew turnover.</li>
@@ -970,8 +970,8 @@ Object.entries(s1EndByTrack).forEach(([id, endMin]) => {
 // Auction marker
 const auctionMarker = document.createElement('div');
 auctionMarker.className = 'marker';
-auctionMarker.style.left = `calc(124px + (100% - 124px) * ${(m(18,30) - T_START) / (T_END - T_START)})`;
-auctionMarker.innerHTML = `<span class="marker-label">AUCTION CLOSES · 6:30 PM</span>`;
+auctionMarker.style.left = `calc(124px + (100% - 124px) * ${(m(19,30) - T_START) / (T_END - T_START)})`;
+auctionMarker.innerHTML = `<span class="marker-label">AUCTION CLOSES · 7:30 PM</span>`;
 document.querySelector('.timeline-inner').appendChild(auctionMarker);
 
 // Doors marker
