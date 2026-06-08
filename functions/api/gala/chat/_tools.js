@@ -243,6 +243,10 @@ async function lookupBooking(env, input) {
     return { found: false, message: 'Ask the guest for their company name or the email they used to RSVP, then look it up.' };
   }
 
+  // ── EMAIL: exact match. The email can belong to a sponsor (the buyer) AND/OR
+  // one or more delegations (a guest a sponsor invited). Delegates RSVP with
+  // their OWN email and their seats live under delegation_id — so we MUST search
+  // sponsor_delegations too, or no delegated guest can ever find their seats.
   if (query.includes('@')) {
     const email = query.toLowerCase();
     const sponsor = await env.GALA_DB.prepare(
@@ -250,32 +254,90 @@ async function lookupBooking(env, input) {
         WHERE archived_at IS NULL AND (LOWER(email) = ? OR LOWER(secondary_email) = ?)
         LIMIT 1`
     ).bind(email, email).first();
-    if (!sponsor) {
+    const delRs = await env.GALA_DB.prepare(
+      `SELECT id, delegate_name, parent_sponsor_id FROM sponsor_delegations
+        WHERE LOWER(delegate_email) = ? AND (status IS NULL OR status <> 'reclaimed')`
+    ).bind(email).all();
+    const delRows = delRs.results || [];
+
+    if (!sponsor && delRows.length === 0) {
       return { found: false, message: `No booking found for ${query}. Double-check the email, or try the company name instead.` };
     }
-    return await bookingResult(env, sponsor);
+
+    // Merge every seat tied to this email into one booking — "here are all your
+    // seats." A sponsor match shows the buyer's whole table; each delegate match
+    // adds that delegate's own seats.
+    const merged = new Map(); // "theater:showing" -> showing obj
+    const addShowings = (arr) => {
+      for (const sh of arr) {
+        const key = `${sh.auditorium}:${sh.showing_number}`;
+        if (!merged.has(key)) { merged.set(key, { ...sh, seats: [...sh.seats] }); continue; }
+        const seen = new Set(merged.get(key).seats.map(s => s.seat));
+        sh.seats.forEach(s => { if (!seen.has(s.seat)) merged.get(key).seats.push(s); });
+      }
+    };
+    let personName = null;
+    let company = null;
+    if (sponsor) {
+      addShowings(await loadShowingsForSponsor(env, sponsor.id));
+      personName = sponsor.first_name ? `${sponsor.first_name} ${sponsor.last_name || ''}`.trim() : sponsor.company;
+      company = sponsor.company;
+    }
+    for (const d of delRows) {
+      addShowings(await loadShowingsForDelegation(env, d.id));
+      if (!personName) personName = d.delegate_name || null;
+      if (!company && d.parent_sponsor_id) {
+        const s = await env.GALA_DB.prepare(`SELECT company FROM sponsors WHERE id = ?`).bind(d.parent_sponsor_id).first();
+        company = s?.company || null;
+      }
+    }
+    const showings = Array.from(merged.values());
+    return {
+      found: true,
+      name: personName || 'Guest',
+      company: company || null,
+      has_seats: showings.length > 0,
+      showings,
+      note: LOOKUP_NOTE,
+    };
   }
 
+  // ── TEXT: company name (sponsors) OR a guest's own name (delegations). Guests
+  // on the night will type their name as often as their company.
   const like = `%${query}%`;
-  const rs = await env.GALA_DB.prepare(
-    `SELECT id, company, first_name, last_name FROM sponsors
-      WHERE archived_at IS NULL AND company LIKE ? COLLATE NOCASE
-      ORDER BY CASE WHEN company LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END, company
-      LIMIT 10`
-  ).bind(like, `${query}%`).all();
-  const rows = rs.results || [];
-  if (rows.length === 0) {
+  const [spRs, dgRs] = await Promise.all([
+    env.GALA_DB.prepare(
+      `SELECT id, company, first_name, last_name FROM sponsors
+        WHERE archived_at IS NULL AND company LIKE ? COLLATE NOCASE
+        ORDER BY CASE WHEN company LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END, company
+        LIMIT 10`
+    ).bind(like, `${query}%`).all(),
+    env.GALA_DB.prepare(
+      `SELECT id, delegate_name, parent_sponsor_id FROM sponsor_delegations
+        WHERE (status IS NULL OR status <> 'reclaimed') AND delegate_name LIKE ? COLLATE NOCASE
+        ORDER BY delegate_name LIMIT 10`
+    ).bind(like).all(),
+  ]);
+
+  const bookings = [];
+  for (const s of (spRs.results || [])) bookings.push(await bookingResult(env, s));
+  for (const d of (dgRs.results || [])) {
+    const b = await delegationBookingResult(env, d);
+    if (b.has_seats) bookings.push(b); // skip dangling/empty invite rows
+  }
+
+  if (bookings.length === 0) {
     return { found: false, message: `No booking found for "${query}". Try a shorter version of the company name, or the email used to RSVP.` };
   }
-  if (rows.length > 1) {
+  if (bookings.length > 1) {
     return {
       found: false,
       multiple: true,
-      candidates: rows.map(r => r.company),
-      message: 'Multiple companies match — list them and ask the guest which one.',
+      candidates: bookings.map(b => (b.company && b.company !== b.name) ? `${b.name} (${b.company})` : b.name),
+      message: 'Multiple matches — list them and ask the guest which one.',
     };
   }
-  return await bookingResult(env, rows[0]);
+  return bookings[0];
 }
 
 async function bookingResult(env, sponsor) {
@@ -290,6 +352,66 @@ async function bookingResult(env, sponsor) {
     has_seats: showings.length > 0,
     showings,
     note: 'READ-ONLY. To change anything, the guest taps "Email me my portal link" on this page — that sends a private link to the email on file, and on that page Booker can actually move their seats for them. For any other help, text or call Scott at 801-810-6642. Do not output a portal link or token.',
+  };
+}
+
+// Shared note appended to every lookup_booking result.
+const LOOKUP_NOTE = 'READ-ONLY. To change anything, the guest taps "Email me my portal link" on this page — that sends a private link to the email on file, and on that page Booker can actually move their seats for them. For any other help, text or call Scott at 801-810-6642. Do not output a portal link or token.';
+
+// Seats for ONE delegation (a guest invited by a sponsor). Their seats live
+// under delegation_id, distinct from the parent sponsor's own seats. Mirrors
+// loadShowingsForSponsor.
+async function loadShowingsForDelegation(env, delegationId) {
+  const rs = await env.GALA_DB.prepare(
+    `SELECT sa.theater_id, sa.showing_number, sa.row_label, sa.seat_num, sa.dinner_choice,
+            m.title AS movie_title, st.show_start, st.dinner_time
+       FROM seat_assignments sa
+       LEFT JOIN showtimes st ON st.theater_id = sa.theater_id
+            AND st.showing_number = sa.showing_number
+       LEFT JOIN movies m ON m.id = st.movie_id
+      WHERE sa.delegation_id = ?
+      ORDER BY sa.theater_id, sa.showing_number, sa.row_label, CAST(sa.seat_num AS INTEGER)`
+  ).bind(delegationId).all();
+
+  const groups = new Map();
+  for (const r of (rs.results || [])) {
+    const key = `${r.theater_id}:${r.showing_number}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        auditorium: r.theater_id,
+        showing_number: r.showing_number,
+        movie_title: r.movie_title || 'Movie TBA',
+        show_start: r.show_start || null,
+        dinner_time: r.dinner_time || null,
+        seats: [],
+      });
+    }
+    groups.get(key).seats.push({
+      seat: `${r.row_label}${r.seat_num}`,
+      dinner_label: r.dinner_choice
+        ? (MYTICKETS_DINNER_LABELS[r.dinner_choice] || r.dinner_choice)
+        : null,
+    });
+  }
+  return Array.from(groups.values());
+}
+
+async function delegationBookingResult(env, d) {
+  const showings = await loadShowingsForDelegation(env, d.id);
+  let company = null;
+  if (d.parent_sponsor_id) {
+    const s = await env.GALA_DB.prepare(
+      `SELECT company FROM sponsors WHERE id = ?`
+    ).bind(d.parent_sponsor_id).first();
+    company = s?.company || null;
+  }
+  return {
+    found: true,
+    name: d.delegate_name || 'Guest',
+    company,
+    has_seats: showings.length > 0,
+    showings,
+    note: LOOKUP_NOTE,
   };
 }
 
