@@ -92,6 +92,12 @@ export async function resolveWriteScope(env, resolved, body) {
     };
   }
 
+  // sponsor_delegations has no company column — the "parent company" for a
+  // delegated guest is the acting sponsor's company. Attach it so writers
+  // (e.g. seat finalize) can build a proper "Company / Delegate" guest name
+  // instead of "undefined / Delegate".
+  target.parent_company = resolved.record.company || null;
+
   return {
     ok: true,
     writeScope: { kind: 'delegation', record: target },

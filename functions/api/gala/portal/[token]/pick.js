@@ -519,9 +519,21 @@ export async function onRequestPost(context) {
     // on-behalf mode we use the target delegation's identity so the
     // night-of check-in list reads correctly — the row should look
     // identical to one the delegate placed themselves.
+    // Resolve the parent company for a delegated guest. The on-behalf path
+    // attaches parent_company; a pure delegation token might not, so fall back
+    // to the parent sponsor's company. Never emit "undefined / …" on the door.
+    let parentCompany = writeScope.record.parent_company || writeScope.record.company || null;
+    if (writeScope.kind !== 'sponsor' && !parentCompany && writeScope.record.parent_sponsor_id) {
+      const ps = await env.GALA_DB.prepare(
+        `SELECT company FROM sponsors WHERE id = ?`
+      ).bind(writeScope.record.parent_sponsor_id).first();
+      parentCompany = ps?.company || null;
+    }
     const guestName = writeScope.kind === 'sponsor'
       ? `${writeScope.record.company}${writeScope.record.first_name ? ' (' + writeScope.record.first_name + ' ' + (writeScope.record.last_name || '') + ')' : ''}`
-      : `${writeScope.record.parent_company} / ${writeScope.record.delegate_name}`;
+      : (parentCompany
+          ? `${parentCompany} / ${writeScope.record.delegate_name}`
+          : writeScope.record.delegate_name);
 
     // Atomic quota-guarded INSERT. The INSERT WHERE re-evaluates the
     // count subquery against committed state per write, so parallel
