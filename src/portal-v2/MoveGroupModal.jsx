@@ -1,17 +1,19 @@
-// MoveGroupModal — move all seats in a group to a different contiguous
-// N-seat block in the same showing + auditorium.
+// MoveGroupModal — move all seats in a group together to a new
+// contiguous N-seat block. The destination can be the SAME auditorium
+// (re-anchor closer to the screen) OR a DIFFERENT movie / auditorium /
+// showtime, chosen from the "Move to" selector.
 //
 // Powered by autoPickBlock from SeatEngine: suggests the best
-// contiguous block of the same size (centered, premium-preferring),
-// shows it as the target on the map, lets the user tap a different
-// starting anchor if they want a different spot. On confirm: release
-// the old block, place the new block, refresh.
+// contiguous block of the same size (centered, premium-preferring) in
+// the chosen destination, shows it as the target on the map, lets the
+// user tap a different starting anchor. On confirm: release the old
+// block in its original location, place the new block in the chosen
+// destination, refresh.
 //
-// Deliberately scoped to same showing + same auditorium. Moving a
-// group across showings/auditoriums is a "release + new pick" two-
-// step that we don't need to compress into one modal. Most "move my
-// group" intents are "we'd rather sit closer to the screen, same
-// movie."
+// Cross-auditorium is purely a release-here + place-there: the backend
+// /pick finalize counts capacity as a global total across all
+// auditoriums (no per-theater lock) and the dinner choice rides along
+// with each seat, so a move nets zero against quota.
 
 import { useEffect, useMemo, useState } from 'react';
 import { SeatMap, adaptTheater, autoPickBlock, seatById } from '../portal/SeatEngine.jsx';
@@ -38,6 +40,43 @@ export function MoveGroupModal({
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState(null);
   const [notify, setNotify] = useState(true);
+  // Destination the group is moving INTO. Defaults to the group's current
+  // location so the modal opens exactly as before; the "Move to" selector
+  // lets the user retarget to a different movie/auditorium/showtime, and the
+  // seat map, taken-set and auto-pick all follow the chosen destination.
+  const [destKey, setDestKey] = useState(`${group.theater_id}:${group.showing_number}`);
+  const [destTheaterId, destShowingNumber] = useMemo(() => {
+    const [t, s] = destKey.split(':');
+    return [Number(t), Number(s)];
+  }, [destKey]);
+  const isSameLocation =
+    destTheaterId === group.theater_id && destShowingNumber === group.showing_number;
+
+  // Pickable destinations: every real showtime that has a seat layout we can
+  // render and a movie to show. Current location is included and pre-selected.
+  const destinations = useMemo(() => {
+    const layouts = new Set((theaterLayouts?.theaters || []).map((t) => t.id));
+    return (portal?.showtimes || [])
+      .filter((s) => layouts.has(s.theater_id) && s.movie_title)
+      .map((s) => ({
+        key: `${s.theater_id}:${s.showing_number}`,
+        theater_id: s.theater_id,
+        showing_number: s.showing_number,
+        movie_title: s.movie_title,
+        poster_url: s.poster_url,
+      }))
+      .sort((a, b) => a.showing_number - b.showing_number || a.theater_id - b.theater_id);
+  }, [portal, theaterLayouts]);
+  const selected = useMemo(
+    () =>
+      destinations.find((d) => d.key === destKey) || {
+        theater_id: destTheaterId,
+        showing_number: destShowingNumber,
+        movie_title: group.movie_title,
+        poster_url: group.poster_url,
+      },
+    [destinations, destKey, destTheaterId, destShowingNumber, group]
+  );
 
   useEffect(() => {
     const onKey = (e) => {
@@ -48,9 +87,9 @@ export function MoveGroupModal({
   }, [onClose, pending]);
 
   const theater = useMemo(() => {
-    const t = (theaterLayouts?.theaters || []).find((x) => x.id === group.theater_id);
+    const t = (theaterLayouts?.theaters || []).find((x) => x.id === destTheaterId);
     return t ? adaptTheater(t) : null;
-  }, [theaterLayouts, group.theater_id]);
+  }, [theaterLayouts, destTheaterId]);
 
   // Build the "occupied by everyone else" set. CRITICAL: exclude the
   // group's own seats — they need to register as "available" to the
@@ -61,37 +100,40 @@ export function MoveGroupModal({
   );
   const otherTaken = useMemo(() => {
     const out = new Set();
-    const showingNum = group.showing_number;
     (portal?.allAssignments || []).forEach((a) => {
-      if (a.theater_id === group.theater_id && (a.showing_number || 1) === showingNum) {
+      if (a.theater_id === destTheaterId && (a.showing_number || 1) === destShowingNumber) {
         const id = `${a.row_label}-${a.seat_num}`;
-        if (!ownIds.has(id)) out.add(id);
+        // The group's own seats only free up in their ORIGINAL location, so
+        // treat them as "available to reuse" only when the destination is
+        // unchanged. In a different auditorium a same-labelled seat (e.g. E1)
+        // belongs to whoever holds it there — never silently free it.
+        if (isSameLocation && ownIds.has(id)) return;
+        out.add(id);
       }
     });
     return out;
-  }, [portal, group, ownIds]);
+  }, [portal, destTheaterId, destShowingNumber, isSameLocation, ownIds]);
 
   // Auto-suggest a contiguous block on open. User can change it by
   // tapping anywhere on the map.
   useEffect(() => {
-    if (!theater) return;
-    // Include the group's current seats in "taken" for auto-pick? No —
-    // we want the auto-picker to consider the user's own seats as
-    // available (we're moving them). Otherwise the picker thinks the
-    // user's own row is occupied and skips it.
+    if (!theater) {
+      setTarget([]);
+      return;
+    }
     const suggestion = autoPickBlock(theater, N, otherTaken, {
       allowAccessible: false,
       preferPremium: true,
     });
     if (suggestion.length === N) {
-      // Filter out the original block from the suggestion — moving to
-      // exactly the same seats is a no-op.
-      const isSameAsCurrent = suggestion.every((id) => ownIds.has(id));
-      if (!isSameAsCurrent) {
-        setTarget(suggestion);
-      }
+      // Moving into exactly the seats you already hold is a no-op — only
+      // possible when the destination is the group's current location.
+      const isNoop = isSameLocation && suggestion.every((id) => ownIds.has(id));
+      setTarget(isNoop ? [] : suggestion);
+    } else {
+      setTarget([]);
     }
-  }, [theater, N, otherTaken, ownIds]);
+  }, [theater, N, otherTaken, ownIds, isSameLocation]);
 
   // Click on a seat: try to anchor a new contiguous block starting at
   // that seat's row, going rightward N seats. If that block has
@@ -151,8 +193,9 @@ export function MoveGroupModal({
     if (target.length !== N || pending) return;
     setPending(true);
     setErr(null);
-    const showingId = SHOWING_NUMBER_TO_ID[group.showing_number];
-    const theaterId = group.theater_id;
+    const origShowingId = SHOWING_NUMBER_TO_ID[group.showing_number];
+    const origTheaterId = group.theater_id;
+    const destShowingId = SHOWING_NUMBER_TO_ID[destShowingNumber];
     const oldIds = group.seats.map((s) => `${s.row}-${s.num}`);
 
     const extras = behalfOf?.delegationId
@@ -160,17 +203,18 @@ export function MoveGroupModal({
       : null;
 
     try {
-      // Step 1: release the old block. Frees N slots.
-      await seats.unplace(showingId, theaterId, oldIds, extras);
-      // Step 2: place the new block. Capacity is back to where we
-      // started so this should succeed unless someone grabbed seats
-      // in the brief window.
+      // Step 1: release the old block in its ORIGINAL auditorium/showing.
+      // Frees N slots against the (global) quota.
+      await seats.unplace(origShowingId, origTheaterId, oldIds, extras);
+      // Step 2: place the new block in the DESTINATION auditorium/showing.
+      // Quota is back to where we started so this succeeds unless someone
+      // grabbed a destination seat in the brief window.
       try {
-        await seats.place(showingId, theaterId, target, extras);
+        await seats.place(destShowingId, destTheaterId, target, extras);
       } catch (placeErr) {
-        // Race: try to put the user back where they were.
+        // Race: put the user back exactly where they were (original spot).
         try {
-          await seats.place(showingId, theaterId, oldIds, extras);
+          await seats.place(origShowingId, origTheaterId, oldIds, extras);
           throw new Error(
             `One of those seats got taken just now. Your original block (${oldIds.map((s) => s.replace('-', '')).join(', ')}) is still yours. Try a different spot.`
           );
@@ -197,7 +241,10 @@ export function MoveGroupModal({
       }
       if (onRefresh) await onRefresh();
       if (onCommitted) onCommitted({ from: oldIds, to: target });
-      if (onSuccess) onSuccess('success', `Moved ${N} ${N === 1 ? 'seat' : 'seats'}.`);
+      if (onSuccess) {
+        const where = isSameLocation ? '' : ` to ${selected.movie_title}`;
+        onSuccess('success', `Moved ${N} ${N === 1 ? 'seat' : 'seats'}${where}.`);
+      }
       onClose();
     } catch (e) {
       setErr(e.message);
@@ -238,10 +285,10 @@ export function MoveGroupModal({
 
         <div className="p2-modal-body">
           {behalfOf && <OnBehalfBanner name={behalfOf.delegateName} />}
-          <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16 }}>
-            {group.poster_url && (
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 12 }}>
+            {selected.poster_url && (
               <img
-                src={group.poster_url}
+                src={selected.poster_url}
                 alt=""
                 style={{
                   width: 60,
@@ -256,20 +303,62 @@ export function MoveGroupModal({
             )}
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
-                {group.movie_title}
+                {selected.movie_title}
               </div>
               <div style={{ marginTop: 6 }}>
                 <ShowingAuditoriumPills
-                  showingNumber={group.showing_number}
-                  auditoriumId={group.theater_id}
+                  showingNumber={selected.showing_number}
+                  auditoriumId={selected.theater_id}
                 />
               </div>
             </div>
           </div>
 
+          {destinations.length > 1 && (
+            <label style={{ display: 'block', marginBottom: 14 }}>
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '.04em',
+                  textTransform: 'uppercase',
+                  color: 'var(--p2-muted)',
+                  marginBottom: 6,
+                }}
+              >
+                Move to
+              </span>
+              <select
+                className="p2-select"
+                value={destKey}
+                disabled={pending}
+                onChange={(e) => setDestKey(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  background: 'var(--p2-field, #0e1530)',
+                  color: '#fff',
+                  border: '1px solid var(--p2-rule)',
+                  fontSize: 14,
+                  appearance: 'auto',
+                }}
+              >
+                {destinations.map((d) => (
+                  <option key={d.key} value={d.key}>
+                    Auditorium {d.theater_id} · {d.movie_title} · {d.showing_number === 1 ? 'Early 4:30 PM' : 'Late 7:15 PM'}
+                    {d.theater_id === group.theater_id && d.showing_number === group.showing_number ? ' (current)' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
           <p style={{ fontSize: 13, color: 'var(--p2-muted)', marginTop: 0, marginBottom: 14 }}>
-            We picked the best contiguous block of {N} seats. Tap anywhere on the map to anchor
-            the block somewhere else — we'll keep all {N} seats together.
+            {destinations.length > 1
+              ? `Choose the movie & auditorium above, then tap the map to place your block — we'll keep all ${N} ${N === 1 ? 'seat' : 'seats'} together.`
+              : `We picked the best contiguous block of ${N} seats. Tap anywhere on the map to anchor the block somewhere else — we'll keep all ${N} seats together.`}
           </p>
 
           <div className="p2-swap-legend">
@@ -319,6 +408,11 @@ export function MoveGroupModal({
               <div className="p2-swap-direction-seat" style={{ fontSize: 18 }}>
                 {oldLabels}
               </div>
+              {!isSameLocation && (
+                <div style={{ fontSize: 11, color: 'var(--p2-muted)', marginTop: 2 }}>
+                  Auditorium {group.theater_id}
+                </div>
+              )}
             </div>
             <div className="p2-swap-arrow" aria-hidden="true">→</div>
             <div className="p2-swap-direction-cell">
@@ -329,6 +423,11 @@ export function MoveGroupModal({
               >
                 {newLabels || 'Tap a seat to anchor'}
               </div>
+              {!isSameLocation && target.length > 0 && (
+                <div style={{ fontSize: 11, color: 'var(--p2-muted)', marginTop: 2 }}>
+                  Auditorium {destTheaterId}
+                </div>
+              )}
             </div>
           </div>
 
