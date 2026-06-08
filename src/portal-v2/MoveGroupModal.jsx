@@ -1,14 +1,13 @@
-// MoveGroupModal — move all seats in a group together to a new
-// contiguous N-seat block. The destination can be the SAME auditorium
-// (re-anchor closer to the screen) OR a DIFFERENT movie / auditorium /
+// MoveGroupModal — move all seats in a group to new seats the guest
+// picks themselves. The destination can be the SAME auditorium (move to
+// better seats for the same movie) OR a DIFFERENT movie / auditorium /
 // showtime, chosen from the "Move to" selector.
 //
-// Powered by autoPickBlock from SeatEngine: suggests the best
-// contiguous block of the same size (centered, premium-preferring) in
-// the chosen destination, shows it as the target on the map, lets the
-// user tap a different starting anchor. On confirm: release the old
-// block in its original location, place the new block in the chosen
-// destination, refresh.
+// Free seat selection: nothing is pre-chosen. The guest taps the exact
+// open seats they want (tap again to deselect), up to the group size N;
+// at capacity a fresh tap rolls the oldest pick off so it never feels
+// stuck. On confirm: release the old seats in their original location,
+// place the newly-picked seats in the chosen destination, refresh.
 //
 // Cross-auditorium is purely a release-here + place-there: the backend
 // /pick finalize counts capacity as a global total across all
@@ -16,7 +15,7 @@
 // with each seat, so a move nets zero against quota.
 
 import { useEffect, useMemo, useState } from 'react';
-import { SeatMap, adaptTheater, autoPickBlock, seatById } from '../portal/SeatEngine.jsx';
+import { SeatMap, adaptTheater } from '../portal/SeatEngine.jsx';
 import { SHOWING_NUMBER_TO_ID } from '../hooks/usePortal.js';
 import { ShowingAuditoriumPills } from './TicketGroupModal.jsx';
 import { OnBehalfBanner, NotifyToggle } from './OnBehalfControls.jsx';
@@ -114,79 +113,36 @@ export function MoveGroupModal({
     return out;
   }, [portal, destTheaterId, destShowingNumber, isSameLocation, ownIds]);
 
-  // Auto-suggest a contiguous block on open. User can change it by
-  // tapping anywhere on the map.
+  // Nothing is pre-selected — the guest picks their own seats. Clear any
+  // in-progress selection whenever the destination changes so a stale pick
+  // from another auditorium can't carry over.
   useEffect(() => {
-    if (!theater) {
-      setTarget([]);
-      return;
-    }
-    const suggestion = autoPickBlock(theater, N, otherTaken, {
-      allowAccessible: false,
-      preferPremium: true,
-    });
-    if (suggestion.length === N) {
-      // Moving into exactly the seats you already hold is a no-op — only
-      // possible when the destination is the group's current location.
-      const isNoop = isSameLocation && suggestion.every((id) => ownIds.has(id));
-      setTarget(isNoop ? [] : suggestion);
-    } else {
-      setTarget([]);
-    }
-  }, [theater, N, otherTaken, ownIds, isSameLocation]);
+    setTarget([]);
+  }, [destKey]);
 
-  // Click on a seat: try to anchor a new contiguous block starting at
-  // that seat's row, going rightward N seats. If that block has
-  // conflicts (gaps in the row's seat layout, taken seats, off the
-  // end), shift left until we find one that fits. If nothing fits in
-  // that row, ignore the tap.
-  function onSeatTap(seatId) {
-    if (pending || !theater) return;
-    const seat = seatById(theater, seatId);
-    if (!seat) return;
-    // Find the row and column index in the adapted seat structure
-    let rowIdx = -1;
-    let colIdx = -1;
-    for (let r = 0; r < theater.rows.length; r++) {
-      const cells = theater.rows[r].seats;
-      for (let c = 0; c < cells.length; c++) {
-        if (cells[c] && cells[c].id === seatId) {
-          rowIdx = r;
-          colIdx = c;
-          break;
+  // Free seat selection — the guest taps the exact seats they want, just
+  // like the normal seat picker. SeatMap calls onSelect(ids, action) where
+  // ids is the tapped seat (or both halves of a loveseat) and action is
+  // 'add' or 'remove'. Taken seats never reach here — SeatMap blocks them.
+  // We hold up to N seats; once full, a fresh tap rolls the oldest pick off
+  // so it never feels stuck. Tap a selected seat to deselect it.
+  function handleSelect(ids, action) {
+    if (pending) return;
+    setTarget((prev) => {
+      let next = prev.slice();
+      for (const id of ids) {
+        if (action === 'remove') {
+          next = next.filter((x) => x !== id);
+        } else if (!next.includes(id)) {
+          next.push(id);
+          if (next.length > N) next = next.slice(next.length - N);
         }
       }
-      if (rowIdx !== -1) break;
-    }
-    if (rowIdx === -1) return;
-
-    // Try N contiguous starting at colIdx, then shift left until we
-    // either fit or fall off the start.
-    const cells = theater.rows[rowIdx].seats;
-    const isFree = (id) => !otherTaken.has(id);
-    for (let start = colIdx; start >= 0; start--) {
-      if (start + N > cells.length) continue;
-      const slice = cells.slice(start, start + N);
-      if (slice.some((c) => !c)) continue;
-      if (slice.some((c) => !isFree(c.id))) continue;
-      setTarget(slice.map((c) => c.id));
-      return;
-    }
-    // Couldn't anchor at-or-before tapped column. Try shifting right
-    // from the tap point as a fallback.
-    for (let start = colIdx + 1; start + N <= cells.length; start++) {
-      const slice = cells.slice(start, start + N);
-      if (slice.some((c) => !c)) continue;
-      if (slice.some((c) => !isFree(c.id))) continue;
-      setTarget(slice.map((c) => c.id));
-      return;
-    }
-    // Nothing fits in this row — silently ignore the tap.
+      return next;
+    });
   }
 
-  // Override the SeatMap's interaction: it normally toggles single
-  // seats. We use it for the visual but route taps through onSeatTap.
-  // The selected Set drives the gold highlights.
+  // Drives the gold highlight for the seats the guest has picked.
   const targetSet = useMemo(() => new Set(target), [target]);
 
   async function commit() {
@@ -357,8 +313,8 @@ export function MoveGroupModal({
 
           <p style={{ fontSize: 13, color: 'var(--p2-muted)', marginTop: 0, marginBottom: 14 }}>
             {destinations.length > 1
-              ? `Choose the movie & auditorium above, then tap the map to place your block — we'll keep all ${N} ${N === 1 ? 'seat' : 'seats'} together.`
-              : `We picked the best contiguous block of ${N} seats. Tap anywhere on the map to anchor the block somewhere else — we'll keep all ${N} seats together.`}
+              ? `Choose the movie & auditorium above, then tap the map to pick your ${N} ${N === 1 ? 'seat' : 'seats'}. Tap a seat again to deselect.`
+              : `Tap the map to pick your ${N} ${N === 1 ? 'seat' : 'seats'}. Tap a seat again to deselect.`}
           </p>
 
           <div className="p2-swap-legend">
@@ -368,7 +324,7 @@ export function MoveGroupModal({
             </span>
             <span className="p2-swap-legend-item">
               <span className="p2-swap-dot is-target" />
-              New block
+              Selected
             </span>
             <span className="p2-swap-legend-item">
               <span className="p2-swap-dot is-open" />
@@ -393,7 +349,7 @@ export function MoveGroupModal({
                 assignedSelf={ownIds}
                 assignedOther={otherTaken}
                 selected={targetSet}
-                onSelect={(id) => onSeatTap(id)}
+                onSelect={handleSelect}
               />
             ) : (
               <div style={{ padding: 24, color: 'var(--p2-muted)', textAlign: 'center' }}>
@@ -460,8 +416,8 @@ export function MoveGroupModal({
             {pending
               ? 'Moving…'
               : target.length === N
-              ? `Move ${N} seats here →`
-              : 'Pick a spot above'}
+              ? `Move ${N} ${N === 1 ? 'seat' : 'seats'} here →`
+              : `Select ${target.length}/${N} seats`}
           </button>
         </div>
       </div>
