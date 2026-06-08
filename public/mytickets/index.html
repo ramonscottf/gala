@@ -104,6 +104,16 @@
   .restart{display:block;width:100%;text-align:center;margin-top:18px;background:transparent;border:0;color:var(--subtle);font-family:inherit;font-size:13.5px;cursor:pointer;text-decoration:underline;}
   .foot{text-align:center;margin-top:26px;color:var(--subtle);font-size:12px;line-height:1.6;}
   .foot a{color:var(--muted);text-decoration:underline;}
+
+  /* Prominent Booker box — separate card under the lookup. Functional only,
+     no entrance animation. */
+  .bookerbox{margin-top:14px;background:linear-gradient(180deg,rgba(98,200,255,.10),rgba(77,84,179,.12));border:1px solid rgba(98,200,255,.30);border-radius:18px;padding:20px;box-shadow:var(--shadow);}
+  .bk-row{display:flex;gap:13px;align-items:flex-start;margin-bottom:14px;}
+  .bk-ic{font-size:26px;line-height:1.1;flex:0 0 auto;}
+  .bk-h{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:20px;line-height:1.1;margin-bottom:5px;}
+  .bk-p{color:var(--muted);font-size:13.5px;line-height:1.5;}
+  .bk-btn{background:var(--indigo);}
+  .bk-btn:hover{filter:brightness(1.08);}
 </style>
 </head>
 <body>
@@ -137,10 +147,21 @@
       <div class="status" id="status" role="status" aria-live="polite"></div>
     </div>
 
+    <div class="bookerbox" id="bookerBox">
+      <div class="bk-row">
+        <div class="bk-ic">💬</div>
+        <div>
+          <div class="bk-h">Talk to Booker</div>
+          <div class="bk-p">Ask Booker to find your tickets, explain the night, or — once you open your private link — <strong>move your seats for you</strong>. No forms, just ask.</div>
+        </div>
+      </div>
+      <button type="button" class="submit bk-btn" id="openBooker">Chat with Booker</button>
+    </div>
+
     <div id="results"></div>
 
     <div class="foot">
-      Can't find your seats? Email <a href="mailto:smiggin@dsdmail.net">smiggin@dsdmail.net</a><br>
+      Questions or trouble? Text or call Scott — <a href="tel:+18018106642">801-810-6642</a><br>
       Wednesday, June 10, 2026 · Megaplex at Legacy Crossing, Centerville
     </div>
   </div>
@@ -237,7 +258,7 @@
         + '. Switch to <strong>By email</strong> and enter that address.</p></div>';
     }
 
-    html += '<p style="text-align:center;color:var(--muted);font-size:13px;margin:16px 4px 2px;line-height:1.5;">Questions about the night? Tap <strong>Booker</strong> (bottom-right) — it knows your seats, movie, and dinner. ↘</p>';
+    html += '<p style="text-align:center;color:var(--muted);font-size:13px;margin:16px 4px 2px;line-height:1.5;">Need to move seats or have a question? Tap <strong>Chat with Booker</strong> above — he knows your seats, movie, and dinner.</p>';
     html += '<button class="restart" id="restart">← Look up a different ticket</button>';
     els.results.innerHTML = html;
     els.results.style.display = 'block';
@@ -347,6 +368,18 @@
   });
 
   setMode('email');
+
+  // Prominent "Chat with Booker" box → open the deferred chat widget. The
+  // widget exposes window.GalaChat.open() once loaded; poll briefly in case
+  // the user taps before the deferred script finishes.
+  var openBookerBtn = document.getElementById('openBooker');
+  if (openBookerBtn) openBookerBtn.addEventListener('click', function(){
+    var tries = 0;
+    (function go(){
+      if (window.GalaChat && typeof window.GalaChat.open === 'function') { window.GalaChat.open(); return; }
+      if (tries++ < 25) setTimeout(go, 120);
+    })();
+  });
 })();
 </script>
 <script src="/assets/chat-widget.js" defer></script>

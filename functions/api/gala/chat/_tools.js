@@ -57,11 +57,49 @@ export const TOOL_DEFINITIONS = [
   {
     name: 'get_portal_link',
     description:
-      "Get the URL of the user's booking portal so they can make changes themselves (add/remove seats, change a movie, update dinner choices). Use this whenever a user wants to actually CHANGE something — Booker is read-only and doesn't make changes directly. Always include this link when the user has a request that needs the portal.",
+      "Get the URL of the user's booking portal so they can do things Booker can't do directly — ADD or REMOVE seats, change which MOVIE they're seeing, or update DINNER choices. (Booker CAN move/swap a guest's existing seats himself via move_my_seat; everything else goes through the portal.) Use this whenever a user wants to add/remove a seat, switch movies, or change dinner.",
     input_schema: {
       type: 'object',
       properties: {},
       required: [],
+    },
+  },
+  {
+    name: 'move_my_seat',
+    description:
+      "Move ONE of THIS user's own seats to a different spot in the SAME theater and SAME showing — either into an empty seat, or by swapping it with ANOTHER seat that also belongs to this same booking (to reorder their own party). Use this when the user wants to sit somewhere else or sit their group together: 'move us to row F', 'put my wife next to me', 'can we scoot down two seats', 'swap my seat with my son's'.\n\nWORKFLOW: ALWAYS call get_my_booking first to get the exact theater, showing, row, and seat numbers of their seats — never guess coordinates. To land in an empty seat, use check_showing_availability or ask the user which open seat they want.\n\nSTRICT RULES — the system enforces every one of these and will REJECT violations, so don't promise anything outside them:\n- You can ONLY move a seat that belongs to THIS user's booking. You can never move someone else's seat.\n- The destination must be EMPTY, or another seat that ALSO belongs to this booking (a swap within their own group). You can never move into or swap with a stranger's seat.\n- You CANNOT add seats, remove/release seats, or change how many seats they have. Moves only.\n- You CANNOT change their movie, theater, or showing. A move stays in the same theater and showing.\n- For adding/removing seats, changing movie, or changing dinner, use get_portal_link instead — that's not a move.\n\nIf there's any ambiguity about which seat or where, confirm the exact from→to with the user before calling. After a successful move, tell them their new seat.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        theater_id: {
+          type: 'integer',
+          description: 'The theater/auditorium number, matching the theater of the seat being moved (from get_my_booking).',
+        },
+        showing_number: {
+          type: 'integer',
+          enum: [1, 2],
+          description: '1 = early (4:30 PM), 2 = late (7:15 PM). Must match the showing of the seat being moved.',
+        },
+        from: {
+          type: 'object',
+          description: "The user's own seat to move.",
+          properties: {
+            row_label: { type: 'string', description: "Row letter, e.g. 'F'." },
+            seat_num: { type: 'string', description: "Seat number, e.g. '12'." },
+          },
+          required: ['row_label', 'seat_num'],
+        },
+        to: {
+          type: 'object',
+          description: 'The destination seat in the SAME theater and showing — empty, or another seat in this same booking (for a swap).',
+          properties: {
+            row_label: { type: 'string', description: "Row letter, e.g. 'F'." },
+            seat_num: { type: 'string', description: "Seat number, e.g. '14'." },
+          },
+          required: ['row_label', 'seat_num'],
+        },
+      },
+      required: ['theater_id', 'showing_number', 'from', 'to'],
     },
   },
 ];
@@ -249,7 +287,7 @@ async function bookingResult(env, sponsor) {
     company: sponsor.company,
     has_seats: showings.length > 0,
     showings,
-    note: 'READ-ONLY. To change anything, the guest taps "Email me my portal link" on this page or emails Sherry (smiggin@dsdmail.net). Do not output a portal link or token.',
+    note: 'READ-ONLY. To change anything, the guest taps "Email me my portal link" on this page — that sends a private link to the email on file, and on that page Booker can actually move their seats for them. For any other help, text or call Scott at 801-810-6642. Do not output a portal link or token.',
   };
 }
 
@@ -269,6 +307,8 @@ export async function dispatchTool(env, tokenContext, name, input) {
       return await checkShowingAvailability(env, input.showing_number);
     case 'get_portal_link':
       return getPortalLink(tokenContext);
+    case 'move_my_seat':
+      return await moveMySeat(env, tokenContext, input);
     default:
       return { error: `Unknown tool: ${name}` };
   }
@@ -461,4 +501,191 @@ function getPortalLink(tokenContext) {
     url: `https://gala.daviskids.org/sponsor/${token}`,
     label: 'Open my booking page',
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// move_my_seat  (WRITE — token/concierge mode only)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// The ONLY write Booker can perform. Bulletproof by construction: every rule is
+// enforced here in code/SQL, never trusted to the model.
+//
+//   • Ownership scope is derived from the resolved token — a SPONSOR owns seats
+//     by sponsor_id, a DELEGATE by delegation_id. The model never supplies it.
+//   • The `from` seat MUST belong to this scope (else not_your_seat).
+//   • The `to` seat MUST be empty, OR also belong to this same scope (a swap
+//     within the user's own party). A stranger's seat is never touched.
+//   • No INSERT (can't add seats) and no DELETE (can't release seats).
+//   • Locked to the SAME theater + showing → movie assignment and the kitchen's
+//     per-showing dinner counts are never disturbed.
+//   • All four composite-key columns are bound on every write (composite-key-bug
+//     discipline); swap uses the same park-and-place as /admin/move-seat.
+//   • Best-effort audit on every successful change.
+async function moveMySeat(env, tokenContext, input) {
+  if (!tokenContext) {
+    return {
+      ok: false,
+      error: 'no_token',
+      message:
+        "I can only move seats on your own private booking page (the secure link from your email). I can't change anything from the public lookup page.",
+    };
+  }
+
+  let scopeCol, scopeId, ownerName;
+  if (tokenContext.kind === 'sponsor') {
+    scopeCol = 'sponsor_id';
+    scopeId = tokenContext.record.id;
+    ownerName = tokenContext.record.company;
+  } else if (tokenContext.kind === 'delegation') {
+    scopeCol = 'delegation_id';
+    scopeId = tokenContext.record.id;
+    ownerName = tokenContext.record.delegate_name;
+  } else {
+    return { ok: false, error: 'unknown_kind' };
+  }
+
+  const t = Number(input?.theater_id);
+  const sh = Number(input?.showing_number);
+  const fr = String(input?.from?.row_label || '').trim();
+  const fn = String(input?.from?.seat_num || '').trim();
+  const tr = String(input?.to?.row_label || '').trim();
+  const tn = String(input?.to?.seat_num || '').trim();
+
+  if (!t || (sh !== 1 && sh !== 2) || !fr || !fn || !tr || !tn) {
+    return {
+      ok: false,
+      error: 'bad_input',
+      message: 'I need the theater, showing, and both the from-seat and to-seat. Let me pull up your booking first.',
+    };
+  }
+  if (fr === tr && fn === tn) {
+    return { ok: false, error: 'same_seat', message: "That's already the seat you're in — nothing to move." };
+  }
+
+  // Source seat by exact coordinate.
+  const src = await env.GALA_DB.prepare(
+    `SELECT id, sponsor_id, delegation_id, guest_name, dinner_choice
+       FROM seat_assignments
+      WHERE theater_id = ? AND showing_number = ? AND row_label = ? AND seat_num = ?
+      LIMIT 1`
+  ).bind(t, sh, fr, fn).first();
+  if (!src) {
+    return { ok: false, error: 'from_empty', message: `Seat ${fr}${fn} is empty — let me re-check your booking so I have the right seat.` };
+  }
+
+  // OWNERSHIP — the source seat must belong to THIS booking.
+  if (String(src[scopeCol] ?? '') !== String(scopeId)) {
+    return {
+      ok: false,
+      error: 'not_your_seat',
+      message: `Seat ${fr}${fn} isn't part of your booking, so I can't move it. I can only move your own seats.`,
+    };
+  }
+
+  // Destination occupant (if any).
+  const dst = await env.GALA_DB.prepare(
+    `SELECT id, sponsor_id, delegation_id, guest_name
+       FROM seat_assignments
+      WHERE theater_id = ? AND showing_number = ? AND row_label = ? AND seat_num = ?
+      LIMIT 1`
+  ).bind(t, sh, tr, tn).first();
+
+  if (!dst) {
+    // ── MOVE into an open seat ──
+    const held = await env.GALA_DB.prepare(
+      `SELECT 1 FROM seat_holds
+        WHERE theater_id = ? AND showing_number = ? AND row_label = ? AND seat_num = ?
+          AND expires_at > datetime('now') LIMIT 1`
+    ).bind(t, sh, tr, tn).first();
+    if (held) {
+      return { ok: false, error: 'held', message: `Seat ${tr}${tn} is being picked by someone right now — try another open seat.` };
+    }
+
+    // Re-assert ownership + exact source coords in the WHERE so a concurrent
+    // change can't let this write land on the wrong row.
+    const res = await env.GALA_DB.prepare(
+      `UPDATE seat_assignments
+          SET row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move'
+        WHERE id = ? AND ${scopeCol} = ?
+          AND theater_id = ? AND showing_number = ? AND row_label = ? AND seat_num = ?`
+    ).bind(tr, tn, src.id, scopeId, t, sh, fr, fn).run();
+    if ((res.meta?.changes || 0) === 0) {
+      return { ok: false, error: 'move_failed', message: 'That seat just changed — let me re-check your booking and try again.' };
+    }
+
+    await logBookerMove(env, {
+      sponsor_id: src.sponsor_id,
+      action: 'booker_move_seat',
+      detail: { scope: scopeCol, scope_id: scopeId, theater_id: t, showing_number: sh, from: `${fr}${fn}`, to: `${tr}${tn}`, guest: src.guest_name, owner: ownerName },
+    });
+    return {
+      ok: true,
+      kind: 'move',
+      from: `${fr}${fn}`,
+      to: `${tr}${tn}`,
+      guest_name: src.guest_name,
+      message: `Moved ${src.guest_name || 'your seat'} from ${fr}${fn} to ${tr}${tn}.`,
+    };
+  }
+
+  // Destination is occupied — OWNERSHIP: it must be one of THIS booking's own
+  // seats to allow a swap. Never swap with a stranger.
+  if (String(dst[scopeCol] ?? '') !== String(scopeId)) {
+    return {
+      ok: false,
+      error: 'dest_taken',
+      message: `Seat ${tr}${tn} is taken by another guest, so I can't move you there. Pick an empty seat, or swap with one of your own seats.`,
+    };
+  }
+
+  // ── SWAP two of the user's own seats ── park-and-place to dodge
+  // UNIQUE(theater,showing,row,seat); both stay in the same theater/showing.
+  const PARK_ROW = '__BKSWAP__';
+  try {
+    await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ? WHERE id = ?`)
+      .bind(PARK_ROW, `${fr}${fn}`, src.id).run();
+    await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move' WHERE id = ?`)
+      .bind(fr, fn, dst.id).run();
+    await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move' WHERE id = ?`)
+      .bind(tr, tn, src.id).run();
+  } catch (e) {
+    // Best-effort un-park so we never strand the row.
+    await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ? WHERE id = ? AND row_label = ?`)
+      .bind(fr, fn, src.id, PARK_ROW).run().catch(() => {});
+    return { ok: false, error: 'swap_failed', message: 'That swap hit a snag — let me re-check those two seats.' };
+  }
+
+  await logBookerMove(env, {
+    sponsor_id: src.sponsor_id,
+    action: 'booker_swap_seat',
+    detail: { scope: scopeCol, scope_id: scopeId, theater_id: t, showing_number: sh, a: `${fr}${fn}`, b: `${tr}${tn}`, guest_a: src.guest_name, guest_b: dst.guest_name, owner: ownerName },
+  });
+  return {
+    ok: true,
+    kind: 'swap',
+    a: `${fr}${fn}`,
+    b: `${tr}${tn}`,
+    guest_a: src.guest_name,
+    guest_b: dst.guest_name,
+    message: `Swapped ${fr}${fn} and ${tr}${tn}.`,
+  };
+}
+
+// Best-effort audit. Tries audit_log (used by /admin/move-seats) first, then
+// sponsor_actions_log (used by /admin/move-seat) — different envs have one or
+// the other. Never throws.
+async function logBookerMove(env, p) {
+  try {
+    await env.GALA_DB.prepare(
+      `INSERT INTO audit_log (action, entity_type, entity_id, details, performed_by, performed_at)
+       VALUES (?, 'seat', ?, ?, 'booker-move', datetime('now'))`
+    ).bind(p.action, p.sponsor_id ?? null, JSON.stringify(p.detail || {})).run();
+    return;
+  } catch (_) { /* fall through */ }
+  try {
+    await env.GALA_DB.prepare(
+      `INSERT INTO sponsor_actions_log (sponsor_id, action, detail, created_at)
+       VALUES (?, ?, ?, datetime('now'))`
+    ).bind(p.sponsor_id ?? null, p.action, JSON.stringify(p.detail || {})).run();
+  } catch (__) { /* no-op if neither table exists */ }
 }

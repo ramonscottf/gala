@@ -12,7 +12,7 @@
 
 import {
   getOrCreateThread, recordMessage, loadFaqContext, loadShowtimes,
-  loadHistory, callHaiku, callSonnet, buildSystemPrompt, postToSlack, jsonResponse,
+  loadHistory, callHaiku, callSonnet, callOpus, buildSystemPrompt, postToSlack, jsonResponse,
 } from './_helpers.js';
 import { TOOL_DEFINITIONS, SELFSERVE_TOOL_DEFINITIONS, getTokenContext, getMyticketsContext, dispatchTool } from './_tools.js';
 
@@ -64,8 +64,10 @@ export async function onRequestPost({ request, env }) {
 
       let reply;
       if (tokenContext) {
-        // Concierge mode: Sonnet + full tools (token-scoped).
-        reply = await callSonnet(env, systemPrompt, history, TOOL_DEFINITIONS, dispatchTool, tokenContext);
+        // Concierge mode (verified portal): Opus + full tools (token-scoped),
+        // including the move_my_seat write tool. Opus drives the seat-move
+        // reasoning; safety is enforced in the tool, not the model.
+        reply = await callOpus(env, systemPrompt, history, TOOL_DEFINITIONS, dispatchTool, tokenContext);
       } else if (selfserve) {
         // Self-serve My Tickets concierge: Sonnet + lookup_booking (no token).
         reply = await callSonnet(env, systemPrompt, history, SELFSERVE_TOOL_DEFINITIONS, dispatchTool, null);
@@ -89,7 +91,7 @@ export async function onRequestPost({ request, env }) {
       });
     } catch (err) {
       console.error('AI call failed:', err);
-      const fallback = "I'm having a little trouble thinking right now — try again in a moment, or email Sherry at smiggin@dsdmail.net if it's urgent.";
+      const fallback = "I'm having a little trouble thinking right now — try again in a moment, or text Scott at 801-810-6642 if it's urgent.";
       await recordMessage(env, thread.id, 'ai', fallback);
       return jsonResponse({
         ok: true,
@@ -103,7 +105,7 @@ export async function onRequestPost({ request, env }) {
   // ----- LIVE MODE -----
   const channelId = env.SLACK_HELPLINE_CHANNEL;
   if (!channelId || !env.SLACK_BOT_TOKEN) {
-    const msg = "Live Help isn't connected yet — please email smiggin@dsdmail.net and we'll get back to you. Sorry about that!";
+    const msg = "Live Help isn't connected yet — please text or call Scott at 801-810-6642 and he'll get back to you. Sorry about that!";
     await recordMessage(env, thread.id, 'system', msg);
     return jsonResponse({
       ok: true,
@@ -152,7 +154,7 @@ export async function onRequestPost({ request, env }) {
     });
   } catch (err) {
     console.error('Slack post failed:', err);
-    const msg = "I couldn't send that to the team just now. Please email smiggin@dsdmail.net or try again.";
+    const msg = "I couldn't send that to the team just now. Please text Scott at 801-810-6642 or try again.";
     await recordMessage(env, thread.id, 'system', msg);
     return jsonResponse({
       ok: false,

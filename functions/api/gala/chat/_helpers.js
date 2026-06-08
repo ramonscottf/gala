@@ -240,7 +240,7 @@ export async function callHaiku(env, systemPrompt, history) {
 //   tool_calls is the names of tools the model invoked, for logging.
 const MAX_TOOL_ITERATIONS = 5;
 
-export async function callSonnet(env, systemPrompt, history, tools, dispatchTool, tokenContext) {
+export async function callSonnet(env, systemPrompt, history, tools, dispatchTool, tokenContext, model = 'claude-sonnet-4-5') {
   const messages = history.map(m => ({
     role: m.sender === 'user' ? 'user' : 'assistant',
     content: m.content,
@@ -250,7 +250,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
   const toolNamesUsed = [];
   let totalIn = 0;
   let totalOut = 0;
-  let lastModel = 'claude-sonnet-4-5';
+  let lastModel = model;
 
   for (let iter = 0; iter < MAX_TOOL_ITERATIONS; iter++) {
     const resp = await fetch(ANTHROPIC_PROXY_URL, {
@@ -260,7 +260,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model,
         max_tokens: 1024,
         system: systemPrompt,
         messages,
@@ -269,7 +269,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
     });
     if (!resp.ok) {
       const errText = await resp.text();
-      throw new Error(`Sonnet error ${resp.status}: ${errText}`);
+      throw new Error(`Tool-model error ${resp.status}: ${errText}`);
     }
     const data = await resp.json();
     if (data.usage) {
@@ -325,6 +325,15 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
   };
 }
 
+// callOpus — concierge mode on a verified portal (token present). Same tool
+// loop as callSonnet, but Opus 4.5 drives it: this is where the write tool
+// (move_my_seat) lives, so we spend the extra reasoning on getting the exact
+// seat coordinates and the from→to right. Safety doesn't depend on the model
+// (the tool enforces every rule) — Opus just makes it smoother in practice.
+export function callOpus(env, systemPrompt, history, tools, dispatchTool, tokenContext) {
+  return callSonnet(env, systemPrompt, history, tools, dispatchTool, tokenContext, 'claude-opus-4-5-20251101');
+}
+
 export function buildSystemPrompt(faqText, showtimesText, tokenContext = null, myticketsContext = null, liveHelp = false, selfserve = false) {
   // Build the optional "WHO YOU'RE TALKING TO" identity block when the user
   // is on a sponsor portal page (token resolved). When this is present, the
@@ -359,8 +368,8 @@ The vibe of the event you're describing:
 
 Rules:
 - Only answer from the FAQ and showtimes data below. Do not invent specific prices, ticket counts, or policies you can't see.
-- If asked about pricing specifics, refunds, sponsor details, accessibility specifics, or anything personal that isn't in the FAQ, suggest the user email Sherry Miggin directly at smiggin@dsdmail.net.
-- The only names you should use are: Sherry Miggin (Executive Director, smiggin@dsdmail.net) and Scott (handles tech/seating questions).
+- If asked about pricing specifics, refunds, sponsor details, accessibility specifics, or anything personal that isn't in the FAQ, let them know they can text or call Scott directly at 801-810-6642 — he handles seating, tickets, and anything that needs a real person.
+- The person to contact for help is ALWAYS Scott — text or call 801-810-6642. Do NOT route people to Sherry or any other staff member, and do not hand out other people's emails; send everything that needs a human to Scott.
 - The Davis Education Foundation supports Davis School District in Utah — unrelated to similarly named foundations elsewhere.
 ${liveHelpLine}
 ${identityBlock}${myticketsBlock}${selfserveBlock}
@@ -372,7 +381,7 @@ ${faqText}
 
 ${showtimesText}
 
-When in doubt, point people to Sherry's email or just answer what you can and let them know to reach out for the rest.`;
+When in doubt, give people Scott's number — text or call 801-810-6642 — or just answer what you can and let them know to reach out to Scott for the rest.`;
 }
 
 // Builds the identity + tool-use guidance block that gets injected into the
@@ -404,7 +413,10 @@ Tool usage guidance:
 - "What did I book?" / "Where are my seats?" / "Who's in my group?" → \`get_my_booking\`
 - "What movies are playing?" / "What are the options?" → \`list_movies\`
 - "Are there seats left in the late showing?" → \`check_showing_availability\`
-- "I want to change something" / "Can you switch me to..." → call \`get_portal_link\` and tell them they can make changes themselves on their booking page (Booker is read-only — writes go through the portal)
+- "Move us to row F" / "Put my wife next to me" / "Can we scoot over" / "Swap my seat with my son's" → this is a MOVE you can do yourself. First \`get_my_booking\` to get exact theater/showing/row/seat, find an open destination (or the user's other seat to swap with), then \`move_my_seat\`. You can ONLY move this user's own seats, only into an empty seat or a swap within their own party, and only within the same theater + showing. Never another guest's seat, never adding or removing seats.
+- "Add a seat" / "Drop a seat" / "Switch our movie" / "Change my dinner" → that's NOT a move. Call \`get_portal_link\` and point them to do it on their booking page.
+
+You CAN move/swap this user's own seats directly with \`move_my_seat\` — so don't tell them you're "read-only" or that they have to do moves themselves. For anything you genuinely can't do, the contact is Scott (text/call 801-810-6642).
 
 Do not invent attendee names, theater numbers, or seat assignments. If a tool returns no data or an error, say you couldn't find their booking and suggest they double-check the link from their email.
 `;
@@ -437,8 +449,9 @@ You're chatting with **${who}** on their "My Tickets" page. Here is their CONFIR
 ${body}
 
 Rules for this booking data:
-- This is READ-ONLY. You can SEE their booking but you CANNOT change anything. Never offer to move seats, switch movies, or change dinner, and never imply you did.
-- If they want to make a change, tell them to tap the "Email me my portal link" button on this page (changes happen on their own private portal), or email Sherry at smiggin@dsdmail.net. Do NOT output a portal link or token yourself — only that button can send it.
+- On THIS public page you are READ-ONLY — you can SEE their booking but cannot change it here, because you can't confirm it's really them. Never imply you changed something here.
+- If they want to MOVE seats or make a change: tell them to tap the "Email me my portal link" button on this page. That sends a private link to the email on file — and once they open that link and chat with you there, you CAN move their seats for them. (So frame it as "tap that button, open the link, and I'll move your seats for you," not a flat no.)
+- For anything else, or if they're stuck, give them Scott's number: text or call 801-810-6642. Do NOT output a portal link or token yourself — only that button can send it, and never hand out other people's emails.
 - For wayfinding ("how do I get to my auditorium?"), give general guidance — follow the Megaplex auditorium-number signage from the main lobby, or ask a volunteer — don't invent a specific route.
 - Use only the seats/movie/times above plus the FAQ. Don't invent seat numbers, theaters, or showtimes.
 - When you state their movie time or dinner time, use the EXACT time shown in their booking above. Their dinner time is the one listed with their showing — do not estimate a different window from general schedule info.
@@ -468,9 +481,10 @@ People open this page to find their gala tickets and see their seats. You have a
 - If it finds nothing, ask them to try a shorter company name or their email.
 - Once found, show their theater/auditorium, movie, exact showtime, dinner choice, and seat numbers clearly and warmly. Use only what the tool returns — don't invent seats, theaters, or times.
 ${known}
-Read-only rules:
-- You can SEE bookings but CANNOT change them. Never offer to move seats, switch movies, or edit dinner, and never imply you did.
-- To make a change, tell them to tap the "Email me my portal link" button on this page, or email Sherry at smiggin@dsdmail.net. Never output a portal link or token yourself.
+Read-only rules (this public page only):
+- Here on the public page you can SEE bookings but can't change them — you can't confirm it's really them. Never imply you changed something here.
+- If they want to MOVE seats or make a change: tell them to tap the "Email me my portal link" button on this page. It sends a private link to the email on file, and once they open that link and chat with you there, you CAN move their seats for them. Frame it as "tap that button, open your link, and I'll move your seats for you" — not a flat no.
+- For anything else or if they're stuck, give them Scott's number: text or call 801-810-6642. Never output a portal link or token yourself, and never hand out anyone's email.
 `;
 }
 

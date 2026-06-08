@@ -662,7 +662,7 @@
     } catch (e) { /* swallow */ }
   }
 
-  btn.addEventListener('click', () => {
+  function openPanel() {
     if (hintShown) dismissHint();
     if (!state.open) {
       setBookerExpression('big-smile');  // greet on open
@@ -671,12 +671,25 @@
       // stays the card. User can toggle either way via the header button.
       if (state.fullscreen === null) state.fullscreen = isMobileView();
       applyFullscreen();
+      state.open = true;
+      panel.style.display = 'flex';
+      dot.classList.remove('gx-show');
+      syncScrollLock();
     }
-    state.open = !state.open;
-    panel.style.display = state.open ? 'flex' : 'none';
-    if (state.open) { dot.classList.remove('gx-show'); syncScrollLock(); }
-    else unlockScroll();
-  });
+  }
+  function togglePanel() {
+    if (state.open) {
+      state.open = false;
+      panel.style.display = 'none';
+      unlockScroll();
+    } else {
+      openPanel();
+    }
+  }
+  btn.addEventListener('click', togglePanel);
+  // Let on-page buttons (e.g. the prominent "Chat with Booker" card on
+  // /mytickets) open Booker directly. Idempotent — safe to call when open.
+  window.GalaChat.open = openPanel;
   $('.gx-close').addEventListener('click', () => {
     state.open = false; panel.style.display = 'none';
     unlockScroll();
