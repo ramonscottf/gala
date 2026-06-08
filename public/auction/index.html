@@ -281,7 +281,7 @@
   @keyframes marq-left  { from { transform: translateX(0); }    to { transform: translateX(-50%); } }
   @keyframes marq-right { from { transform: translateX(-50%); } to { transform: translateX(0); } }
   @media (prefers-reduced-motion: reduce) { .spon-marquee .track { animation: none; justify-content: center; width: 100%; gap: 48px; flex-wrap: wrap; } }
-  /* ── Floating "Register for the Gala" FAB + registration modal ── */
+  /* ── Floating "Register for the Silent Auction" FAB + registration modal ── */
   .reg-fab { position: fixed; left: 22px; bottom: 22px; z-index: 1500; display: inline-flex; align-items: center; gap: 9px; padding: 14px 22px; border: 0; border-radius: 999px; cursor: pointer; font-family: inherit; font-weight: 800; font-size: 15px; letter-spacing: .01em; color: #fff; background: linear-gradient(95deg, var(--red), #883bb5 76%, var(--indigo)); box-shadow: 0 12px 30px rgba(215,40,70,.34); transition: transform .12s, box-shadow .12s; }
   .reg-fab:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(215,40,70,.42); }
   .reg-fab:active { transform: scale(.97); }
@@ -391,7 +391,7 @@
           <span><b id="meta-count">…</b>&nbsp;items in the catalog</span>
         </div>
         <div class="hero-actions">
-          <a class="hero-btn hero-btn--primary" href="/auction-registration">Register — it's free</a>
+          <a class="hero-btn hero-btn--primary" href="/auction-registration">Register for the silent auction</a>
           <a class="hero-btn hero-btn--ghost" href="https://secure.qgiv.com/event/def2026/item/634103" data-niner-open>🏈 49ers Drawing · $100</a>
         </div>
         <div class="hero-sponsors">
@@ -692,7 +692,7 @@ document.getElementById("sort").addEventListener("change", e => { sortMode=e.tar
 </script>
 <button class="reg-fab" id="reg-fab" type="button" aria-haspopup="dialog">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4z"/><path d="M13 5v14"/></svg>
-  <span class="full">Register for the Gala</span><span class="short">Register</span>
+  <span class="full">Register for the Silent Auction</span><span class="short">Register</span>
 </button>
 
 <div class="reg-modal-back" id="reg-modal" role="dialog" aria-modal="true" aria-labelledby="reg-modal-title">
@@ -702,14 +702,14 @@ document.getElementById("sort").addEventListener("change", e => { sortMode=e.tar
     <div class="reg-step" data-step="register">
       <div class="reg-modal-head">
         <span class="kick">Step 1 of 2</span>
-        <h3 id="reg-modal-title">Register for the Gala</h3>
+        <h3 id="reg-modal-title">Register for the Silent Auction</h3>
         <p>Free, and it only takes a minute — then grab the app to bid.</p>
       </div>
       <div class="reg-app-top">
         <span class="reg-app-top-lbl">Already registered? Get the free bidding app:</span>
         <div class="store-row store-row--sm" id="reg-store-row-top"></div>
       </div>
-      <div class="reg-note"><b>Heads up:</b> Below, &ldquo;Choose Your Tickets&rdquo; is your <b>free auction registration</b> &mdash; <b>not</b> a Megaplex movie ticket. Leave the quantity at <b>1</b>, enter your info, and tap <b>Next</b>.</div>
+      <div class="reg-note"><b>Heads up:</b> Givi runs this form, so it says &ldquo;tickets&rdquo; and &ldquo;checkout&rdquo; &mdash; but you&rsquo;re <b>not</b> buying a movie ticket. Your seats and meals are already set. This is the free step that registers you for the silent auction and turns on bidding. Leave the quantity at <b>1</b>, enter your info, and tap <b>Next</b>.</div>
       <div class="reg-embed-wrap">
         <iframe class="reg-embed" id="reg-iframe" data-src="https://secure.qgiv.com/for/daviseducationfoundationauction/event/embed/?preventRefreshOnClose=true" title="Register for the 2026 DEF Gala Silent Auction" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </div>
