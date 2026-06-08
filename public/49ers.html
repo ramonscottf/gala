@@ -62,7 +62,7 @@
     /* ── HERO ── */
     .hero {
       position: relative;
-      min-height: 92vh;
+      min-height: 80vh;
       max-height: 900px;
       overflow: hidden;
       background: #1a0303;
@@ -70,7 +70,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 80px 24px;
+      padding: 60px 24px;
     }
     .hero-bg {
       position: absolute; inset: 0;
@@ -166,8 +166,13 @@
       letter-spacing: 0.04em; text-transform: uppercase;
     }
     @media (max-width: 720px) {
-      .stats-grid { grid-template-columns: 1fr; }
-      .stats { transform: translateY(-30%); }
+      .hero { min-height: 68vh; padding: 48px 20px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .stats-grid .stat:first-child { grid-column: 1 / -1; }
+      .stat { padding: 18px 14px; }
+      .stat-num { font-size: 42px; margin-bottom: 6px; }
+      .stat-label { font-size: 11px; letter-spacing: 0.02em; }
+      .stats { transform: translateY(-24%); }
     }
 
     /* ── PRIZE ── */
@@ -771,7 +776,7 @@
       <br>Getaway
       <span class="accent">Six tickets · $2,000 travel card</span>
     </h1>
-    <p class="lede">A <strong>$100 donation</strong> to school lunch enters you to win the <strong>trip of a lifetime</strong> — six lower-bowl tickets to a 2026–2027 49ers home game of your choice, plus a $2,000 travel card.</p>
+    <p class="lede">A <strong>$100 donation</strong> to school lunch enters you to win the <strong>trip of a lifetime</strong> — six lower-bowl tickets to your choice of three 2026–2027 49ers home games, plus a $2,000 travel card.</p>
     <div class="hero-actions">
       <a href="https://secure.qgiv.com/event/def2026/item/634103" class="btn-primary" data-qgiv>Enter to win</a>
       <a href="#prize" class="btn-secondary">See the prize</a>
@@ -808,7 +813,7 @@
     <div class="prize-info">
       <p class="label">The Prize</p>
       <h2>The trip of a <span class="gold">lifetime</span>.</h2>
-      <p>One winner takes a group of six to a 2026–2027 San Francisco 49ers regular-season home game of their choice. <strong>Lower bowl, 19th row</strong> — close enough to hear the snap counts.</p>
+      <p>One winner takes a group of six to a 2026–2027 San Francisco 49ers regular-season home game — your <strong>choice between three different home games</strong>, with weeknight options on the table. <strong>Lower bowl, 19th row</strong> — close enough to hear the snap counts.</p>
       <p>Plus a <strong>$2,000 travel and expense card</strong> to handle flights, hotel, dinner, and everything in between.</p>
       <div class="prize-features">
         <div class="feature">
@@ -821,7 +826,7 @@
         </div>
         <div class="feature">
           <div class="feature-icon">🏟</div>
-          <div class="feature-text"><strong>Your pick</strong>Any home game, your choice</div>
+          <div class="feature-text"><strong>Your pick</strong>3 home games · weeknight options</div>
         </div>
         <div class="feature">
           <div class="feature-icon">🏆</div>
