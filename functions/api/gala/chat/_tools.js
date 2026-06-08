@@ -67,7 +67,7 @@ export const TOOL_DEFINITIONS = [
   {
     name: 'move_my_seat',
     description:
-      "Move ONE of THIS user's own seats to a different spot in the SAME theater and SAME showing — either into an empty seat, or by swapping it with ANOTHER seat that also belongs to this same booking (to reorder their own party). Use this when the user wants to sit somewhere else or sit their group together: 'move us to row F', 'put my wife next to me', 'can we scoot down two seats', 'swap my seat with my son's'.\n\nWORKFLOW: ALWAYS call get_my_booking first to get the exact theater, showing, row, and seat numbers of their seats — never guess coordinates. To land in an empty seat, use check_showing_availability or ask the user which open seat they want.\n\nSTRICT RULES — the system enforces every one of these and will REJECT violations, so don't promise anything outside them:\n- You can ONLY move a seat that belongs to THIS user's booking. You can never move someone else's seat.\n- The destination must be EMPTY, or another seat that ALSO belongs to this booking (a swap within their own group). You can never move into or swap with a stranger's seat.\n- You CANNOT add seats, remove/release seats, or change how many seats they have. Moves only.\n- You CANNOT change their movie, theater, or showing. A move stays in the same theater and showing.\n- For adding/removing seats, changing movie, or changing dinner, use get_portal_link instead — that's not a move.\n\nIf there's any ambiguity about which seat or where, confirm the exact from→to with the user before calling. After a successful move, tell them their new seat.",
+      "Move ONE of THIS user's own seats — into an empty seat, or by swapping with ANOTHER seat in this same booking. The destination can be the SAME auditorium, or a DIFFERENT movie / auditorium / showtime. Use this when the user wants to sit elsewhere, sit their group together, OR switch movies: 'move us to row F', 'put my wife next to me', 'can we switch to Paddington', 'move us to Auditorium 1 at the same time'.\n\nWORKFLOW: ALWAYS call get_my_booking first to get the exact theater, showing, row, and seat numbers of their seats — never guess coordinates. To land in an empty seat, use check_showing_availability or ask which open seat they want. To switch movies, find the auditorium + showing for the desired movie (list_movies / check_showing_availability), confirm the exact destination seat with the user, then move once per seat.\n\nSTRICT RULES — the system enforces every one of these and will REJECT violations, so don't promise anything outside them:\n- You can ONLY move a seat that belongs to THIS user's booking. You can never move someone else's seat.\n- The destination must be EMPTY, or another seat that ALSO belongs to this booking (a swap within their own group). You can never move into or swap with a stranger's seat.\n- You CANNOT add seats, remove/release seats, or change how many seats they have. Moves only.\n- The destination must be a real auditorium that is actually showing a movie at that showtime.\n- For adding/removing seats or changing a dinner choice, use get_portal_link — that's not a move. (Changing MOVIES is now a move you CAN do.)\n\nIf there's any ambiguity about which seat or where, confirm the exact from→to with the user before calling. After a successful move, tell them their new seat.",
     input_schema: {
       type: 'object',
       properties: {
@@ -91,8 +91,10 @@ export const TOOL_DEFINITIONS = [
         },
         to: {
           type: 'object',
-          description: 'The destination seat in the SAME theater and showing — empty, or another seat in this same booking (for a swap).',
+          description: 'The destination seat. Include theater_id and/or showing_number ONLY when moving to a different auditorium/movie or a different showtime; omit them to stay in the same auditorium + showing as the from-seat. Must be empty, or another seat in this same booking (for a swap).',
           properties: {
+            theater_id: { type: 'integer', description: 'Destination auditorium number. Omit to keep the same auditorium; set it (to a different number) to switch movies/auditoriums.' },
+            showing_number: { type: 'integer', enum: [1, 2], description: 'Destination showing (1 = early 4:30 PM, 2 = late 7:15 PM). Omit to keep the same showtime.' },
             row_label: { type: 'string', description: "Row letter, e.g. 'F'." },
             seat_num: { type: 'string', description: "Seat number, e.g. '14'." },
           },
@@ -550,6 +552,13 @@ async function moveMySeat(env, tokenContext, input) {
   const fn = String(input?.from?.seat_num || '').trim();
   const tr = String(input?.to?.row_label || '').trim();
   const tn = String(input?.to?.seat_num || '').trim();
+  // Destination auditorium/showing default to the source's when omitted — so a
+  // simple within-auditorium move needs nothing extra on `to`, while a
+  // movie/auditorium/time change sets to.theater_id and/or to.showing_number.
+  const toT = Number(input?.to?.theater_id) || t;
+  const toSraw = Number(input?.to?.showing_number);
+  const toS = (toSraw === 1 || toSraw === 2) ? toSraw : sh;
+  const crossShowing = toT !== t || toS !== sh;
 
   if (!t || (sh !== 1 && sh !== 2) || !fr || !fn || !tr || !tn) {
     return {
@@ -558,8 +567,24 @@ async function moveMySeat(env, tokenContext, input) {
       message: 'I need the theater, showing, and both the from-seat and to-seat. Let me pull up your booking first.',
     };
   }
-  if (fr === tr && fn === tn) {
+  if (!crossShowing && fr === tr && fn === tn) {
     return { ok: false, error: 'same_seat', message: "That's already the seat you're in — nothing to move." };
+  }
+
+  // Cross-auditorium / cross-showing move: confirm the destination is a real
+  // active showing (an auditorium actually showing a movie at that time) before
+  // we relocate anyone into it.
+  if (crossShowing) {
+    const showOk = await env.GALA_DB.prepare(
+      `SELECT 1 FROM showtimes WHERE theater_id = ? AND showing_number = ? LIMIT 1`
+    ).bind(toT, toS).first();
+    if (!showOk) {
+      return {
+        ok: false,
+        error: 'no_such_showing',
+        message: `Auditorium ${toT} doesn't have a ${toS === 1 ? 'early (4:30 PM)' : 'late (7:15 PM)'} showing, so I can't move you there. Let me check what's actually playing.`,
+      };
+    }
   }
 
   // Source seat by exact coordinate.
@@ -582,13 +607,15 @@ async function moveMySeat(env, tokenContext, input) {
     };
   }
 
-  // Destination occupant (if any).
+  // Destination occupant (if any) — read in the DESTINATION auditorium/showing.
   const dst = await env.GALA_DB.prepare(
     `SELECT id, sponsor_id, delegation_id, guest_name
        FROM seat_assignments
       WHERE theater_id = ? AND showing_number = ? AND row_label = ? AND seat_num = ?
       LIMIT 1`
-  ).bind(t, sh, tr, tn).first();
+  ).bind(toT, toS, tr, tn).first();
+
+  const destLabel = crossShowing ? `Auditorium ${toT} seat ${tr}${tn}` : `${tr}${tn}`;
 
   if (!dst) {
     // ── MOVE into an open seat ──
@@ -596,19 +623,20 @@ async function moveMySeat(env, tokenContext, input) {
       `SELECT 1 FROM seat_holds
         WHERE theater_id = ? AND showing_number = ? AND row_label = ? AND seat_num = ?
           AND expires_at > datetime('now') LIMIT 1`
-    ).bind(t, sh, tr, tn).first();
+    ).bind(toT, toS, tr, tn).first();
     if (held) {
-      return { ok: false, error: 'held', message: `Seat ${tr}${tn} is being picked by someone right now — try another open seat.` };
+      return { ok: false, error: 'held', message: `Seat ${destLabel} is being picked by someone right now — try another open seat.` };
     }
 
-    // Re-assert ownership + exact source coords in the WHERE so a concurrent
-    // change can't let this write land on the wrong row.
+    // Full-coordinate write (theater + showing + row + seat). The dinner choice
+    // and ownership ride along untouched. WHERE re-asserts ownership + exact
+    // source coords so a concurrent change can't misfire.
     const res = await env.GALA_DB.prepare(
       `UPDATE seat_assignments
-          SET row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move'
+          SET theater_id = ?, showing_number = ?, row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move'
         WHERE id = ? AND ${scopeCol} = ?
           AND theater_id = ? AND showing_number = ? AND row_label = ? AND seat_num = ?`
-    ).bind(tr, tn, src.id, scopeId, t, sh, fr, fn).run();
+    ).bind(toT, toS, tr, tn, src.id, scopeId, t, sh, fr, fn).run();
     if ((res.meta?.changes || 0) === 0) {
       return { ok: false, error: 'move_failed', message: 'That seat just changed — let me re-check your booking and try again.' };
     }
@@ -616,15 +644,18 @@ async function moveMySeat(env, tokenContext, input) {
     await logBookerMove(env, {
       sponsor_id: src.sponsor_id,
       action: 'booker_move_seat',
-      detail: { scope: scopeCol, scope_id: scopeId, theater_id: t, showing_number: sh, from: `${fr}${fn}`, to: `${tr}${tn}`, guest: src.guest_name, owner: ownerName },
+      detail: { scope: scopeCol, scope_id: scopeId, from: `T${t}/S${sh} ${fr}${fn}`, to: `T${toT}/S${toS} ${tr}${tn}`, guest: src.guest_name, owner: ownerName, cross: crossShowing },
     });
     return {
       ok: true,
       kind: 'move',
       from: `${fr}${fn}`,
       to: `${tr}${tn}`,
+      to_theater_id: toT,
+      to_showing_number: toS,
+      changed_auditorium: crossShowing,
       guest_name: src.guest_name,
-      message: `Moved ${src.guest_name || 'your seat'} from ${fr}${fn} to ${tr}${tn}.`,
+      message: `Moved ${src.guest_name || 'your seat'} from ${fr}${fn} to ${destLabel}${crossShowing ? ` (${toS === 1 ? 'early 4:30 PM' : 'late 7:15 PM'} showing)` : ''}.`,
     };
   }
 
@@ -634,22 +665,24 @@ async function moveMySeat(env, tokenContext, input) {
     return {
       ok: false,
       error: 'dest_taken',
-      message: `Seat ${tr}${tn} is taken by another guest, so I can't move you there. Pick an empty seat, or swap with one of your own seats.`,
+      message: `Seat ${destLabel} is taken by another guest, so I can't move you there. Pick an empty seat, or swap with one of your own seats.`,
     };
   }
 
   // ── SWAP two of the user's own seats ── park-and-place to dodge
-  // UNIQUE(theater,showing,row,seat); both stay in the same theater/showing.
+  // UNIQUE(theater,showing,row,seat). Works within one auditorium or across
+  // auditoriums/showings; every write binds the full coordinate.
   const PARK_ROW = '__BKSWAP__';
   try {
     await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ? WHERE id = ?`)
       .bind(PARK_ROW, `${fr}${fn}`, src.id).run();
-    await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move' WHERE id = ?`)
-      .bind(fr, fn, dst.id).run();
-    await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move' WHERE id = ?`)
-      .bind(tr, tn, src.id).run();
+    await env.GALA_DB.prepare(`UPDATE seat_assignments SET theater_id = ?, showing_number = ?, row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move' WHERE id = ?`)
+      .bind(t, sh, fr, fn, dst.id).run();
+    await env.GALA_DB.prepare(`UPDATE seat_assignments SET theater_id = ?, showing_number = ?, row_label = ?, seat_num = ?, updated_at = datetime('now'), assigned_by = 'booker-move' WHERE id = ?`)
+      .bind(toT, toS, tr, tn, src.id).run();
   } catch (e) {
-    // Best-effort un-park so we never strand the row.
+    // Best-effort un-park so we never strand the row (theater/showing weren't
+    // changed during park, so only row/seat need restoring).
     await env.GALA_DB.prepare(`UPDATE seat_assignments SET row_label = ?, seat_num = ? WHERE id = ? AND row_label = ?`)
       .bind(fr, fn, src.id, PARK_ROW).run().catch(() => {});
     return { ok: false, error: 'swap_failed', message: 'That swap hit a snag — let me re-check those two seats.' };
@@ -658,7 +691,7 @@ async function moveMySeat(env, tokenContext, input) {
   await logBookerMove(env, {
     sponsor_id: src.sponsor_id,
     action: 'booker_swap_seat',
-    detail: { scope: scopeCol, scope_id: scopeId, theater_id: t, showing_number: sh, a: `${fr}${fn}`, b: `${tr}${tn}`, guest_a: src.guest_name, guest_b: dst.guest_name, owner: ownerName },
+    detail: { scope: scopeCol, scope_id: scopeId, a: `T${t}/S${sh} ${fr}${fn}`, b: `T${toT}/S${toS} ${tr}${tn}`, guest_a: src.guest_name, guest_b: dst.guest_name, owner: ownerName },
   });
   return {
     ok: true,
@@ -667,7 +700,7 @@ async function moveMySeat(env, tokenContext, input) {
     b: `${tr}${tn}`,
     guest_a: src.guest_name,
     guest_b: dst.guest_name,
-    message: `Swapped ${fr}${fn} and ${tr}${tn}.`,
+    message: `Swapped ${fr}${fn} and ${destLabel}.`,
   };
 }
 
