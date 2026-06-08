@@ -105,6 +105,7 @@ export function WickoPillNav({ token }) {
         </button>
         <ul id="p2-wpn-drawer" className={`wpn__links ${open ? 'is-open' : ''}`}>
           <li><a href="#p2-tickets" onClick={goTickets}>Tickets</a></li>
+          <li><a href="/auction-registration/" onClick={() => setOpen(false)}>Auction</a></li>
           <li><a href={`/${token}/faq`} onClick={goFaq}>FAQ</a></li>
           <li><a href={`/${token}/settings`} onClick={goSettings}>Settings</a></li>
         </ul>

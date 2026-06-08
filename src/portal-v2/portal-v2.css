@@ -4103,6 +4103,38 @@ body {
   color-scheme: dark;
 }
 
+/* "Already registered? grab the app" strip above the Qgiv embed.
+   Lots of guests open this only to check seats / download the app — give
+   them a one-tap path to the stores without filling the form again. */
+.p2-auction-already {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: #f4f6fb;
+  border-bottom: 1px solid #e6e9f2;
+}
+.p2-auction-already-txt {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0d1b3d;
+}
+.p2-auction-already-stores { display: inline-flex; gap: 8px; }
+.p2-auction-already-btn {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #0d1b3d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.p2-auction-already-btn:hover { background: #16285a; }
+
 .p2-auction-error {
   margin: 16px 22px 0;
 }

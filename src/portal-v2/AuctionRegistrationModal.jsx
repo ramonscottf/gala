@@ -286,6 +286,29 @@ export function AuctionRegistrationModal({
           />
         ) : (
           <div className="p2-auction-modal-body">
+            <div className="p2-auction-already">
+              <span className="p2-auction-already-txt">
+                Already registered? Just grab the app:
+              </span>
+              <span className="p2-auction-already-stores">
+                <a
+                  href={GIVI_IOS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p2-auction-already-btn"
+                >
+                  App Store
+                </a>
+                <a
+                  href={GIVI_ANDROID_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p2-auction-already-btn"
+                >
+                  Google Play
+                </a>
+              </span>
+            </div>
             {stage === 'error' && (
               <div className="p2-notice red p2-auction-error">
                 <p>{errorMsg}</p>
