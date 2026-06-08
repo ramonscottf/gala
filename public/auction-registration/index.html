@@ -65,7 +65,7 @@
 
   /* Embedded registration */
   .embed-wrap { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid var(--grey-200); border-radius: 22px; box-shadow: 0 20px 60px rgba(13,27,61,.12); overflow: hidden; }
-  .reg-embed { display: block; width: 100%; height: 1180px; border: 0; }
+  .reg-embed { display: block; width: 100%; height: 760px; border: 0; }
   .fallback { text-align: center; color: var(--grey-500); font-size: 14px; margin: 18px 0 0; }
   .fallback a { color: var(--red); font-weight: 700; text-decoration: none; }
   .reg-next { text-align: center; margin-top: 30px; }
@@ -99,7 +99,7 @@
     .hero { padding: 100px 20px 44px; }
     .step { padding: 46px 18px; }
     .step.alt { margin: 6px 8px 26px; border-radius: 22px; }
-    .reg-embed { height: 1320px; }
+    .reg-embed { height: 900px; }
     .btn { width: 100%; }
     .hero-cta { flex-direction: column; }
   }
@@ -155,14 +155,14 @@
       <span class="num">Step 1</span>
       <h2>Register for the Silent Auction</h2>
       <p>Sign up below — it takes a minute and it's <b>free</b>. One heads-up: the form is run by Givi, so it says &ldquo;tickets&rdquo; and &ldquo;checkout&rdquo; — but you're <b>not</b> buying a movie ticket. Your seats and meals are already set. This is the free step that registers you for the silent auction and switches on bidding. Leave the quantity at <b>1</b> and fill in your contact and payment info. <b>You can't bid until this is done.</b></p>
+      <div class="reg-next" style="margin-top:18px;">
+        <button class="btn primary" type="button" data-open-app>Already registered? Get the bidding app →</button>
+      </div>
     </div>
     <div class="embed-wrap">
       <iframe class="reg-embed" src="https://secure.qgiv.com/for/daviseducationfoundationauction/event/embed/?preventRefreshOnClose=true" title="Register for the 2026 DEF Gala Silent Auction" loading="lazy" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
     <p class="fallback">Form not loading? <a href="https://secure.qgiv.com/event/def2026/register/" target="_blank" rel="noopener">Open registration in a new tab →</a></p>
-    <div class="reg-next">
-      <button class="btn primary" type="button" data-open-app>I've registered — get the bidding app →</button>
-    </div>
   </section>
 
   <section class="step alt" id="getapp">
