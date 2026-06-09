@@ -106,21 +106,21 @@
       gateAccent: '#11194a',
     },
     neutral: {
-      headerBg: '#0a2540',
+      headerBg: 'linear-gradient(135deg, #0b1b3c 0%, #24508f 100%)',
       headerText: '#ffffff',
-      headerSub: 'rgba(255,255,255,0.7)',
+      headerSub: 'rgba(255,255,255,0.74)',
       panelBg: '#ffffff',
       bodyBg: '#f5f7fa',
-      userBg: '#0a2540',
+      userBg: '#0b1b3c',
       userText: '#ffffff',
       aiBg: '#ffffff',
       aiText: '#1a1f2e',
       aiBorder: '#e5e9f0',
-      sendBtn: '#0a2540',
-      sendBtnHover: '#11194a',
+      sendBtn: '#0b1b3c',
+      sendBtnHover: '#24508f',
       banner: '#eef2f7',
       bannerText: '#1a1f2e',
-      gateAccent: '#0a2540',
+      gateAccent: '#0b1b3c',
     },
   };
   function pickTheme() {
@@ -452,10 +452,34 @@
   function syncScrollLock() {
     if (state.open && state.fullscreen) lockScroll(); else unlockScroll();
   }
+  // Hard zoom-kill: a >=16px input stops iOS auto-zoom-on-focus, but to
+  // GUARANTEE "no zoom whatsoever" (the native-texting feel), clamp the page
+  // viewport while the full-screen chat is open, then restore the original on
+  // close so the rest of the site stays pinch-zoomable.
+  let _savedViewport = null;
+  function viewportMeta() {
+    let m = document.querySelector('meta[name="viewport"]');
+    if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'viewport'); document.head.appendChild(m); }
+    return m;
+  }
+  function lockViewportZoom() {
+    const m = viewportMeta();
+    if (_savedViewport === null) _savedViewport = m.getAttribute('content') || '';
+    m.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+  }
+  function unlockViewportZoom() {
+    if (_savedViewport === null) return;
+    viewportMeta().setAttribute('content', _savedViewport);
+    _savedViewport = null;
+  }
+  function syncViewportZoom() {
+    if (state.open && state.fullscreen) lockViewportZoom(); else unlockViewportZoom();
+  }
   function toggleFullscreen() {
     state.fullscreen = !state.fullscreen;
     applyFullscreen();
     syncScrollLock();
+    syncViewportZoom();
   }
   if (expandBtn) expandBtn.addEventListener('click', toggleFullscreen);
   const dot = btn.querySelector('#gx-dot');
@@ -675,6 +699,7 @@
       panel.style.display = 'flex';
       dot.classList.remove('gx-show');
       syncScrollLock();
+      syncViewportZoom();
     }
   }
   function togglePanel() {
@@ -682,6 +707,7 @@
       state.open = false;
       panel.style.display = 'none';
       unlockScroll();
+      unlockViewportZoom();
     } else {
       openPanel();
     }
@@ -693,6 +719,7 @@
   $('.gx-close').addEventListener('click', () => {
     state.open = false; panel.style.display = 'none';
     unlockScroll();
+    unlockViewportZoom();
   });
 
   // Gate removed — chat starts automatically when panel opens (autoStart below)
