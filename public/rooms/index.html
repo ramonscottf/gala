@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Room Roster · DEF Gala 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;1,700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="/assets/seatmini.js"></script>
+<style>
+:root{ --navy:#0b1b3c; --navy-deep:#050b1c; --gold:#ffc24d; --blue:#2858d6; --red:#CB262C;
+  --rule:rgba(255,255,255,0.10); --mute:rgba(255,255,255,0.65); }
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{ min-height:100vh; color:#fff; font-family:'Inter',system-ui,sans-serif;
+  background:#070a1d;
+  background-image:radial-gradient(ellipse 120% 60% at 50% -10%, #24508f 0%, #122a57 35%, #0b1b3c 75%, #050b1c 100%);
+  background-attachment:fixed; padding:14px 12px 60px; }
+.strip{position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2858d6,#CB262C,#4a7df0,#CB262C);z-index:60;}
+.wrap{max-width:760px;margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif;font-size:26px;margin:10px 0 2px;}
+.sub{color:var(--mute);font-size:13px;margin-bottom:14px;}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#34d399;}
+.live .dot{width:8px;height:8px;border-radius:99px;background:#34d399;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.card{background:rgba(17,28,60,0.72);border:1px solid var(--rule);border-radius:14px;padding:16px;margin-bottom:16px;}
+.show-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+.show-head .movie{font-family:'Fraunces',Georgia,serif;font-size:20px;font-weight:700;}
+.show-head .time{color:var(--gold);font-weight:800;font-size:15px;}
+.show-head .count{margin-left:auto;color:var(--mute);font-size:13px;}
+.mapbox{background:rgba(5,11,28,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px;overflow-x:auto;margin:10px 0;}
+table{width:100%;border-collapse:collapse;font-size:15px;}
+td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,0.07);vertical-align:top;}
+td.seat{font-weight:800;color:var(--gold);width:54px;white-space:nowrap;font-size:16px;}
+td.dinner{color:var(--mute);text-align:right;white-space:nowrap;font-size:13px;width:120px;}
+.rowbreak td{border-bottom:1px solid rgba(255,255,255,0.18);}
+.idx a{display:block;background:rgba(17,28,60,0.72);border:1px solid var(--rule);border-radius:12px;
+  padding:14px 16px;margin-bottom:10px;color:#fff;text-decoration:none;font-weight:700;font-size:16px;}
+.idx a span{color:var(--mute);font-weight:400;font-size:13px;display:block;margin-top:2px;}
+.loginbox input{width:100%;padding:13px;border-radius:10px;border:1px solid var(--rule);
+  background:rgba(7,13,33,0.65);color:#fff;font-size:16px;margin-bottom:10px;}
+.loginbox button{width:100%;padding:13px;border-radius:10px;border:none;background:var(--blue);
+  color:#fff;font-weight:800;font-size:15px;cursor:pointer;}
+.err{color:#ff8a8a;font-size:13px;margin-top:8px;}
+.stamp{color:rgba(255,255,255,0.45);font-size:11.5px;text-align:center;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="strip"></div>
+<div class="wrap" id="app"><div class="card">Loading…</div></div>
+<script>
+const DINNERS = { frenchdip:'Hot French Dip', salad:'Chicken Salad', veggie:'Vegetarian', kids:'Kids Meal' };
+const app = document.getElementById('app');
+const AUD = new URL(location.href).searchParams.get('aud');
+let layouts = null, timer = null;
+
+async function fetchDirectory() {
+  const r = await fetch('/api/gala/admin/directory', { credentials: 'include' });
+  if (r.status === 401) return { auth: false };
+  if (!r.ok) throw new Error('directory ' + r.status);
+  const d = await r.json();
+  return { auth: true, rows: d.rows || [] };
+}
+
+function renderLogin() {
+  app.innerHTML = `
+    <h1>Room Roster</h1>
+    <div class="sub">Gala helpers — enter the gala password once on this device.</div>
+    <div class="card loginbox">
+      <input type="password" id="pw" placeholder="Gala password" autocomplete="current-password">
+      <button onclick="doLogin()">Open rosters</button>
+      <div class="err" id="loginerr"></div>
+    </div>`;
+}
+async function doLogin() {
+  const pw = document.getElementById('pw').value;
+  const r = await fetch('/api/gala/login', { method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: pw }) });
+  if (r.ok) boot(); else document.getElementById('loginerr').textContent = 'Wrong password — ask Scott (801-810-6642).';
+}
+
+function renderIndex(rows) {
+  const byAud = new Map();
+  rows.forEach(r => {
+    if (!byAud.has(r.theater_id)) byAud.set(r.theater_id, { n: 0, movies: new Set() });
+    const a = byAud.get(r.theater_id); a.n++; if (r.movie) a.movies.add(r.movie);
+  });
+  const links = [...byAud.entries()].sort((a,b)=>a[0]-b[0]).map(([t, a]) =>
+    `<a href="?aud=${t}">Auditorium ${t}<span>${[...a.movies].join(' · ')} — ${a.n} guests</span></a>`).join('');
+  app.innerHTML = `
+    <h1>Room Rosters</h1>
+    <div class="sub">Tap your auditorium. Pages refresh themselves — leave them open.</div>
+    <div class="idx">${links || '<div class="card">No seated guests yet.</div>'}</div>`;
+}
+
+function renderRoom(rows) {
+  const mine = rows.filter(r => String(r.theater_id) === String(AUD));
+  const byShow = new Map();
+  mine.forEach(r => {
+    const k = r.showing_number;
+    if (!byShow.has(k)) byShow.set(k, []);
+    byShow.get(k).push(r);
+  });
+
+  const sections = [...byShow.entries()].sort((a,b)=>a[0]-b[0]).map(([sh, seats]) => {
+    const first = seats[0];
+    const sorted = seats.slice().sort((a,b)=> a.row.localeCompare(b.row) || (Number(a.num)-Number(b.num)));
+    const occupied = new Set(sorted.map(s => s.seat));
+    const names = sorted.map(s => `${s.seat}|${esc(s.guest_name || s.delegate_name || s.company || '')}`).join('~');
+    let lastRow = null;
+    const trs = sorted.map(s => {
+      const who = s.delegate_name || s.guest_name || s.company || 'Guest';
+      const sub = (s.parent_company && s.delegate_name) ? ` <span style="color:var(--mute);font-weight:400;">· ${esc(s.parent_company)}</span>`
+                : (s.company && s.guest_name && s.company !== s.guest_name && !s.delegate_name) ? '' : '';
+      const cls = (lastRow && lastRow !== s.row) ? ' class="rowbreak-top"' : '';
+      const breakCls = (lastRow && lastRow !== s.row) ? ' style="border-top:2px solid rgba(255,255,255,0.16);"' : '';
+      lastRow = s.row;
+      return `<tr><td class="seat"${breakCls}>${s.seat}</td><td${breakCls}>${esc(who)}${sub}</td><td class="dinner"${breakCls}>${s.dinner ? (DINNERS[s.dinner]||s.dinner) : ''}</td></tr>`;
+    }).join('');
+    return `
+      <div class="card">
+        <div class="show-head">
+          <span class="movie">${esc(first.movie || 'Showing ' + sh)}</span>
+          <span class="time">${esc(first.show_start || (sh === 1 ? 'Early' : 'Late'))}</span>
+          <span class="count">${sorted.length} seated</span>
+        </div>
+        <div class="mapbox seatmini" data-occ="${sorted.map(s=>s.seat).join(',')}" data-names="${names}"></div>
+        <table><tbody>${trs}</tbody></table>
+      </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <h1>Auditorium ${esc(AUD)}</h1>
+    <div class="sub"><span class="live"><span class="dot"></span>LIVE</span> · read-only roster for greeters &amp; seat helpers · <a href="/rooms/" style="color:var(--mute);">all rooms</a></div>
+    ${sections || '<div class="card">No guests seated in this auditorium yet.</div>'}
+    <div class="stamp">Updated ${new Date().toLocaleTimeString()} · refreshes automatically · trouble? Scott 801-810-6642</div>`;
+  paintMaps();
+}
+
+function esc(x){ const d=document.createElement('div'); d.textContent=x==null?'':String(x); return d.innerHTML; }
+
+async function paintMaps() {
+  try {
+    layouts = layouts || await SeatMini.load();
+    const th = SeatMini.theater(layouts, AUD);
+    if (!th) return;
+    document.querySelectorAll('.seatmini').forEach(el => {
+      const occ = new Set((el.dataset.occ || '').split(',').filter(Boolean));
+      const names = new Map((el.dataset.names || '').split('~').filter(Boolean).map(p => p.split('|')));
+      SeatMini.render(el, th, { occupied: occ, names, cell: 22, showNumbers: true });
+    });
+  } catch (e) {}
+}
+
+async function boot() {
+  try {
+    const d = await fetchDirectory();
+    if (!d.auth) { renderLogin(); return; }
+    if (!AUD) renderIndex(d.rows); else renderRoom(d.rows);
+    if (AUD && !timer) timer = setInterval(boot, 25000);
+  } catch (e) {
+    app.innerHTML = `<div class="card">Couldn't load (${esc(e.message)}). <button class="loginbox" onclick="boot()" style="margin-left:8px;padding:8px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;">Retry</button></div>`;
+  }
+}
+boot();
+</script>
+</body>
+</html>

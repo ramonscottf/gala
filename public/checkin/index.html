@@ -257,9 +257,19 @@ input[type=text] {
   font-size: 0.9rem;
 }
 .divider { text-align: center; color: var(--ink-muted); font-size: 0.85rem; margin: 16px 0; }
+
+.show-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:14px;margin:14px 0;text-align:left;}
+.show-card__movie{font-weight:800;font-size:1.05rem;margin-bottom:6px;}
+.show-card__meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.pill{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(40,88,214,0.24);border:1px solid rgba(74,125,240,0.4);color:#c7d6ff;}
+.pill--gold{background:rgba(255,194,77,0.16);border-color:rgba(255,194,77,0.5);color:#ffc24d;}
+.show-card__seats{font-size:0.92rem;margin-bottom:10px;}
+.seatmini{background:rgba(5,11,28,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px;overflow-x:auto;}
+.seatmini__hint{font-size:11.5px;color:rgba(255,255,255,0.5);text-align:center;margin-top:6px;}
 </style>
   <link rel="stylesheet" href="/css/ts-header.css">
   <link rel="stylesheet" href="/css/ts-footer.css">
+<script src="/assets/seatmini.js"></script>
 </head>
 <body>
 
@@ -371,52 +381,51 @@ function renderError(msg) {
 }
 
 function renderGroup(token, data) {
-  const seatsByTheater = {};
+  // Group seats by theater + showing — a building can host two showings.
+  const groups = {};
   data.seats.forEach(s => {
-    if (!seatsByTheater[s.theater_id]) seatsByTheater[s.theater_id] = [];
-    seatsByTheater[s.theater_id].push(s);
+    const k = s.theater_id + ':' + (s.showing_number || 1);
+    (groups[k] = groups[k] || []).push(s);
   });
-  const seatList = Object.entries(seatsByTheater).map(([tid, seats]) => {
-    const sorted = seats.sort((a,b) => a.row_label.localeCompare(b.row_label) || String(a.seat_num).localeCompare(String(b.seat_num)));
-    const rows = sorted.map(s => `Row ${s.row_label}-${s.seat_num}`).join(', ');
-    return `<div><strong>Auditorium ${tid}:</strong> ${rows}</div>`;
+
+  const DINNERS = { frenchdip: 'Hot French Dip', salad: 'Chicken Salad', veggie: 'Vegetarian', kids: 'Kids Meal' };
+  const cards = Object.entries(groups).map(([k, seats]) => {
+    const first = seats[0];
+    const sorted = seats.sort((a,b) => a.row_label.localeCompare(b.row_label) || (Number(a.seat_num) - Number(b.seat_num)));
+    const labels = sorted.map(s => s.row_label + s.seat_num);
+    const dinners = [...new Set(sorted.map(s => s.dinner && (DINNERS[s.dinner] || s.dinner)).filter(Boolean))];
+    return `
+      <div class="show-card">
+        <div class="show-card__head">
+          <div class="show-card__movie">${first.movie || 'Auditorium ' + first.theater_id}</div>
+          <div class="show-card__meta">
+            <span class="pill pill--gold">Movie ${first.show_start || ''}</span>
+            ${first.dinner_time ? `<span class="pill">Dinner ${first.dinner_time}</span>` : ''}
+            <span class="pill">Auditorium ${first.theater_id}</span>
+          </div>
+        </div>
+        <div class="show-card__seats"><strong>Seats:</strong> ${labels.join(', ')}${dinners.length ? ` &nbsp;·&nbsp; ${dinners.join(', ')}` : ''}</div>
+        <div class="seatmini" data-theater="${first.theater_id}" data-seats="${labels.join(',')}"></div>
+        <div class="seatmini__hint">Your seats in gold — screen at the top.</div>
+      </div>`;
   }).join('');
 
-  const alreadyChecked = data.checkedInCount === data.seatCount;
-
-  // Detect: did the sponsor land here via the SMS link (URL has ?t=TOKEN)?
-  // vs staff scanning via camera (URL has no token param).
   const urlToken = new URL(location.href).searchParams.get('t');
   const isSponsorView = !!urlToken;
 
-  const qrBlock = `
-    <div class="qr-block">
-      <div class="qr-block__label">Your check-in QR</div>
-      <img src="/api/gala/qr?t=${encodeURIComponent(token)}&size=360" alt="Check-in QR" class="qr-block__img" width="220" height="220"/>
-      <div class="qr-block__hint">${isSponsorView ? 'Show this at the check-in table on June 10' : 'Scanned — confirm below'}</div>
-    </div>
-  `;
-
   groupCard.innerHTML = `
     <div class="card group-display">
-      <h2>${data.company}</h2>
-      <div style="color:var(--ink-soft);font-size:0.95rem;">${data.name}</div>
+      <h2>${data.company || data.name}</h2>
+      <div style="color:var(--ink-soft);font-size:0.95rem;">${data.name}${data.company && data.name !== data.company ? '' : ''}</div>
       ${data.tier ? `<span class="tier">${data.tier}</span>` : ''}
-      ${qrBlock}
-      <div class="seats-list">
-        <div style="margin-bottom:6px;"><strong>${data.seatCount} seat${data.seatCount===1?'':'s'}</strong></div>
-        ${seatList}
+      ${cards}
+      <div class="qr-block">
+        <div class="qr-block__label">Your gala QR</div>
+        <img src="/api/gala/qr?t=${encodeURIComponent(token)}&size=360" alt="Gala QR" class="qr-block__img" width="220" height="220"/>
+        <div class="qr-block__hint">${isSponsorView
+          ? 'Save this — any gala helper can scan it to pull up your seats in a second.'
+          : 'Scanned — these are their seats. Point them to the gold ones.'}</div>
       </div>
-      ${alreadyChecked ? `
-        <div class="checked-in">✓ Checked in at ${new Date(data.seats[0].checked_in_at).toLocaleTimeString()}</div>
-        ${isSponsorView ? '' : `<button class="btn btn--secondary btn--full" onclick="undoCheckin('${token}')">Undo Check-In</button>`}
-      ` : isSponsorView ? `
-        <div class="sponsor-note">Show the QR above to a gala volunteer on June 10 to check in.</div>
-      ` : `
-        <button class="btn btn--red btn--full" onclick="checkIn('${token}')" id="checkin-btn">
-          ✓ Check In ${data.seatCount} Guest${data.seatCount===1?'':'s'}
-        </button>
-      `}
       <div style="margin-top:12px;">
         <button class="btn btn--secondary btn--full" onclick="location.reload()">${isSponsorView ? 'Refresh' : 'Scan another'}</button>
       </div>
@@ -424,6 +433,20 @@ function renderGroup(token, data) {
   `;
   groupCard.style.display = 'block';
   scannerCard.style.display = 'none';
+  paintMiniMaps();
+}
+
+let _layoutsP = null;
+async function paintMiniMaps() {
+  try {
+    _layoutsP = _layoutsP || SeatMini.load();
+    const layouts = await _layoutsP;
+    document.querySelectorAll('.seatmini').forEach(el => {
+      const th = SeatMini.theater(layouts, el.dataset.theater);
+      if (!th) return;
+      SeatMini.render(el, th, { highlight: new Set(el.dataset.seats.split(',')), cell: 22 });
+    });
+  } catch (e) { /* map is decoration — never block the ticket info */ }
 }
 
 async function checkIn(token) {

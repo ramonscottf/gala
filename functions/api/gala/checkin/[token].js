@@ -29,6 +29,18 @@ export async function onRequestGet(context) {
   // Compute checked-in count
   const checkedInCount = seatList.filter(s => s.checked_in).length;
 
+  // Enrich with showtime + movie so the guest view can say WHEN and WHAT,
+  // not just where. One small lookup; showtimes is a tiny table.
+  const stRs = await env.GALA_DB.prepare(
+    `SELECT st.theater_id, st.showing_number, st.show_start, st.dinner_time,
+            m.title AS movie_title
+       FROM showtimes st LEFT JOIN movies m ON m.id = st.movie_id`
+  ).all();
+  const stMap = new Map();
+  for (const r of (stRs.results || [])) {
+    stMap.set(`${r.theater_id}:${r.showing_number}`, r);
+  }
+
   return jsonOk({
     kind: resolved.kind,
     name,
@@ -36,14 +48,22 @@ export async function onRequestGet(context) {
     tier,
     seatCount: seatList.length,
     checkedInCount,
-    seats: seatList.map(s => ({
-      theater_id: s.theater_id,
-      row_label: s.row_label,
-      seat_num: s.seat_num,
-      guest_name: s.guest_name,
-      checked_in: !!s.checked_in,
-      checked_in_at: s.checked_in_at,
-    })),
+    seats: seatList.map(s => {
+      const st = stMap.get(`${s.theater_id}:${s.showing_number}`) || {};
+      return {
+        theater_id: s.theater_id,
+        showing_number: s.showing_number,
+        row_label: s.row_label,
+        seat_num: s.seat_num,
+        guest_name: s.guest_name,
+        dinner: s.dinner_choice || null,
+        movie: st.movie_title || null,
+        show_start: st.show_start || null,
+        dinner_time: st.dinner_time || null,
+        checked_in: !!s.checked_in,
+        checked_in_at: s.checked_in_at,
+      };
+    }),
   });
 }
 
