@@ -437,14 +437,25 @@ export async function resolveSmsAudience(audience, db) {
       SELECT NULL AS id, first_name, last_name, organization AS company,
              phone, NULL AS rsvp_token, 'Volunteer' AS sponsorship_tier
       FROM volunteers
-      WHERE deleted_at IS NULL AND sms_opt_in = 1
+      WHERE deleted_at IS NULL
         AND phone IS NOT NULL AND phone != ''
       UNION ALL
       SELECT NULL AS id, name AS first_name, '' AS last_name, 'Cook Crew' AS company,
              phone, NULL AS rsvp_token, 'Volunteer' AS sponsorship_tier
       FROM cook_shirts
       WHERE phone IS NOT NULL AND phone != ''
+      UNION ALL
+      SELECT NULL AS id, first_name, last_name, company,
+             phone, NULL AS rsvp_token, 'Donor' AS sponsorship_tier
+      FROM donors
+      WHERE archived_at IS NULL
+        AND phone IS NOT NULL AND phone != ''
     `;
+    // Volunteer opt-in note (2026-06-09): the signup form stopped recording
+    // sms_opt_in after ~May 8 — weeks 16-18 show 21/23 opted in (~91%), then
+    // 0/52 from week 19 on. Those zeros are a tracking bug, not refusals, so
+    // per Scott's direction ALL active volunteers are included. If a volunteer
+    // asks to stop, set deleted_at or clear their phone.
     const [coreRes, extraRes] = await Promise.all([
       db.prepare(coreSql).all(),
       db.prepare(extraSql).all(),
