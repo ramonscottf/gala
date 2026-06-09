@@ -11,13 +11,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SeatMap, adaptTheater } from '../../portal/SeatEngine.jsx';
 
-const NAVY = '#0a1430';
-const PANEL = '#0e1838';
+const GROUND = 'radial-gradient(ellipse 120% 60% at 50% -10%, #24508f 0%, #122a57 35%, #0b1b3c 75%, #050b1c 100%)';
+const NAVY = '#070a1d';                  // deep base
+const INK = '#0b1233';                   // ink-on-gold text
+const PANEL = 'rgba(17,28,60,0.72)';     // navy surface over the ground
 const RULE = 'rgba(255,255,255,0.12)';
-const GOLD = '#f5b841';
-const BLUE = '#3b82f6';
-const MUTED = 'rgba(255,255,255,0.62)';
+const GOLD = '#ffc24d';                  // DEF gold-400
+const GOLD_SOFT = '#ffd77f';
+const BLUE = '#2858d6';                  // brand blue
+const RED = '#CB262C';                   // canonical gala red
+const MUTED = 'rgba(255,255,255,0.65)';
 const FONT_UI = "'Inter', system-ui, -apple-system, sans-serif";
+const FONT_DISPLAY = "'Fraunces', 'Source Serif 4', Georgia, serif";
+const STRIP = 'linear-gradient(90deg, #2858d6, #CB262C, #4a7df0, #CB262C)';
 
 const DINNER_LABELS = {
   frenchdip: 'Hot French Dip', chicken: 'Chicken', beef: 'Beef',
@@ -294,7 +300,7 @@ export function SeatmapApp() {
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, padding: '10px 14px', background: PANEL, borderRadius: 12, border: `1px solid ${RULE}` }}>
       {st.poster_url && <img src={st.poster_url} alt="" aria-hidden="true" style={{ width: 44, aspectRatio: '2/3', objectFit: 'cover', borderRadius: 6, border: `1px solid ${RULE}`, flexShrink: 0 }} />}
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 16, fontWeight: 800 }}>Auditorium {st.theater_id}</div>
+        <div style={{ fontSize: 17, fontWeight: 800, fontFamily: FONT_DISPLAY }}>Auditorium {st.theater_id}</div>
         <div style={{ fontSize: 13, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.movie_title} · {timeLabel(st)}</div>
       </div>
       {right && <div style={{ marginLeft: 'auto', textAlign: 'right' }}>{right}</div>}
@@ -302,10 +308,11 @@ export function SeatmapApp() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: NAVY, color: '#fff', fontFamily: FONT_UI, padding: '14px 12px 120px' }}>
+    <div style={{ minHeight: '100vh', background: GROUND, color: '#fff', fontFamily: FONT_UI, padding: '14px 12px 120px' }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, background: STRIP, zIndex: 60 }} aria-hidden="true" />
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0 }}>Seat Mover <span style={{ color: GOLD }}>v2</span></h1>
+          <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0, fontFamily: FONT_DISPLAY, letterSpacing: '-0.01em' }}>Seat Mover <span style={{ color: GOLD }}>v2</span></h1>
           <span style={{ fontSize: 12, color: MUTED }}>preview · live tool unchanged</span>
         </div>
 
@@ -338,6 +345,7 @@ export function SeatmapApp() {
                   showLetters showSeatNumbers allowZoom allowLasso={false}
                   assignedOther={destOccupied}
                   highlighted={sameRoom ? partyIds : new Set()}
+                  highlightColor={GOLD}
                   selected={new Set(targets)}
                   selectedStyle="hollow"
                   onSelect={toggleTarget}
@@ -369,6 +377,7 @@ export function SeatmapApp() {
                   adminClickable
                   onSeatActivate={onSeatActivate}
                   highlighted={highlighted}
+                  highlightColor={GOLD}
                 />
               ) : <div style={{ color: MUTED, padding: 24, textAlign: 'center' }}>{data ? 'Could not load auditorium layout.' : 'Loading seats…'}</div>}
             </div>
