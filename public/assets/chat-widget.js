@@ -590,6 +590,68 @@
     if (prepend) bodyEl.prepend(wrap); else bodyEl.appendChild(wrap);
     bodyEl.scrollTop = bodyEl.scrollHeight;
   }
+  // Self-service ticket delivery chips. message.js attaches data.buttons after
+  // Booker finds a booking on the My Tickets page. Tapping one POSTs to
+  // /chat/ticket-action, which delivers to the contact on file (the widget
+  // never sees or sends a phone/email — only the action name + thread id).
+  async function ticketAction(action, chip) {
+    const orig = chip.textContent;
+    chip.disabled = true;
+    chip.style.opacity = '0.6';
+    chip.textContent = action === 'qr' ? 'Loading…' : 'Sending…';
+    try {
+      const r = await fetch('/api/gala/chat/ticket-action', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ thread_id: state.threadId, action: action }),
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) {
+        appendMsg('system', "Couldn't send that just now — you can also text Scott at 801-810-6642.");
+        chip.disabled = false; chip.style.opacity = '1'; chip.textContent = orig;
+        return;
+      }
+      if (action === 'qr' && data.qr_url) {
+        const b = document.createElement('div');
+        b.className = 'gx-msg gx-ai';
+        b.innerHTML = '<div style="font-weight:600;margin-bottom:6px;">🎟️ Your check-in QR</div>'
+          + '<img src="' + data.qr_url + '" alt="Check-in QR code" width="220" height="220" '
+          + 'style="display:block;width:220px;height:220px;background:#fff;border-radius:12px;padding:8px;box-sizing:border-box;" />'
+          + '<div style="font-size:12px;opacity:.75;margin-top:6px;">Show this at the door to check in — that\'s all you need.</div>';
+        bodyEl.appendChild(b); bodyEl.scrollTop = bodyEl.scrollHeight;
+        chip.textContent = '🎟️ QR shown';
+      } else if (data.sent_to) {
+        const verb = action === 'sms' ? '📲 Texted' : '✉️ Emailed';
+        appendMsg('system', verb + ' your tickets to ' + data.sent_to + '.');
+        chip.textContent = action === 'sms' ? '📲 Texted ✓' : '✉️ Emailed ✓';
+      } else {
+        chip.textContent = '✓ Done';
+      }
+    } catch (e) {
+      appendMsg('system', "Couldn't reach the server. Try again or text Scott at 801-810-6642.");
+      chip.disabled = false; chip.style.opacity = '1'; chip.textContent = orig;
+    }
+  }
+
+  function appendTicketButtons(buttons) {
+    if (!buttons || !buttons.length || !state.threadId) return;
+    const row = document.createElement('div');
+    row.className = 'gx-ticketbtns';
+    row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;max-width:92%;margin:2px 0 8px;';
+    buttons.forEach(function (b) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.textContent = b.label;
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:10px 14px;min-height:42px;'
+        + 'border-radius:999px;border:1.5px solid #2858d6;background:#fff;color:#0b1b3c;'
+        + 'font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;';
+      chip.addEventListener('click', function () { ticketAction(b.action, chip); });
+      row.appendChild(chip);
+    });
+    bodyEl.appendChild(row);
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+  }
+
   function showTyping() {
     if (bodyEl.querySelector('.gx-typing')) return;
     const t = document.createElement('div');
@@ -786,6 +848,7 @@
         setBookerExpression('big-smile');
         setTimeout(() => setBookerExpression('neutral'), 1400);
       }
+      if (data.buttons && data.buttons.length) appendTicketButtons(data.buttons);
       state.lastSeen = new Date().toISOString();
     } catch (err) {
       hideTyping();
