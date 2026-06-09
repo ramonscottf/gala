@@ -101,3 +101,15 @@ test sponsor (restore after). VERIFY-BEFORE-ACTING; world > memory.
 - [ ] React island foundation (parity + picker/header)
 - [ ] Rosters + directory + overview
 - [ ] Mobile polish + safety
+
+
+## Status snapshot — 2026-06-09 (day before event)
+
+| Phase | Status |
+|---|---|
+| 1 — Move flow (party move, cross-room) | ✅ done |
+| 2 — Gala-brand re-skin | ✅ done |
+| 3 — No-zoom chat + 3.5 self-service tickets (Text/Email/QR) | ✅ done |
+| 4 — Directory search + tonight-at-a-glance overview | ✅ done (2026-06-09) — `/api/gala/admin/directory`, search→jump→dossier, per-room cards w/ checked-in counts |
+| 5 — Mobile polish + night-of safety | ◻️ open (check-in tint now cheap: directory carries checked_in) |
+| 6 — Cutover v2 → /admin/seatmap | ◻️ open — DECIDE BEFORE DOORS which tool ambassadors use |
