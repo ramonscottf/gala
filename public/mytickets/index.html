@@ -245,16 +245,15 @@
 
     // Edit affordance
     if (data.canEdit){
-      html += '<div class="editbox"><h4>Need to make a change?</h4>'
-        + '<p>We\'ll send your private portal link to <strong>' + esc(data.editEmail) + '</strong>. '
-        + 'Open it to move seats, pick dinner, or invite guests.</p>'
-        + '<button class="submit" id="sendLink" data-email="' + esc(data.editEmail) + '">Email me my portal link</button>'
+      html += '<div class="editbox"><h4>Get your tickets &amp; check-in QR</h4>'
+        + '<p>We\'ll email your tickets, your <strong>check-in QR</strong> for the door, and a private link to move seats or pick dinner to <strong>' + esc(data.editEmail) + '</strong>.</p>'
+        + '<button class="submit" id="sendLink" data-email="' + esc(data.editEmail) + '">✉️ Email me my tickets + QR</button>'
         + '<div class="status" id="linkStatus" role="status" aria-live="polite"></div></div>';
     } else {
-      html += '<div class="editbox"><h4>Need to make a change?</h4>'
-        + '<p>To edit these seats we\'ll send a private link to the email on file'
+      html += '<div class="editbox"><h4>Get your tickets &amp; check-in QR</h4>'
+        + '<p>For your check-in QR and a link to manage your seats, switch to <strong>By email</strong> and enter the email on your invitation'
         + (data.maskedEmail ? ' (<strong>' + esc(data.maskedEmail) + '</strong>)' : '')
-        + '. Switch to <strong>By email</strong> and enter that address.</p></div>';
+        + '. We\'ll send everything there.</p></div>';
     }
 
     html += '<p style="text-align:center;color:var(--muted);font-size:13px;margin:16px 4px 2px;line-height:1.5;">Need to move seats or have a question? Tap <strong>Chat with Booker</strong> above — he knows your seats, movie, and dinner.</p>';
@@ -314,7 +313,7 @@
       });
       var j = await r.json().catch(function(){ return {}; });
       if (r.ok){
-        if (ls){ ls.textContent = '✓ Sent! Check your inbox (and spam) in about a minute.'; ls.className='status ok'; }
+        if (ls){ ls.textContent = '✓ Sent! Your tickets + check-in QR are on the way — check your inbox (and spam).'; ls.className='status ok'; }
       } else {
         if (ls){ ls.textContent = (j && j.error) || 'Could not send right now — try again shortly.'; ls.className='status err'; }
         if (btn) btn.disabled = false;

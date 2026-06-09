@@ -38,8 +38,67 @@ const PORTAL_BASE = 'https://gala.daviskids.org/sponsor/';
 // when his eyes are needed. _notify.js has a stale comment claiming
 // comma-separated is supported — it isn't, at least not as of May 2026.
 const REPLY_TO = 'smiggin@dsdmail.net';
+const ORIGIN = 'https://gala.daviskids.org';
+const DINNER_LABELS = { frenchdip: 'Hot French Dip', salad: 'Chicken Salad', veggie: 'Vegetarian', kids: 'Kids Meal' };
 
-function buildEmailHtml({ recipientName, portalUrl, kind }) {
+// Load the recipient's seats, grouped by showing. Sponsor = their own directly
+// held seats; delegation = the seats under that delegation.
+async function loadShowings(env, kind, id) {
+  const where = kind === 'delegation'
+    ? 'sa.delegation_id = ?'
+    : 'sa.sponsor_id = ? AND sa.delegation_id IS NULL';
+  const rs = await env.GALA_DB.prepare(
+    `SELECT sa.theater_id, sa.showing_number, sa.row_label, sa.seat_num, sa.dinner_choice,
+            m.title AS movie_title, st.show_start, st.dinner_time
+       FROM seat_assignments sa
+       LEFT JOIN showtimes st ON st.theater_id = sa.theater_id AND st.showing_number = sa.showing_number
+       LEFT JOIN movies m ON m.id = st.movie_id
+      WHERE ${where}
+      ORDER BY sa.theater_id, sa.showing_number, sa.row_label, CAST(sa.seat_num AS INTEGER)`
+  ).bind(id).all();
+  const groups = new Map();
+  for (const r of (rs.results || [])) {
+    const key = `${r.theater_id}:${r.showing_number}`;
+    if (!groups.has(key)) {
+      groups.set(key, { auditorium: r.theater_id, movie: r.movie_title || 'Movie TBA', show_start: r.show_start || null, dinner_time: r.dinner_time || null, seats: [], dinners: new Set() });
+    }
+    const g = groups.get(key);
+    g.seats.push(`${r.row_label}${r.seat_num}`);
+    if (r.dinner_choice) g.dinners.add(DINNER_LABELS[r.dinner_choice] || r.dinner_choice);
+  }
+  return Array.from(groups.values());
+}
+
+// Tickets summary + inline check-in QR for the email body. The token rides in
+// the QR/checkin URL, which is fine here — the email goes only to the address
+// on file, the same secure channel that carries the portal link.
+function ticketsBlockHtml(showings, token) {
+  const qr = `${ORIGIN}/api/gala/qr?t=${encodeURIComponent(token)}&format=png&size=300`;
+  let cards;
+  if (showings.length) {
+    cards = showings.map(function (g) {
+      const dinner = g.dinners.size
+        ? '<div style="color:#475569;font-size:13px;margin-top:3px;">Dinner: ' + Array.from(g.dinners).join(' / ') + ' · served ' + (g.dinner_time || 'TBA') + '</div>'
+        : '';
+      return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin:0 0 10px;">'
+        + '<div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#0066ff;font-weight:700;">Auditorium ' + g.auditorium + '</div>'
+        + '<div style="font-size:16px;font-weight:700;color:#0d1b3d;margin:2px 0;">' + g.movie + '</div>'
+        + '<div style="color:#1a1a1a;font-size:14px;">Showtime ' + (g.show_start || 'TBA') + ' · Seats <strong>' + g.seats.join(', ') + '</strong></div>'
+        + dinner + '</div>';
+    }).join('');
+  } else {
+    cards = '<p style="color:#475569;font-size:14px;">We don\'t have seats on file for you yet — reply to this email and we\'ll get you set.</p>';
+  }
+  return '<div style="margin:6px 0 4px;">'
+    + '<div style="font-size:12px;font-weight:700;color:#0d1b3d;margin:0 0 10px;letter-spacing:.08em;">YOUR TICKETS</div>'
+    + cards
+    + '<div style="text-align:center;margin:18px 0 6px;">'
+    + '<img src="' + qr + '" width="220" height="220" alt="Your check-in QR code" style="display:inline-block;border:8px solid #fff;border-radius:12px;box-shadow:0 4px 14px rgba(13,27,61,.15);" />'
+    + '<div style="font-size:13px;color:#737373;margin-top:8px;">Show this QR at the door to check in — that\'s all you need.</div>'
+    + '</div></div>';
+}
+
+function buildEmailHtml({ recipientName, portalUrl, kind, ticketsHtml }) {
   const greeting = recipientName ? `Hi ${recipientName.split(' ')[0]},` : 'Hello,';
   const roleLine = kind === 'delegation'
     ? "You're listed as a guest delegate on a DEF Gala 2026 sponsorship."
@@ -68,11 +127,12 @@ function buildEmailHtml({ recipientName, portalUrl, kind }) {
   <div class="wrap">
     <div class="card">
       <div class="eyebrow">Davis Education Foundation</div>
-      <h1>Your Gala <em>2026</em> portal link</h1>
+      <h1>Your Gala <em>2026</em> tickets</h1>
       <p>${greeting}</p>
-      <p>${roleLine} You can pick (and edit) your seats, choose your dinner, and invite the rest of your party using the link below.</p>
+      ${ticketsHtml || ''}
+      <p>${roleLine} Use your private link below to move seats, choose dinner, or invite the rest of your party.</p>
       <div class="btn-wrap">
-        <a href="${portalUrl}" class="btn">Open my Gala portal &rarr;</a>
+        <a href="${portalUrl}" class="btn">Manage my seats &rarr;</a>
       </div>
       <p class="url-fallback">
         Button not working? Paste this into your browser:<br>
@@ -86,7 +146,7 @@ function buildEmailHtml({ recipientName, portalUrl, kind }) {
   `;
 }
 
-function buildEmailText({ recipientName, portalUrl, kind }) {
+function buildEmailText({ recipientName, portalUrl, kind, checkinUrl }) {
   const greeting = recipientName ? `Hi ${recipientName.split(' ')[0]},` : 'Hello,';
   const roleLine = kind === 'delegation'
     ? "You're listed as a guest delegate on a DEF Gala 2026 sponsorship."
@@ -96,7 +156,10 @@ function buildEmailText({ recipientName, portalUrl, kind }) {
     '',
     roleLine,
     '',
-    'Open your Gala portal here:',
+    'Check in at the door with this link (or the QR in this email):',
+    checkinUrl,
+    '',
+    'Manage your seats, dinner, and guests here:',
     portalUrl,
     '',
     "If you didn't request this email, you can safely ignore it.",
@@ -181,10 +244,20 @@ export async function onRequestPost(context) {
   }
 
   const portalUrl = `${PORTAL_BASE}${portalToken}`;
-  const subject = "Your DEF Gala 2026 portal link";
+  const checkinUrl = `${ORIGIN}/checkin?t=${encodeURIComponent(portalToken)}`;
+  const subject = "Your DEF Gala 2026 tickets";
 
-  const html = buildEmailHtml({ recipientName, portalUrl, kind });
-  const text = buildEmailText({ recipientName, portalUrl, kind });
+  const recordId = sponsorRow ? sponsorRow.id : delegationRow.id;
+  let ticketsHtml = '';
+  try {
+    const showings = await loadShowings(env, kind, recordId);
+    ticketsHtml = ticketsBlockHtml(showings, portalToken);
+  } catch (e) {
+    console.error('[request-link] tickets block failed', e);
+  }
+
+  const html = buildEmailHtml({ recipientName, portalUrl, kind, ticketsHtml });
+  const text = buildEmailText({ recipientName, portalUrl, kind, checkinUrl });
 
   // _notify.sendEmail returns { ok, ... } — uses GALA_MAIL_TOKEN
   // (SkippyMail) primary, falls back to RESEND_API_KEY if configured.
