@@ -125,54 +125,59 @@ export async function resolveAudience(audience, db) {
     // the bug. Reclaimed delegations (host pulled the seats back) are excluded.
     // Guests carry no rsvp_token, so "Everyone" is for static-link blasts
     // (register pushes, day-of) — never tier seat-selector sends that use {TOKEN}.
-    const allSql = `
-      SELECT MIN(id) AS id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
-      FROM (
-        SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
-        FROM sponsors
-        WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
-        UNION ALL
-        -- Secondary contact on the sponsorship (e.g. spouse / EA) — added
-        -- 2026-06-09 audit: these addresses were silently unreachable.
-        SELECT id, secondary_email AS email, first_name, last_name, company,
-               sponsorship_tier, rsvp_token
-        FROM sponsors
-        WHERE archived_at IS NULL AND secondary_email IS NOT NULL AND secondary_email != ''
-        UNION ALL
-        SELECT NULL AS id, d.delegate_email AS email, d.delegate_name AS first_name,
-               '' AS last_name,
-               (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
-               'Guest' AS sponsorship_tier, NULL AS rsvp_token
-        FROM sponsor_delegations d
-        WHERE d.status != 'reclaimed'
-          AND d.delegate_email IS NOT NULL AND d.delegate_email != ''
-        UNION ALL
-        SELECT NULL AS id, email, first_name, last_name, company,
-               'Donor' AS sponsorship_tier, NULL AS rsvp_token
-        FROM donors
-        WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
-        UNION ALL
-        -- Volunteers (active only) — 2026-06-09 audit: 85 volunteers were
-        -- entirely outside Everyone. They're at the event; they get day-of
-        -- messaging. Soft-deleted rows excluded.
-        SELECT NULL AS id, email, first_name, last_name, organization AS company,
-               'Volunteer' AS sponsorship_tier, NULL AS rsvp_token
-        FROM volunteers
-        WHERE deleted_at IS NULL AND email IS NOT NULL AND email != ''
-        UNION ALL
-        -- Cook crew (cook_shirts signups) — working the event night-of.
-        SELECT NULL AS id, email, first_name, last_name, 'Cook Crew' AS company,
-               'Volunteer' AS sponsorship_tier, NULL AS rsvp_token
-        FROM cook_shirts
-        WHERE email IS NOT NULL AND email != ''
-      )
-      GROUP BY lower(email)
-      ORDER BY company COLLATE NOCASE
+    // D1 caps the number of terms in a compound SELECT — a single 6-way
+    // UNION here threw at runtime (error 1101, found 2026-06-09 via live
+    // preview). Run two ≤3-term queries and merge/dedupe in JS instead.
+    const coreSql = `
+      SELECT id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+      FROM sponsors
+      WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
+      UNION ALL
+      SELECT NULL AS id, d.delegate_email AS email, d.delegate_name AS first_name,
+             '' AS last_name,
+             (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+             'Guest' AS sponsorship_tier, NULL AS rsvp_token
+      FROM sponsor_delegations d
+      WHERE d.status != 'reclaimed'
+        AND d.delegate_email IS NOT NULL AND d.delegate_email != ''
+      UNION ALL
+      SELECT NULL AS id, email, first_name, last_name, company,
+             'Donor' AS sponsorship_tier, NULL AS rsvp_token
+      FROM donors
+      WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
     `;
-    const allRes = await db.prepare(allSql).all();
+    // Secondary sponsor contacts + volunteers (active) + cook crew —
+    // 2026-06-09 audit: all three were silently outside Everyone.
+    const extraSql = `
+      SELECT id, secondary_email AS email, first_name, last_name, company,
+             sponsorship_tier, rsvp_token
+      FROM sponsors
+      WHERE archived_at IS NULL AND secondary_email IS NOT NULL AND secondary_email != ''
+      UNION ALL
+      SELECT NULL AS id, email, first_name, last_name, organization AS company,
+             'Volunteer' AS sponsorship_tier, NULL AS rsvp_token
+      FROM volunteers
+      WHERE deleted_at IS NULL AND email IS NOT NULL AND email != ''
+      UNION ALL
+      SELECT NULL AS id, email, first_name, last_name, 'Cook Crew' AS company,
+             'Volunteer' AS sponsorship_tier, NULL AS rsvp_token
+      FROM cook_shirts
+      WHERE email IS NOT NULL AND email != ''
+    `;
+    const [coreRes, extraRes] = await Promise.all([
+      db.prepare(coreSql).all(),
+      db.prepare(extraSql).all(),
+    ]);
+    const seen = new Map();
+    for (const row of [...(coreRes.results || []), ...(extraRes.results || [])]) {
+      const key = String(row.email || '').toLowerCase();
+      if (key && !seen.has(key)) seen.set(key, row);
+    }
+    const merged = [...seen.values()].sort((a, b) =>
+      String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base' }));
     return {
-      tiers: ['Everyone (purchasers + guests + donors)'],
-      recipients: allRes.results || [],
+      tiers: ['Everyone (purchasers + guests + donors + volunteers + cooks)'],
+      recipients: merged,
       missingEmail: [],
     };
   }
@@ -302,29 +307,27 @@ export async function resolveAudience(audience, db) {
   }
 
   // Sponsor tier presets
-  if (lc.includes('platinum')) tiers = tierMatches('platinum');
-  else if (lc.includes('gold')) tiers = tierMatches('gold');
-  else if (lc.includes('silver')) tiers = tierMatches('silver');
-  else if (lc.includes('bronze')) tiers = tierMatches('bronze');
-  else if (lc.includes('friends')) tiers = tierMatches('friends');
-  else if (lc.includes('individual')) tiers = tierMatches('individual');
-  // Aggregate presets
-  // 'Confirmed Buyers' = anyone who's bought a tier and is attending the gala.
-  // Reads as 'everyone confirmed coming' to a human; that's how it should resolve.
-  // Donations / Silent Auction live in the donors table and are excluded by definition.
-  else if (lc.includes('confirmed buyers') ||
-           lc.includes('all sponsors + friends') ||
-           lc.includes('all sponsors + ff')) {
+  // AGGREGATE presets MUST be checked before single-tier substrings:
+  // "All Sponsors + Friends & Family" contains the substring 'friends',
+  // so the old order resolved it to F&F-only and silently dropped every
+  // corporate sponsor. (Found 2026-06-09 via live preview.)
+  if (lc.includes('confirmed buyers') ||
+      lc.includes('all sponsors + friends') ||
+      lc.includes('all sponsors + ff')) {
     tiers = ['Platinum', 'Gold', 'Silver', 'Bronze',
              'Friends and Family', 'Split Friends & Family',
              'Individual Seats', 'IndividualSeats'];
   }
   // 'All Sponsors' / 'Paid Sponsors' = the top four corporate tiers only.
-  // Use this when you specifically want Platinum/Gold/Silver/Bronze (e.g.
-  // logo-on-screen, tier-only thank-yous, sponsor-recognition messaging).
   else if (lc.includes('all sponsors') || lc.includes('paid sponsors')) {
     tiers = ['Platinum', 'Gold', 'Silver', 'Bronze'];
   }
+  else if (lc.includes('platinum')) tiers = tierMatches('platinum');
+  else if (lc.includes('gold')) tiers = tierMatches('gold');
+  else if (lc.includes('silver')) tiers = tierMatches('silver');
+  else if (lc.includes('bronze')) tiers = tierMatches('bronze');
+  else if (lc.includes('friends')) tiers = tierMatches('friends');
+  else if (lc.includes('individual')) tiers = tierMatches('individual');
   // Add more presets here as the pipeline grows.
 
   if (tiers.length === 0) {
