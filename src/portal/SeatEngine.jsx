@@ -168,6 +168,7 @@ export const SeatMap = ({
   onSeatActivate,
   highlighted = new Set(),
   highlightColor = '#f5b841',
+  selectedStyle = 'fill',
 }) => {
   const rows = theater?.rows || [];
   const W = theater?.cols || 0;
@@ -508,11 +509,14 @@ export const SeatMap = ({
                 const st = status(s.id);
                 const isSel = selected.has(s.id);
                 const isHi = highlighted.has(s.id);
+                const hollowSel = isSel && selectedStyle === 'hollow';
                 const fill = colorFor(s.id, s.t);
                 const strokeColor = isHi
                   ? (dark ? '#0a1430' : BRAND.ink)
+                  : hollowSel
+                  ? highlightColor
                   : (isSel ? (dark ? '#fff' : BRAND.ink) : 'none');
-                const sw = isHi ? 1.5 : (isSel ? 2.5 : 0);
+                const sw = isHi ? 1.5 : hollowSel ? 3 : (isSel ? 2.5 : 0);
 
                 // Phase 1.13 — fix paired-loveseat overlap and height.
                 // Phase 1.11 added a `bonus` widening that caused the right
