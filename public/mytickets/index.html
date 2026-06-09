@@ -13,8 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#11194a; --navy-deep:#080d28; --navy-mid:#1c2760; --navy-soft:#242f68;
-    --indigo:#4d54b3; --red:#d72846; --red-soft:#ff4d70; --gold:#f4b942;
+    --navy:#0b1b3c; --navy-deep:#050b1c; --navy-mid:#122a57; --navy-soft:#24508f;
+    --indigo:#2858d6; --red:#CB262C; --red-soft:#e84e53; --gold:#ffc24d;
     --cyan:#62c8ff; --paper:#fbf8f3; --ink:#fff;
     --muted:rgba(255,255,255,.72); --subtle:rgba(255,255,255,.54);
     --rule:rgba(255,255,255,.14); --panel:rgba(20,28,72,.82); --panel-solid:#171f54;
@@ -27,8 +27,7 @@
     font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     -webkit-font-smoothing:antialiased; min-height:100dvh;
     background-image:
-      radial-gradient(120% 70% at 50% -10%, rgba(77,84,179,.34) 0%, transparent 55%),
-      radial-gradient(90% 60% at 100% 0%, rgba(215,40,70,.18) 0%, transparent 50%);
+      radial-gradient(ellipse 120% 60% at 50% -10%, #24508f 0%, #122a57 35%, #0b1b3c 75%, #050b1c 100%);
     background-attachment:fixed;
   }
   a{color:inherit;}
@@ -81,7 +80,7 @@
   .showing-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:11px;}
   .showing-movie{font-weight:800;font-size:16px;line-height:1.25;}
   .showing-pills{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;}
-  .pill{font-size:11.5px;font-weight:700;letter-spacing:.02em;padding:5px 10px;border-radius:999px;background:rgba(77,84,179,.28);color:#cfd4ff;border:1px solid rgba(120,130,230,.35);}
+  .pill{font-size:11.5px;font-weight:700;letter-spacing:.02em;padding:5px 10px;border-radius:999px;background:rgba(40,88,214,.24);color:#c7d6ff;border:1px solid rgba(74,125,240,.4);}
   .pill.gold{background:rgba(244,185,66,.16);color:var(--gold);border-color:rgba(244,185,66,.4);}
   .seatlist{display:flex;flex-direction:column;gap:7px;padding-bottom:8px;}
   .seatrow{
@@ -91,7 +90,7 @@
   .seatrow .s{font-family:"Fraunces",serif;font-weight:700;font-size:19px;color:var(--gold);min-width:54px;}
   .seatrow .d{font-size:13.5px;color:var(--muted);text-align:right;}
   .seatrow .d.none{color:var(--red-soft);font-weight:600;}
-  .editbox{margin-top:16px;padding:15px;border-radius:13px;background:rgba(98,200,255,.08);border:1px solid rgba(98,200,255,.25);}
+  .editbox{margin-top:16px;padding:15px;border-radius:13px;background:rgba(40,88,214,.10);border:1px solid rgba(74,125,240,.28);}
   .editbox h4{margin:0 0 6px;font-size:14.5px;}
   .editbox p{margin:0 0 11px;font-size:13px;color:var(--muted);line-height:1.5;}
   .editbox .submit{background:var(--indigo);margin-top:0;}
@@ -107,7 +106,7 @@
 
   /* Prominent Booker box — separate card under the lookup. Functional only,
      no entrance animation. */
-  .bookerbox{margin-top:14px;background:linear-gradient(180deg,rgba(98,200,255,.10),rgba(77,84,179,.12));border:1px solid rgba(98,200,255,.30);border-radius:18px;padding:20px;box-shadow:var(--shadow);}
+  .bookerbox{margin-top:14px;background:linear-gradient(180deg,rgba(40,88,214,.12),rgba(40,88,214,.18));border:1px solid rgba(74,125,240,.34);border-radius:18px;padding:20px;box-shadow:var(--shadow);}
   .bk-row{display:flex;gap:13px;align-items:flex-start;margin-bottom:14px;}
   .bk-ic{font-size:26px;line-height:1.1;flex:0 0 auto;}
   .bk-h{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:20px;line-height:1.1;margin-bottom:5px;}

@@ -177,7 +177,7 @@ export async function getMyticketsContext(request, env) {
   if (!Number.isInteger(id) || id <= 0) return null;
 
   const sponsor = await env.GALA_DB.prepare(
-    `SELECT id, company, first_name, last_name
+    `SELECT id, company, first_name, last_name, rsvp_token, email
        FROM sponsors WHERE id = ? AND archived_at IS NULL LIMIT 1`
   ).bind(id).first();
   if (!sponsor) return null;
@@ -192,6 +192,7 @@ export async function getMyticketsContext(request, env) {
     name,
     company: sponsor.company,
     showings,
+    _deliver: { token: sponsor.rsvp_token || null, kind: 'sponsor', to_email: sponsor.email || null, to_phone: null, name, company: sponsor.company },
   };
 }
 

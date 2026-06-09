@@ -77,7 +77,7 @@ export async function getOrCreateThread(request, env, name, email, opts = {}) {
   const existingId = getCookie(request, COOKIE_NAME);
   if (existingId) {
     const row = await env.GALA_DB.prepare(
-      'SELECT id, mode, slack_thread_ts, attendee_name, attendee_email FROM chat_threads WHERE id = ?'
+      'SELECT id, mode, slack_thread_ts, attendee_name, attendee_email, found_token FROM chat_threads WHERE id = ?'
     ).bind(existingId).first();
     if (row) {
       // If caller is supplying a name/email and the thread doesn't have one

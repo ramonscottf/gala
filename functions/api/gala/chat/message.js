@@ -15,6 +15,7 @@ import {
   loadHistory, callHaiku, callSonnet, callOpus, buildSystemPrompt, postToSlack, jsonResponse,
 } from './_helpers.js';
 import { TOOL_DEFINITIONS, SELFSERVE_TOOL_DEFINITIONS, getTokenContext, getMyticketsContext, dispatchTool } from './_tools.js';
+import { resolveToken } from '../_sponsor_portal.js';
 
 export async function onRequestPost({ request, env }) {
   let body;
@@ -82,26 +83,46 @@ export async function onRequestPost({ request, env }) {
         ai_tokens_out: reply.usage.output_tokens,
       });
 
-      // Self-serve ticket delivery: when Booker actually finds a booking on the
-      // My Tickets page, surface tappable Text / Email / Show-QR buttons and
-      // remember the token on the thread so /chat/ticket-action can deliver
-      // without another lookup. Buttons offered only for channels we have a
-      // contact for; QR is always available (read-only).
+      // Self-serve ticket delivery buttons. Show them whenever Booker knows who
+      // it's helping, in priority order: (1) a lookup_booking it ran this turn,
+      // (2) the form-identified sponsor snapshot, (3) a token stored on the
+      // thread from an earlier turn. This way the buttons appear on EVERY reply
+      // once the guest is identified — not just the exact message where the
+      // tool fired (which broke when a find happened on a prior/errored turn).
       let ticketButtons = null;
-      if (selfserve && Array.isArray(reply.tool_results)) {
-        const hit = reply.tool_results.find(
-          (t) => t && t.name === 'lookup_booking' && t.result && t.result.found
-                 && t.result._deliver && t.result._deliver.token
-        );
-        if (hit) {
-          const d = hit.result._deliver;
+      if (selfserve) {
+        let deliver = null;
+        if (Array.isArray(reply.tool_results)) {
+          const hit = reply.tool_results.find(
+            (t) => t && t.name === 'lookup_booking' && t.result && t.result.found
+                   && t.result._deliver && t.result._deliver.token
+          );
+          if (hit) deliver = hit.result._deliver;
+        }
+        if (!deliver && myticketsContext && myticketsContext._deliver && myticketsContext._deliver.token) {
+          deliver = myticketsContext._deliver;
+        }
+        if (!deliver && thread.found_token) {
           try {
-            await env.GALA_DB.prepare('UPDATE chat_threads SET found_token = ? WHERE id = ?')
-              .bind(d.token, thread.id).run();
-          } catch (e) { console.error('found_token persist failed:', e); }
+            const resolved = await resolveToken(env, thread.found_token);
+            if (resolved) {
+              const r = resolved.record;
+              deliver = resolved.kind === 'delegation'
+                ? { token: r.token, kind: 'delegation', to_email: r.delegate_email || null, to_phone: r.delegate_phone || null }
+                : { token: r.rsvp_token, kind: 'sponsor', to_email: r.email || null, to_phone: null };
+            }
+          } catch (e) { console.error('found_token resolve failed:', e); }
+        }
+        if (deliver && deliver.token) {
+          if (thread.found_token !== deliver.token) {
+            try {
+              await env.GALA_DB.prepare('UPDATE chat_threads SET found_token = ? WHERE id = ?')
+                .bind(deliver.token, thread.id).run();
+            } catch (e) { console.error('found_token persist failed:', e); }
+          }
           ticketButtons = [];
-          if (d.to_phone) ticketButtons.push({ action: 'sms', label: '📲 Text my tickets' });
-          if (d.to_email) ticketButtons.push({ action: 'email', label: '✉️ Email my tickets' });
+          if (deliver.to_phone) ticketButtons.push({ action: 'sms', label: '📲 Text my tickets' });
+          if (deliver.to_email) ticketButtons.push({ action: 'email', label: '✉️ Email my tickets' });
           ticketButtons.push({ action: 'qr', label: '🎟️ Show my QR' });
         }
       }
