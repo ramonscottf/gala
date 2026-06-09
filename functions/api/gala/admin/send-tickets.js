@@ -136,6 +136,10 @@ export async function onRequestPost({ request, env }) {
   const onlySponsorId = payload.onlySponsorId || null;
   const onlyDelegationId = payload.onlyDelegationId || null;
   const limit = Math.min(Math.max(parseInt(payload.limit, 10) || 120, 1), 200);
+  // toOverride: send the recipient's exact production email to this address
+  // instead — pure preview. Never logs, never touches the real recipient,
+  // ignores the already-sent check. For Scott's-inbox review only.
+  const toOverride = String(payload.toOverride || '').trim() || null;
 
   const db = env.GALA_DB;
   if (!db) return jsonError('GALA_DB not bound', 500);
@@ -207,7 +211,9 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  const pending = queue.filter(r => !sentKeys.has(String(r.email).toLowerCase()));
+  const pending = toOverride
+    ? queue
+    : queue.filter(r => !sentKeys.has(String(r.email).toLowerCase()));
   const batch = pending.slice(0, limit);
 
   const runId = RUN_ID();
@@ -232,9 +238,14 @@ export async function onRequestPost({ request, env }) {
 
       if (dryRun) { sent++; continue; }
 
-      const res = await sendEmail(env, { to: r.email, subject, html });
+      const res = await sendEmail(env, {
+        to: toOverride || r.email,
+        subject: toOverride ? `[PREVIEW for ${r.email}] ${subject}` : subject,
+        html,
+      });
       if (res && res.ok) {
         sent++;
+        if (toOverride) continue; // preview sends are never logged
         await db.prepare(`
           INSERT INTO marketing_send_log (send_id, send_run_id, channel, recipient_email, recipient_name, status, sent_by, audience_label, sent_at)
           VALUES (?, ?, 'Email', ?, ?, 'sent', 'admin-tickets', ?, CURRENT_TIMESTAMP)
