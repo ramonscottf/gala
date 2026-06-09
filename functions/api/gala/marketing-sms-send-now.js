@@ -10,100 +10,7 @@
 
 import { verifyGalaAuth, jsonError, jsonOk } from './_auth.js';
 import { sendSMS } from './_notify.js';
-
-// Audience name → SQL filter clause. Mirrors _audience.js mappings but
-// keyed off `phone` instead of `email`.
-function audienceClause(name) {
-  const n = String(name || '').toLowerCase();
-  if (n === 'platinum sponsors') return { tiers: ['Platinum'] };
-  if (n === 'gold sponsors') return { tiers: ['Gold'] };
-  if (n === 'silver sponsors') return { tiers: ['Silver'] };
-  if (n === 'bronze sponsors') return { tiers: ['Bronze'] };
-  if (n === 'friends & family') return { tiers: ['Friends and Family'] };
-  if (n === 'individual seats') return { tiers: ['Individual Seats'] };
-  if (n === 'confirmed buyers') return { tiers: ['Platinum', 'Gold', 'Silver', 'Bronze', 'Friends and Family', 'Individual Seats'] };
-  if (n === 'platinum internal') return { internal: true };
-  if (n === 'everyone' || n === 'all contacts') return { all: true };
-  return null;
-}
-
-async function resolveSmsRecipients(audience, db) {
-  const clause = audienceClause(audience);
-  if (!clause) return [];
-
-  if (clause.internal) {
-    // Platinum Internal = Scott + Sherry + Kara test trio (matches the
-    // canonical sandbox audience used during dry runs)
-    const rows = await db.prepare(`
-      SELECT id, first_name, last_name, company, phone, rsvp_token
-      FROM sponsors
-      WHERE archived_at IS NULL
-        AND phone IS NOT NULL
-        AND phone != ''
-        AND email IN ('sfoster@dsdmail.net', 'smiggin@dsdmail.net', 'ktoone@dsdmail.net', 'karatoone@gmail.com')
-      ORDER BY company
-    `).all();
-    return rows.results || [];
-  }
-
-  if (clause.all) {
-    // Everyone = purchasers + invited guests + volunteers (SMS opt-in only —
-    // 54 of 85 explicitly opted out, TCPA) + cook crew. Deduped in JS by
-    // NORMALIZED phone (strip punctuation/+1) so "(801) 555-1234" and
-    // "8015551234" don't get double-texted. Split into two small queries —
-    // D1 caps compound SELECT terms (a 6-way UNION threw error 1101 in the
-    // email resolver, 2026-06-09). Guests/volunteers have no rsvp_token, so
-    // "Everyone" SMS is for static-link blasts (no {TOKEN}).
-    const coreSql = `
-      SELECT id, first_name, last_name, company, phone, rsvp_token
-      FROM sponsors
-      WHERE archived_at IS NULL AND phone IS NOT NULL AND phone != ''
-      UNION ALL
-      SELECT NULL AS id, d.delegate_name AS first_name, '' AS last_name,
-             (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
-             d.delegate_phone AS phone, NULL AS rsvp_token
-      FROM sponsor_delegations d
-      WHERE d.status != 'reclaimed'
-        AND d.delegate_phone IS NOT NULL AND d.delegate_phone != ''
-    `;
-    const extraSql = `
-      SELECT NULL AS id, first_name, last_name, organization AS company,
-             phone, NULL AS rsvp_token
-      FROM volunteers
-      WHERE deleted_at IS NULL AND sms_opt_in = 1
-        AND phone IS NOT NULL AND phone != ''
-      UNION ALL
-      SELECT NULL AS id, first_name, last_name, 'Cook Crew' AS company,
-             phone, NULL AS rsvp_token
-      FROM cook_shirts
-      WHERE phone IS NOT NULL AND phone != ''
-    `;
-    const [coreRes, extraRes] = await Promise.all([
-      db.prepare(coreSql).all(),
-      db.prepare(extraSql).all(),
-    ]);
-    const normPhone = (p) => String(p || '').replace(/[^0-9]/g, '').replace(/^1(?=\d{10}$)/, '');
-    const seen = new Map();
-    for (const row of [...(coreRes.results || []), ...(extraRes.results || [])]) {
-      const key = normPhone(row.phone);
-      if (key && !seen.has(key)) seen.set(key, row);
-    }
-    return [...seen.values()].sort((a, b) =>
-      String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base' }));
-  }
-
-  const placeholders = clause.tiers.map(() => '?').join(',');
-  const rows = await db.prepare(`
-    SELECT id, first_name, last_name, company, phone, rsvp_token
-    FROM sponsors
-    WHERE archived_at IS NULL
-      AND phone IS NOT NULL
-      AND phone != ''
-      AND sponsorship_tier IN (${placeholders})
-    ORDER BY company
-  `).bind(...clause.tiers).all();
-  return rows.results || [];
-}
+import { resolveSmsAudience } from './_audience.js';
 
 function displayName(r) {
   const parts = [r.first_name, r.last_name].filter(Boolean);
@@ -137,7 +44,7 @@ export async function onRequestPost({ request, env }) {
   }
   if (!send.body) return jsonError('SMS body is empty', 400);
 
-  const recipients = await resolveSmsRecipients(send.audience, db);
+  const recipients = await resolveSmsAudience(send.audience, db);
   if (recipients.length !== confirmedRecipientCount) {
     return jsonError(
       `Recipient count changed since preview (was ${confirmedRecipientCount}, now ${recipients.length}). Re-open Preview to refresh.`,

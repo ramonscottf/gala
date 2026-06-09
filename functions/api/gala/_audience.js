@@ -159,7 +159,7 @@ export async function resolveAudience(audience, db) {
       FROM volunteers
       WHERE deleted_at IS NULL AND email IS NOT NULL AND email != ''
       UNION ALL
-      SELECT NULL AS id, email, first_name, last_name, 'Cook Crew' AS company,
+      SELECT NULL AS id, email, name AS first_name, '' AS last_name, 'Cook Crew' AS company,
              'Volunteer' AS sponsorship_tier, NULL AS rsvp_token
       FROM cook_shirts
       WHERE email IS NOT NULL AND email != ''
@@ -373,4 +373,99 @@ export function displayName(row) {
   if (row.company) return row.company;
   const parts = [row.first_name, row.last_name].filter(Boolean);
   return parts.join(' ').trim() || row.email || '(unknown)';
+}
+
+// ─── Shared SMS audience resolver ──────────────────────────────────────────
+// Single source of truth for SMS recipient resolution. Previously THREE
+// near-identical copies lived in marketing-sms-send-now.js and
+// marketing-preview-send.js — they drifted (preview showed 273 while the
+// real universe grew), which is how recipients go silently missing.
+// Consolidated 2026-06-09. Both endpoints import from here.
+
+function smsAudienceClause(name) {
+  const n = String(name || '').toLowerCase();
+  if (n === 'platinum sponsors') return { tiers: ['Platinum'] };
+  if (n === 'gold sponsors') return { tiers: ['Gold'] };
+  if (n === 'silver sponsors') return { tiers: ['Silver'] };
+  if (n === 'bronze sponsors') return { tiers: ['Bronze'] };
+  if (n === 'friends & family') return { tiers: ['Friends and Family', 'Split Friends & Family'] };
+  if (n === 'individual seats') return { tiers: ['Individual Seats', 'IndividualSeats'] };
+  if (n === 'confirmed buyers') return { tiers: ['Platinum', 'Gold', 'Silver', 'Bronze', 'Friends and Family', 'Split Friends & Family', 'Individual Seats', 'IndividualSeats'] };
+  if (n === 'platinum internal') return { internal: true };
+  if (n === 'everyone' || n === 'all contacts') return { all: true };
+  return null;
+}
+
+const normPhoneKey = (p) =>
+  String(p || '').replace(/[^0-9]/g, '').replace(/^1(?=\d{10}$)/, '');
+
+export async function resolveSmsAudience(audience, db) {
+  const clause = smsAudienceClause(audience);
+  if (!clause) return [];
+
+  if (clause.internal) {
+    const rows = await db.prepare(`
+      SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
+      FROM sponsors
+      WHERE archived_at IS NULL
+        AND phone IS NOT NULL AND phone != ''
+        AND email IN ('sfoster@dsdmail.net', 'smiggin@dsdmail.net', 'ktoone@dsdmail.net', 'karatoone@gmail.com')
+      ORDER BY company
+    `).all();
+    return rows.results || [];
+  }
+
+  if (clause.all) {
+    // Everyone = purchasers + invited guests + volunteers (SMS opt-in only —
+    // 54 of 85 explicitly opted out, TCPA) + cook crew. Two ≤2-term queries
+    // merged in JS (D1 caps compound-SELECT terms; a 6-way UNION threw 1101).
+    // Deduped by digits-only phone so "(801) 555-1234" ≠ "8015551234" dupes.
+    const coreSql = `
+      SELECT id, first_name, last_name, company, phone, rsvp_token,
+             sponsorship_tier
+      FROM sponsors
+      WHERE archived_at IS NULL AND phone IS NOT NULL AND phone != ''
+      UNION ALL
+      SELECT NULL AS id, d.delegate_name AS first_name, '' AS last_name,
+             (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+             d.delegate_phone AS phone, NULL AS rsvp_token, 'Guest' AS sponsorship_tier
+      FROM sponsor_delegations d
+      WHERE d.status != 'reclaimed'
+        AND d.delegate_phone IS NOT NULL AND d.delegate_phone != ''
+    `;
+    const extraSql = `
+      SELECT NULL AS id, first_name, last_name, organization AS company,
+             phone, NULL AS rsvp_token, 'Volunteer' AS sponsorship_tier
+      FROM volunteers
+      WHERE deleted_at IS NULL AND sms_opt_in = 1
+        AND phone IS NOT NULL AND phone != ''
+      UNION ALL
+      SELECT NULL AS id, name AS first_name, '' AS last_name, 'Cook Crew' AS company,
+             phone, NULL AS rsvp_token, 'Volunteer' AS sponsorship_tier
+      FROM cook_shirts
+      WHERE phone IS NOT NULL AND phone != ''
+    `;
+    const [coreRes, extraRes] = await Promise.all([
+      db.prepare(coreSql).all(),
+      db.prepare(extraSql).all(),
+    ]);
+    const seen = new Map();
+    for (const row of [...(coreRes.results || []), ...(extraRes.results || [])]) {
+      const key = normPhoneKey(row.phone);
+      if (key && !seen.has(key)) seen.set(key, row);
+    }
+    return [...seen.values()].sort((a, b) =>
+      String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base' }));
+  }
+
+  const placeholders = clause.tiers.map(() => '?').join(',');
+  const rows = await db.prepare(`
+    SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
+    FROM sponsors
+    WHERE archived_at IS NULL
+      AND phone IS NOT NULL AND phone != ''
+      AND sponsorship_tier IN (${placeholders})
+    ORDER BY company
+  `).bind(...clause.tiers).all();
+  return rows.results || [];
 }

@@ -10,7 +10,7 @@
 // The body returned here is the live body that would be sent.
 
 import { verifyGalaAuth, jsonError, jsonOk } from './_auth.js';
-import { resolveAudience, displayName } from './_audience.js';
+import { resolveAudience, resolveSmsAudience, displayName } from './_audience.js';
 
 export async function onRequestPost({ request, env }) {
   if (!(await verifyGalaAuth(request, env.GALA_DASH_SECRET))) return jsonError('Unauthorized', 401);
@@ -49,7 +49,7 @@ export async function onRequestPost({ request, env }) {
   // marketing-sms-send-now.js — there's no shared resolver yet because
   // _audience.js is hard-keyed to email-required filtering).
   if (channelLc === 'sms') {
-    const recipients = await resolveSmsRecipients(send.audience, db);
+    const recipients = await resolveSmsAudience(send.audience, db);
     return jsonOk({
       sendId: send.send_id,
       channel: send.channel,
@@ -98,73 +98,3 @@ function stripHtml(html) {
   return String(html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-// SMS audience resolver — phone-based, mirrors the audience clauses in
-// marketing-sms-send-now.js. Keep in sync if either changes.
-function audienceClause(name) {
-  const n = String(name || '').toLowerCase();
-  if (n === 'platinum sponsors') return { tiers: ['Platinum'] };
-  if (n === 'gold sponsors') return { tiers: ['Gold'] };
-  if (n === 'silver sponsors') return { tiers: ['Silver'] };
-  if (n === 'bronze sponsors') return { tiers: ['Bronze'] };
-  if (n === 'friends & family') return { tiers: ['Friends and Family'] };
-  if (n === 'individual seats') return { tiers: ['Individual Seats'] };
-  if (n === 'confirmed buyers') return { tiers: ['Platinum', 'Gold', 'Silver', 'Bronze', 'Friends and Family', 'Individual Seats'] };
-  if (n === 'platinum internal') return { internal: true };
-  if (n === 'everyone' || n === 'all contacts') return { all: true };
-  return null;
-}
-
-async function resolveSmsRecipients(audience, db) {
-  const clause = audienceClause(audience);
-  if (!clause) return [];
-
-  if (clause.internal) {
-    const rows = await db.prepare(`
-      SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
-      FROM sponsors
-      WHERE archived_at IS NULL
-        AND phone IS NOT NULL
-        AND phone != ''
-        AND email IN ('sfoster@dsdmail.net', 'smiggin@dsdmail.net', 'ktoone@dsdmail.net', 'karatoone@gmail.com')
-      ORDER BY company
-    `).all();
-    return rows.results || [];
-  }
-
-  if (clause.all) {
-    // Everyone = purchasers + their invited guests with a phone, deduped by
-    // phone. Guests live in sponsor_delegations (delegate_phone). Mirrors the
-    // send-now resolver so the preview count matches what actually ships.
-    // Reclaimed delegations excluded.
-    const rows = await db.prepare(`
-      SELECT MIN(id) AS id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
-      FROM (
-        SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
-        FROM sponsors
-        WHERE archived_at IS NULL AND phone IS NOT NULL AND phone != ''
-        UNION ALL
-        SELECT NULL AS id, d.delegate_name AS first_name, '' AS last_name,
-               (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
-               d.delegate_phone AS phone, NULL AS rsvp_token, 'Guest' AS sponsorship_tier
-        FROM sponsor_delegations d
-        WHERE d.status != 'reclaimed'
-          AND d.delegate_phone IS NOT NULL AND d.delegate_phone != ''
-      )
-      GROUP BY phone
-      ORDER BY company
-    `).all();
-    return rows.results || [];
-  }
-
-  const placeholders = clause.tiers.map(() => '?').join(',');
-  const rows = await db.prepare(`
-    SELECT id, first_name, last_name, company, phone, rsvp_token, sponsorship_tier
-    FROM sponsors
-    WHERE archived_at IS NULL
-      AND phone IS NOT NULL
-      AND phone != ''
-      AND sponsorship_tier IN (${placeholders})
-    ORDER BY company
-  `).bind(...clause.tiers).all();
-  return rows.results || [];
-}
