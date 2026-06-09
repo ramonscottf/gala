@@ -829,31 +829,40 @@
     sendBtn.disabled = true;
     appendMsg('user', text);
     // User sent a message — Booker stays curious while waiting for the reply.
-    // The reply handler flips to big-smile when it arrives.
     setBookerExpression('curious');
     setTimeout(() => showTyping(), 250);
-    try {
-      const r = await fetch('/api/gala/chat/message', {
-        method: 'POST', credentials: 'include',
-        headers: chatHeaders(),
-        body: JSON.stringify({ content: text }),
-      });
-      const data = await r.json();
-      hideTyping();
-      if (data.reply) {
-        appendMsg(data.reply.sender, data.reply.content);
-        // Booker delivered the answer — quick big-smile flash, then back
-        // to neutral idle. (User is no longer mid-typing, so we don't
-        // hold curious here.)
-        setBookerExpression('big-smile');
-        setTimeout(() => setBookerExpression('neutral'), 1400);
+
+    // Resilient send: one silent retry on a transient network blip (common on
+    // mobile / spotty venue wifi). The lookup is read-only, so a retry is safe.
+    let data = null;
+    for (let attempt = 0; attempt < 2 && !data; attempt++) {
+      try {
+        const r = await fetch('/api/gala/chat/message', {
+          method: 'POST', credentials: 'include',
+          headers: chatHeaders(),
+          body: JSON.stringify({ content: text }),
+        });
+        data = await r.json();
+      } catch (err) {
+        if (attempt === 0) await new Promise((res) => setTimeout(res, 800));
       }
-      if (data.buttons && data.buttons.length) appendTicketButtons(data.buttons);
-      state.lastSeen = new Date().toISOString();
-    } catch (err) {
-      hideTyping();
-      appendMsg('system', "Couldn't reach the server. Please try again.");
     }
+    hideTyping();
+
+    if (!data) {
+      appendMsg('system', "Hmm, the connection dropped — tap send to try again, or text Scott at 801-810-6642.");
+      input.value = text;            // restore so a resend is one tap
+      input.style.height = 'auto';
+      sendBtn.disabled = false;
+      return;
+    }
+    if (data.reply) {
+      appendMsg(data.reply.sender, data.reply.content);
+      setBookerExpression('big-smile');
+      setTimeout(() => setBookerExpression('neutral'), 1400);
+    }
+    if (data.buttons && data.buttons.length) appendTicketButtons(data.buttons);
+    state.lastSeen = new Date().toISOString();
   }
 
   // Auto-start: now that the server allows anonymous chat threads
@@ -876,14 +885,21 @@
     if (autoStarted) return;
     autoStarted = true;
     try {
-      const r = await fetch('/api/gala/chat/start', {
-        method: 'POST', credentials: 'include',
-        headers: chatHeaders(),
-        body: JSON.stringify({}),
-      });
-      const data = await r.json();
-      if (!r.ok || !data.thread_id) {
-        appendMsg('system', "Couldn't start chat. Try refreshing the page.");
+      let data = null;
+      for (let attempt = 0; attempt < 2 && !data; attempt++) {
+        try {
+          const r = await fetch('/api/gala/chat/start', {
+            method: 'POST', credentials: 'include',
+            headers: chatHeaders(),
+            body: JSON.stringify({}),
+          });
+          data = await r.json();
+        } catch (e) {
+          if (attempt === 0) await new Promise((res) => setTimeout(res, 800));
+        }
+      }
+      if (!data || !data.thread_id) {
+        appendMsg('system', "Couldn't start chat — tap the chat button again, or refresh the page.");
         autoStarted = false;
         return;
       }
