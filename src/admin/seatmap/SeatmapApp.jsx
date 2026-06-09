@@ -19,6 +19,18 @@ const GOLD = '#f5b841';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FONT_UI = "'Inter', system-ui, -apple-system, sans-serif";
 
+const DINNER_LABELS = {
+  frenchdip: 'Hot French Dip',
+  chicken: 'Chicken',
+  beef: 'Beef',
+  veg: 'Vegetarian',
+  vegetarian: 'Vegetarian',
+  vegan: 'Vegan',
+  kids: 'Kids Meal',
+  gf: 'Gluten-Free',
+};
+const dinnerLabel = (d) => (d ? (DINNER_LABELS[d] || d) : null);
+
 function timeLabel(showtime) {
   if (showtime?.show_start) return showtime.show_start;
   return showtime?.showing_number === 1 ? 'Early' : 'Late';
@@ -116,6 +128,41 @@ export function SeatmapApp() {
     ? (theater.rows || []).reduce((n, r) => n + (r.seats || []).filter(Boolean).length, 0)
     : 0;
 
+  // ── Tap interaction: identify the occupant of a seat and light up their party.
+  const bySeat = useMemo(() => {
+    const m = new Map();
+    (data?.assignments || []).forEach((a) => m.set(`${a.row}-${a.num}`, a));
+    return m;
+  }, [data]);
+
+  const [occupant, setOccupant] = useState(null);
+  useEffect(() => { setOccupant(null); }, [curKey]); // close dossier on room change
+
+  // The tapped occupant's whole party IN THIS ROOM: same delegation for a
+  // delegated guest, else the sponsor's own (non-delegated) seats.
+  const groupSeats = useMemo(() => {
+    if (!occupant) return [];
+    return (data?.assignments || []).filter((a) =>
+      occupant.delegation_id
+        ? a.delegation_id === occupant.delegation_id
+        : (a.sponsor_id === occupant.sponsor_id && !a.delegation_id)
+    );
+  }, [occupant, data]);
+
+  const highlighted = useMemo(
+    () => new Set(groupSeats.map((a) => `${a.row}-${a.num}`)),
+    [groupSeats]
+  );
+
+  const onSeatActivate = (id) => setOccupant(bySeat.get(id) || null);
+
+  // Distinct dinners across the party (most parties share one).
+  const groupDinners = useMemo(() => {
+    const s = new Set();
+    groupSeats.forEach((a) => { if (a.dinner) s.add(a.dinner); });
+    return [...s];
+  }, [groupSeats]);
+
   return (
     <div style={{ minHeight: '100vh', background: NAVY, color: '#fff', fontFamily: FONT_UI, padding: '14px 12px 80px' }}>
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
@@ -178,6 +225,8 @@ export function SeatmapApp() {
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12, color: MUTED, marginBottom: 8 }}>
               <span><span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, background: '#3b82f6', marginRight: 6, verticalAlign: 'middle' }} />Open</span>
               <span><span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, background: 'rgba(255,255,255,0.25)', marginRight: 6, verticalAlign: 'middle' }} />Taken</span>
+              <span><span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, background: GOLD, marginRight: 6, verticalAlign: 'middle' }} />Selected party</span>
+              <span style={{ color: 'rgba(255,255,255,0.42)' }}>· tap any seat</span>
             </div>
 
             {/* The real guest chart */}
@@ -191,6 +240,9 @@ export function SeatmapApp() {
                   allowZoom
                   allowLasso={false}
                   assignedOther={new Set([...occupied, ...holds])}
+                  adminClickable
+                  onSeatActivate={onSeatActivate}
+                  highlighted={highlighted}
                 />
               ) : (
                 <div style={{ color: MUTED, padding: 24, textAlign: 'center' }}>
@@ -200,11 +252,49 @@ export function SeatmapApp() {
             </div>
 
             <p style={{ fontSize: 12, color: MUTED, marginTop: 12 }}>
-              Visual parity build. Tap-to-move, sponsor dossier, group highlight and cross-room moves are the next slice.
+              Tap any seat to see who's there and light up their whole party. Tap-to-move and cross-room moves are the next build.
             </p>
           </>
         )}
       </div>
+
+      {/* Dossier — who's in the tapped seat */}
+      {occupant && (
+        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50, padding: '0 12px' }}>
+          <div style={{ maxWidth: 980, margin: '0 auto' }}>
+            <div style={{ background: PANEL, border: `1px solid ${RULE}`, borderRadius: '16px 16px 0 0', padding: 16, boxShadow: '0 -12px 40px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: GOLD, marginBottom: 4 }}>
+                    {occupant.delegation_id ? 'Delegate guest' : (occupant.tier ? `${occupant.tier} sponsor` : 'Guest')}
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.15 }}>
+                    {occupant.guest_name || occupant.company || 'Unnamed guest'}
+                  </div>
+                  {occupant.company && occupant.guest_name && occupant.company !== occupant.guest_name && (
+                    <div style={{ fontSize: 13, color: MUTED, marginTop: 2 }}>{occupant.company}</div>
+                  )}
+                </div>
+                <button onClick={() => setOccupant(null)} aria-label="Close"
+                  style={{ background: 'transparent', border: `1px solid ${RULE}`, color: '#fff', borderRadius: 999, width: 32, height: 32, fontSize: 16, lineHeight: 1, cursor: 'pointer', flexShrink: 0 }}>×</button>
+              </div>
+              <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginTop: 12, fontSize: 13 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: MUTED, textTransform: 'uppercase', letterSpacing: '.05em' }}>Seats ({groupSeats.length || 1})</div>
+                  <div style={{ fontWeight: 700, marginTop: 2 }}>{groupSeats.length ? groupSeats.map((a) => `${a.row}${a.num}`).join(', ') : `${occupant.row}${occupant.num}`}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: MUTED, textTransform: 'uppercase', letterSpacing: '.05em' }}>Dinner</div>
+                  <div style={{ fontWeight: 700, marginTop: 2 }}>{groupDinners.length ? groupDinners.map(dinnerLabel).join(', ') : '—'}</div>
+                </div>
+              </div>
+              <div style={{ marginTop: 14, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                Move party → <span style={{ color: 'rgba(255,255,255,0.38)' }}>coming in the next build</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

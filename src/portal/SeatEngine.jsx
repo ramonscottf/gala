@@ -164,6 +164,10 @@ export const SeatMap = ({
   onZoomChange,
   highlightRows,
   highlightSeatType,
+  adminClickable = false,
+  onSeatActivate,
+  highlighted = new Set(),
+  highlightColor = '#f5b841',
 }) => {
   const rows = theater?.rows || [];
   const W = theater?.cols || 0;
@@ -268,6 +272,7 @@ export const SeatMap = ({
     return 'open';
   };
   const colorFor = (id, seatType) => {
+    if (highlighted.has(id)) return highlightColor;
     const st = status(id);
     if (st === 'self') return BRAND.indigoLight;
     if (st === 'other') return dark ? 'rgba(255,255,255,0.16)' : 'rgba(13,15,36,0.16)';
@@ -284,6 +289,7 @@ export const SeatMap = ({
   };
   const opacityFor = (seat) => {
     if (!seat) return 1;
+    if (highlighted.has(seat.id)) return 1;
     const st = status(seat.id);
     if (st === 'other') return 0.4;
     if (selected.has(seat.id)) return 1;
@@ -313,7 +319,10 @@ export const SeatMap = ({
   };
 
   const handleSeatClick = (id, ev) => {
-    if (status(id) === 'other') return;
+    if (status(id) === 'other' && !adminClickable) return;
+    // Admin mode hands every tap straight to the app (identify / move), bypassing
+    // the guest selection toggle. Guests never pass onSeatActivate, so unchanged.
+    if (onSeatActivate) { onSeatActivate(id); return; }
     // Expand this tap to include the loveseat partner if applicable.
     // For a paired loveseat, BOTH halves go to onSelect together — the
     // app's selection state (and the server's hold/finalize) will treat
@@ -498,9 +507,12 @@ export const SeatMap = ({
                 const x = padX + cIdx * (cell + gap);
                 const st = status(s.id);
                 const isSel = selected.has(s.id);
+                const isHi = highlighted.has(s.id);
                 const fill = colorFor(s.id, s.t);
-                const strokeColor = isSel ? (dark ? '#fff' : BRAND.ink) : 'none';
-                const sw = isSel ? 2.5 : 0;
+                const strokeColor = isHi
+                  ? (dark ? '#0a1430' : BRAND.ink)
+                  : (isSel ? (dark ? '#fff' : BRAND.ink) : 'none');
+                const sw = isHi ? 1.5 : (isSel ? 2.5 : 0);
 
                 // Phase 1.13 — fix paired-loveseat overlap and height.
                 // Phase 1.11 added a `bonus` widening that caused the right
