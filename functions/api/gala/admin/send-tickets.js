@@ -20,6 +20,7 @@ import { verifyGalaAuth, jsonError, jsonOk } from '../_auth.js';
 import { sendEmail } from '../_notify.js';
 
 const SEND_ID = 'tickets-jun10';
+const RUN_ID = () => `tickets-${Date.now()}`;
 const PORTAL_BASE = 'https://gala.daviskids.org/sponsor/';
 const AUCTION_URL = 'https://gala.daviskids.org/auction/';
 
@@ -159,7 +160,8 @@ export async function onRequestPost({ request, env }) {
     .map(r => String(r.recipient_email || '').toLowerCase()).filter(Boolean));
 
   // ── Recipient 1: sponsors with self-managed seats ─────────────────────
-  const sponsors = await db.prepare(`
+  // (skipped entirely when testing a single delegation)
+  const sponsors = onlyDelegationId ? { results: [] } : await db.prepare(`
     SELECT s.id, s.email, s.first_name, s.last_name, s.company, s.rsvp_token
     FROM sponsors s
     WHERE s.archived_at IS NULL AND s.email IS NOT NULL AND s.email != ''
@@ -208,6 +210,7 @@ export async function onRequestPost({ request, env }) {
   const pending = queue.filter(r => !sentKeys.has(String(r.email).toLowerCase()));
   const batch = pending.slice(0, limit);
 
+  const runId = RUN_ID();
   let sent = 0, failed = 0;
   const errors = [];
   for (const r of batch) {
@@ -233,9 +236,9 @@ export async function onRequestPost({ request, env }) {
       if (res && res.ok) {
         sent++;
         await db.prepare(`
-          INSERT INTO marketing_send_log (send_id, channel, recipient_email, recipient_name, status, sent_by, audience_label, sent_at)
-          VALUES (?, 'Email', ?, ?, 'sent', 'admin-tickets', ?, CURRENT_TIMESTAMP)
-        `).bind(SEND_ID, r.email, r.displayName, `Tickets: ${r.kind}`).run();
+          INSERT INTO marketing_send_log (send_id, send_run_id, channel, recipient_email, recipient_name, status, sent_by, audience_label, sent_at)
+          VALUES (?, ?, 'Email', ?, ?, 'sent', 'admin-tickets', ?, CURRENT_TIMESTAMP)
+        `).bind(SEND_ID, runId, r.email, r.displayName, `Tickets: ${r.kind}`).run();
       } else {
         failed++;
         errors.push({ email: r.email, error: (res && res.error) || 'send failed' });
