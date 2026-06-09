@@ -47,26 +47,43 @@ async function resolveSmsRecipients(audience, db) {
   }
 
   if (clause.all) {
-    // Everyone = purchasers + their invited guests, every row with a phone,
-    // deduped by phone. Guests live in sponsor_delegations (delegate_phone) —
-    // this used to read only `sponsors`, so it never texted a single guest.
-    // Reclaimed delegations excluded. Guests have no rsvp_token, so "Everyone"
-    // SMS is for static-link blasts (no {TOKEN}).
+    // Everyone = purchasers + their invited guests + volunteers (SMS opt-in
+    // only — 54 of 85 explicitly opted out, TCPA) + cook crew, every row
+    // with a phone, deduped by NORMALIZED phone (strip punctuation/+1) so
+    // "(801) 555-1234" and "8015551234" don't get double-texted.
+    // Reclaimed delegations excluded. Guests/volunteers have no rsvp_token,
+    // so "Everyone" SMS is for static-link blasts (no {TOKEN}).
+    // 2026-06-09 audit: volunteers + cooks were entirely outside Everyone.
     const rows = await db.prepare(`
-      SELECT MIN(id) AS id, first_name, last_name, company, phone, rsvp_token
+      SELECT MIN(id) AS id, first_name, last_name, company, MIN(phone) AS phone, rsvp_token
       FROM (
-        SELECT id, first_name, last_name, company, phone, rsvp_token
+        SELECT id, first_name, last_name, company, phone, rsvp_token,
+               replace(replace(replace(replace(replace(replace(phone,'-',''),' ',''),'(',''),')',''),'+1',''),'.','') AS phone_key
         FROM sponsors
         WHERE archived_at IS NULL AND phone IS NOT NULL AND phone != ''
         UNION ALL
         SELECT NULL AS id, d.delegate_name AS first_name, '' AS last_name,
                (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
-               d.delegate_phone AS phone, NULL AS rsvp_token
+               d.delegate_phone AS phone, NULL AS rsvp_token,
+               replace(replace(replace(replace(replace(replace(d.delegate_phone,'-',''),' ',''),'(',''),')',''),'+1',''),'.','') AS phone_key
         FROM sponsor_delegations d
         WHERE d.status != 'reclaimed'
           AND d.delegate_phone IS NOT NULL AND d.delegate_phone != ''
+        UNION ALL
+        SELECT NULL AS id, first_name, last_name, organization AS company,
+               phone, NULL AS rsvp_token,
+               replace(replace(replace(replace(replace(replace(phone,'-',''),' ',''),'(',''),')',''),'+1',''),'.','') AS phone_key
+        FROM volunteers
+        WHERE deleted_at IS NULL AND sms_opt_in = 1
+          AND phone IS NOT NULL AND phone != ''
+        UNION ALL
+        SELECT NULL AS id, first_name, last_name, 'Cook Crew' AS company,
+               phone, NULL AS rsvp_token,
+               replace(replace(replace(replace(replace(replace(phone,'-',''),' ',''),'(',''),')',''),'+1',''),'.','') AS phone_key
+        FROM cook_shirts
+        WHERE phone IS NOT NULL AND phone != ''
       )
-      GROUP BY phone
+      GROUP BY phone_key
       ORDER BY company
     `).all();
     return rows.results || [];

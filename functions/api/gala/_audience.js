@@ -132,6 +132,13 @@ export async function resolveAudience(audience, db) {
         FROM sponsors
         WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
         UNION ALL
+        -- Secondary contact on the sponsorship (e.g. spouse / EA) — added
+        -- 2026-06-09 audit: these addresses were silently unreachable.
+        SELECT id, secondary_email AS email, first_name, last_name, company,
+               sponsorship_tier, rsvp_token
+        FROM sponsors
+        WHERE archived_at IS NULL AND secondary_email IS NOT NULL AND secondary_email != ''
+        UNION ALL
         SELECT NULL AS id, d.delegate_email AS email, d.delegate_name AS first_name,
                '' AS last_name,
                (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
@@ -144,6 +151,20 @@ export async function resolveAudience(audience, db) {
                'Donor' AS sponsorship_tier, NULL AS rsvp_token
         FROM donors
         WHERE archived_at IS NULL AND email IS NOT NULL AND email != ''
+        UNION ALL
+        -- Volunteers (active only) — 2026-06-09 audit: 85 volunteers were
+        -- entirely outside Everyone. They're at the event; they get day-of
+        -- messaging. Soft-deleted rows excluded.
+        SELECT NULL AS id, email, first_name, last_name, organization AS company,
+               'Volunteer' AS sponsorship_tier, NULL AS rsvp_token
+        FROM volunteers
+        WHERE deleted_at IS NULL AND email IS NOT NULL AND email != ''
+        UNION ALL
+        -- Cook crew (cook_shirts signups) — working the event night-of.
+        SELECT NULL AS id, email, first_name, last_name, 'Cook Crew' AS company,
+               'Volunteer' AS sponsorship_tier, NULL AS rsvp_token
+        FROM cook_shirts
+        WHERE email IS NOT NULL AND email != ''
       )
       GROUP BY lower(email)
       ORDER BY company COLLATE NOCASE
