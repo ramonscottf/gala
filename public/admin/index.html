@@ -1188,6 +1188,7 @@ body {
      Exposes window.GalaEditor.mount(targetDiv, initialHtml, onChange). -->
 <script src="./assets/editor.js" defer></script>
 <script src="/assets/run-of-show-export.js" defer></script>
+<script src="/assets/room-sheets-pdf.js" defer></script>
 </head>
 <body>
 
@@ -1536,6 +1537,7 @@ body {
       <button class="ga-btn" id="vol-test-btn" title="Test SMS and email pipelines">Test Pipes</button>
       <button class="ga-btn" id="vol-export-btn">Export</button>
       <button class="ga-btn" id="vol-runofshow-btn" title="Download the theater run-of-show (Excel) with live guest counts per auditorium &amp; showing">📅 Run of Show</button>
+      <button class="ga-btn" id="vol-roomsheets-btn" title="Download one PDF: a seat map + guest list for every auditorium &amp; showing (ambassador sheets)">🗺 Room Sheets (PDF)</button>
       <button class="ga-btn" id="vol-refresh-btn">Refresh</button>
       <a href="/volunteer" target="_blank" class="ga-btn">Public Signup ↗</a>
     </div>
@@ -6509,6 +6511,11 @@ loadMoviesOverview();
 if(b)b.addEventListener("click",function(){
   if(window.GalaRunOfShow){window.GalaRunOfShow.download(this);}
   else{alert("Export tool not loaded — please refresh and try again.");}
+});})();
+(function(){var b=document.getElementById("vol-roomsheets-btn");
+if(b)b.addEventListener("click",function(){
+  if(window.GalaRoomSheets){window.GalaRoomSheets.download(this);}
+  else{alert("Room sheets tool not loaded — please refresh and try again.");}
 });})();
 </script>
 </body>
