@@ -92,6 +92,7 @@ function ticketsBlockHtml(showings, token) {
   return '<div style="margin:6px 0 4px;">'
     + '<div style="font-size:12px;font-weight:700;color:#0d1b3d;margin:0 0 10px;letter-spacing:.08em;">YOUR TICKETS</div>'
     + cards
+    + '<p style="margin:14px 0 4px;"><a href="' + ORIGIN + '/checkin?t=' + encodeURIComponent(token) + '" style="font-weight:700;color:#0066ff;">&#128205; See your seats highlighted on the auditorium map</a></p>'
     + '<div style="text-align:center;margin:18px 0 6px;">'
     + '<img src="' + qr + '" width="220" height="220" alt="Your check-in QR code" style="display:inline-block;border:8px solid #fff;border-radius:12px;box-shadow:0 4px 14px rgba(13,27,61,.15);" />'
     + '<div style="font-size:13px;color:#737373;margin-top:8px;">Show this QR at the door to check in — that\'s all you need.</div>'

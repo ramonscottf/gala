@@ -83,7 +83,7 @@ function smsSummary(name, showings, token) {
       : '';
     return `Aud ${g.auditorium} · ${g.movie} ${g.show_start || ''} · Seats ${g.seats.join(', ')}${dinner}`;
   });
-  return `Your DEF Gala tickets, ${name}:\n${parts.join('\n')}\n\nCheck in at the door with this link:\n${ORIGIN}/checkin?t=${token}\n\nSee you June 10!`;
+  return `Your DEF Gala tickets, ${name}:\n${parts.join('\n')}\n\nSee your seats on the map: ${ORIGIN}/checkin?t=${token}\n\nSee you June 10!`;
 }
 
 function emailBody(showings, token) {
@@ -105,7 +105,8 @@ function emailBody(showings, token) {
   return `<p style="margin:0 0 18px 0;">Here are your tickets for the DEF Gala. Show the QR code below at the door to check in — that's all you need.</p>
       ${seatsBlock}
       <div style="text-align:center;margin:22px 0 6px 0;">
-        <img src="${qr}" width="240" height="240" alt="Your check-in QR code" style="display:inline-block;border:8px solid #ffffff;border-radius:12px;box-shadow:0 4px 14px rgba(13,27,61,0.15);" />
+        <a href="${ORIGIN}/checkin?t=${encodeURIComponent(token)}" style="font-weight:700;color:#0066ff;display:inline-block;margin-bottom:12px;">&#128205; See your seats highlighted on the auditorium map</a><br/>
+        <img src="${qr}" width="240" height="240" alt="Your gala QR code" style="display:inline-block;border:8px solid #ffffff;border-radius:12px;box-shadow:0 4px 14px rgba(13,27,61,0.15);" />
         <div style="font-size:13px;color:#666;margin-top:10px;">Your check-in code · doors open at dinner time</div>
       </div>`;
 }
