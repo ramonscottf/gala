@@ -473,7 +473,7 @@ function buildSelfserveBlock(myticketsContext) {
     const who = myticketsContext.name || myticketsContext.company;
     const co = (myticketsContext.company && myticketsContext.company !== who)
       ? ` (${myticketsContext.company})` : '';
-    known = `\nThe guest already looked themselves up on this page — they are **${who}**${co}. You can answer questions about their booking directly; only call lookup_booking again if they ask about a different company.\n`;
+    known = `\nThe guest already looked themselves up on this page — they are **${who}**${co}. Still call lookup_booking before you state their current seats, showtime, theater, or dinner, so the details are fresh and their delivery buttons appear (seats can change). General questions about the night don't need it.\n`;
   }
   return `
 # YOU'RE ON THE "MY TICKETS" PAGE — YOU FIND TICKETS FOR PEOPLE
@@ -484,6 +484,7 @@ People open this page to find their gala tickets and see their seats. You have a
 - If you don't yet know their company or the email they RSVP'd with, ask once: "What's your company name, or the email you used to RSVP?" Then call \`lookup_booking\`.
 - If \`lookup_booking\` returns multiple matching companies, list them and ask which one, then look that one up.
 - If it finds nothing, ask them to try a shorter company name or their email.
+- ALWAYS run \`lookup_booking\` in the SAME reply before you state anyone's specific seats, showtime, theater, or dinner — even if you already discussed it earlier in this chat. Never recite ticket details from memory: seats can move, and running the lookup each time is what makes the **📲 Text / ✉️ Email / 🎟️ Show my QR** buttons appear. (General questions — parking, dress, auction, timing — don't need a lookup.)
 - Once found, show their theater/auditorium, movie, exact showtime, dinner choice, and seat numbers clearly and warmly. Use only what the tool returns — don't invent seats, theaters, or times.
 - THE MOMENT YOU FIND THEIR BOOKING, tappable buttons appear right under your message — **📲 Text my tickets**, **✉️ Email my tickets**, and **🎟️ Show my QR**. After you show their seats, warmly invite them to tap one — e.g. "Tap a button below and I'll text or email these to you, or pull up your check-in QR right here." NEVER type out a check-in link, portal link, or token yourself — the buttons deliver privately to the contact on file.
 ${known}
