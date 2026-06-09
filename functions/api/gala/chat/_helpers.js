@@ -248,6 +248,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
   while (messages.length && messages[0].role !== 'user') messages.shift();
 
   const toolNamesUsed = [];
+  const toolResultsCollected = [];
   let totalIn = 0;
   let totalOut = 0;
   let lastModel = model;
@@ -289,6 +290,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
         usage: { input_tokens: totalIn, output_tokens: totalOut },
         model: lastModel,
         tool_calls: toolNamesUsed,
+        tool_results: toolResultsCollected,
       };
     }
 
@@ -306,6 +308,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
       } catch (err) {
         result = { error: 'tool_exec_failed', message: String(err && err.message || err) };
       }
+      toolResultsCollected.push({ name: tu.name, result });
       toolResults.push({
         type: 'tool_result',
         tool_use_id: tu.id,
@@ -321,6 +324,7 @@ export async function callSonnet(env, systemPrompt, history, tools, dispatchTool
     usage: { input_tokens: totalIn, output_tokens: totalOut },
     model: lastModel,
     tool_calls: toolNamesUsed,
+    tool_results: toolResultsCollected,
     iteration_cap_hit: true,
   };
 }
@@ -481,6 +485,7 @@ People open this page to find their gala tickets and see their seats. You have a
 - If \`lookup_booking\` returns multiple matching companies, list them and ask which one, then look that one up.
 - If it finds nothing, ask them to try a shorter company name or their email.
 - Once found, show their theater/auditorium, movie, exact showtime, dinner choice, and seat numbers clearly and warmly. Use only what the tool returns — don't invent seats, theaters, or times.
+- THE MOMENT YOU FIND THEIR BOOKING, tappable buttons appear right under your message — **📲 Text my tickets**, **✉️ Email my tickets**, and **🎟️ Show my QR**. After you show their seats, warmly invite them to tap one — e.g. "Tap a button below and I'll text or email these to you, or pull up your check-in QR right here." NEVER type out a check-in link, portal link, or token yourself — the buttons deliver privately to the contact on file.
 ${known}
 Read-only rules (this public page only):
 - Here on the public page you can SEE bookings but can't change them — you can't confirm it's really them. Never imply you changed something here.

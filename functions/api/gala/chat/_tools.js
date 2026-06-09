@@ -250,12 +250,12 @@ async function lookupBooking(env, input) {
   if (query.includes('@')) {
     const email = query.toLowerCase();
     const sponsor = await env.GALA_DB.prepare(
-      `SELECT id, company, first_name, last_name FROM sponsors
+      `SELECT id, company, first_name, last_name, rsvp_token, email FROM sponsors
         WHERE archived_at IS NULL AND (LOWER(email) = ? OR LOWER(secondary_email) = ?)
         LIMIT 1`
     ).bind(email, email).first();
     const delRs = await env.GALA_DB.prepare(
-      `SELECT id, delegate_name, parent_sponsor_id FROM sponsor_delegations
+      `SELECT id, delegate_name, parent_sponsor_id, token, delegate_email, delegate_phone FROM sponsor_delegations
         WHERE LOWER(delegate_email) = ? AND (status IS NULL OR status <> 'reclaimed')`
     ).bind(email).all();
     const delRows = delRs.results || [];
@@ -292,6 +292,9 @@ async function lookupBooking(env, input) {
       }
     }
     const showings = Array.from(merged.values());
+    const _deliver = delRows.length
+      ? { token: delRows[0].token || null, kind: 'delegation', to_email: delRows[0].delegate_email || null, to_phone: delRows[0].delegate_phone || null, name: delRows[0].delegate_name || personName || 'Guest', company: company || null }
+      : (sponsor ? { token: sponsor.rsvp_token || null, kind: 'sponsor', to_email: sponsor.email || null, to_phone: null, name: personName || 'Guest', company: company || null } : null);
     return {
       found: true,
       name: personName || 'Guest',
@@ -299,6 +302,7 @@ async function lookupBooking(env, input) {
       has_seats: showings.length > 0,
       showings,
       note: LOOKUP_NOTE,
+      _deliver,
     };
   }
 
@@ -307,13 +311,13 @@ async function lookupBooking(env, input) {
   const like = `%${query}%`;
   const [spRs, dgRs] = await Promise.all([
     env.GALA_DB.prepare(
-      `SELECT id, company, first_name, last_name FROM sponsors
+      `SELECT id, company, first_name, last_name, rsvp_token, email FROM sponsors
         WHERE archived_at IS NULL AND company LIKE ? COLLATE NOCASE
         ORDER BY CASE WHEN company LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END, company
         LIMIT 10`
     ).bind(like, `${query}%`).all(),
     env.GALA_DB.prepare(
-      `SELECT id, delegate_name, parent_sponsor_id FROM sponsor_delegations
+      `SELECT id, delegate_name, parent_sponsor_id, token, delegate_email, delegate_phone FROM sponsor_delegations
         WHERE (status IS NULL OR status <> 'reclaimed') AND delegate_name LIKE ? COLLATE NOCASE
         ORDER BY delegate_name LIMIT 10`
     ).bind(like).all(),
@@ -352,6 +356,7 @@ async function bookingResult(env, sponsor) {
     has_seats: showings.length > 0,
     showings,
     note: 'READ-ONLY. To change anything, the guest taps "Email me my portal link" on this page — that sends a private link to the email on file, and on that page Booker can actually move their seats for them. For any other help, text or call Scott at 801-810-6642. Do not output a portal link or token.',
+    _deliver: { token: sponsor.rsvp_token || null, kind: 'sponsor', to_email: sponsor.email || null, to_phone: null, name, company: sponsor.company },
   };
 }
 
@@ -412,6 +417,7 @@ async function delegationBookingResult(env, d) {
     has_seats: showings.length > 0,
     showings,
     note: LOOKUP_NOTE,
+    _deliver: { token: d.token || null, kind: 'delegation', to_email: d.delegate_email || null, to_phone: d.delegate_phone || null, name: d.delegate_name || 'Guest', company },
   };
 }
 

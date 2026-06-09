@@ -81,6 +81,31 @@ export async function onRequestPost({ request, env }) {
         ai_tokens_in: reply.usage.input_tokens,
         ai_tokens_out: reply.usage.output_tokens,
       });
+
+      // Self-serve ticket delivery: when Booker actually finds a booking on the
+      // My Tickets page, surface tappable Text / Email / Show-QR buttons and
+      // remember the token on the thread so /chat/ticket-action can deliver
+      // without another lookup. Buttons offered only for channels we have a
+      // contact for; QR is always available (read-only).
+      let ticketButtons = null;
+      if (selfserve && Array.isArray(reply.tool_results)) {
+        const hit = reply.tool_results.find(
+          (t) => t && t.name === 'lookup_booking' && t.result && t.result.found
+                 && t.result._deliver && t.result._deliver.token
+        );
+        if (hit) {
+          const d = hit.result._deliver;
+          try {
+            await env.GALA_DB.prepare('UPDATE chat_threads SET found_token = ? WHERE id = ?')
+              .bind(d.token, thread.id).run();
+          } catch (e) { console.error('found_token persist failed:', e); }
+          ticketButtons = [];
+          if (d.to_phone) ticketButtons.push({ action: 'sms', label: '📲 Text my tickets' });
+          if (d.to_email) ticketButtons.push({ action: 'email', label: '✉️ Email my tickets' });
+          ticketButtons.push({ action: 'qr', label: '🎟️ Show my QR' });
+        }
+      }
+
       return jsonResponse({
         ok: true,
         mode: 'ai',
@@ -88,6 +113,7 @@ export async function onRequestPost({ request, env }) {
         // tool_calls is included for clients that want to display "Booker
         // looked up your booking" affordances. Omitted when no tools used.
         ...(reply.tool_calls && reply.tool_calls.length ? { tool_calls: reply.tool_calls } : {}),
+        ...(ticketButtons && ticketButtons.length ? { buttons: ticketButtons } : {}),
       });
     } catch (err) {
       console.error('AI call failed:', err);
