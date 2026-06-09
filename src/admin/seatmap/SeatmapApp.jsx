@@ -201,7 +201,48 @@ export function SeatmapApp() {
 
   useEffect(() => { if (mode === 'view') setOccupant(null); }, [curKey]); // close dossier on room change (view only)
 
-  const onSeatActivate = (id) => setOccupant(bySeat.get(id) || null);
+  const onSeatActivate = (id) => {
+    const occ = bySeat.get(id);
+    if (occ) { setOccupant(occ); return; }
+    // Open seat in view mode → toggle into the walk-up selection.
+    setOccupant(null);
+    setWalkupSel((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+
+  // ── Walk-up assignment (night-of, Scott-only) ──────────────────────────────
+  const [walkupSel, setWalkupSel] = useState([]); // seat ids 'D-7'
+  const [walkupOpen, setWalkupOpen] = useState(false);
+  const [wuName, setWuName] = useState('');
+  const [wuPhone, setWuPhone] = useState('');
+  const [wuEmail, setWuEmail] = useState('');
+  const [wuDinner, setWuDinner] = useState('');
+  const [wuBusy, setWuBusy] = useState(false);
+  const [wuMsg, setWuMsg] = useState(null);
+  const [wuDone, setWuDone] = useState(null);
+  useEffect(() => { setWalkupSel([]); setWalkupOpen(false); setWuDone(null); setWuMsg(null); }, [curKey]);
+
+  const submitWalkup = async () => {
+    if (!wuName.trim() || wuBusy) return;
+    setWuBusy(true); setWuMsg(null);
+    try {
+      const res = await fetch('/api/gala/admin/walkup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: wuName.trim(), phone: wuPhone.trim() || null, email: wuEmail.trim() || null,
+          theater_id: curT, showing_number: curSh,
+          seats: walkupSel.map((id) => { const [row, num] = id.split('-'); return { row, num }; }),
+          dinner: wuDinner || null, send: true,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+      setWuDone(d);
+      setWalkupSel([]); setWuName(''); setWuPhone(''); setWuEmail(''); setWuDinner('');
+      setTick((t) => t + 1);
+    } catch (e) {
+      setWuMsg(String(e.message || e));
+    } finally { setWuBusy(false); }
+  };
 
   // ── Phase 4 derivations ────────────────────────────────────────────────────
   // Group directory rows into parties per room: a delegation is a party; a
@@ -539,6 +580,9 @@ export function SeatmapApp() {
                   onSeatActivate={onSeatActivate}
                   highlighted={highlighted}
                   highlightColor={GOLD}
+                  selected={new Set(walkupSel)}
+                  selectedStyle="hollow"
+                  onSelect={onSeatActivate}
                 />
               ) : <div style={{ color: MUTED, padding: 24, textAlign: 'center' }}>{data ? 'Could not load auditorium layout.' : 'Loading seats…'}</div>}
             </div>
@@ -547,6 +591,64 @@ export function SeatmapApp() {
           </>
         )}
       </div>
+
+      {/* Walk-up assign bar + sheet (view mode, open seats selected, no dossier open) */}
+      {mode === 'view' && !occupant && (walkupSel.length > 0 || wuDone) && (
+        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50, padding: '0 12px' }}>
+          <div style={{ maxWidth: 980, margin: '0 auto' }}>
+            <div style={{ background: PANEL, border: `1px solid ${RULE}`, borderRadius: '16px 16px 0 0', padding: 16, boxShadow: '0 -12px 40px rgba(0,0,0,0.5)' }}>
+              {wuDone ? (
+                <>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#34d399' }}>✓ Assigned — seats {wuDone.seats.join(', ')}</div>
+                  <div style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>
+                    {wuDone.sent.sms ? '📲 Texted their tickets. ' : ''}{wuDone.sent.email ? '✉️ Emailed their tickets. ' : ''}
+                    {!wuDone.sent.sms && !wuDone.sent.email ? 'No contact given — show them this QR or read them the link.' : ''}
+                  </div>
+                  <div style={{ fontSize: 12, color: MUTED, marginTop: 6, wordBreak: 'break-all' }}>Seat map link: {wuDone.checkin_url}</div>
+                  <button onClick={() => setWuDone(null)} style={{ marginTop: 12, width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.1)', color: '#fff', border: `1px solid ${RULE}`, fontWeight: 700, cursor: 'pointer' }}>Done</button>
+                </>
+              ) : !walkupOpen ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800 }}>{walkupSel.length} open seat{walkupSel.length === 1 ? '' : 's'} selected</div>
+                    <div style={{ fontSize: 12, color: MUTED }}>{walkupSel.map((id) => id.replace('-', '')).join(', ')} · tap more to add</div>
+                  </div>
+                  <button onClick={() => setWalkupSel([])} style={{ padding: '10px 12px', borderRadius: 10, background: 'transparent', border: `1px solid ${RULE}`, color: '#fff', fontSize: 13, cursor: 'pointer' }}>Clear</button>
+                  <button onClick={() => setWalkupOpen(true)} style={{ padding: '12px 16px', borderRadius: 12, background: GOLD, color: INK, border: 'none', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Assign walk-up →</button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 10 }}>Assign {walkupSel.length} seat{walkupSel.length === 1 ? '' : 's'} ({walkupSel.map((id) => id.replace('-', '')).join(', ')}) — Aud {curT}</div>
+                  <input value={wuName} onChange={(e) => setWuName(e.target.value)} placeholder="Guest name (required)"
+                    style={{ width: '100%', boxSizing: 'border-box', padding: 12, borderRadius: 10, border: `1px solid ${RULE}`, background: 'rgba(7,13,33,0.65)', color: '#fff', fontSize: 15, marginBottom: 8 }} />
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <input value={wuPhone} onChange={(e) => setWuPhone(e.target.value)} placeholder="Phone (texts tickets)" inputMode="tel"
+                      style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 10, border: `1px solid ${RULE}`, background: 'rgba(7,13,33,0.65)', color: '#fff', fontSize: 14 }} />
+                    <input value={wuEmail} onChange={(e) => setWuEmail(e.target.value)} placeholder="Email (emails tickets)" inputMode="email"
+                      style={{ flex: 1, minWidth: 0, padding: 12, borderRadius: 10, border: `1px solid ${RULE}`, background: 'rgba(7,13,33,0.65)', color: '#fff', fontSize: 14 }} />
+                  </div>
+                  <select value={wuDinner} onChange={(e) => setWuDinner(e.target.value)}
+                    style={{ width: '100%', padding: 12, borderRadius: 10, border: `1px solid ${RULE}`, background: 'rgba(7,13,33,0.65)', color: '#fff', fontSize: 14, marginBottom: 10 }}>
+                    <option value="">Dinner — choose later in their link</option>
+                    <option value="frenchdip">Hot French Dip (all seats)</option>
+                    <option value="salad">Chicken Salad (all seats)</option>
+                    <option value="veggie">Vegetarian (all seats)</option>
+                    <option value="kids">Kids Meal (all seats)</option>
+                  </select>
+                  {wuMsg && <div style={{ background: '#3a1620', border: '1px solid #7a2e3e', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 13 }}>{wuMsg}</div>}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setWalkupOpen(false)} style={{ padding: '13px 16px', borderRadius: 12, background: 'transparent', border: `1px solid ${RULE}`, color: '#fff', fontSize: 14, cursor: 'pointer' }}>Back</button>
+                    <button onClick={submitWalkup} disabled={!wuName.trim() || wuBusy}
+                      style={{ flex: 1, padding: 13, borderRadius: 12, background: wuName.trim() && !wuBusy ? GOLD : 'rgba(255,194,77,0.35)', color: INK, border: 'none', fontSize: 15, fontWeight: 800, cursor: wuName.trim() && !wuBusy ? 'pointer' : 'default' }}>
+                      {wuBusy ? 'Assigning…' : `Assign${(wuPhone.trim() || wuEmail.trim()) ? ' + send tickets' : ''} →`}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dossier (view mode) */}
       {mode === 'view' && occupant && (
