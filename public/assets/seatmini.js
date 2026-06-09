@@ -70,8 +70,17 @@
       lab.textContent = row.label;
       svg.appendChild(lab);
 
-      (row.numbers || []).forEach((num, i) => {
-        const col = row.cols[i];
+      // Rows come in two shapes: simple {numbers, cols} or mixed
+      // {segments:[{seats, cols, type}]} (wheelchair / companion / loveseat
+      // rows). Flatten both into (num, col) pairs so no seat goes missing.
+      const pairs = [];
+      if (row.numbers) {
+        row.numbers.forEach((num, i) => pairs.push([num, row.cols[i]]));
+      } else if (row.segments) {
+        row.segments.forEach((seg) => (seg.seats || []).forEach((num, i) => pairs.push([num, seg.cols[i]])));
+      }
+
+      pairs.forEach(([num, col]) => {
         const x = pad + labelW + (col - minCol) * (cell + gap);
         const id = `${row.label}${num}`;
         const isHi = hi.has(id), isOcc = occ.has(id);
