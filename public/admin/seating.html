@@ -2248,6 +2248,7 @@ body[data-verify-mode] .verify-banner {
   .mm-results { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 }
 </style>
+<script src="/assets/run-of-show-export.js" defer></script>
 </head>
 <body>
 
@@ -2267,6 +2268,7 @@ body[data-verify-mode] .verify-banner {
       <button type="button" class="admin-utility-btn" id="print-btn" title="Print current auditorium chart">🖨 <span class="admin-utility-label">Print</span></button>
     </span>
     <button class="btn btn-secondary" id="export-btn">Export</button>
+    <button class="btn btn-secondary" id="runofshow-btn" title="Download the theater run-of-show (Excel) with live guest counts per auditorium &amp; showing">📅 Run of Show</button>
     <button class="btn btn-secondary" id="clear-btn">Clear</button>
   </div>
 </div>
@@ -5625,6 +5627,13 @@ document.addEventListener('keydown', (e) => {
 
 /* ═══ INIT ═══ */
 init();
+</script>
+<script>
+(function(){var b=document.getElementById("runofshow-btn");
+if(b)b.addEventListener("click",function(){
+  if(window.GalaRunOfShow){window.GalaRunOfShow.download(this);}
+  else{alert("Export tool not loaded — please refresh and try again.");}
+});})();
 </script>
 </body>
 </html>
