@@ -64,6 +64,27 @@ export function SeatmapApp() {
 
   // move mode
   const [mode, setMode] = useState('view'); // 'view' | 'move'
+
+  // ── Phase 4: directory + overview ──────────────────────────────────────────
+  const [dirRows, setDirRows] = useState([]);
+  const [dirErr, setDirErr] = useState(null);
+  const [q, setQ] = useState('');
+  const [pendingJump, setPendingJump] = useState(null); // {key, anchor}
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/gala/admin/directory');
+        if (!res.ok) throw new Error(`directory ${res.status}`);
+        const d = await res.json();
+        if (alive) { setDirRows(d.rows || []); setDirErr(null); }
+      } catch (e) {
+        if (alive) setDirErr(String(e.message || e));
+      }
+    })();
+    return () => { alive = false; };
+  }, [tick]);
   const [moveParty, setMoveParty] = useState([]); // source assignments
   const [moveSrcKey, setMoveSrcKey] = useState(null);
   const [moveDestKey, setMoveDestKey] = useState(null);
@@ -181,6 +202,89 @@ export function SeatmapApp() {
   useEffect(() => { if (mode === 'view') setOccupant(null); }, [curKey]); // close dossier on room change (view only)
 
   const onSeatActivate = (id) => setOccupant(bySeat.get(id) || null);
+
+  // ── Phase 4 derivations ────────────────────────────────────────────────────
+  // Group directory rows into parties per room: a delegation is a party; a
+  // sponsor's own (non-delegated) seats are a party.
+  const dirParties = useMemo(() => {
+    const map = new Map();
+    for (const r of dirRows) {
+      const pk = r.delegation_id ? `d${r.delegation_id}` : `s${r.sponsor_id}`;
+      const key = `${r.theater_id}:${r.showing_number}|${pk}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          roomKey: `${r.theater_id}:${r.showing_number}`,
+          theater_id: r.theater_id, showing_number: r.showing_number,
+          movie: r.movie, show_start: r.show_start,
+          anchor: { sponsor_id: r.sponsor_id, delegation_id: r.delegation_id },
+          name: r.delegate_name || r.guest_name || r.company || 'Unnamed party',
+          company: r.delegation_id ? (r.parent_company || null) : (r.company || null),
+          tier: r.tier, seats: [], dinners: new Set(), checkedIn: 0,
+        });
+      }
+      const p = map.get(key);
+      p.seats.push(r.seat);
+      if (r.dinner) p.dinners.add(r.dinner);
+      if (r.checked_in) p.checkedIn += 1;
+      // Prefer a real person name over a company label if one appears later.
+      if (!r.delegation_id && r.guest_name && p.name === p.company) p.name = r.guest_name;
+    }
+    return [...map.values()];
+  }, [dirRows]);
+
+  const qNorm = q.trim().toLowerCase();
+  const searching = mode === 'view' && qNorm.length >= 2;
+  const results = useMemo(() => {
+    if (!searching) return [];
+    return dirParties
+      .filter((p) =>
+        (p.name || '').toLowerCase().includes(qNorm) ||
+        (p.company || '').toLowerCase().includes(qNorm) ||
+        p.seats.some((s) => s.toLowerCase() === qNorm))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .slice(0, 40);
+  }, [searching, qNorm, dirParties]);
+
+  // Per-room overview stats for the "tonight at a glance" cards.
+  const overview = useMemo(() => {
+    return showtimes.map((s) => {
+      const key = `${s.theater_id}:${s.showing_number}`;
+      const rows = dirRows.filter((r) => `${r.theater_id}:${r.showing_number}` === key);
+      const th = theaterFor(s.theater_id);
+      const cap = th ? (th.rows || []).reduce((n, r) => n + (r.seats || []).filter(Boolean).length, 0) : 0;
+      const parties = dirParties.filter((p) => p.roomKey === key).length;
+      return {
+        key, theater_id: s.theater_id, showing_number: s.showing_number,
+        movie: s.movie_title, time: timeLabel(s),
+        seated: rows.length, cap, parties,
+        checkedIn: rows.reduce((n, r) => n + (r.checked_in ? 1 : 0), 0),
+      };
+    });
+  }, [showtimes, dirRows, dirParties, layouts]);
+
+  // Jump from a search result: switch rooms, then open that party's dossier
+  // once the new room's data arrives (the room-change effect above clears the
+  // dossier, so we set it after data lands).
+  const jumpTo = (p) => {
+    setQ('');
+    if (p.roomKey === curKey && data) {
+      const hit = (data.assignments || []).find((a) =>
+        p.anchor.delegation_id ? a.delegation_id === p.anchor.delegation_id
+          : (a.sponsor_id === p.anchor.sponsor_id && !a.delegation_id));
+      setOccupant(hit || null);
+      return;
+    }
+    setPendingJump({ key: p.roomKey, anchor: p.anchor });
+    setCurKey(p.roomKey);
+  };
+  useEffect(() => {
+    if (!pendingJump || curKey !== pendingJump.key || !data) return;
+    const hit = (data.assignments || []).find((a) =>
+      pendingJump.anchor.delegation_id ? a.delegation_id === pendingJump.anchor.delegation_id
+        : (a.sponsor_id === pendingJump.anchor.sponsor_id && !a.delegation_id));
+    setOccupant(hit || null);
+    setPendingJump(null);
+  }, [pendingJump, curKey, data]);
 
   // ── MOVE MODE ──────────────────────────────────────────────────────────────
   const [destT, destSh] = useMemo(() => parseKey(moveDestKey), [moveDestKey]);
@@ -316,10 +420,48 @@ export function SeatmapApp() {
           <span style={{ fontSize: 12, color: MUTED }}>preview · live tool unchanged</span>
         </div>
 
+        {mode === 'view' && (
+          <div style={{ position: 'relative', marginBottom: 12 }}>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search anyone — name, company, or seat (e.g. D7)…"
+              inputMode="search"
+              style={{ width: '100%', boxSizing: 'border-box', padding: '13px 40px 13px 14px', borderRadius: 12, border: `1px solid ${q ? BLUE : RULE}`, background: 'rgba(7,13,33,0.65)', color: '#fff', fontSize: 15, fontFamily: FONT_UI, outline: 'none' }}
+            />
+            {q && (
+              <button onClick={() => setQ('')} aria-label="Clear search"
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', width: 28, height: 28, borderRadius: 999, border: 'none', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 14, cursor: 'pointer' }}>×</button>
+            )}
+          </div>
+        )}
+
         {err && <div style={{ background: '#3a1620', border: '1px solid #7a2e3e', borderRadius: 10, padding: 12, marginBottom: 12, fontSize: 13 }}>{err.includes('401') ? 'Session expired — reload and log in again.' : `Error: ${err}`}</div>}
 
         {loading ? (
           <div style={{ color: MUTED, padding: 24 }}>Loading…</div>
+        ) : searching ? (
+          <div style={{ background: PANEL, borderRadius: 12, border: `1px solid ${RULE}`, padding: 6 }}>
+            {dirErr ? (
+              <div style={{ color: MUTED, padding: 18, fontSize: 13 }}>Directory unavailable ({dirErr}) — use the map below by room.</div>
+            ) : results.length === 0 ? (
+              <div style={{ color: MUTED, padding: 18, fontSize: 13 }}>No match for “{q.trim()}” — try fewer letters, or a company name.</div>
+            ) : results.map((p, i) => (
+              <button key={i} onClick={() => jumpTo(p)}
+                style={{ display: 'block', width: '100%', textAlign: 'left', background: 'transparent', border: 'none', borderBottom: i < results.length - 1 ? `1px solid ${RULE}` : 'none', padding: '12px 10px', cursor: 'pointer', color: '#fff', fontFamily: FONT_UI }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 15, fontWeight: 800 }}>{p.name}</span>
+                  {p.company && p.company !== p.name && <span style={{ fontSize: 12.5, color: MUTED }}>{p.company}</span>}
+                  {p.checkedIn > 0 && (
+                    <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 800, color: '#34d399', border: '1px solid rgba(52,211,153,0.45)', borderRadius: 999, padding: '2px 8px' }}>✓ {p.checkedIn}/{p.seats.length} in</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 12.5, color: MUTED, marginTop: 3 }}>
+                  <span style={{ color: GOLD, fontWeight: 700 }}>Aud {p.theater_id}</span> · {p.show_start || (p.showing_number === 1 ? 'Early' : 'Late')}{p.movie ? ` · ${p.movie}` : ''} · seats {p.seats.join(', ')}
+                </div>
+              </button>
+            ))}
+          </div>
         ) : mode === 'move' ? (
           <>
             <div style={{ background: 'rgba(245,184,65,0.12)', border: `1px solid ${GOLD}`, borderRadius: 12, padding: '12px 14px', marginBottom: 12 }}>
@@ -357,6 +499,25 @@ export function SeatmapApp() {
           </>
         ) : (
           <>
+            {overview.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8, marginBottom: 12 }}>
+                {overview.map((o) => (
+                  <button key={o.key} onClick={() => setCurKey(o.key)}
+                    style={{ textAlign: 'left', background: o.key === curKey ? 'rgba(255,194,77,0.12)' : PANEL, border: `1px solid ${o.key === curKey ? GOLD : RULE}`, borderRadius: 12, padding: '10px 12px', cursor: 'pointer', color: '#fff', fontFamily: FONT_UI }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, fontFamily: FONT_DISPLAY }}>Aud {o.theater_id}</span>
+                      <span style={{ fontSize: 11, color: MUTED }}>{o.time}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: MUTED, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: '2px 0 6px' }}>{o.movie || '—'}</div>
+                    <div style={{ display: 'flex', gap: 10, fontSize: 12 }}>
+                      <span><b>{o.seated}</b><span style={{ color: MUTED }}>/{o.cap || '—'}</span></span>
+                      <span style={{ color: o.checkedIn > 0 ? '#34d399' : MUTED }}>✓ {o.checkedIn} in</span>
+                      <span style={{ color: MUTED }}>{o.parties} parties</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
             <Picker label="Auditorium" value={curKey} onChange={setCurKey} />
             <Header st={current} right={<div style={{ fontSize: 12, color: MUTED }}><div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{occupied.size}<span style={{ fontSize: 12, color: MUTED }}>/{seatCount}</span></div>seated</div>} />
 
