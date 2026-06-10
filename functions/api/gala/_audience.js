@@ -37,7 +37,7 @@ export const AUDIENCE_PRESETS = [
   'All Sponsors + Friends & Family',
   'Confirmed Buyers',          // Everyone who has bought a tier and is attending — all paid + F&F + Individual Seats
   'Everyone',                  // Purchasers + invited guests (delegations) + donors with an email, deduped — widest reach. No tier filter; for static-link blasts.
-  'Missed Friday Email',       // One-off catch-up: the Everyone email universe MINUS anyone who already received push-fri-email (the 2026-06-05 "5 days out — 49ers" blast that fired before guests were wired into Everyone). ~235 guests/donors. Email only.
+  'Missed Friday Email', 'Early Showing (4:30)',       // One-off catch-up: the Everyone email universe MINUS anyone who already received push-fri-email (the 2026-06-05 "5 days out — 49ers" blast that fired before guests were wired into Everyone). ~235 guests/donors. Email only.
   // Dynamic: every eligible-to-select tier (all but Individual Seats) whose
   // placed seats < seats_purchased. Re-resolves at send time, so anyone who
   // finishes before the next send drops off. Carries seats_remaining for the
@@ -188,6 +188,43 @@ export async function resolveAudience(audience, db) {
   // only reached the 109 purchasers. This resolves to the ~235 guests/donors
   // who missed it (Everyone-union MINUS push-fri-email's status='sent' rows),
   // deduped by email. Email only; static-link copy, no {TOKEN}.
+  // Day-of (Jun 10 2026): every party seated in the 4:30 (early) showing —
+  // sponsors with direct-placed seats + delegations with placed seats at
+  // showing_number = 1, deduped by email. UNLIKE 'Everyone', guests DO carry
+  // a token here (d.token AS rsvp_token) so per-recipient {TOKEN}
+  // substitution renders a working /checkin?t= My Ticket link for everyone.
+  if (lc === 'early showing (4:30)' || lc === 'early showing') {
+    const earlySql = `
+      SELECT MIN(id) AS id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
+      FROM (
+        SELECT s.id, s.email, s.first_name, s.last_name, s.company, s.sponsorship_tier, s.rsvp_token
+        FROM sponsors s
+        WHERE s.archived_at IS NULL AND s.email IS NOT NULL AND s.email != ''
+          AND EXISTS (SELECT 1 FROM seat_assignments sa
+                       WHERE sa.sponsor_id = s.id AND sa.delegation_id IS NULL
+                         AND sa.showing_number = 1)
+        UNION ALL
+        SELECT NULL AS id, d.delegate_email AS email, d.delegate_name AS first_name,
+               '' AS last_name,
+               (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+               'Guest' AS sponsorship_tier, d.token AS rsvp_token
+        FROM sponsor_delegations d
+        WHERE d.status != 'reclaimed'
+          AND d.delegate_email IS NOT NULL AND d.delegate_email != ''
+          AND EXISTS (SELECT 1 FROM seat_assignments sa
+                       WHERE sa.delegation_id = d.id AND sa.showing_number = 1)
+      )
+      GROUP BY lower(email)
+      ORDER BY company COLLATE NOCASE
+    `;
+    const earlyRes = await db.prepare(earlySql).all();
+    return {
+      tiers: ['Early showing (4:30) — seated parties'],
+      recipients: earlyRes.results || [],
+      missingEmail: [],
+    };
+  }
+
   if (lc === 'missed friday email' || lc === 'catch-up: friday email (missed)') {
     const missedSql = `
       SELECT MIN(id) AS id, email, first_name, last_name, company, sponsorship_tier, rsvp_token
