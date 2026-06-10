@@ -76,7 +76,7 @@ function showingCard(group) {
 function ticketHtml({ recipientName, company, groups, portalUrl, mapUrl, totalSeats }) {
   const cards = groups.map(showingCard).join('');
   const mapBtn = mapUrl
-    ? `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(mapUrl)}" style="display:inline-block;background:#ffc24d;color:#0b1233;padding:13px 28px;border-radius:8px;font-weight:800;font-size:14px;text-decoration:none;">📍 See your seats on the auditorium map →</a></p>`
+    ? `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(mapUrl)}" style="display:inline-block;background:#ffc24d;color:#0b1233;padding:13px 28px;border-radius:8px;font-weight:800;font-size:14px;text-decoration:none;">🎟️ My Ticket — your seats on the map →</a></p>`
     : '';
   const companyBtn = company
     ? `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(portalUrl)}" style="display:inline-block;background:#0b1b3c;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">🎟️ View my live ticket &amp; everyone from ${esc(company)} →</a></p>`

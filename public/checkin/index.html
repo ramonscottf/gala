@@ -266,6 +266,22 @@ input[type=text] {
 .show-card__seats{font-size:0.92rem;margin-bottom:10px;}
 .seatmini{background:rgba(5,11,28,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px;overflow-x:auto;}
 .seatmini__hint{font-size:11.5px;color:rgba(255,255,255,0.5);text-align:center;margin-top:6px;}
+
+.tk-head{display:flex;gap:14px;align-items:flex-start;}
+.tk-poster{width:86px;aspect-ratio:2/3;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.12);flex-shrink:0;}
+.tk-info{min-width:0;flex:1;}
+.tk-eyebrow{color:#e05a5f;font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px;}
+.tk-title{font-family:'Fraunces',Georgia,serif;font-size:1.35rem;font-weight:700;line-height:1.15;margin-bottom:10px;}
+.tk-rows{font-size:0.9rem;}
+.tk-row{display:flex;gap:12px;padding:2px 0;}
+.tk-row span{color:rgba(255,255,255,0.55);min-width:108px;}
+.tk-row strong{font-weight:700;}
+.tk-divider{height:1px;background:rgba(255,255,255,0.12);margin:14px 0;}
+.tk-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;}
+.tk-seatrow{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:0.92rem;}
+.tk-chip{background:var(--red);color:#fff;border-radius:6px;padding:4px 9px;font-weight:800;font-size:13px;flex-shrink:0;}
+.tk-who{min-width:0;flex:1;font-weight:600;}
+.tk-dinner{color:rgba(255,255,255,0.55);font-size:12.5px;white-space:nowrap;}
 </style>
   <link rel="stylesheet" href="/css/ts-header.css">
   <link rel="stylesheet" href="/css/ts-footer.css">
@@ -393,18 +409,30 @@ function renderGroup(token, data) {
     const first = seats[0];
     const sorted = seats.sort((a,b) => a.row_label.localeCompare(b.row_label) || (Number(a.seat_num) - Number(b.seat_num)));
     const labels = sorted.map(s => s.row_label + s.seat_num);
-    const dinners = [...new Set(sorted.map(s => s.dinner && (DINNERS[s.dinner] || s.dinner)).filter(Boolean))];
+    const seatRows = sorted.map(s => `
+      <div class="tk-seatrow">
+        <span class="tk-chip">${s.row_label}${s.seat_num}</span>
+        <span class="tk-who">${s.guest_name || ''}</span>
+        <span class="tk-dinner">${s.dinner ? (DINNERS[s.dinner] || s.dinner) : ''}</span>
+      </div>`).join('');
     return `
       <div class="show-card">
-        <div class="show-card__head">
-          <div class="show-card__movie">${first.movie || 'Auditorium ' + first.theater_id}</div>
-          <div class="show-card__meta">
-            <span class="pill pill--gold">Movie ${first.show_start || ''}</span>
-            ${first.dinner_time ? `<span class="pill">Dinner ${first.dinner_time}</span>` : ''}
-            <span class="pill">Auditorium ${first.theater_id}</span>
+        <div class="tk-head">
+          ${first.poster_url ? `<img class="tk-poster" src="${first.poster_url}" alt="" aria-hidden="true">` : ''}
+          <div class="tk-info">
+            <div class="tk-eyebrow">Your movie</div>
+            <div class="tk-title">${first.movie || 'Auditorium ' + first.theater_id}</div>
+            <div class="tk-rows">
+              <div class="tk-row"><span>Auditorium</span><strong>#${first.theater_id}</strong></div>
+              ${first.dinner_time ? `<div class="tk-row"><span>Doors &amp; dinner</span><strong>${first.dinner_time}</strong></div>` : ''}
+              ${first.show_start ? `<div class="tk-row"><span>Movie starts</span><strong>${first.show_start}</strong></div>` : ''}
+            </div>
           </div>
         </div>
-        <div class="show-card__seats"><strong>Seats:</strong> ${labels.join(', ')}${dinners.length ? ` &nbsp;·&nbsp; ${dinners.join(', ')}` : ''}</div>
+        <div class="tk-divider"></div>
+        <div class="tk-label">Your seats</div>
+        ${seatRows}
+        <div class="tk-label" style="margin-top:14px;">Where you're sitting</div>
         <div class="seatmini" data-theater="${first.theater_id}" data-seats="${labels.join(',')}"></div>
         <div class="seatmini__hint">Your seats in gold — screen at the top.</div>
       </div>`;

@@ -33,7 +33,7 @@ export async function onRequestGet(context) {
   // not just where. One small lookup; showtimes is a tiny table.
   const stRs = await env.GALA_DB.prepare(
     `SELECT st.theater_id, st.showing_number, st.show_start, st.dinner_time,
-            m.title AS movie_title
+            m.title AS movie_title, m.poster_url
        FROM showtimes st LEFT JOIN movies m ON m.id = st.movie_id`
   ).all();
   const stMap = new Map();
@@ -58,6 +58,7 @@ export async function onRequestGet(context) {
         guest_name: s.guest_name,
         dinner: s.dinner_choice || null,
         movie: st.movie_title || null,
+        poster_url: st.poster_url || null,
         show_start: st.show_start || null,
         dinner_time: st.dinner_time || null,
         checked_in: !!s.checked_in,
