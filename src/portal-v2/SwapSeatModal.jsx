@@ -277,7 +277,16 @@ export function SwapSeatModal({
                 assignedSelf={selfSet}
                 assignedOther={otherTaken}
                 selected={selectedSet}
-                onSelect={(id) => onSeatTap(id)}
+                onSelect={(ids) => {
+                  // SeatEngine now emits onSelect(ids, action) with an ARRAY
+                  // (loveseat pairs expand to both halves). This modal swaps
+                  // ONE seat, so normalize to the first id — for singles
+                  // that's the tapped seat; toggling off still works because
+                  // the same id round-trips. (Jun 10 fix: taps were dying in
+                  // seatById(theater, <array>) -> silent return.)
+                  const id = Array.isArray(ids) ? ids[0] : ids;
+                  if (id) onSeatTap(id);
+                }}
               />
             ) : (
               <div style={{ padding: 24, color: 'var(--p2-muted)', textAlign: 'center' }}>
