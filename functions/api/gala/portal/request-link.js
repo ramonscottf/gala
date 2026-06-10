@@ -221,13 +221,26 @@ export async function onRequestPost(context) {
     return genericOk;
   }
 
-  // Prefer the sponsor record over a delegation — a sponsor who's also
-  // listed as someone's delegate (rare but possible) should get their
-  // own portal link, not the one where they're the guest.
+  // Prefer the sponsor record over a delegation — EXCEPT when the sponsor
+  // has zero seats of their own (everything delegated) and the delegation
+  // matching this same email DOES have seats. A "your tickets" email with
+  // no tickets in it helps nobody; send the view that shows their seats.
   let recipientName = null;
   let portalToken = null;
   let kind = 'sponsor';
-  if (sponsorRow) {
+  let useSponsor = !!sponsorRow;
+  if (sponsorRow && delegationRow) {
+    const sCount = await env.GALA_DB.prepare(
+      `SELECT COUNT(*) AS n FROM seat_assignments WHERE sponsor_id = ? AND delegation_id IS NULL`
+    ).bind(sponsorRow.id).first();
+    if (!(sCount?.n > 0)) {
+      const dCount = await env.GALA_DB.prepare(
+        `SELECT COUNT(*) AS n FROM seat_assignments WHERE delegation_id = ?`
+      ).bind(delegationRow.id).first();
+      if (dCount?.n > 0) useSponsor = false;
+    }
+  }
+  if (useSponsor) {
     recipientName = [sponsorRow.first_name, sponsorRow.last_name].filter(Boolean).join(' ').trim() || null;
     portalToken = sponsorRow.rsvp_token;
     kind = 'sponsor';
