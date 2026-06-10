@@ -65,6 +65,9 @@ tr.g.sel td{background:rgba(244,185,66,0.13);}
 tr.g.sel td.seat{color:#f4b942;box-shadow:inset 3px 0 0 #f4b942;}
 .maphint{font-size:11.5px;color:var(--mute);text-align:center;margin:6px 0 12px;}
 .sorttoggle{display:inline-flex;background:rgba(8,13,40,0.6);border:1px solid var(--rule);border-radius:999px;padding:4px;gap:4px;margin:0 0 12px;}
+button,a,tr.g{touch-action:manipulation;-webkit-tap-highlight-color:rgba(244,185,66,0.25);}
+.showpill:active,.scanbtn:active,.backbtn:active{transform:scale(0.96);}
+.backbtn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid var(--rule);color:#fff;font-size:13.5px;font-weight:800;text-decoration:none;letter-spacing:0.02em;}
 </style>
 </head>
 <body>
@@ -90,7 +93,7 @@ function renderLogin() {
     <div class="sub">Gala helpers — enter the gala password once on this device.</div>
     <div class="card loginbox">
       <input type="password" id="pw" placeholder="Gala password" autocomplete="current-password">
-      <button onclick="doLogin()">Open rosters</button>
+      <button data-act="login">Open rosters</button>
       <div class="err" id="loginerr"></div>
     </div>`;
 }
@@ -131,7 +134,7 @@ function setShow(n) {
   SHOW = n;
   const u = new URL(location.href); u.searchParams.set('show', String(n));
   history.replaceState(null, '', u);
-  boot();
+  if (LAST_ROWS) renderRoom(LAST_ROWS); else boot();
 }
 
 // Sort + party-highlight state. LAST_ROWS lets taps re-render without a refetch.
@@ -166,7 +169,7 @@ function renderRoom(rows) {
     toggle = `<div class="showtoggle">` + showKeys.map(sh => {
       const t = (byShow.get(sh)[0].show_start || '').trim();
       const lbl = (sh === 1 ? 'Early' : 'Late') + (t ? ' \u00b7 ' + t : '');
-      return `<button class="showpill${sh === SHOW ? ' on' : ''}" onclick="setShow(${sh})">${lbl}</button>`;
+      return `<button class="showpill${sh === SHOW ? ' on' : ''}" data-act="show" data-val="${sh}">${lbl}</button>`;
     }).join('') + `</div>`;
   }
   const sections = [...byShow.entries()].sort((a,b)=>a[0]-b[0])
@@ -201,15 +204,16 @@ function renderRoom(rows) {
         <div class="mapbox seatmini" data-occ="${seats.map(s=>s.seat).join(',')}" data-sel="${selSeats.join(',')}" data-names="${names}"></div>
         <div class="maphint">Tap any seat or name \u2014 their whole party lights up gold.</div>
         <div class="sorttoggle">
-          <button class="showpill${SORT==='seat'?' on':''}" onclick="setSort('seat')">Seat</button>
-          <button class="showpill${SORT==='name'?' on':''}" onclick="setSort('name')">Name</button>
-          <button class="showpill${SORT==='company'?' on':''}" onclick="setSort('company')">Company</button>
+          <button class="showpill${SORT==='seat'?' on':''}" data-act="sort" data-val="seat">Seat</button>
+          <button class="showpill${SORT==='name'?' on':''}" data-act="sort" data-val="name">Name</button>
+          <button class="showpill${SORT==='company'?' on':''}" data-act="sort" data-val="company">Company</button>
         </div>
         <table><tbody>${trs}</tbody></table>
       </div>`;
   }).join('');
 
   app.innerHTML = `
+    <div class="toolrow" style="margin:2px 0 8px;"><a class="backbtn" href="/rooms/">\u2039 All rooms</a></div>
     <h1>Auditorium ${esc(AUD)}</h1>
     <div class="sub"><span class="live"><span class="dot"></span>LIVE</span> · read-only roster for greeters &amp; seat helpers · <a href="/rooms/" style="color:var(--mute);">all rooms</a></div>
     <div class="toolrow">${toggle}<a class="scanbtn" href="/checkin/">\u{1F4F7} Scan a ticket</a></div>
@@ -230,39 +234,69 @@ async function paintMaps() {
       const sel = new Set((el.dataset.sel || '').split(',').filter(Boolean));
       const names = new Map((el.dataset.names || '').split('~').filter(Boolean).map(p => p.split('|')));
       SeatMini.render(el, th, { occupied: occ, highlight: sel, names, cell: 22, showNumbers: true });
-      if (!el._tapWired) {
-        el._tapWired = true;
-        el.addEventListener('click', (e) => {
-          const r = e.target.closest && e.target.closest('rect[data-seat]');
-          if (!r) return;
-          const seat = r.getAttribute('data-seat');
-          const hit = (LAST_ROWS || []).find(x => String(x.theater_id) === String(AUD) && x.seat === seat && (!SHOW || x.showing_number === SHOW));
-          setSel(hit ? partyKey(hit) : null);
-        });
-      }
-    });
-    document.querySelectorAll('tr.g').forEach(tr => {
-      if (tr._tapWired) return; tr._tapWired = true;
-      tr.addEventListener('click', () => {
-        setSel(tr.dataset.g);
-        const box = document.querySelector('.mapbox');
-        if (box && SEL) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
     });
   } catch (e) {}
 }
 
-async function boot() {
+// --- hardening state ---
+let inflight = false;          // never stack fetch+render cycles
+let lastPayload = null;        // skip DOM swaps when data is unchanged
+let lastTouch = 0;             // defer refresh renders while a finger is busy
+document.addEventListener('pointerdown', () => { lastTouch = Date.now(); }, { capture: true, passive: true });
+
+// One delegated handler on the persistent container — survives every
+// innerHTML swap, so taps can never hit a dead listener.
+app.addEventListener('click', (e) => {
+  const act = e.target.closest('[data-act]');
+  if (act) {
+    const a = act.dataset.act;
+    if (a === 'show')  setShow(Number(act.dataset.val));
+    else if (a === 'sort') setSort(act.dataset.val);
+    else if (a === 'login') doLogin();
+    else if (a === 'retry') boot(true);
+    return;
+  }
+  const rect = e.target.closest('rect[data-seat]');
+  if (rect) {
+    const seat = rect.getAttribute('data-seat');
+    const hit = (LAST_ROWS || []).find(x => String(x.theater_id) === String(AUD) && x.seat === seat && (!SHOW || x.showing_number === SHOW));
+    setSel(hit ? partyKey(hit) : null);
+    return;
+  }
+  const tr = e.target.closest('tr.g');
+  if (tr) {
+    setSel(tr.dataset.g);
+    const box = document.querySelector('.mapbox');
+    if (box && SEL && box.scrollIntoView) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+});
+
+async function boot(force) {
+  if (inflight) return;
+  inflight = true;
   try {
     const d = await fetchDirectory();
-    if (!d.auth) { renderLogin(); return; }
+    if (!d.auth) { lastPayload = null; renderLogin(); return; }
+    const payload = JSON.stringify(d.rows);
+    const interacting = (Date.now() - lastTouch) < 1200;
+    if (!force && payload === lastPayload) {
+      // Data unchanged — leave the DOM alone (taps stay safe), just bump the stamp.
+      const st = document.querySelector('.stamp');
+      if (st) st.textContent = `Updated ${new Date().toLocaleTimeString()} \u00b7 refreshes automatically \u00b7 trouble? Scott 801-810-6642`;
+      return;
+    }
+    if (!force && interacting && lastPayload !== null) return; // try again next tick
+    lastPayload = payload;
     if (!AUD) renderIndex(d.rows); else renderRoom(d.rows);
-    if (AUD && !timer) timer = setInterval(boot, 25000);
   } catch (e) {
-    app.innerHTML = `<div class="card">Couldn't load (${esc(e.message)}). <button class="loginbox" onclick="boot()" style="margin-left:8px;padding:8px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;">Retry</button></div>`;
+    if (lastPayload !== null) return; // keep showing good data over a transient error
+    app.innerHTML = `<div class="card">Couldn't load (${esc(e.message)}). <button class="loginbox" data-act="retry" style="margin-left:8px;padding:8px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;font-weight:700;cursor:pointer;">Retry</button></div>`;
+  } finally {
+    inflight = false;
+    if (AUD && !timer) timer = setInterval(boot, 25000);
   }
 }
-boot();
+boot(true);
 </script>
 </body>
 </html>
