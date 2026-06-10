@@ -78,9 +78,7 @@ function ticketHtml({ recipientName, company, groups, portalUrl, mapUrl, totalSe
   const mapBtn = mapUrl
     ? `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(mapUrl)}" style="display:inline-block;background:#ffc24d;color:#0b1233;padding:13px 28px;border-radius:8px;font-weight:800;font-size:14px;text-decoration:none;">🎟️ My Ticket — your seats on the map →</a></p>`
     : '';
-  const companyBtn = company
-    ? `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(portalUrl)}" style="display:inline-block;background:#0b1b3c;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">🎟️ View my live ticket &amp; everyone from ${esc(company)} →</a></p>`
-    : `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(portalUrl)}" style="display:inline-block;background:#0b1b3c;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">🎟️ View my live ticket →</a></p>`;
+
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f1f5f9;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;"><tr><td align="center" style="padding:22px 12px;">
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;font-family:Arial,Helvetica,sans-serif;">
@@ -94,12 +92,12 @@ function ticketHtml({ recipientName, company, groups, portalUrl, mapUrl, totalSe
       <p style="margin:0 0 16px;color:#1e293b;font-size:15px;line-height:1.55;">This is your ticket — everything for your ${totalSeats === 1 ? 'seat' : `${totalSeats} seats`} tonight is below. Your seats, your dinner, and a live map of exactly where you're sitting — it's all here.</p>
       ${cards}
       ${mapBtn}
-      ${companyBtn}
       <p style="text-align:center;margin:0 0 18px;"><a href="${AUCTION_URL}" style="display:inline-block;background:#CB262C;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">🔨 Register for the silent auction + get Givi →</a></p>
       <p style="margin:0 0 18px;color:#475569;font-size:13px;line-height:1.6;text-align:center;">The silent auction closes at <strong>7:30 PM tonight</strong> — register and download the Givi app before you arrive so you can bid from your seat. Item pickup opens <strong>7:45 PM</strong> in the auction room, just south of the main lobby.</p>
     </td></tr>
     <tr><td style="background:#0b1b3c;border-radius:0 0 14px 14px;padding:18px 26px;">
-      <p style="margin:0;color:#9db4e8;font-size:12px;line-height:1.6;">We can't wait to see you tonight. Every bid and every seat supports Davis County students.<br/>— Sherry, Kara, and everyone at the Davis Education Foundation</p>
+      <p style="margin:0 0 12px;color:#9db4e8;font-size:12px;line-height:1.6;">We can't wait to see you tonight. Every bid and every seat supports Davis County students.<br/>— Sherry, Kara, and everyone at the Davis Education Foundation</p>
+      <p style="margin:0;font-size:12px;text-align:center;"><a href="${esc(portalUrl)}" style="color:#9db4e8;text-decoration:underline;">My ticket portal</a></p>
     </td></tr>
   </table></td></tr></table></body></html>`;
 }

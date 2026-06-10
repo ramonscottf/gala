@@ -50,7 +50,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#CB262C">
-<title>Gala Check-In</title>
+<title>My Ticket — DEF Gala 2026</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
@@ -60,32 +60,33 @@
   --navy-950: #0b1b3c;
   --navy-900: #122a57;
   --gold-400: #ffc24d;
-  --ink: #1e293b;
-  --ink-soft: #475569;
-  --ink-muted: #94a3b8;
-  --border: #e2e8f0;
-  --bg-soft: #f8fafc;
-  --success: #059669;
-  --success-bg: #ecfdf5;
-  --warn: #d97706;
-  --danger: #dc2626;
+  --blue: #2858d6;
+  --panel: rgba(17,28,60,0.72);
+  --line: rgba(255,255,255,0.10);
+  --txt-soft: rgba(255,255,255,0.72);
+  --txt-muted: rgba(255,255,255,0.5);
+  --success: #34d399;
+  --danger: #f87171;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--navy-950);
+  background: radial-gradient(1200px 800px at 18% -8%, #24508f, #122a57 42%, #0b1b3c 68%, #050b1c 100%) fixed;
   color: #fff;
   min-height: 100vh;
   padding: 20px;
 }
 .wrap { max-width: 560px; margin: 0 auto; }
 .card {
-  background: #fff;
-  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   margin-bottom: 16px;
+  color: #fff;
 }
 h1 {
   font-family: 'Fraunces', Georgia, serif;
@@ -93,14 +94,8 @@ h1 {
   color: #fff;
   margin-bottom: 4px;
 }
-h1 span {
-  background: linear-gradient(90deg, var(--gala-red), var(--gold-400), var(--gala-red));
-  background-size: 200% auto;
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  animation: shim 4s linear infinite;
-}
-@keyframes shim { 0%{background-position:0% center;} 100%{background-position:200% center;} }
-.sub { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 24px; }
+h1 span { color: var(--gold-400); font-style: italic; }
+.sub { color: var(--txt-soft); font-size: 0.9rem; margin-bottom: 24px; }
 
 .scanner-wrap {
   position: relative;
@@ -148,20 +143,23 @@ h1 span {
   color: #fff;
 }
 .btn--secondary {
-  background: #fff;
-  color: var(--ink);
-  border: 1.5px solid var(--border);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.22);
 }
 .btn--full { width: 100%; justify-content: center; padding: 16px; font-size: 1rem; }
 
 input[type=text] {
   width: 100%;
   padding: 14px 16px;
-  border: 1.5px solid var(--border);
+  background: rgba(5,11,28,0.6);
+  border: 1.5px solid rgba(255,255,255,0.18);
   border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
+  color: #fff;
 }
+input[type=text]::placeholder { color: var(--txt-muted); }
 
 .group-display {
   text-align: center;
@@ -169,14 +167,16 @@ input[type=text] {
 }
 .group-display h2 {
   font-family: 'Fraunces', Georgia, serif;
-  color: var(--navy-900);
+  color: #fff;
   font-size: 1.6rem;
   margin-bottom: 6px;
 }
+.group-display > p { color: var(--txt-soft); }
 .qr-block {
   margin: 20px auto 22px;
   padding: 18px;
-  background: var(--navy-950);
+  background: rgba(5,11,28,0.65);
+  border: 1px solid var(--line);
   border-radius: 14px;
   max-width: 280px;
 }
@@ -195,18 +195,18 @@ input[type=text] {
   padding: 10px;
   border-radius: 10px;
   width: 220px;
-  height: 220px;
   max-width: 100%;
   height: auto;
   aspect-ratio: 1;
 }
 .qr-block__hint {
-  color: rgba(255,255,255,0.7);
+  color: var(--txt-soft);
   font-size: 0.8rem;
 }
 .sponsor-note {
-  background: var(--success-bg);
-  color: #065f46;
+  background: rgba(52,211,153,0.12);
+  border: 1px solid rgba(52,211,153,0.35);
+  color: #a7f3d0;
   padding: 14px 16px;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -217,8 +217,9 @@ input[type=text] {
 .group-display .tier {
   display: inline-block;
   padding: 4px 14px;
-  background: rgba(203,38,44,0.1);
-  color: var(--gala-red);
+  background: rgba(255,194,77,0.14);
+  border: 1px solid rgba(255,194,77,0.45);
+  color: var(--gold-400);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -227,7 +228,8 @@ input[type=text] {
   margin: 8px 0 14px;
 }
 .seats-list {
-  background: var(--bg-soft);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 14px 18px;
   text-align: left;
@@ -235,10 +237,10 @@ input[type=text] {
   font-size: 0.95rem;
   line-height: 1.8;
 }
-.seats-list strong { color: var(--navy-900); }
+.seats-list strong { color: var(--gold-400); }
 
 .checked-in {
-  background: var(--success-bg);
+  background: rgba(52,211,153,0.12);
   border: 1.5px solid var(--success);
   color: var(--success);
   padding: 16px;
@@ -248,40 +250,35 @@ input[type=text] {
   margin-bottom: 14px;
 }
 .error-msg {
-  background: #fef2f2;
+  background: rgba(248,113,113,0.12);
   border: 1.5px solid var(--danger);
-  color: var(--danger);
+  color: #fecaca;
   padding: 14px;
   border-radius: 10px;
   margin-bottom: 14px;
   font-size: 0.9rem;
 }
-.divider { text-align: center; color: var(--ink-muted); font-size: 0.85rem; margin: 16px 0; }
+.divider { text-align: center; color: var(--txt-muted); font-size: 0.85rem; margin: 16px 0; }
 
-.show-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:14px;margin:14px 0;text-align:left;}
-.show-card__movie{font-weight:800;font-size:1.05rem;margin-bottom:6px;}
-.show-card__meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
-.pill{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(40,88,214,0.24);border:1px solid rgba(74,125,240,0.4);color:#c7d6ff;}
-.pill--gold{background:rgba(255,194,77,0.16);border-color:rgba(255,194,77,0.5);color:#ffc24d;}
-.show-card__seats{font-size:0.92rem;margin-bottom:10px;}
+.show-card{background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0;text-align:left;}
 .seatmini{background:rgba(5,11,28,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px;overflow-x:auto;}
-.seatmini__hint{font-size:11.5px;color:rgba(255,255,255,0.5);text-align:center;margin-top:6px;}
+.seatmini__hint{font-size:11.5px;color:var(--txt-muted);text-align:center;margin-top:6px;}
 
 .tk-head{display:flex;gap:14px;align-items:flex-start;}
-.tk-poster{width:86px;aspect-ratio:2/3;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.12);flex-shrink:0;}
+.tk-poster{width:86px;aspect-ratio:2/3;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.14);flex-shrink:0;}
 .tk-info{min-width:0;flex:1;}
-.tk-eyebrow{color:#e05a5f;font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px;}
-.tk-title{font-family:'Fraunces',Georgia,serif;font-size:1.35rem;font-weight:700;line-height:1.15;margin-bottom:10px;}
+.tk-eyebrow{color:#ff8a8e;font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px;}
+.tk-title{font-family:'Fraunces',Georgia,serif;font-size:1.35rem;font-weight:700;line-height:1.15;margin-bottom:10px;color:#fff;}
 .tk-rows{font-size:0.9rem;}
 .tk-row{display:flex;gap:12px;padding:2px 0;}
-.tk-row span{color:rgba(255,255,255,0.55);min-width:108px;}
-.tk-row strong{font-weight:700;}
-.tk-divider{height:1px;background:rgba(255,255,255,0.12);margin:14px 0;}
-.tk-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;}
+.tk-row span{color:var(--txt-muted);min-width:108px;}
+.tk-row strong{font-weight:700;color:#fff;}
+.tk-divider{height:1px;background:var(--line);margin:14px 0;}
+.tk-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-400);margin-bottom:8px;}
 .tk-seatrow{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:0.92rem;}
-.tk-chip{background:var(--red);color:#fff;border-radius:6px;padding:4px 9px;font-weight:800;font-size:13px;flex-shrink:0;}
-.tk-who{min-width:0;flex:1;font-weight:600;}
-.tk-dinner{color:rgba(255,255,255,0.55);font-size:12.5px;white-space:nowrap;}
+.tk-chip{background:var(--gala-red);color:#fff;border-radius:6px;padding:4px 9px;font-weight:800;font-size:13px;flex-shrink:0;}
+.tk-who{min-width:0;flex:1;font-weight:600;color:#fff;text-align:left;}
+.tk-dinner{color:var(--txt-muted);font-size:12.5px;white-space:nowrap;}
 </style>
   <link rel="stylesheet" href="/css/ts-header.css">
   <link rel="stylesheet" href="/css/ts-footer.css">
@@ -290,7 +287,7 @@ input[type=text] {
 <body>
 
 <div class="wrap">
-  <h1>Gala <span>Check-In</span></h1>
+  <h1>My <span>Ticket</span></h1>
   <p class="sub">June 10, 2026 · Megaplex Theatres at Legacy Crossing</p>
 
   <div id="scanner-card" class="card">
