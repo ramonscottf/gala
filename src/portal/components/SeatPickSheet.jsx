@@ -573,6 +573,26 @@ export default function SeatPickSheet({
       setHighlightedSeatType(null);
     }
   }, [highlightedSeatType, seatTypesPresent]);
+  // Bug fix Jun 10 2026 (gala morning) — seats.allSelfIds entries are
+  // showing-NAMESPACED ('early:G-10') since the May 11 Tanner fix, but the
+  // SeatEngine deals in raw ids ('G-10'). Every comparison below silently
+  // never matched, so a sponsor's own placed seats rendered as OPEN in the
+  // picker; tapping (or auto-pick grabbing) them 409'd server-side as
+  // 'Seat already taken' → the "Seats just got grabbed" modal, forever.
+  // Build the raw-id self set scoped to the CURRENT theater + showing —
+  // the exact key the server conflicts on.
+  const selfIdsHere = useMemo(() => {
+    const out = new Set();
+    const rows = [...(portal?.myAssignments || []), ...(portal?.myHolds || [])];
+    rows.forEach((r) => {
+      if (r.theater_id === theaterId &&
+          (Number(r.showing_number) || 1) === (Number(showingNumber) || 1)) {
+        out.add(`${r.row_label}-${r.seat_num}`);
+      }
+    });
+    return out;
+  }, [portal, theaterId, showingNumber]);
+
   const otherTaken = useMemo(
     () => (theaterId ? otherTakenForTheater(portal, theaterId) : new Set()),
     [portal, theaterId]
@@ -614,7 +634,7 @@ export default function SeatPickSheet({
 
   const onSelect = (ids, op) => {
     const filtered = ids.filter((id) => {
-      const isSelf = seats.allSelfIds.has(id);
+      const isSelf = selfIdsHere.has(id);
       return mode === 'assign' ? isSelf : !isSelf;
     });
     if (!filtered.length) return;
@@ -640,7 +660,7 @@ export default function SeatPickSheet({
 
   const tryAuto = () => {
     if (!adaptedTheater || remaining <= 0) return;
-    const taken = new Set([...otherTaken, ...seats.allSelfIds]);
+    const taken = new Set([...otherTaken, ...selfIdsHere]);
     const N = Math.min(remaining, Math.max(2, sel.size || 4));
     const picks = autoPickBlock(adaptedTheater, N, taken);
     setSel(new Set(picks));
@@ -836,7 +856,7 @@ export default function SeatPickSheet({
   };
 
   const haveSelfHere = adaptedTheater
-    ? adaptedTheater.rows.some((r) => r.seats.some((s) => s && seats.allSelfIds.has(s.id)))
+    ? adaptedTheater.rows.some((r) => r.seats.some((s) => s && selfIdsHere.has(s.id)))
     : false;
 
   // Phase 5.13 — three-step staged flow. Step state defaults to 3
@@ -1558,7 +1578,7 @@ export default function SeatPickSheet({
               showSeatNumbers={true}
               allowZoom={false}
               allowLasso={!compact}
-              assignedSelf={seats.allSelfIds}
+              assignedSelf={selfIdsHere}
               assignedOther={otherTaken}
               selected={sel}
               onSelect={onSelect}
