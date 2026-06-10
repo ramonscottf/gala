@@ -94,8 +94,8 @@ function ticketsBlockHtml(showings, token) {
     + cards
     + '<p style="margin:14px 0 4px;"><a href="' + ORIGIN + '/checkin?t=' + encodeURIComponent(token) + '" style="font-weight:700;color:#0066ff;">&#128205; See your seats highlighted on the auditorium map</a></p>'
     + '<div style="text-align:center;margin:18px 0 6px;">'
-    + '<img src="' + qr + '" width="220" height="220" alt="Your check-in QR code" style="display:inline-block;border:8px solid #fff;border-radius:12px;box-shadow:0 4px 14px rgba(13,27,61,.15);" />'
-    + '<div style="font-size:13px;color:#737373;margin-top:8px;">Show this QR at the door to check in — that\'s all you need.</div>'
+    + '<img src="' + qr + '" width="220" height="220" alt="Your gala QR code" style="display:inline-block;border:8px solid #fff;border-radius:12px;box-shadow:0 4px 14px rgba(13,27,61,.15);" />'
+    + '<div style="font-size:13px;color:#737373;margin-top:8px;">Save this QR — any gala helper can scan it to pull up your seats in a second.</div>'
     + '</div></div>';
 }
 
@@ -157,7 +157,7 @@ function buildEmailText({ recipientName, portalUrl, kind, checkinUrl }) {
     '',
     roleLine,
     '',
-    'Check in at the door with this link (or the QR in this email):',
+    'See your seats on the auditorium map (helpers can also scan your QR):',
     checkinUrl,
     '',
     'Manage your seats, dinner, and guests here:',

@@ -102,12 +102,12 @@ function emailBody(showings, token) {
   const seatsBlock = showings.length
     ? rows
     : `<p style="margin:0 0 16px 0;">We don't have seats on file for you yet. Text Scott at 801-810-6642 and he'll get you set.</p>`;
-  return `<p style="margin:0 0 18px 0;">Here are your tickets for the DEF Gala. Show the QR code below at the door to check in — that's all you need.</p>
+  return `<p style="margin:0 0 18px 0;">Here are your tickets for the DEF Gala — seats, dinner, and the map link below. Any gala helper can scan your QR to pull up your seats.</p>
       ${seatsBlock}
       <div style="text-align:center;margin:22px 0 6px 0;">
         <a href="${ORIGIN}/checkin?t=${encodeURIComponent(token)}" style="font-weight:700;color:#0066ff;display:inline-block;margin-bottom:12px;">&#128205; See your seats highlighted on the auditorium map</a><br/>
         <img src="${qr}" width="240" height="240" alt="Your gala QR code" style="display:inline-block;border:8px solid #ffffff;border-radius:12px;box-shadow:0 4px 14px rgba(13,27,61,0.15);" />
-        <div style="font-size:13px;color:#666;margin-top:10px;">Your check-in code · doors open at dinner time</div>
+        <div style="font-size:13px;color:#666;margin-top:10px;">Your gala QR · doors open at dinner time</div>
       </div>`;
 }
 

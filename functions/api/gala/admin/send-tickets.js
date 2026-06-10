@@ -73,8 +73,11 @@ function showingCard(group) {
   </table>`;
 }
 
-function ticketHtml({ recipientName, company, groups, portalUrl, totalSeats }) {
+function ticketHtml({ recipientName, company, groups, portalUrl, mapUrl, totalSeats }) {
   const cards = groups.map(showingCard).join('');
+  const mapBtn = mapUrl
+    ? `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(mapUrl)}" style="display:inline-block;background:#ffc24d;color:#0b1233;padding:13px 28px;border-radius:8px;font-weight:800;font-size:14px;text-decoration:none;">📍 See your seats on the auditorium map →</a></p>`
+    : '';
   const companyBtn = company
     ? `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(portalUrl)}" style="display:inline-block;background:#0b1b3c;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">🎟️ View my live ticket &amp; everyone from ${esc(company)} →</a></p>`
     : `<p style="text-align:center;margin:0 0 10px;"><a href="${esc(portalUrl)}" style="display:inline-block;background:#0b1b3c;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">🎟️ View my live ticket →</a></p>`;
@@ -88,8 +91,9 @@ function ticketHtml({ recipientName, company, groups, portalUrl, totalSeats }) {
     </td></tr>
     <tr><td style="height:5px;background:linear-gradient(90deg,#1f4484,#CB262C);font-size:0;line-height:0;">&nbsp;</td></tr>
     <tr><td style="background:#f8fafc;padding:22px 22px 8px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-      <p style="margin:0 0 16px;color:#1e293b;font-size:15px;line-height:1.55;">This is your ticket — everything for your ${totalSeats === 1 ? 'seat' : `${totalSeats} seats`} tonight is below. Show this email (or your live ticket) at check-in.</p>
+      <p style="margin:0 0 16px;color:#1e293b;font-size:15px;line-height:1.55;">This is your ticket — everything for your ${totalSeats === 1 ? 'seat' : `${totalSeats} seats`} tonight is below. Your seats, your dinner, and a live map of exactly where you're sitting — it's all here.</p>
       ${cards}
+      ${mapBtn}
       ${companyBtn}
       <p style="text-align:center;margin:0 0 18px;"><a href="${AUCTION_URL}" style="display:inline-block;background:#CB262C;color:#fff;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;">🔨 Register for the silent auction + get Givi →</a></p>
       <p style="margin:0 0 18px;color:#475569;font-size:13px;line-height:1.6;text-align:center;">The silent auction closes at <strong>7:30 PM tonight</strong> — register and download the Givi app before you arrive so you can bid from your seat. Item pickup opens <strong>7:45 PM</strong> in the auction room, just south of the main lobby.</p>
@@ -230,9 +234,10 @@ export async function onRequestPost({ request, env }) {
 
       const groups = buildGroups(seats, showMap);
       const portalUrl = r.token ? `${PORTAL_BASE}${r.token}` : 'https://gala.daviskids.org/';
+      const mapUrl = r.token ? `https://gala.daviskids.org/checkin?t=${encodeURIComponent(r.token)}` : null;
       const html = ticketHtml({
         recipientName: r.name, company: r.company,
-        groups, portalUrl, totalSeats: seats.length,
+        groups, portalUrl, mapUrl, totalSeats: seats.length,
       });
       const subject = `🎟️ Your gala ticket — tonight, ${groups[0].dinnerTime} dinner, Auditorium #${groups[0].theaterId}`;
 
