@@ -88,6 +88,8 @@
         r.setAttribute('x', x); r.setAttribute('y', y);
         r.setAttribute('width', cell); r.setAttribute('height', cell);
         r.setAttribute('rx', 6);
+        r.setAttribute('data-seat', id);
+        if (isOcc || isHi) r.style.cursor = 'pointer';
         if (isHi) { r.setAttribute('fill', GOLD); }
         else if (isOcc) { r.setAttribute('fill', TAKEN_FILL); }
         else { r.setAttribute('fill', 'transparent'); r.setAttribute('stroke', OPEN_STROKE); r.setAttribute('stroke-width', '1.4'); }

@@ -49,6 +49,13 @@ td.dinner{color:var(--mute);text-align:right;white-space:nowrap;font-size:13px;w
 .showpill{border:none;background:transparent;color:var(--mute);font-family:inherit;font-size:13.5px;font-weight:800;letter-spacing:0.02em;padding:8px 18px;border-radius:999px;cursor:pointer;}
 .showpill.on{background:#f4b942;color:#1a1502;}
 .scanbtn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;background:rgba(74,125,240,0.18);border:1px solid rgba(74,125,240,0.45);color:#9fb8ff;font-size:13.5px;font-weight:800;text-decoration:none;letter-spacing:0.02em;}
+
+td.co{color:var(--mute);text-align:right;font-size:13px;}
+tr.g{cursor:pointer;}
+tr.g.sel td{background:rgba(244,185,66,0.13);}
+tr.g.sel td.seat{color:#f4b942;box-shadow:inset 3px 0 0 #f4b942;}
+.maphint{font-size:11.5px;color:var(--mute);text-align:center;margin:6px 0 12px;}
+.sorttoggle{display:inline-flex;background:rgba(8,13,40,0.6);border:1px solid var(--rule);border-radius:999px;padding:4px;gap:4px;margin:0 0 12px;}
 </style>
 </head>
 <body>
@@ -118,7 +125,21 @@ function setShow(n) {
   boot();
 }
 
+// Sort + party-highlight state. LAST_ROWS lets taps re-render without a refetch.
+let SORT = 'seat';            // 'seat' | 'name' | 'company'
+let SEL = null;               // party key 'd{delegation_id}' or 's{sponsor_id}'
+let LAST_ROWS = null;
+function partyKey(r) { return r.delegation_id ? 'd' + r.delegation_id : 's' + r.sponsor_id; }
+function dispName(r) { return r.delegate_name || r.guest_name || r.company || 'Guest'; }
+function dispCompany(r) {
+  const c = r.parent_company || r.company || '';
+  return c === dispName(r) ? '' : c;
+}
+function setSort(m) { SORT = m; if (LAST_ROWS) renderRoom(LAST_ROWS); }
+function setSel(k) { SEL = (SEL === k ? null : k); if (LAST_ROWS) renderRoom(LAST_ROWS); }
+
 function renderRoom(rows) {
+  LAST_ROWS = rows;
   const mine = rows.filter(r => String(r.theater_id) === String(AUD));
   const byShow = new Map();
   mine.forEach(r => {
@@ -143,27 +164,38 @@ function renderRoom(rows) {
     .filter(([sh]) => showKeys.length < 2 || sh === SHOW)
     .map(([sh, seats]) => {
     const first = seats[0];
-    const sorted = seats.slice().sort((a,b)=> a.row.localeCompare(b.row) || (Number(a.num)-Number(b.num)));
-    const occupied = new Set(sorted.map(s => s.seat));
-    const names = sorted.map(s => `${s.seat}|${esc(s.guest_name || s.delegate_name || s.company || '')}`).join('~');
+    const bySeat = (a,b) => a.row.localeCompare(b.row) || (Number(a.num)-Number(b.num));
+    const sorted = seats.slice().sort(
+      SORT === 'name'    ? (a,b) => dispName(a).localeCompare(dispName(b)) || bySeat(a,b)
+    : SORT === 'company' ? (a,b) => (dispCompany(a)||dispName(a)).localeCompare(dispCompany(b)||dispName(b)) || bySeat(a,b)
+    : bySeat);
+    const occupied = new Set(seats.map(s => s.seat));
+    const selSeats = SEL ? seats.filter(s => partyKey(s) === SEL).map(s => s.seat) : [];
+    const names = seats.map(s => `${s.seat}|${esc(s.guest_name || s.delegate_name || s.company || '')}`).join('~');
     let lastRow = null;
     const trs = sorted.map(s => {
-      const who = s.delegate_name || s.guest_name || s.company || 'Guest';
-      const sub = (s.parent_company && s.delegate_name) ? ` <span style="color:var(--mute);font-weight:400;">· ${esc(s.parent_company)}</span>`
-                : (s.company && s.guest_name && s.company !== s.guest_name && !s.delegate_name) ? '' : '';
-      const cls = (lastRow && lastRow !== s.row) ? ' class="rowbreak-top"' : '';
-      const breakCls = (lastRow && lastRow !== s.row) ? ' style="border-top:2px solid rgba(255,255,255,0.16);"' : '';
+      const brk = (SORT === 'seat' && lastRow && lastRow !== s.row) ? ' style="border-top:2px solid rgba(255,255,255,0.16);"' : '';
       lastRow = s.row;
-      return `<tr><td class="seat"${breakCls}>${s.seat}</td><td${breakCls}>${esc(who)}${sub}</td><td class="dinner"${breakCls}>${s.dinner ? (DINNERS[s.dinner]||s.dinner) : ''}</td></tr>`;
+      const k = partyKey(s);
+      return `<tr class="g${SEL === k ? ' sel' : ''}" data-g="${k}">
+        <td class="seat"${brk}>${s.seat}</td>
+        <td${brk}>${esc(dispName(s))}</td>
+        <td class="co"${brk}>${esc(dispCompany(s))}</td></tr>`;
     }).join('');
     return `
       <div class="card">
         <div class="show-head">
           <span class="movie">${esc(first.movie || 'Showing ' + sh)}</span>
           <span class="time">${esc(first.show_start || (sh === 1 ? 'Early' : 'Late'))}</span>
-          <span class="count">${sorted.length} seated</span>
+          <span class="count">${seats.length} seated</span>
         </div>
-        <div class="mapbox seatmini" data-occ="${sorted.map(s=>s.seat).join(',')}" data-names="${names}"></div>
+        <div class="mapbox seatmini" data-occ="${seats.map(s=>s.seat).join(',')}" data-sel="${selSeats.join(',')}" data-names="${names}"></div>
+        <div class="maphint">Tap any seat or name \u2014 their whole party lights up gold.</div>
+        <div class="sorttoggle">
+          <button class="showpill${SORT==='seat'?' on':''}" onclick="setSort('seat')">Seat</button>
+          <button class="showpill${SORT==='name'?' on':''}" onclick="setSort('name')">Name</button>
+          <button class="showpill${SORT==='company'?' on':''}" onclick="setSort('company')">Company</button>
+        </div>
         <table><tbody>${trs}</tbody></table>
       </div>`;
   }).join('');
@@ -186,8 +218,27 @@ async function paintMaps() {
     if (!th) return;
     document.querySelectorAll('.seatmini').forEach(el => {
       const occ = new Set((el.dataset.occ || '').split(',').filter(Boolean));
+      const sel = new Set((el.dataset.sel || '').split(',').filter(Boolean));
       const names = new Map((el.dataset.names || '').split('~').filter(Boolean).map(p => p.split('|')));
-      SeatMini.render(el, th, { occupied: occ, names, cell: 22, showNumbers: true });
+      SeatMini.render(el, th, { occupied: occ, highlight: sel, names, cell: 22, showNumbers: true });
+      if (!el._tapWired) {
+        el._tapWired = true;
+        el.addEventListener('click', (e) => {
+          const r = e.target.closest && e.target.closest('rect[data-seat]');
+          if (!r) return;
+          const seat = r.getAttribute('data-seat');
+          const hit = (LAST_ROWS || []).find(x => String(x.theater_id) === String(AUD) && x.seat === seat && (!SHOW || x.showing_number === SHOW));
+          setSel(hit ? partyKey(hit) : null);
+        });
+      }
+    });
+    document.querySelectorAll('tr.g').forEach(tr => {
+      if (tr._tapWired) return; tr._tapWired = true;
+      tr.addEventListener('click', () => {
+        setSel(tr.dataset.g);
+        const box = document.querySelector('.mapbox');
+        if (box && SEL) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
     });
   } catch (e) {}
 }
