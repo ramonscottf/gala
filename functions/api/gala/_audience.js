@@ -464,6 +464,7 @@ function smsAudienceClause(name) {
   if (n === 'individual seats') return { tiers: ['Individual Seats', 'IndividualSeats'] };
   if (n === 'confirmed buyers') return { tiers: ['Platinum', 'Gold', 'Silver', 'Bronze', 'Friends and Family', 'Split Friends & Family', 'Individual Seats', 'IndividualSeats'] };
   if (n === 'platinum internal') return { internal: true };
+  if (n === 'late showing (evening)' || n === 'late showing') return { lateShowing: true };
   if (n === 'everyone' || n === 'all contacts') return { all: true };
   return null;
 }
@@ -485,6 +486,39 @@ export async function resolveSmsAudience(audience, db) {
       ORDER BY company
     `).all();
     return rows.results || [];
+  }
+
+  if (clause.lateShowing) {
+    // Day-of (Jun 10 2026): everyone seated in the EVENING (late) showing —
+    // sponsors with direct-placed showing-2 seats + delegations with placed
+    // showing-2 seats, phones required. Delegations supply d.token AS
+    // rsvp_token so {TOKEN} SMS links work for guests too. Deduped by
+    // digits-only phone (normPhoneKey), matching the Everyone branch.
+    const lateSql = `
+      SELECT s.id, s.first_name, s.last_name, s.company, s.phone, s.rsvp_token, s.sponsorship_tier
+      FROM sponsors s
+      WHERE s.archived_at IS NULL AND s.phone IS NOT NULL AND s.phone != ''
+        AND EXISTS (SELECT 1 FROM seat_assignments sa
+                     WHERE sa.sponsor_id = s.id AND sa.delegation_id IS NULL
+                       AND sa.showing_number = 2)
+      UNION ALL
+      SELECT NULL AS id, d.delegate_name AS first_name, '' AS last_name,
+             (SELECT company FROM sponsors ps WHERE ps.id = d.parent_sponsor_id) AS company,
+             d.delegate_phone AS phone, d.token AS rsvp_token, 'Guest' AS sponsorship_tier
+      FROM sponsor_delegations d
+      WHERE d.status != 'reclaimed'
+        AND d.delegate_phone IS NOT NULL AND d.delegate_phone != ''
+        AND EXISTS (SELECT 1 FROM seat_assignments sa
+                     WHERE sa.delegation_id = d.id AND sa.showing_number = 2)
+    `;
+    const lateRes = await db.prepare(lateSql).all();
+    const seen = new Map();
+    for (const row of lateRes.results || []) {
+      const key = normPhoneKey(row.phone);
+      if (key && !seen.has(key)) seen.set(key, row);
+    }
+    return [...seen.values()].sort((a, b) =>
+      String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base' }));
   }
 
   if (clause.all) {
