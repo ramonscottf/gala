@@ -55,230 +55,255 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --gala-red: #CB262C;
-  --gala-red-deep: #a01f24;
-  --navy-950: #0b1b3c;
-  --navy-900: #122a57;
-  --gold-400: #ffc24d;
-  --blue: #2858d6;
-  --panel: rgba(17,28,60,0.72);
-  --line: rgba(255,255,255,0.10);
-  --txt-soft: rgba(255,255,255,0.72);
-  --txt-muted: rgba(255,255,255,0.5);
-  --success: #34d399;
-  --danger: #f87171;
+  --p2-navy: #11194a;
+  --p2-navy-deep: #080d28;
+  --p2-blue: #4a7df0;
+  --p2-blue-deep: #2858d6;
+  --p2-red: #d72846;
+  --p2-red-soft: #ff4d70;
+  --p2-gold: #f4b942;
+  --p2-ink: #ffffff;
+  --p2-muted: rgba(255, 255, 255, 0.72);
+  --p2-subtle: rgba(255, 255, 255, 0.54);
+  --p2-rule: rgba(255, 255, 255, 0.14);
+  --p2-panel: rgba(20, 28, 72, 0.82);
+  --p2-shadow: 0 10px 40px -22px rgba(0, 0, 0, 0.55);
+  --p2-gradient-strip: linear-gradient(90deg, var(--p2-red), var(--p2-gold), var(--p2-blue-deep));
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  background: radial-gradient(1200px 800px at 18% -8%, #24508f, #122a57 42%, #0b1b3c 68%, #050b1c 100%) fixed;
-  color: #fff;
-  min-height: 100vh;
-  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  color: var(--p2-ink);
+  min-height: 100dvh;
+  padding: 28px 20px 48px;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(215, 40, 70, 0.26), transparent 30%),
+    radial-gradient(circle at 88% 8%, rgba(98, 200, 255, 0.14), transparent 28%),
+    linear-gradient(135deg, #080916 0%, #11194a 52%, #171845 100%);
+  background-attachment: fixed;
+  position: relative;
 }
-.wrap { max-width: 560px; margin: 0 auto; }
-.card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  margin-bottom: 16px;
-  color: #fff;
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 70%);
 }
+.wrap { max-width: 560px; margin: 0 auto; position: relative; z-index: 1; }
+
+.eyebrow {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--p2-gold);
+  font-size: 12px; font-weight: 900;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.eyebrow::before { content: ""; width: 34px; height: 2px; border-radius: 999px; background: currentColor; }
 h1 {
   font-family: 'Fraunces', Georgia, serif;
-  font-size: 1.7rem;
-  color: #fff;
-  margin-bottom: 4px;
+  font-weight: 600; letter-spacing: -0.02em; line-height: 0.92;
+  font-size: clamp(38px, 9vw, 56px);
+  color: #fff; margin-bottom: 8px; text-wrap: balance;
 }
-h1 span { color: var(--gold-400); font-style: italic; }
-.sub { color: var(--txt-soft); font-size: 0.9rem; margin-bottom: 24px; }
+.flair { font-style: italic; color: var(--p2-gold); font-weight: 500; }
+.sub { color: var(--p2-muted); font-size: 0.92rem; margin-bottom: 26px; }
+
+.card {
+  border: 0;
+  background: var(--p2-panel);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 22px;
+  box-shadow: var(--p2-shadow);
+  position: relative;
+  overflow: hidden;
+  padding: 26px;
+  margin-bottom: 18px;
+}
+.card.stripped::before {
+  content: "";
+  position: absolute; inset: 0 0 auto;
+  height: 3px;
+  background: var(--p2-gradient-strip);
+  z-index: 2;
+}
+
+.who-company {
+  color: var(--p2-gold);
+  font-size: 12px; font-weight: 900;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.who-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600; letter-spacing: -0.02em;
+  font-size: clamp(26px, 6vw, 34px);
+  color: #fff; line-height: 1.02;
+}
+.tier {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 12px;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(244, 185, 66, 0.16);
+  border: 1px solid rgba(244, 185, 66, 0.42);
+  color: var(--p2-gold);
+  font-size: 12px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.ticket { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--p2-rule); }
+.ticket:first-of-type { margin-top: 18px; padding-top: 0; border-top: 0; }
+.ticket-head { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+.ticket-poster {
+  width: 92px; aspect-ratio: 2/3; object-fit: cover;
+  border-radius: 12px; flex-shrink: 0;
+  box-shadow: 0 8px 24px -10px rgba(0,0,0,0.6);
+}
+.ticket-info { min-width: 0; flex: 1; }
+.ticket-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600; letter-spacing: -0.02em;
+  font-size: clamp(22px, 5.4vw, 30px);
+  line-height: 1.02; color: #fff;
+  margin-bottom: 12px; text-wrap: balance;
+}
+.pill-pair { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.showtime-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  font-size: 13px; font-weight: 800; letter-spacing: 0.02em;
+}
+.showtime-pill.early { background: rgba(74,125,240,0.18); border: 1px solid rgba(74,125,240,0.42); color: #9fb8ff; }
+.showtime-pill.late  { background: rgba(215,40,70,0.18);  border: 1px solid rgba(215,40,70,0.44);  color: #ff8aa1; }
+.showtime-pill .dot { width: 7px; height: 7px; border-radius: 999px; background: currentColor; opacity: 0.85; }
+.aud-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(244,185,66,0.16);
+  border: 1px solid rgba(244,185,66,0.42);
+  color: var(--p2-gold);
+  font-size: 13px; font-weight: 800; letter-spacing: 0.02em;
+}
+.meta-pill {
+  display: inline-flex; align-items: center;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--p2-rule);
+  color: var(--p2-muted);
+  font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+.sec-label {
+  color: var(--p2-gold);
+  font-size: 12px; font-weight: 900;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin: 18px 0 10px;
+}
+.seatrow {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+.seat-num {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 26px; font-weight: 600;
+  color: var(--p2-gold);
+  letter-spacing: 0.01em; line-height: 1;
+  flex-shrink: 0; min-width: 48px;
+}
+.seat-who { min-width: 0; flex: 1; font-weight: 600; font-size: 0.93rem; color: #fff; }
+.dinner-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(244,185,66,0.16);
+  border: 1px solid rgba(244,185,66,0.36);
+  color: var(--p2-gold);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+  white-space: nowrap; flex-shrink: 0;
+}
+.dinner-pill .em { font-size: 14px; line-height: 1; }
+
+.seatmini { background: rgba(8,13,40,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 10px; overflow-x: auto; }
+.seatmini__hint { font-size: 11.5px; color: var(--p2-subtle); text-align: center; margin-top: 8px; }
+
+.qr-card { text-align: center; }
+.qr-card__label {
+  color: var(--p2-gold);
+  font-size: 12px; font-weight: 900;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.qr-card__img {
+  display: block; margin: 0 auto 12px;
+  background: #fff; padding: 10px; border-radius: 14px;
+  width: 220px; max-width: 100%; height: auto; aspect-ratio: 1;
+}
+.qr-card__hint { color: var(--p2-muted); font-size: 0.85rem; max-width: 320px; margin: 0 auto; }
 
 .scanner-wrap {
-  position: relative;
-  aspect-ratio: 1;
-  max-width: 400px;
-  margin: 0 auto 14px;
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
+  position: relative; aspect-ratio: 1; max-width: 400px;
+  margin: 0 auto 14px; background: #000;
+  border-radius: 14px; overflow: hidden;
 }
 #video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .scanner-frame {
   position: absolute; inset: 12%;
-  border: 3px solid var(--gala-red);
-  border-radius: 12px;
-  pointer-events: none;
+  border: 3px solid var(--p2-red);
+  border-radius: 12px; pointer-events: none;
   box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
 }
-.scanner-frame::before,
-.scanner-frame::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; height: 2px;
-  background: var(--gala-red);
-  box-shadow: 0 0 8px var(--gala-red);
+.scanner-frame::before, .scanner-frame::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 2px;
+  background: var(--p2-red); box-shadow: 0 0 8px var(--p2-red);
   animation: scan 2s ease-in-out infinite;
 }
-@keyframes scan {
-  0%, 100% { top: 0; opacity: 1; }
-  50% { top: 100%; opacity: 0.6; }
-}
+@keyframes scan { 0%,100% { top: 0; opacity: 1; } 50% { top: 100%; opacity: 0.6; } }
 
 .btn {
-  padding: 12px 24px;
-  border-radius: 50px;
-  border: none;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 24px; border-radius: 999px; border: 0;
+  font-family: inherit; font-weight: 800; font-size: 0.9rem;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
 }
-.btn--red {
-  background: linear-gradient(135deg, var(--gala-red), var(--gala-red-deep));
-  color: #fff;
-}
-.btn--secondary {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-  border: 1.5px solid rgba(255,255,255,0.22);
-}
-.btn--full { width: 100%; justify-content: center; padding: 16px; font-size: 1rem; }
+.btn--red { background: linear-gradient(95deg, var(--p2-red), #883bb5 76%, var(--p2-blue-deep)); color: #fff; }
+.btn--secondary { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.22); }
+.btn--full { width: 100%; padding: 15px; font-size: 0.95rem; }
 
 input[type=text] {
-  width: 100%;
-  padding: 14px 16px;
-  background: rgba(5,11,28,0.6);
-  border: 1.5px solid rgba(255,255,255,0.18);
-  border-radius: 10px;
-  font-size: 1rem;
-  font-family: inherit;
-  color: #fff;
+  width: 100%; padding: 14px 16px;
+  background: rgba(8,13,40,0.6);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px; font-size: 1rem; font-family: inherit; color: #fff;
 }
-input[type=text]::placeholder { color: var(--txt-muted); }
-
-.group-display {
-  text-align: center;
-  padding: 28px 24px;
-}
-.group-display h2 {
-  font-family: 'Fraunces', Georgia, serif;
-  color: #fff;
-  font-size: 1.6rem;
-  margin-bottom: 6px;
-}
-.group-display > p { color: var(--txt-soft); }
-.qr-block {
-  margin: 20px auto 22px;
-  padding: 18px;
-  background: rgba(5,11,28,0.65);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  max-width: 280px;
-}
-.qr-block__label {
-  color: var(--gold-400);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-.qr-block__img {
-  display: block;
-  margin: 0 auto 10px;
-  background: #fff;
-  padding: 10px;
-  border-radius: 10px;
-  width: 220px;
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: 1;
-}
-.qr-block__hint {
-  color: var(--txt-soft);
-  font-size: 0.8rem;
-}
-.sponsor-note {
-  background: rgba(52,211,153,0.12);
-  border: 1px solid rgba(52,211,153,0.35);
-  color: #a7f3d0;
-  padding: 14px 16px;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  text-align: center;
-  margin-top: 10px;
-}
-.group-display .tier {
-  display: inline-block;
-  padding: 4px 14px;
-  background: rgba(255,194,77,0.14);
-  border: 1px solid rgba(255,194,77,0.45);
-  color: var(--gold-400);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-radius: 20px;
-  margin: 8px 0 14px;
-}
-.seats-list {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px 18px;
-  text-align: left;
-  margin-bottom: 18px;
-  font-size: 0.95rem;
-  line-height: 1.8;
-}
-.seats-list strong { color: var(--gold-400); }
+input[type=text]::placeholder { color: var(--p2-subtle); }
 
 .checked-in {
-  background: rgba(52,211,153,0.12);
-  border: 1.5px solid var(--success);
-  color: var(--success);
-  padding: 16px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-bottom: 14px;
+  background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.4);
+  color: #6ee7b7; padding: 16px; border-radius: 14px;
+  font-weight: 700; font-size: 1rem; margin-bottom: 14px; text-align: center;
+}
+.sponsor-note {
+  background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.35);
+  color: #a7f3d0; padding: 14px 16px; border-radius: 12px;
+  font-size: 0.92rem; line-height: 1.45; text-align: center; margin-top: 10px;
 }
 .error-msg {
-  background: rgba(248,113,113,0.12);
-  border: 1.5px solid var(--danger);
-  color: #fecaca;
-  padding: 14px;
-  border-radius: 10px;
-  margin-bottom: 14px;
-  font-size: 0.9rem;
+  background: rgba(215,40,70,0.14); border: 1px solid rgba(215,40,70,0.45);
+  color: #ffb3c1; padding: 14px; border-radius: 12px;
+  margin-bottom: 14px; font-size: 0.9rem;
 }
-.divider { text-align: center; color: var(--txt-muted); font-size: 0.85rem; margin: 16px 0; }
-
-.show-card{background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0;text-align:left;}
-.seatmini{background:rgba(5,11,28,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px;overflow-x:auto;}
-.seatmini__hint{font-size:11.5px;color:var(--txt-muted);text-align:center;margin-top:6px;}
-
-.tk-head{display:flex;gap:14px;align-items:flex-start;}
-.tk-poster{width:86px;aspect-ratio:2/3;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.14);flex-shrink:0;}
-.tk-info{min-width:0;flex:1;}
-.tk-eyebrow{color:#ff8a8e;font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px;}
-.tk-title{font-family:'Fraunces',Georgia,serif;font-size:1.35rem;font-weight:700;line-height:1.15;margin-bottom:10px;color:#fff;}
-.tk-rows{font-size:0.9rem;}
-.tk-row{display:flex;gap:12px;padding:2px 0;}
-.tk-row span{color:var(--txt-muted);min-width:108px;}
-.tk-row strong{font-weight:700;color:#fff;}
-.tk-divider{height:1px;background:var(--line);margin:14px 0;}
-.tk-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-400);margin-bottom:8px;}
-.tk-seatrow{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:0.92rem;}
-.tk-chip{background:var(--gala-red);color:#fff;border-radius:6px;padding:4px 9px;font-weight:800;font-size:13px;flex-shrink:0;}
-.tk-who{min-width:0;flex:1;font-weight:600;color:#fff;text-align:left;}
-.tk-dinner{color:var(--txt-muted);font-size:12.5px;white-space:nowrap;}
+.divider { text-align: center; color: var(--p2-subtle); font-size: 0.85rem; margin: 16px 0; }
 </style>
   <link rel="stylesheet" href="/css/ts-header.css">
   <link rel="stylesheet" href="/css/ts-footer.css">
@@ -287,7 +312,8 @@ input[type=text]::placeholder { color: var(--txt-muted); }
 <body>
 
 <div class="wrap">
-  <h1>My <span>Ticket</span></h1>
+  <div class="eyebrow">DEF Gala 2026</div>
+  <h1>My <span class="flair">ticket.</span></h1>
   <p class="sub">June 10, 2026 · Megaplex Theatres at Legacy Crossing</p>
 
   <div id="scanner-card" class="card">
@@ -401,37 +427,45 @@ function renderGroup(token, data) {
     (groups[k] = groups[k] || []).push(s);
   });
 
-  const DINNERS = { frenchdip: 'Hot French Dip', salad: 'Chicken Salad', veggie: 'Vegetarian', kids: 'Kids Meal' };
+  const DINNERS = {
+    frenchdip: { emoji: '\u{1F956}', label: 'Hot French Dip' },
+    salad:     { emoji: '\u{1F957}', label: 'Chicken Salad' },
+    veggie:    { emoji: '\u{1F331}', label: 'Vegetarian' },
+    kids:      { emoji: '\u{1F9D2}', label: 'Kids Meal' },
+  };
   const cards = Object.entries(groups).map(([k, seats]) => {
     const first = seats[0];
     const sorted = seats.sort((a,b) => a.row_label.localeCompare(b.row_label) || (Number(a.seat_num) - Number(b.seat_num)));
     const labels = sorted.map(s => s.row_label + s.seat_num);
-    const seatRows = sorted.map(s => `
-      <div class="tk-seatrow">
-        <span class="tk-chip">${s.row_label}${s.seat_num}</span>
-        <span class="tk-who">${s.guest_name || ''}</span>
-        <span class="tk-dinner">${s.dinner ? (DINNERS[s.dinner] || s.dinner) : ''}</span>
-      </div>`).join('');
+    const isEarly = (first.showing_number || 1) === 1;
+    const seatRows = sorted.map(s => {
+      const d = s.dinner ? (DINNERS[s.dinner] || { emoji: '', label: s.dinner }) : null;
+      return `
+      <div class="seatrow">
+        <span class="seat-num">${s.row_label}${s.seat_num}</span>
+        <span class="seat-who">${s.guest_name || ''}</span>
+        ${d ? `<span class="dinner-pill"><span class="em">${d.emoji}</span>${d.label}</span>` : ''}
+      </div>`;
+    }).join('');
     return `
-      <div class="show-card">
-        <div class="tk-head">
-          ${first.poster_url ? `<img class="tk-poster" src="${first.poster_url}" alt="" aria-hidden="true">` : ''}
-          <div class="tk-info">
-            <div class="tk-eyebrow">Your movie</div>
-            <div class="tk-title">${first.movie || 'Auditorium ' + first.theater_id}</div>
-            <div class="tk-rows">
-              <div class="tk-row"><span>Auditorium</span><strong>#${first.theater_id}</strong></div>
-              ${first.dinner_time ? `<div class="tk-row"><span>Doors &amp; dinner</span><strong>${first.dinner_time}</strong></div>` : ''}
-              ${first.show_start ? `<div class="tk-row"><span>Movie starts</span><strong>${first.show_start}</strong></div>` : ''}
+      <div class="ticket">
+        <div class="ticket-head">
+          ${first.poster_url ? `<img class="ticket-poster" src="${first.poster_url}" alt="" aria-hidden="true">` : ''}
+          <div class="ticket-info">
+            <div class="ticket-title">${first.movie || 'Auditorium ' + first.theater_id}</div>
+            <div class="pill-pair">
+              <span class="showtime-pill ${isEarly ? 'early' : 'late'}"><span class="dot"></span>${isEarly ? 'Early' : 'Late'}${first.dinner_time ? ' \u00b7 ' + first.dinner_time : ''}</span>
+              <span class="aud-pill">\u{1F3AC} Auditorium ${first.theater_id}</span>
+              <span class="meta-pill">${sorted.length} seat${sorted.length === 1 ? '' : 's'}</span>
             </div>
+            ${first.show_start ? `<div style="margin-top:10px;color:var(--p2-muted);font-size:0.88rem;">Doors &amp; dinner <strong style="color:#fff;">${first.dinner_time || ''}</strong> \u00b7 Movie starts <strong style="color:#fff;">${first.show_start}</strong></div>` : ''}
           </div>
         </div>
-        <div class="tk-divider"></div>
-        <div class="tk-label">Your seats</div>
+        <div class="sec-label">Seats in this group</div>
         ${seatRows}
-        <div class="tk-label" style="margin-top:14px;">Where you're sitting</div>
+        <div class="sec-label">Where you're sitting</div>
         <div class="seatmini" data-theater="${first.theater_id}" data-seats="${labels.join(',')}"></div>
-        <div class="seatmini__hint">Your seats in gold — screen at the top.</div>
+        <div class="seatmini__hint">Your seats in gold \u2014 screen at the top.</div>
       </div>`;
   }).join('');
 
@@ -439,19 +473,19 @@ function renderGroup(token, data) {
   const isSponsorView = !!urlToken;
 
   groupCard.innerHTML = `
-    <div class="card group-display">
-      <h2>${data.company || data.name}</h2>
-      <div style="color:var(--ink-soft);font-size:0.95rem;">${data.name}${data.company && data.name !== data.company ? '' : ''}</div>
+    <div class="card stripped">
+      ${data.company ? `<div class="who-company">${data.company}</div>` : ''}
+      <div class="who-name">${data.name || data.company || ''}</div>
       ${data.tier ? `<span class="tier">${data.tier}</span>` : ''}
       ${cards}
-      <div class="qr-block">
-        <div class="qr-block__label">Your gala QR</div>
-        <img src="/api/gala/qr?t=${encodeURIComponent(token)}&size=360" alt="Gala QR" class="qr-block__img" width="220" height="220"/>
-        <div class="qr-block__hint">${isSponsorView
-          ? 'Save this — any gala helper can scan it to pull up your seats in a second.'
-          : 'Scanned — these are their seats. Point them to the gold ones.'}</div>
-      </div>
-      <div style="margin-top:12px;">
+    </div>
+    <div class="card stripped qr-card">
+      <div class="qr-card__label">Your gala QR</div>
+      <img src="/api/gala/qr?t=${encodeURIComponent(token)}&size=360" alt="Gala QR" class="qr-card__img" width="220" height="220"/>
+      <div class="qr-card__hint">${isSponsorView
+        ? 'Save this \u2014 any gala helper can scan it to pull up your seats in a second.'
+        : 'Scanned \u2014 these are their seats. Point them to the gold ones.'}</div>
+      <div style="margin-top:16px;">
         <button class="btn btn--secondary btn--full" onclick="location.reload()">${isSponsorView ? 'Refresh' : 'Scan another'}</button>
       </div>
     </div>
